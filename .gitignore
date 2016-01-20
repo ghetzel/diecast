@@ -1,5 +1,5 @@
 /bin
 /templates
-/gopath
+/gopath/pkg
 /public
 /config

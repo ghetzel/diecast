@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-PROJECT="ace-test"
+PROJECT="diecast"
 ORG_PATH="github.com/ghetzel"
 REPO_PATH="${ORG_PATH}/${PROJECT}"
 

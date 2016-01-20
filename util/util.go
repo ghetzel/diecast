@@ -2,10 +2,6 @@ package util
 
 import (
     "fmt"
-    "encoding/json"
-    "io"
-    "io/ioutil"
-    "net/http"
     "os"
     "time"
 

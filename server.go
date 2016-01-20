@@ -2,11 +2,12 @@ package main
 
 import (
     "fmt"
-    "regexp"
+    "io/ioutil"
     "net/http"
     "net/url"
-    "strings"
     "os"
+    "regexp"
+    "strings"
     "github.com/yosssi/ace"
     "github.com/julienschmidt/httprouter"
     "github.com/codegangsta/negroni"
@@ -15,24 +16,29 @@ import (
     log "github.com/Sirupsen/logrus"
 )
 
-const DEFAULT_CONFIG_PATH = `./diecast.yml`
+const DEFAULT_CONFIG_PATH   = `./diecast.yml`
+const DEFAULT_TEMPLATE_PATH = `./templates`
+const DEFAULT_SERVE_ADDRESS = `127.0.0.1`
+const DEFAULT_SERVE_PORT    = 28419
 
 type Server struct {
-    Address    string
-    Port       int
-    Bindings   map[string]Binding
-    ConfigPath string
+    Address      string
+    Port         int
+    Bindings     map[string]Binding
+    ConfigPath   string
+    TemplatePath string
 
-    router     *httprouter.Router
-    server     *negroni.Negroni
+    router       *httprouter.Router
+    server       *negroni.Negroni
 }
 
 func NewServer() *Server {
     return &Server{
-        Address:    `127.0.0.1`,
-        Port:       28419,
-        ConfigPath: DEFAULT_CONFIG_PATH,
-        Bindings:   make(map[string]Binding),
+        Address:      DEFAULT_SERVE_ADDRESS,
+        Port:         DEFAULT_SERVE_PORT,
+        ConfigPath:   DEFAULT_CONFIG_PATH,
+        TemplatePath: DEFAULT_TEMPLATE_PATH,
+        Bindings:     make(map[string]Binding),
     }
 }
 
@@ -80,15 +86,15 @@ func (self *Server) Serve() error {
             slug := strings.Join(parts[0:len(parts) - i], `/`)
 
 
-            log.Infof("Trying: %s", fmt.Sprintf("%s/%s/index.ace", `templates`, slug))
+            log.Infof("Trying: %s", fmt.Sprintf("%s/%s/index.ace", self.TemplatePath, slug))
 
-            if _, err := os.Stat( fmt.Sprintf("%s/%s/index.ace", `templates`, slug) ); err == nil {
+            if _, err := os.Stat( fmt.Sprintf("%s/%s/index.ace", self.TemplatePath, slug) ); err == nil {
                 innerTplPath = `/` + slug + `/index`
                 break
             }else if os.IsNotExist(err) {
-                log.Infof("Trying: %s", fmt.Sprintf("%s/%s.ace", `templates`, slug))
+                log.Infof("Trying: %s", fmt.Sprintf("%s/%s.ace", self.TemplatePath, slug))
 
-                if _, err := os.Stat( fmt.Sprintf("%s/%s.ace", `templates`, slug) ); err == nil {
+                if _, err := os.Stat( fmt.Sprintf("%s/%s.ace", self.TemplatePath, slug) ); err == nil {
                     innerTplPath = `/` + slug
                     break
                 }
@@ -100,7 +106,7 @@ func (self *Server) Serve() error {
 
         if tpl, err := ace.Load(`base`, innerTplPath, &ace.Options{
             DynamicReload: true,
-            BaseDir:       `templates`,
+            BaseDir:       self.TemplatePath,
             FuncMap:       functions.GetBaseFunctions(),
         }); err == nil {
 
@@ -133,9 +139,10 @@ func (self *Server) Serve() error {
     })
 
     self.server = negroni.Classic()
-    self.server.UseHandler(router)
+    self.server.UseHandler(self.router)
 
-    self.server.Run(fmt.Sprintf("%s:%d", ``, 8080))
+    self.server.Run(fmt.Sprintf("%s:%d", self.Address, self.Port))
+    return nil
 }
 
 func (self *Server) GetBindings(method string, path string, req *http.Request) map[string]Binding {
@@ -143,7 +150,7 @@ func (self *Server) GetBindings(method string, path string, req *http.Request) m
     bindings := make(map[string]Binding)
 
 
-    for key, binding := range Bindings {
+    for key, binding := range self.Bindings {
         if binding.RouteMethods == MethodAny || binding.RouteMethods & httpMethod == httpMethod {
             for _, rx := range binding.Routes {
                 if match := rx.FindStringSubmatch(path); match != nil {
@@ -237,7 +244,7 @@ func (self *Server) PopulateBindings(bindings map[string]BindingConfig) error {
 
 
         log.Infof("Setting up binding %s: %+v", name, binding)
-        Bindings[name] = binding
+        self.Bindings[name] = binding
     }
 
     return nil
