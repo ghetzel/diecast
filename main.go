@@ -5,6 +5,7 @@ import (
     log "github.com/Sirupsen/logrus"
     "github.com/codegangsta/cli"
     "github.com/ghetzel/diecast/util"
+    "github.com/ghetzel/diecast/template"
 )
 
 func main() {
@@ -44,12 +45,6 @@ func main() {
                     EnvVar: `CONFIG_FILE`,
                 },
                 cli.StringFlag{
-                    Name:   `templates-dir, T`,
-                    Usage:  `Root path where templates are stored`,
-                    Value:  DEFAULT_TEMPLATE_PATH,
-                    EnvVar: `TEMPLATES_DIR`,
-                },
-                cli.StringFlag{
                     Name:   `address, a`,
                     Usage:  `Address the HTTP server should listen on`,
                     Value:  DEFAULT_SERVE_ADDRESS,
@@ -61,13 +56,27 @@ func main() {
                     Value:  DEFAULT_SERVE_PORT,
                     EnvVar: `HTTP_PORT`,
                 },
+                cli.StringFlag{
+                    Name:   `templates-dir, T`,
+                    Usage:  `Root path where templates are stored`,
+                    Value:  template.DEFAULT_TEMPLATE_PATH,
+                    EnvVar: `TEMPLATES_DIR`,
+                },
+                cli.StringFlag{
+                    Name:   `static-dir, S`,
+                    Usage:  `Path where static assets are located`,
+                    Value:  DEFAULT_STATIC_PATH,
+                    EnvVar: `STATIC_PATH`,
+                },
             },
             Action:      func(c *cli.Context){
                 server := NewServer()
 
-                server.Address    = c.String(`address`)
-                server.Port       = c.Int(`port`)
-                server.ConfigPath = c.String(`config-file`)
+                server.Address      = c.String(`address`)
+                server.Port         = c.Int(`port`)
+                server.ConfigPath   = c.String(`config-file`)
+                server.StaticPath   = c.String(`static-dir`)
+                server.TemplatePath = c.String(`templates-dir`)
 
                 if err := server.Initialize(); err == nil {
                     log.Infof("Starting HTTP server at %s:%d", server.Address, server.Port)

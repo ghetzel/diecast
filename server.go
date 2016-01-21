@@ -6,18 +6,22 @@ import (
     "net/http"
     "net/url"
     "os"
+    "path"
+    "path/filepath"
     "regexp"
     "strings"
-    "github.com/yosssi/ace"
     "github.com/julienschmidt/httprouter"
     "github.com/codegangsta/negroni"
     "github.com/shutterstock/go-stockutil/stringutil"
-    "github.com/ghetzel/diecast/functions"
+
+    "github.com/ghetzel/diecast/template"
+    "github.com/ghetzel/diecast/template/ace"
+
     log "github.com/Sirupsen/logrus"
 )
 
-const DEFAULT_CONFIG_PATH   = `./diecast.yml`
-const DEFAULT_TEMPLATE_PATH = `./templates`
+const DEFAULT_CONFIG_PATH   = `diecast.yml`
+const DEFAULT_STATIC_PATH   = `public`
 const DEFAULT_SERVE_ADDRESS = `127.0.0.1`
 const DEFAULT_SERVE_PORT    = 28419
 
@@ -27,6 +31,8 @@ type Server struct {
     Bindings     map[string]Binding
     ConfigPath   string
     TemplatePath string
+    Templates    map[string]template.ITemplate
+    StaticPath   string
 
     router       *httprouter.Router
     server       *negroni.Negroni
@@ -37,8 +43,10 @@ func NewServer() *Server {
         Address:      DEFAULT_SERVE_ADDRESS,
         Port:         DEFAULT_SERVE_PORT,
         ConfigPath:   DEFAULT_CONFIG_PATH,
-        TemplatePath: DEFAULT_TEMPLATE_PATH,
+        TemplatePath: template.DEFAULT_TEMPLATE_PATH,
         Bindings:     make(map[string]Binding),
+        Templates:    make(map[string]template.ITemplate),
+        StaticPath:   DEFAULT_STATIC_PATH,
     }
 }
 
@@ -52,68 +60,94 @@ func (self *Server) Initialize() error {
         }else{
             return fmt.Errorf("Cannot load bindings.yml: %v", err)
         }
-    }else{
-        return fmt.Errorf("Cannot load bindings.yml: %v", err)
+    }
+
+    if err := self.LoadTemplates(); err != nil {
+        return err
     }
 
     return nil
+}
+
+func (self *Server) LoadTemplates() error {
+    return filepath.Walk(self.TemplatePath, func(filename string, info os.FileInfo, err error) error {
+        if info.Mode().IsRegular() && !strings.HasPrefix(path.Base(filename), `_`) {
+            ext := path.Ext(filename)
+            key := strings.TrimSuffix(strings.TrimPrefix(filename, path.Clean(self.TemplatePath)+`/`), ext)
+
+            if _, ok := self.Templates[key]; !ok {
+                var tpl template.ITemplate
+                var err error
+
+                switch ext {
+                case `.ace`:
+                    tpl = ace.New()
+                // case `.pongo`:
+                //     tpl = pongo.New()
+                default:
+                    return nil
+                }
+
+                if err == nil {
+                    tpl.SetTemplateDir(self.TemplatePath)
+
+                    log.Debugf("Load template %T: [%s] %s", tpl, key, tpl.GetTemplateDir())
+
+                    if err := tpl.Load(key); err == nil {
+                        self.Templates[key] = tpl
+                    }else{
+                        log.Warnf("Error loading template '%s': %v", filename, err)
+                        return nil
+                    }
+                }else{
+                    return err
+                }
+            }else{
+                log.Warnf("Cannot load template '%s', key was already loaded", filename)
+            }
+        }
+
+        return nil
+    })
 }
 
 func (self *Server) Serve() error {
     self.router = httprouter.New()
 
     self.router.GET(`/*path`, func(w http.ResponseWriter, req *http.Request, params httprouter.Params){
-        path             := params.ByName(`path`)
-        routeBindings    := self.GetBindings(req.Method, path, req)
-        allParams        := make(map[string]interface{})
+        routePath  := params.ByName(`path`)
+        tplKey     := routePath
+        var tpl template.ITemplate
 
-        for _, binding := range routeBindings {
-            for k, v := range binding.ResourceParams {
-                allParams[k] = v
-            }
+        if tplKey == `/` {
+            tplKey = `/index`
         }
 
-        innerTplPath     := path
-
-        if innerTplPath == `/` {
-            innerTplPath = `/default`
-        }
-
-        parts := strings.Split(innerTplPath, `/`)
+        parts := strings.Split(tplKey, `/`)
         parts  = parts[1:len(parts)]
 
         for i, _ := range parts {
-            slug := strings.Join(parts[0:len(parts) - i], `/`)
+            key := strings.Join(parts[0:len(parts) - i], `/`)
+            // log.Infof("Trying: %s", key)
 
-
-            log.Infof("Trying: %s", fmt.Sprintf("%s/%s/index.ace", self.TemplatePath, slug))
-
-            if _, err := os.Stat( fmt.Sprintf("%s/%s/index.ace", self.TemplatePath, slug) ); err == nil {
-                innerTplPath = `/` + slug + `/index`
+            if t, ok := self.Templates[key]; ok {
+                tpl = t
                 break
-            }else if os.IsNotExist(err) {
-                log.Infof("Trying: %s", fmt.Sprintf("%s/%s.ace", self.TemplatePath, slug))
-
-                if _, err := os.Stat( fmt.Sprintf("%s/%s.ace", self.TemplatePath, slug) ); err == nil {
-                    innerTplPath = `/` + slug
-                    break
-                }
             }
         }
 
+        if tpl != nil {
+            routeBindings    := self.GetBindings(req.Method, routePath, req)
+            allParams        := make(map[string]interface{})
+            payload          := map[string]interface{}{
+                `route`:  params.ByName(`path`),
+                `params`: allParams,
+            }
 
-        log.Infof("PATH: %s", innerTplPath)
-
-        if tpl, err := ace.Load(`base`, innerTplPath, &ace.Options{
-            DynamicReload: true,
-            BaseDir:       self.TemplatePath,
-            FuncMap:       functions.GetBaseFunctions(),
-        }); err == nil {
-
-
-            payload := map[string]interface{}{
-                `TemplatePath`: params.ByName(`path`),
-                `Params`:       allParams,
+            for _, binding := range routeBindings {
+                for k, v := range binding.ResourceParams {
+                    allParams[k] = v
+                }
             }
 
             bindingData := make(map[string]interface{})
@@ -126,26 +160,29 @@ func (self *Server) Serve() error {
                 }
             }
 
-            // log.Infof("Data for %s\n---\n%+v\n---\n", path, bindingData)
+            // log.Infof("Data for %s\n---\n%+v\n---\n", routePath, bindingData)
 
             payload[`data`] = bindingData
 
-            if err := tpl.Execute(w, payload); err != nil {
+            if err := tpl.Render(w, payload); err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
             }
+
         }else{
-            http.Error(w, err.Error(), http.StatusInternalServerError)
+            http.Error(w, fmt.Sprintf("Template '%s' not found", tplKey), http.StatusNotFound)
         }
     })
 
-    self.server = negroni.Classic()
+    self.server = negroni.New()
+    self.server.Use(negroni.NewRecovery())
+    self.server.Use(negroni.NewStatic( http.Dir(self.StaticPath) ))
     self.server.UseHandler(self.router)
 
     self.server.Run(fmt.Sprintf("%s:%d", self.Address, self.Port))
     return nil
 }
 
-func (self *Server) GetBindings(method string, path string, req *http.Request) map[string]Binding {
+func (self *Server) GetBindings(method string, routePath string, req *http.Request) map[string]Binding {
     var httpMethod HttpMethod
     bindings := make(map[string]Binding)
 
@@ -153,7 +190,7 @@ func (self *Server) GetBindings(method string, path string, req *http.Request) m
     for key, binding := range self.Bindings {
         if binding.RouteMethods == MethodAny || binding.RouteMethods & httpMethod == httpMethod {
             for _, rx := range binding.Routes {
-                if match := rx.FindStringSubmatch(path); match != nil {
+                if match := rx.FindStringSubmatch(routePath); match != nil {
                     for i, matchGroupName := range rx.SubexpNames() {
                         if matchGroupName != `` {
                             newUrl := *binding.Resource
@@ -179,7 +216,6 @@ func (self *Server) GetBindings(method string, path string, req *http.Request) m
                             }
 
                             newUrl.RawQuery = strings.Join(rawQuery, `&`)
-                            log.Infof("NEW URL %+v ? %+v", newUrl, newUrl.Query())
 
                             binding.Resource = &newUrl
                         }
@@ -190,11 +226,11 @@ func (self *Server) GetBindings(method string, path string, req *http.Request) m
                 }
             }
         }else{
-            log.Warnf("Binding '%s' did not match %s %s", key, method, path)
+            log.Warnf("Binding '%s' did not match %s %s", key, method, routePath)
         }
     }
 
-    log.Infof("Bindings for %s %s -> %v", method, path, bindings)
+    // log.Debugf("Bindings for %s %s -> %v", method, routePath, bindings)
     return bindings
 }
 

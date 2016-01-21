@@ -2,6 +2,7 @@ package main
 
 import (
     "encoding/json"
+    "fmt"
     "io/ioutil"
     "net/url"
     "net/http"
@@ -54,19 +55,25 @@ func (self *Binding) Evaluate(req *http.Request, params httprouter.Params) (inte
     if bindingReq, err := http.NewRequest(method, reqUrl, nil); err == nil {
         client := &http.Client{}
 
-        log.Warnf("REQ %s %+v ? %+v", method, self.Resource, self.Resource.Query())
+        log.Debugf("Binding Request: %s %+v ? %s", method, self.Resource, self.Resource.RawQuery)
 
-        if res, err := client.Do(bindingReq); err == nil && res.StatusCode < 400 {
-            if data, err := ioutil.ReadAll(res.Body); err == nil {
-                var rv interface{}
+        if res, err := client.Do(bindingReq); err == nil {
+            log.Debugf("Binding Response: HTTP %d (body: %d bytes)", res.StatusCode, res.ContentLength)
 
-                if err := json.Unmarshal(data, &rv); err == nil {
-                    return rv, nil
+            if res.StatusCode < 400 {
+                if data, err := ioutil.ReadAll(res.Body); err == nil {
+                    var rv interface{}
+
+                    if err := json.Unmarshal(data, &rv); err == nil {
+                        return rv, nil
+                    }else{
+                        return nil, err
+                    }
                 }else{
                     return nil, err
                 }
             }else{
-                return nil, err
+                return nil, fmt.Errorf("Request failed with HTTP %d: %s", res.StatusCode, res.Status)
             }
         }else{
             return nil, err
