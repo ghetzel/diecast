@@ -10,7 +10,7 @@ type ITemplate interface {
     Load(string) error
     GetTemplateDir() string
     SetTemplateDir(string)
-    Render(io.Writer, interface{}) error
+    Render(io.Writer, map[string]interface{}) error
 }
 
 

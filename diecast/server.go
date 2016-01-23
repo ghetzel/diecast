@@ -17,6 +17,7 @@ import (
     "github.com/ghetzel/diecast/diecast/util"
     "github.com/ghetzel/diecast/diecast/template"
     "github.com/ghetzel/diecast/diecast/template/ace"
+    "github.com/ghetzel/diecast/diecast/template/pongo"
 
     log "github.com/Sirupsen/logrus"
 )
@@ -88,8 +89,8 @@ func (self *Server) LoadTemplates() error {
                 switch ext {
                 case `.ace`:
                     tpl = ace.New()
-                // case `.pongo`:
-                //     tpl = pongo.New()
+                case `.pongo`:
+                    tpl = pongo.New()
                 default:
                     return nil
                 }
@@ -142,6 +143,13 @@ func (self *Server) Serve() error {
             }
         }
 
+    //  template was not found, attempt to load the index template
+        if tpl == nil {
+            if t, ok := self.Templates[`index`]; ok {
+                tpl = t
+            }
+        }
+
         if tpl != nil {
             routeBindings    := self.GetBindings(req.Method, routePath, req)
             allParams        := make(map[string]interface{})
@@ -166,9 +174,10 @@ func (self *Server) Serve() error {
                 }
             }
 
-            // log.Infof("Data for %s\n---\n%+v\n---\n", routePath, bindingData)
 
             payload[`data`] = bindingData
+
+            log.Infof("Data for %s\n---\n%+v\n---\n", routePath, payload)
 
             if err := tpl.Render(w, payload); err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)

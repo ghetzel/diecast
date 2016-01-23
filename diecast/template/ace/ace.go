@@ -48,7 +48,7 @@ func (self *AceTemplate) Load(key string) error {
 }
 
 
-func (self *AceTemplate) Render(output io.Writer, payload interface{}) error {
+func (self *AceTemplate) Render(output io.Writer, payload map[string]interface{}) error {
     if self.template != nil {
         return self.template.Execute(output, payload)
     }else{
