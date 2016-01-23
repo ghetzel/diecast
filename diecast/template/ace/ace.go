@@ -6,8 +6,8 @@ import (
     "io"
     "os"
     "github.com/yosssi/ace"
-    diecast "github.com/ghetzel/diecast/template"
-    "github.com/ghetzel/diecast/functions"
+    diecast "github.com/ghetzel/diecast/diecast/template"
+    "github.com/ghetzel/diecast/diecast/functions"
 )
 
 type AceTemplate struct {

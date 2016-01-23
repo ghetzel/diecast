@@ -1,4 +1,4 @@
-package main
+package diecast
 
 import (
     "fmt"
@@ -14,8 +14,8 @@ import (
     "github.com/codegangsta/negroni"
     "github.com/shutterstock/go-stockutil/stringutil"
 
-    "github.com/ghetzel/diecast/template"
-    "github.com/ghetzel/diecast/template/ace"
+    "github.com/ghetzel/diecast/diecast/template"
+    "github.com/ghetzel/diecast/diecast/template/ace"
 
     log "github.com/Sirupsen/logrus"
 )

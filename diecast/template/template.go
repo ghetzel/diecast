@@ -4,7 +4,7 @@ import (
     "io"
 )
 
-const DEFAULT_TEMPLATE_PATH = `./templates`
+const DEFAULT_TEMPLATE_PATH = `templates`
 
 type ITemplate interface {
     Load(string) error

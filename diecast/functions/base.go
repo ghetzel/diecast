@@ -4,7 +4,7 @@ import (
     "html/template"
     "strconv"
     "github.com/shutterstock/go-stockutil/stringutil"
-    "github.com/ghetzel/diecast/util"
+    "github.com/ghetzel/diecast/diecast/util"
 )
 
 func GetBaseFunctions() template.FuncMap {

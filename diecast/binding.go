@@ -1,4 +1,4 @@
-package main
+package diecast
 
 import (
     "encoding/json"

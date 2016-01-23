@@ -4,8 +4,9 @@ import (
     "os"
     log "github.com/Sirupsen/logrus"
     "github.com/codegangsta/cli"
-    "github.com/ghetzel/diecast/util"
-    "github.com/ghetzel/diecast/template"
+    "github.com/ghetzel/diecast/diecast"
+    "github.com/ghetzel/diecast/diecast/util"
+    "github.com/ghetzel/diecast/diecast/template"
 )
 
 func main() {
@@ -41,19 +42,19 @@ func main() {
                 cli.StringFlag{
                     Name:   `config-file, c`,
                     Usage:  `Path to the configuration file to use`,
-                    Value:  DEFAULT_CONFIG_PATH,
+                    Value:  diecast.DEFAULT_CONFIG_PATH,
                     EnvVar: `CONFIG_FILE`,
                 },
                 cli.StringFlag{
                     Name:   `address, a`,
                     Usage:  `Address the HTTP server should listen on`,
-                    Value:  DEFAULT_SERVE_ADDRESS,
+                    Value:  diecast.DEFAULT_SERVE_ADDRESS,
                     EnvVar: `HTTP_ADDR`,
                 },
                 cli.IntFlag{
                     Name:   `port, p`,
                     Usage:  `TCP port the HTTP server should listen on`,
-                    Value:  DEFAULT_SERVE_PORT,
+                    Value:  diecast.DEFAULT_SERVE_PORT,
                     EnvVar: `HTTP_PORT`,
                 },
                 cli.StringFlag{
@@ -65,12 +66,12 @@ func main() {
                 cli.StringFlag{
                     Name:   `static-dir, S`,
                     Usage:  `Path where static assets are located`,
-                    Value:  DEFAULT_STATIC_PATH,
+                    Value:  diecast.DEFAULT_STATIC_PATH,
                     EnvVar: `STATIC_PATH`,
                 },
             },
             Action:      func(c *cli.Context){
-                server := NewServer()
+                server := diecast.NewServer()
 
                 server.Address      = c.String(`address`)
                 server.Port         = c.Int(`port`)
