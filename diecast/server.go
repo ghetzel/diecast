@@ -14,6 +14,7 @@ import (
     "github.com/codegangsta/negroni"
     "github.com/shutterstock/go-stockutil/stringutil"
 
+    "github.com/ghetzel/diecast/diecast/util"
     "github.com/ghetzel/diecast/diecast/template"
     "github.com/ghetzel/diecast/diecast/template/ace"
 
@@ -33,6 +34,7 @@ type Server struct {
     TemplatePath string
     Templates    map[string]template.ITemplate
     StaticPath   string
+    LogLevel     string
 
     router       *httprouter.Router
     server       *negroni.Negroni
@@ -51,6 +53,10 @@ func NewServer() *Server {
 }
 
 func (self *Server) Initialize() error {
+    if self.LogLevel != `` {
+        util.ParseLogLevel(self.LogLevel)
+    }
+
     if data, err := ioutil.ReadFile(self.ConfigPath); err == nil {
         if config, err := LoadConfig(data); err == nil {
             if err := self.PopulateBindings(config.Bindings); err != nil {
