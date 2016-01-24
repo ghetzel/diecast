@@ -6,7 +6,7 @@ import (
     "github.com/codegangsta/cli"
     "github.com/ghetzel/diecast/diecast"
     "github.com/ghetzel/diecast/diecast/util"
-    "github.com/ghetzel/diecast/diecast/template"
+    "github.com/ghetzel/diecast/diecast/engines"
 )
 
 func main() {
@@ -60,7 +60,7 @@ func main() {
                 cli.StringFlag{
                     Name:   `templates-dir, T`,
                     Usage:  `Root path where templates are stored`,
-                    Value:  template.DEFAULT_TEMPLATE_PATH,
+                    Value:  engines.DEFAULT_TEMPLATE_PATH,
                     EnvVar: `TEMPLATES_DIR`,
                 },
                 cli.StringFlag{

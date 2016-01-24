@@ -15,9 +15,8 @@ import (
     "github.com/shutterstock/go-stockutil/stringutil"
 
     "github.com/ghetzel/diecast/diecast/util"
-    "github.com/ghetzel/diecast/diecast/template"
-    "github.com/ghetzel/diecast/diecast/template/ace"
-    "github.com/ghetzel/diecast/diecast/template/pongo"
+    "github.com/ghetzel/diecast/diecast/engines"
+    "github.com/ghetzel/diecast/diecast/engines/pongo"
 
     log "github.com/Sirupsen/logrus"
 )
@@ -33,7 +32,7 @@ type Server struct {
     Bindings     map[string]Binding
     ConfigPath   string
     TemplatePath string
-    Templates    map[string]template.ITemplate
+    Templates    map[string]engines.ITemplate
     StaticPath   string
     LogLevel     string
 
@@ -46,9 +45,9 @@ func NewServer() *Server {
         Address:      DEFAULT_SERVE_ADDRESS,
         Port:         DEFAULT_SERVE_PORT,
         ConfigPath:   DEFAULT_CONFIG_PATH,
-        TemplatePath: template.DEFAULT_TEMPLATE_PATH,
+        TemplatePath: engines.DEFAULT_TEMPLATE_PATH,
         Bindings:     make(map[string]Binding),
-        Templates:    make(map[string]template.ITemplate),
+        Templates:    make(map[string]engines.ITemplate),
         StaticPath:   DEFAULT_STATIC_PATH,
     }
 }
@@ -83,12 +82,10 @@ func (self *Server) LoadTemplates() error {
             key := strings.TrimSuffix(strings.TrimPrefix(filename, path.Clean(self.TemplatePath)+`/`), ext)
 
             if _, ok := self.Templates[key]; !ok {
-                var tpl template.ITemplate
+                var tpl engines.ITemplate
                 var err error
 
                 switch ext {
-                case `.ace`:
-                    tpl = ace.New()
                 case `.pongo`:
                     tpl = pongo.New()
                 default:
@@ -98,7 +95,7 @@ func (self *Server) LoadTemplates() error {
                 if err == nil {
                     tpl.SetTemplateDir(self.TemplatePath)
 
-                    log.Debugf("Load template %T: [%s] %s", tpl, key, tpl.GetTemplateDir())
+                    log.Debugf("Load template at %s: %T: [%s] %s", filename, tpl, key, tpl.GetTemplateDir())
 
                     if err := tpl.Load(key); err == nil {
                         self.Templates[key] = tpl
@@ -124,7 +121,7 @@ func (self *Server) Serve() error {
     self.router.GET(`/*path`, func(w http.ResponseWriter, req *http.Request, params httprouter.Params){
         routePath  := params.ByName(`path`)
         tplKey     := routePath
-        var tpl template.ITemplate
+        var tpl engines.ITemplate
 
         if tplKey == `/` {
             tplKey = `/index`
@@ -137,7 +134,10 @@ func (self *Server) Serve() error {
             key := strings.Join(parts[0:len(parts) - i], `/`)
             // log.Infof("Trying: %s", key)
 
-            if t, ok := self.Templates[key]; ok {
+            if t, ok := self.Templates[key + `/index`]; ok {
+                tpl = t
+                break
+            }else if t, ok := self.Templates[key]; ok {
                 tpl = t
                 break
             }
@@ -177,7 +177,7 @@ func (self *Server) Serve() error {
 
             payload[`data`] = bindingData
 
-            log.Infof("Data for %s\n---\n%+v\n---\n", routePath, payload)
+            log.Debugf("Data for %s\n---\n%+v\n---\n", routePath, payload)
 
             if err := tpl.Render(w, payload); err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
