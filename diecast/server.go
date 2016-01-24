@@ -77,37 +77,39 @@ func (self *Server) Initialize() error {
 
 func (self *Server) LoadTemplates() error {
     return filepath.Walk(self.TemplatePath, func(filename string, info os.FileInfo, err error) error {
-        if info.Mode().IsRegular() && !strings.HasPrefix(path.Base(filename), `_`) {
-            ext := path.Ext(filename)
-            key := strings.TrimSuffix(strings.TrimPrefix(filename, path.Clean(self.TemplatePath)+`/`), ext)
+        if err == nil {
+            if info.Mode().IsRegular() && !strings.HasPrefix(path.Base(filename), `_`) {
+                ext := path.Ext(filename)
+                key := strings.TrimSuffix(strings.TrimPrefix(filename, path.Clean(self.TemplatePath)+`/`), ext)
 
-            if _, ok := self.Templates[key]; !ok {
-                var tpl engines.ITemplate
-                var err error
+                if _, ok := self.Templates[key]; !ok {
+                    var tpl engines.ITemplate
+                    var err error
 
-                switch ext {
-                case `.pongo`:
-                    tpl = pongo.New()
-                default:
-                    return nil
-                }
-
-                if err == nil {
-                    tpl.SetTemplateDir(self.TemplatePath)
-
-                    log.Debugf("Load template at %s: %T: [%s] %s", filename, tpl, key, tpl.GetTemplateDir())
-
-                    if err := tpl.Load(key); err == nil {
-                        self.Templates[key] = tpl
-                    }else{
-                        log.Warnf("Error loading template '%s': %v", filename, err)
+                    switch ext {
+                    case `.pongo`:
+                        tpl = pongo.New()
+                    default:
                         return nil
                     }
+
+                    if err == nil {
+                        tpl.SetTemplateDir(self.TemplatePath)
+
+                        log.Debugf("Load template at %s: %T: [%s] %s", filename, tpl, key, tpl.GetTemplateDir())
+
+                        if err := tpl.Load(key); err == nil {
+                            self.Templates[key] = tpl
+                        }else{
+                            log.Warnf("Error loading template '%s': %v", filename, err)
+                            return nil
+                        }
+                    }else{
+                        return err
+                    }
                 }else{
-                    return err
+                    log.Warnf("Cannot load template '%s', key was already loaded", filename)
                 }
-            }else{
-                log.Warnf("Cannot load template '%s', key was already loaded", filename)
             }
         }
 
