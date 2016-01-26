@@ -24,6 +24,14 @@ const (
     MethodPatch             = 64
 )
 
+type BindingConfig struct {
+    Routes         []string          `json:"routes"`
+    Resource       string            `json:"resource"`
+    ResourceParams map[string]string `json:"params,omitempty"`
+    RouteMethods   []string          `json:"route_methods,omitempty"`
+    ResourceMethod string            `json:"resource_method,omitempty"`
+}
+
 type Binding struct {
     Routes         []*regexp.Regexp
     RouteMethods   HttpMethod
