@@ -69,6 +69,12 @@ func main() {
                     Value:  diecast.DEFAULT_STATIC_PATH,
                     EnvVar: `STATIC_PATH`,
                 },
+                cli.StringFlag{
+                    Name:   `route-prefix`,
+                    Usage:  `The path prepended to all HTTP requests`,
+                    Value:  diecast.DEFAULT_ROUTE_PREFIX,
+                    EnvVar: `ROUTE_PREFIX`,
+                },
             },
             Action:      func(c *cli.Context){
                 server := diecast.NewServer()
@@ -78,9 +84,10 @@ func main() {
                 server.ConfigPath   = c.String(`config-file`)
                 server.StaticPath   = c.String(`static-dir`)
                 server.TemplatePath = c.String(`templates-dir`)
+                server.RoutePrefix  = c.String(`route-prefix`)
 
                 if err := server.Initialize(); err == nil {
-                    log.Infof("Starting HTTP server at %s:%d", server.Address, server.Port)
+                    log.Infof("Starting HTTP server at http://%s:%d", server.Address, server.Port)
                     server.Serve()
                 }else{
                     log.Fatalf("Failed to start HTTP server: %v", err)

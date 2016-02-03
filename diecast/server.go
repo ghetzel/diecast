@@ -25,6 +25,7 @@ const DEFAULT_CONFIG_PATH   = `diecast.yml`
 const DEFAULT_STATIC_PATH   = `public`
 const DEFAULT_SERVE_ADDRESS = `127.0.0.1`
 const DEFAULT_SERVE_PORT    = 28419
+const DEFAULT_ROUTE_PREFIX  = `/`
 
 type Server struct {
     Address      string
@@ -35,6 +36,7 @@ type Server struct {
     Templates    map[string]engines.ITemplate
     StaticPath   string
     LogLevel     string
+    RoutePrefix  string
 
     router       *httprouter.Router
     server       *negroni.Negroni
@@ -49,6 +51,7 @@ func NewServer() *Server {
         Bindings:     make(map[string]Binding),
         Templates:    make(map[string]engines.ITemplate),
         StaticPath:   DEFAULT_STATIC_PATH,
+        RoutePrefix:  DEFAULT_ROUTE_PREFIX,
     }
 }
 
@@ -117,12 +120,14 @@ func (self *Server) LoadTemplates() error {
 func (self *Server) Serve() error {
     self.router = httprouter.New()
 
-    self.router.GET(`/*path`, func(w http.ResponseWriter, req *http.Request, params httprouter.Params){
+    self.RoutePrefix = strings.TrimSuffix(self.RoutePrefix, `/`)
+
+    self.router.GET(fmt.Sprintf("%s/*path", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request, params httprouter.Params){
         routePath  := params.ByName(`path`)
         tplKey     := routePath
         var tpl engines.ITemplate
 
-        if tplKey == `/` {
+        if tplKey == `/` || tplKey == `` {
             tplKey = `/index`
         }
 
@@ -187,9 +192,15 @@ func (self *Server) Serve() error {
         }
     })
 
+    staticHandler := negroni.NewStatic( http.Dir(self.StaticPath) )
+
+    if self.RoutePrefix != DEFAULT_ROUTE_PREFIX {
+        staticHandler.Prefix = self.RoutePrefix
+    }
+
     self.server = negroni.New()
     self.server.Use(negroni.NewRecovery())
-    self.server.Use(negroni.NewStatic( http.Dir(self.StaticPath) ))
+    self.server.Use(staticHandler)
     self.server.UseHandler(self.router)
 
     self.server.Run(fmt.Sprintf("%s:%d", self.Address, self.Port))
