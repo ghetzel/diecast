@@ -21,11 +21,14 @@ import (
     log "github.com/Sirupsen/logrus"
 )
 
-const DEFAULT_CONFIG_PATH   = `diecast.yml`
-const DEFAULT_STATIC_PATH   = `public`
-const DEFAULT_SERVE_ADDRESS = `127.0.0.1`
-const DEFAULT_SERVE_PORT    = 28419
-const DEFAULT_ROUTE_PREFIX  = `/`
+const DEFAULT_CONFIG_PATH    = `diecast.yml`
+const DEFAULT_STATIC_PATH    = `public`
+const DEFAULT_SERVE_ADDRESS  = `127.0.0.1`
+const DEFAULT_SERVE_PORT     = 28419
+const DEFAULT_ROUTE_PREFIX   = `/`
+
+var ParamDelimPre            = `#{`
+var ParamDelimPost           = `}`
 
 type Server struct {
     Address      string
@@ -157,15 +160,22 @@ func (self *Server) Serve() error {
         if tpl != nil {
             routeBindings    := self.GetBindings(req.Method, routePath, req)
             allParams        := make(map[string]interface{})
-            payload          := map[string]interface{}{
-                `route`:  params.ByName(`path`),
-                `params`: allParams,
-            }
+            allRouteParams   := make(map[string]interface{})
 
             for _, binding := range routeBindings {
                 for k, v := range binding.ResourceParams {
                     allParams[k] = v
                 }
+
+                for k, v := range binding.RouteParams {
+                    allRouteParams[k] = v
+                }
+            }
+
+            payload          := map[string]interface{}{
+                `route`:        params.ByName(`path`),
+                `route_params`: allRouteParams,
+                `params`:       allParams,
             }
 
             bindingData := make(map[string]interface{})
@@ -219,24 +229,35 @@ func (self *Server) GetBindings(method string, routePath string, req *http.Reque
                     for i, matchGroupName := range rx.SubexpNames() {
                         if matchGroupName != `` {
                             newUrl := *binding.Resource
-                            newUrl.Path = strings.Replace(newUrl.Path, `:`+matchGroupName, match[i], -1)
 
+                        //  generate the final request path with params expanded from the 'resource' config
+                            newUrl.Path = strings.Replace(newUrl.Path, (ParamDelimPre + matchGroupName + ParamDelimPost), match[i], -1)
+
+                        //  expand parameters from the 'params' config
                             for qs, v := range newUrl.Query() {
-                                qsv := strings.Replace(v[0], `:`+matchGroupName, match[i], -1)
+                                qsv := strings.Replace(v[0], (ParamDelimPre + matchGroupName + ParamDelimPost), match[i], -1)
                                 binding.ResourceParams[qs] = qsv
+                                binding.RouteParams[matchGroupName] = match[i]
                             }
 
+                        //  passthrough querystring parameters supplied in the reuquest itself as overrides
                             for qs, v := range req.URL.Query() {
                                 if len(v) > 0 {
                                     binding.ResourceParams[qs] = v[0]
+                                    binding.RouteParams[qs] = v[0]
                                 }
                             }
 
+                        //  build raw querystring
                             rawQuery := make([]string, 0)
 
                             for k, v := range binding.ResourceParams {
                                 if str, err := stringutil.ToString(v); err == nil {
-                                    rawQuery = append(rawQuery, k + `=` + url.QueryEscape(str))
+                                    if binding.EscapeParams {
+                                        str = url.QueryEscape(str)
+                                    }
+
+                                    rawQuery = append(rawQuery, k + `=` + str)
                                 }
                             }
 
@@ -263,6 +284,8 @@ func (self *Server) PopulateBindings(bindings map[string]BindingConfig) error {
     for name, bindingConfig := range bindings {
         binding := Binding{
             ResourceParams: make(map[string]interface{}),
+            RouteParams:    make(map[string]interface{}),
+            EscapeParams:   bindingConfig.EscapeParams,
         }
 
         if len(bindingConfig.RouteMethods) == 0 {
