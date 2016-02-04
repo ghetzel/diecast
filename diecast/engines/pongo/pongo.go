@@ -6,7 +6,6 @@ import (
     "os"
     "github.com/flosch/pongo2"
     "github.com/ghetzel/diecast/diecast/engines"
-    // "github.com/ghetzel/diecast/diecast/functions"
 )
 
 type PongoTemplate struct {
@@ -15,6 +14,13 @@ type PongoTemplate struct {
     template *pongo2.Template
 }
 
+func Initialize() error {
+    for name, funcdef := range GetBaseFunctions() {
+        pongo2.RegisterFilter(name, funcdef)
+    }
+
+    return nil
+}
 
 func New() engines.ITemplate {
     return &PongoTemplate{}

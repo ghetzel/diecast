@@ -59,10 +59,6 @@ func (self *Binding) Evaluate(req *http.Request, params httprouter.Params) (inte
 
     reqUrl := self.Resource.String()
 
-    if qs := self.Resource.RawQuery; qs != `` {
-        reqUrl = reqUrl + `?` + qs
-    }
-
     if bindingReq, err := http.NewRequest(method, reqUrl, nil); err == nil {
         client := &http.Client{}
 

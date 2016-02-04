@@ -82,6 +82,10 @@ func (self *Server) Initialize() error {
 }
 
 func (self *Server) LoadTemplates() error {
+    if err := pongo.Initialize(); err != nil {
+        return nil
+    }
+
     return filepath.Walk(self.TemplatePath, func(filename string, info os.FileInfo, err error) error {
         log.Debugf("File in template path: %s (err: %v)", filename, err)
 
@@ -191,7 +195,7 @@ func (self *Server) Serve() error {
 
             payload[`data`] = bindingData
 
-            log.Debugf("Data for %s\n---\n%+v\n---\n", routePath, payload)
+            // log.Debugf("Data for %s\n---\n%+v\n---\n", routePath, payload)
 
             if err := tpl.Render(w, payload); err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -228,7 +232,7 @@ func (self *Server) GetBindings(method string, routePath string, req *http.Reque
                 if match := rx.FindStringSubmatch(routePath); match != nil {
                     for i, matchGroupName := range rx.SubexpNames() {
                         if matchGroupName != `` {
-                            newUrl := *binding.Resource
+                            newUrl       := *binding.Resource
 
                         //  generate the final request path with params expanded from the 'resource' config
                             newUrl.Path = strings.Replace(newUrl.Path, (ParamDelimPre + matchGroupName + ParamDelimPost), match[i], -1)
@@ -236,6 +240,7 @@ func (self *Server) GetBindings(method string, routePath string, req *http.Reque
                         //  expand parameters from the 'params' config
                             for qs, v := range newUrl.Query() {
                                 qsv := strings.Replace(v[0], (ParamDelimPre + matchGroupName + ParamDelimPost), match[i], -1)
+
                                 binding.ResourceParams[qs] = qsv
                                 binding.RouteParams[matchGroupName] = match[i]
                             }
@@ -249,7 +254,7 @@ func (self *Server) GetBindings(method string, routePath string, req *http.Reque
                             }
 
                         //  build raw querystring
-                            rawQuery := make([]string, 0)
+                            newUrlValues := newUrl.Query()
 
                             for k, v := range binding.ResourceParams {
                                 if str, err := stringutil.ToString(v); err == nil {
@@ -257,11 +262,14 @@ func (self *Server) GetBindings(method string, routePath string, req *http.Reque
                                         str = url.QueryEscape(str)
                                     }
 
-                                    rawQuery = append(rawQuery, k + `=` + str)
+                                    log.Debugf("Setting resource param %s='%s'", k, v)
+                                    newUrlValues.Set(k, str)
                                 }
                             }
 
-                            newUrl.RawQuery = strings.Join(rawQuery, `&`)
+                            newUrl.RawQuery = newUrlValues.Encode()
+
+                            log.Debugf("Resource URL: %+v (%s)", newUrl, newUrlValues.Encode())
 
                             binding.Resource = &newUrl
                         }
