@@ -13,13 +13,13 @@ type MountProxy struct {
 }
 
 func (self *MountProxy) Open(name string) (http.File, error) {
-    log.Debugf("MountProxy: Open('%s')", name)
+    if self.Mounts != nil {
+        for i, mount := range self.Mounts {
+            if mount.WillRespondTo(name) {
+                log.Debugf("MountProxy: mount[%d] '%s' responding to %s", i, mount.MountPoint, name)
 
-    for i, mount := range self.Mounts {
-        if mount.WillRespondTo(name) {
-            log.Debugf("MountProxy: mount[%d] '%s' responding to %s", i, mount.MountPoint, name)
-
-            return mount.Open(name)
+                return mount.Open(name)
+            }
         }
     }
 

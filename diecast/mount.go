@@ -26,7 +26,6 @@ func (self *Mount) Initialize() error {
 }
 
 func (self *Mount) WillRespondTo(name string) bool {
-    log.Debugf("Does %s start with %s?", name, self.MountPoint)
     return strings.HasPrefix(name, self.MountPoint)
 }
 

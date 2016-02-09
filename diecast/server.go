@@ -53,7 +53,7 @@ func NewServer() *Server {
         ConfigPath:   DEFAULT_CONFIG_PATH,
         TemplatePath: engines.DEFAULT_TEMPLATE_PATH,
         Bindings:     make(map[string]Binding),
-        MountProxy:   new(MountProxy),
+        MountProxy:   &MountProxy{},
         Templates:    make(map[string]engines.ITemplate),
         StaticPath:   DEFAULT_STATIC_PATH,
         RoutePrefix:  DEFAULT_ROUTE_PREFIX,
@@ -75,9 +75,11 @@ func (self *Server) Initialize() error {
                 return fmt.Errorf("Failed to initialize mounts: %v", err)
             }
         }else{
-            return fmt.Errorf("Cannot load bindings.yml: %v", err)
+            return fmt.Errorf("Cannot load configuration at %s: %v", self.ConfigPath, err)
         }
     }
+
+    self.MountProxy.Fallback = http.Dir(self.StaticPath)
 
     if err := self.LoadTemplates(); err != nil {
         return err
@@ -361,8 +363,6 @@ func (self *Server) InitializeMounts(mountsConfig []Mount) error {
         mounts = append(mounts, mount)
     }
 
-    self.MountProxy.Mounts   = mounts
-    self.MountProxy.Fallback = http.Dir(self.StaticPath)
-
+    self.MountProxy.Mounts = mounts
     return nil
 }
