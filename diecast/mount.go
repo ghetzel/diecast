@@ -11,8 +11,9 @@ import (
 type Mount struct {
     http.FileSystem
 
-    MountPoint string  `json:"mount"`
-    Path       string  `json:"path"`
+    MountPoint  string  `json:"mount"`
+    Path        string  `json:"path"`
+    Passthrough bool    `json:"passthrough"`
 }
 
 func (self *Mount) Initialize() error {
@@ -31,8 +32,5 @@ func (self *Mount) WillRespondTo(name string) bool {
 
 func (self *Mount) Open(name string) (http.File, error) {
     newPath := path.Join(strings.TrimSuffix(self.Path, `/`), strings.TrimPrefix(name, self.MountPoint))
-
-    log.Debugf("Opening path '%s'", newPath)
-
     return os.Open(newPath)
 }
