@@ -6,6 +6,7 @@ import (
 
 type Config struct {
     Bindings map[string]BindingConfig `json:"bindings"`
+    Mounts   []Mount                  `json:"mounts"`
 }
 
 func LoadConfig(data []byte) (Config, error) {

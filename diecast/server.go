@@ -22,7 +22,7 @@ import (
 )
 
 const DEFAULT_CONFIG_PATH    = `diecast.yml`
-const DEFAULT_STATIC_PATH    = `public`
+const DEFAULT_STATIC_PATH    = `static`
 const DEFAULT_SERVE_ADDRESS  = `127.0.0.1`
 const DEFAULT_SERVE_PORT     = 28419
 const DEFAULT_ROUTE_PREFIX   = `/`
@@ -34,6 +34,7 @@ type Server struct {
     Address      string
     Port         int
     Bindings     map[string]Binding
+    MountProxy   *MountProxy
     ConfigPath   string
     TemplatePath string
     Templates    map[string]engines.ITemplate
@@ -52,6 +53,7 @@ func NewServer() *Server {
         ConfigPath:   DEFAULT_CONFIG_PATH,
         TemplatePath: engines.DEFAULT_TEMPLATE_PATH,
         Bindings:     make(map[string]Binding),
+        MountProxy:   new(MountProxy),
         Templates:    make(map[string]engines.ITemplate),
         StaticPath:   DEFAULT_STATIC_PATH,
         RoutePrefix:  DEFAULT_ROUTE_PREFIX,
@@ -69,6 +71,9 @@ func (self *Server) Initialize() error {
                 return fmt.Errorf("Cannot populate bindings: %v", err)
             }
 
+            if err := self.InitializeMounts(config.Mounts); err != nil {
+                return fmt.Errorf("Failed to initialize mounts: %v", err)
+            }
         }else{
             return fmt.Errorf("Cannot load bindings.yml: %v", err)
         }
@@ -206,7 +211,7 @@ func (self *Server) Serve() error {
         }
     })
 
-    staticHandler := negroni.NewStatic( http.Dir(self.StaticPath) )
+    staticHandler := negroni.NewStatic(self.MountProxy)
 
     if self.RoutePrefix != DEFAULT_ROUTE_PREFIX {
         staticHandler.Prefix = self.RoutePrefix
@@ -338,6 +343,26 @@ func (self *Server) PopulateBindings(bindings map[string]BindingConfig) error {
         log.Infof("Setting up binding %s: %+v", name, binding)
         self.Bindings[name] = binding
     }
+
+    return nil
+}
+
+
+func (self *Server) InitializeMounts(mountsConfig []Mount) error {
+    mounts := make([]Mount, 0)
+
+    for _, mount := range mountsConfig {
+        log.Debugf("Initializing mount at %s", mount.Path)
+
+        if err := mount.Initialize(); err != nil {
+            return err
+        }
+
+        mounts = append(mounts, mount)
+    }
+
+    self.MountProxy.Mounts   = mounts
+    self.MountProxy.Fallback = http.Dir(self.StaticPath)
 
     return nil
 }
