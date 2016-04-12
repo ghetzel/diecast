@@ -1,9 +1,10 @@
-all: build
+all: fmt build
+
+deps:
+	go get .
+
+fmt:
+	gofmt -w .
 
 build:
-	./build.sh
-debug:
-	DEBUG=true ./build.sh
-
-clean:
-	git clean -fd
+	go build -o bin/`basename ${PWD}`

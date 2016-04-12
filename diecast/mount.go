@@ -1,36 +1,36 @@
 package diecast
 
 import (
-    "net/http"
-    "os"
-    "path"
-    "strings"
-    log "github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
+	"net/http"
+	"os"
+	"path"
+	"strings"
 )
 
 type Mount struct {
-    http.FileSystem
+	http.FileSystem
 
-    MountPoint  string  `json:"mount"`
-    Path        string  `json:"path"`
-    Passthrough bool    `json:"passthrough"`
+	MountPoint  string `json:"mount"`
+	Path        string `json:"path"`
+	Passthrough bool   `json:"passthrough"`
 }
 
 func (self *Mount) Initialize() error {
-    if _, err := os.Stat(self.Path); err != nil {
-        return err
-    }
+	if _, err := os.Stat(self.Path); err != nil {
+		return err
+	}
 
-    log.Debugf("Initialize mount '%s' -> '%s'", self.MountPoint, self.Path)
+	log.Debugf("Initialize mount '%s' -> '%s'", self.MountPoint, self.Path)
 
-    return nil
+	return nil
 }
 
 func (self *Mount) WillRespondTo(name string) bool {
-    return strings.HasPrefix(name, self.MountPoint)
+	return strings.HasPrefix(name, self.MountPoint)
 }
 
 func (self *Mount) Open(name string) (http.File, error) {
-    newPath := path.Join(strings.TrimSuffix(self.Path, `/`), strings.TrimPrefix(name, self.MountPoint))
-    return os.Open(newPath)
+	newPath := path.Join(strings.TrimSuffix(self.Path, `/`), strings.TrimPrefix(name, self.MountPoint))
+	return os.Open(newPath)
 }

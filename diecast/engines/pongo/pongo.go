@@ -1,52 +1,51 @@
 package pongo
 
 import (
-    "fmt"
-    "io"
-    "os"
-    "github.com/flosch/pongo2"
-    "github.com/ghetzel/diecast/diecast/engines"
+	"fmt"
+	"github.com/flosch/pongo2"
+	"github.com/ghetzel/diecast/diecast/engines"
+	"io"
+	"os"
 )
 
 type PongoTemplate struct {
-    engines.Template
+	engines.Template
 
-    template *pongo2.Template
+	template *pongo2.Template
 }
 
 func Initialize() error {
-    for name, funcdef := range GetBaseFunctions() {
-        pongo2.RegisterFilter(name, funcdef)
-    }
+	for name, funcdef := range GetBaseFunctions() {
+		pongo2.RegisterFilter(name, funcdef)
+	}
 
-    return nil
+	return nil
 }
 
 func New() engines.ITemplate {
-    return &PongoTemplate{}
+	return &PongoTemplate{}
 }
 
 func (self *PongoTemplate) Load(key string) error {
-    tplPath := fmt.Sprintf("%s/%s.pongo", self.GetTemplateDir(), key)
+	tplPath := fmt.Sprintf("%s/%s.pongo", self.GetTemplateDir(), key)
 
-    if _, err := os.Stat(tplPath); err == nil {
-        if tpl, err := pongo2.FromFile(tplPath); err == nil {
-            self.template = tpl
-            return nil
-        }else{
-            return err
-        }
-        return nil
-    }else{
-        return err
-    }
+	if _, err := os.Stat(tplPath); err == nil {
+		if tpl, err := pongo2.FromFile(tplPath); err == nil {
+			self.template = tpl
+			return nil
+		} else {
+			return err
+		}
+		return nil
+	} else {
+		return err
+	}
 }
 
-
 func (self *PongoTemplate) Render(output io.Writer, payload map[string]interface{}) error {
-    if self.template != nil {
-        return self.template.ExecuteWriter(pongo2.Context(payload), output)
-    }else{
-        return fmt.Errorf("Cannot execute nil template")
-    }
+	if self.template != nil {
+		return self.template.ExecuteWriter(pongo2.Context(payload), output)
+	} else {
+		return fmt.Errorf("Cannot execute nil template")
+	}
 }
