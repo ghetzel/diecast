@@ -1,8 +1,12 @@
 package diecast
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/codegangsta/negroni"
+	"github.com/ghetzel/diecast/diecast/engines"
+	"github.com/ghetzel/diecast/diecast/engines/pongo"
+	"github.com/ghetzel/diecast/diecast/util"
 	"github.com/julienschmidt/httprouter"
 	"github.com/shutterstock/go-stockutil/stringutil"
 	"io/ioutil"
@@ -13,10 +17,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/ghetzel/diecast/diecast/engines"
-	"github.com/ghetzel/diecast/diecast/engines/pongo"
-	"github.com/ghetzel/diecast/diecast/util"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -42,6 +42,7 @@ type Server struct {
 	LogLevel     string
 	RoutePrefix  string
 
+	mux    *http.ServeMux
 	router *httprouter.Router
 	server *negroni.Negroni
 }
@@ -132,6 +133,7 @@ func (self *Server) LoadTemplates() error {
 }
 
 func (self *Server) Serve() error {
+	self.mux = http.NewServeMux()
 	self.router = httprouter.New()
 
 	self.RoutePrefix = strings.TrimSuffix(self.RoutePrefix, `/`)
@@ -218,10 +220,28 @@ func (self *Server) Serve() error {
 		staticHandler.Prefix = self.RoutePrefix
 	}
 
+	self.mux.HandleFunc(`/_bindings`, func(w http.ResponseWriter, req *http.Request) {
+		if req.URL.Path == `/_bindings` {
+			if data, err := json.Marshal(self.Bindings); err == nil {
+				w.Header().Set(`Content-Type`, `application/json`)
+
+				if _, err := w.Write(data); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+	})
+
+	self.mux.Handle(`/`, self.router)
+
 	self.server = negroni.New()
 	self.server.Use(negroni.NewRecovery())
 	self.server.Use(staticHandler)
-	self.server.UseHandler(self.router)
+	self.server.UseHandler(self.mux)
 
 	self.server.Run(fmt.Sprintf("%s:%d", self.Address, self.Port))
 	return nil

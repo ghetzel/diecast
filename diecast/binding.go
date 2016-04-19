@@ -35,13 +35,13 @@ type BindingConfig struct {
 }
 
 type Binding struct {
-	Routes         []*regexp.Regexp
-	RouteMethods   HttpMethod
-	RouteParams    map[string]interface{}
-	ResourceMethod HttpMethod
-	Resource       *url.URL
-	ResourceParams map[string]interface{}
-	EscapeParams   bool
+	Routes         []*regexp.Regexp       `json:"routes"`
+	RouteMethods   HttpMethod             `json:"route_methods"`
+	RouteParams    map[string]interface{} `json:"route_params"`
+	ResourceMethod HttpMethod             `json:"resource_method"`
+	Resource       *url.URL               `json:"resource"`
+	ResourceParams map[string]interface{} `json:"resource_params"`
+	EscapeParams   bool                   `json:"escape_params"`
 }
 
 func (self *Binding) Evaluate(req *http.Request, params httprouter.Params) (interface{}, error) {

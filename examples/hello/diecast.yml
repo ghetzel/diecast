@@ -1,0 +1,36 @@
+---
+bindings:
+# create a binding called "my_api_endpoint" that is automatically evaluated for all
+# routes (i.e. any starting with "/") requested via the GET method
+#
+# The request will be proxied to the given 'resource' URL using the 'resource_method'
+# HTTP method (GET by default).  The upstream request will include the `query_string_key1'
+# query string parameter, which will be equal to the route query string
+# parameter 'request_query_string_key1'
+#
+  my_api_endpoint:
+    routes:          ['^/']
+    route_methods:   ['GET']
+    resource:        "http://my-api.example.com/api/path/to/endpoint"
+    resource_method: 'GET'
+    params:
+      query_string_key1: :request_query_string_key1
+
+  other_api_endpoint:
+    routes:          ['^/orders']
+    resource:        "http://my-api.example.com/api/other/endpoint"
+
+
+mounts:
+# expose the server-side directory '/usr/local/share/thing-shared' under the top-level URL path '/assets'
+#
+- mount: /assets
+  path:  /usr/local/share/thing-shared
+
+# expose the server-side directory '/usr/share/thing-shared' under the top-level URL path '/assets'
+# but return a 404 if the requested file isn't there (as opposed to trying any additional
+# mount paths after this one)
+#
+- mount: /assets
+  path:  /usr/share/thing-shared
+  passthrough: false
