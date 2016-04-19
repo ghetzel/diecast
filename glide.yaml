@@ -1,0 +1,11 @@
+package: github.com/ghetzel/diecast
+import:
+- package: github.com/Sirupsen/logrus
+- package: github.com/codegangsta/cli
+- package: github.com/codegangsta/negroni
+- package: github.com/flosch/pongo2
+- package: github.com/ghodss/yaml
+- package: github.com/julienschmidt/httprouter
+- package: github.com/shutterstock/go-stockutil
+  subpackages:
+  - stringutil
