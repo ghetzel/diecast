@@ -35,6 +35,7 @@ type Server struct {
 	Port         int
 	Bindings     map[string]Binding
 	MountProxy   *MountProxy
+	Config       Config
 	ConfigPath   string
 	TemplatePath string
 	Templates    map[string]engines.ITemplate
@@ -68,6 +69,8 @@ func (self *Server) Initialize() error {
 
 	if data, err := ioutil.ReadFile(self.ConfigPath); err == nil {
 		if config, err := LoadConfig(data); err == nil {
+			self.Config = config
+
 			if err := self.PopulateBindings(config.Bindings); err != nil {
 				return fmt.Errorf("Cannot populate bindings: %v", err)
 			}
@@ -380,5 +383,23 @@ func (self *Server) InitializeMounts(mountsConfig []Mount) error {
 	}
 
 	self.MountProxy.Mounts = mounts
+	return nil
+}
+
+func (self *Server) ApplyMatchingRoutesToResponse(w http.ResponseWriter, method string, routePath string, req *http.Request) error {
+	for i, route := range self.Config.Routes {
+		if route.IsMatch(method, routePath, req) {
+			log.Debugf("Configured route %d (%+v %s) matches %s %s", i, route.Methods, route.Path, method, routePath)
+
+			if err := route.Apply(w); err != nil {
+				return err
+			}
+		}
+
+		if route.Final {
+			return nil
+		}
+	}
+
 	return nil
 }

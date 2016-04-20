@@ -5,6 +5,7 @@ import (
 )
 
 type Config struct {
+	Routes   []Route                  `json:"routes"`
 	Bindings map[string]BindingConfig `json:"bindings"`
 	Mounts   []Mount                  `json:"mounts"`
 }
