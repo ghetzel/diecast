@@ -42,6 +42,7 @@ type Server struct {
 	StaticPath   string
 	LogLevel     string
 	RoutePrefix  string
+	Payload      map[string]interface{}
 
 	mux    *http.ServeMux
 	router *httprouter.Router
@@ -59,6 +60,7 @@ func NewServer() *Server {
 		Templates:    make(map[string]engines.ITemplate),
 		StaticPath:   DEFAULT_STATIC_PATH,
 		RoutePrefix:  DEFAULT_ROUTE_PREFIX,
+		Payload:      make(map[string]interface{}),
 	}
 }
 
@@ -83,13 +85,17 @@ func (self *Server) Initialize() error {
 		}
 	}
 
-	self.MountProxy.Fallback = http.Dir(self.StaticPath)
-
 	if err := self.LoadTemplates(); err != nil {
 		return err
 	}
 
+	self.MountProxy.Fallback = http.Dir(self.StaticPath)
+
 	return nil
+}
+
+func (self *Server) SetPayload(key string, value interface{}) {
+	self.Payload[key] = value
 }
 
 func (self *Server) LoadTemplates() error {
@@ -205,6 +211,13 @@ func (self *Server) Serve() error {
 			}
 
 			payload[`data`] = bindingData
+
+			//	add external payload keys
+			for k, v := range self.Payload {
+				if _, ok := payload[k]; !ok {
+					payload[k] = v
+				}
+			}
 
 			// log.Debugf("Data for %s\n---\n%+v\n---\n", routePath, payload)
 
