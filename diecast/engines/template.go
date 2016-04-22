@@ -5,6 +5,7 @@ import (
 )
 
 const DEFAULT_TEMPLATE_PATH = `templates`
+const DEFAULT_TEMPLATE_ENGINE = `golang`
 
 type ITemplate interface {
 	Load(string) error

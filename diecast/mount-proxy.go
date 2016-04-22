@@ -27,7 +27,7 @@ func (self *MountProxy) Open(name string) (http.File, error) {
 		}
 	}
 
-	log.Debugf("MountProxy: fallback mount responding to %s", name)
+	log.Debugf("MountProxy: fallback trying '%s'", name)
 
 	return self.Fallback.Open(name)
 }

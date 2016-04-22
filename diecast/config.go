@@ -5,9 +5,16 @@ import (
 )
 
 type Config struct {
-	Routes   []Route                  `json:"routes"`
-	Bindings map[string]BindingConfig `json:"bindings"`
-	Mounts   []Mount                  `json:"mounts"`
+	Options  GlobalConfig       `json:"options"`
+	Routes   []*Route           `json:"routes"`
+	Bindings map[string]Binding `json:"bindings"`
+	Mounts   []Mount            `json:"mounts"`
+}
+
+type GlobalConfig struct {
+	DefaultEngine string                 `json:"default_engine"`
+	Headers       map[string]string      `json:"headers"`
+	Payload       map[string]interface{} `json:"payload"`
 }
 
 func LoadConfig(data []byte) (Config, error) {

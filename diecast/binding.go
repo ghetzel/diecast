@@ -8,62 +8,41 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strings"
 )
 
-type HttpMethod int
+type Binding struct {
+	Name         string                 `json:"-"`
+	Method       string                 `json:"method"`
+	Resource     string                 `json:"resource"`
+	Params       map[string]interface{} `json:"params"`
+	EscapeParams bool                   `json:"escape_params"`
 
-const (
-	MethodAny     HttpMethod = 0
-	MethodGet                = 1
-	MethodPost               = 2
-	MethodPut                = 4
-	MethodDelete             = 8
-	MethodHead               = 16
-	MethodOptions            = 32
-	MethodPatch              = 64
-)
-
-type BindingConfig struct {
-	Routes         []string          `json:"routes"`
-	Resource       string            `json:"resource"`
-	ResourceParams map[string]string `json:"params,omitempty"`
-	RouteMethods   []string          `json:"route_methods,omitempty"`
-	ResourceMethod string            `json:"resource_method,omitempty"`
-	EscapeParams   bool              `json:"escape_params,omitempty"`
+	url *url.URL
 }
 
-type Binding struct {
-	Routes         []*regexp.Regexp       `json:"routes"`
-	RouteMethods   HttpMethod             `json:"route_methods"`
-	RouteParams    map[string]interface{} `json:"route_params"`
-	ResourceMethod HttpMethod             `json:"resource_method"`
-	Resource       *url.URL               `json:"resource"`
-	ResourceParams map[string]interface{} `json:"resource_params"`
-	EscapeParams   bool                   `json:"escape_params"`
+func (self *Binding) Initialize(name string) error {
+	self.Name = name
+
+	log.Debugf("Initialize binding '%s'", self.Name)
+
+	if u, err := url.Parse(self.Resource); err == nil {
+		self.url = u
+	} else {
+		return err
+	}
+
+	return nil
 }
 
 func (self *Binding) Evaluate(req *http.Request, params httprouter.Params) (interface{}, error) {
-	var method string
-
-	switch self.ResourceMethod {
-	case MethodPost:
-		method = `POST`
-	case MethodPut:
-		method = `PUT`
-	case MethodDelete:
-		method = `DELETE`
-	default:
-		method = `GET`
-	}
-
-	reqUrl := self.Resource.String()
+	method := strings.ToUpper(self.Method)
+	reqUrl := self.url.String()
 
 	if bindingReq, err := http.NewRequest(method, reqUrl, nil); err == nil {
 		client := &http.Client{}
 
-		log.Debugf("Binding Request: %s %+v ? %s", method, self.Resource, self.Resource.RawQuery)
+		log.Debugf("Binding Request: %s %+v ? %s", method, self.url, self.url.RawQuery)
 
 		if res, err := client.Do(bindingReq); err == nil {
 			log.Debugf("Binding Response: HTTP %d (body: %d bytes)", res.StatusCode, res.ContentLength)
@@ -88,26 +67,5 @@ func (self *Binding) Evaluate(req *http.Request, params httprouter.Params) (inte
 		}
 	} else {
 		return nil, err
-	}
-}
-
-func ToHttpMethod(method string) HttpMethod {
-	switch strings.ToLower(method) {
-	case `get`:
-		return MethodGet
-	case `post`:
-		return MethodPost
-	case `put`:
-		return MethodPut
-	case `delete`:
-		return MethodDelete
-	case `head`:
-		return MethodHead
-	case `options`:
-		return MethodOptions
-	case `patch`:
-		return MethodPatch
-	default:
-		return MethodAny
 	}
 }

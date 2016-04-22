@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <title>Hello!</title>
+  </head>
+
+  <body>
+    <center>
+      <h1>Hello, world!</h1>
+      <!-- <img src="/image.gif" /> -->
+
+      <div>
+        <table>
+          <tbody>
+            <tr>
+              <th>Protocol</th>
+              <td>{{ request.protocol.name }}</td>
+            </tr>
+            <tr>
+              <th>Method</th>
+              <td>{{ request.method }}</td>
+            </tr>
+            <tr>
+              <th>Host</th>
+              <td>{{ request.url.host }}</td>
+            </tr>
+            <tr>
+              <th>Path</th>
+              <td>{{ request.url.path }}</td>
+            </tr>
+            <tr>
+              <th>Route</th>
+              <td>[{{ route.index }}] <pre>{{ route.pattern }}</pre></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre>{{ request.headers }}</pre>
+      </div>
+    </center>
+  </body>
+</html>

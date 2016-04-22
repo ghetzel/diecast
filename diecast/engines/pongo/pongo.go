@@ -8,15 +8,20 @@ import (
 	"os"
 )
 
+var isInitialized bool
+
 type PongoTemplate struct {
 	engines.Template
-
 	template *pongo2.Template
 }
 
 func Initialize() error {
-	for name, funcdef := range GetBaseFunctions() {
-		pongo2.RegisterFilter(name, funcdef)
+	if !isInitialized {
+		for name, funcdef := range GetBaseFunctions() {
+			pongo2.RegisterFilter(name, funcdef)
+		}
+
+		isInitialized = true
 	}
 
 	return nil

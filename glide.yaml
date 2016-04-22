@@ -9,3 +9,4 @@ import:
 - package: github.com/shutterstock/go-stockutil
   subpackages:
   - stringutil
+- package: github.com/hoisie/mustache

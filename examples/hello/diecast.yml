@@ -1,4 +1,9 @@
 ---
+options:
+  default_engine: mustache
+  headers:
+    'Content-Type': 'text/html'
+
 bindings:
 # create a binding called "my_api_endpoint" that is automatically evaluated for all
 # routes (i.e. any starting with "/") requested via the GET method
@@ -9,28 +14,34 @@ bindings:
 # parameter 'request_query_string_key1'
 #
   my_api_endpoint:
-    routes:          ['^/']
-    route_methods:   ['GET']
+    method: 'GET'
     resource:        "http://my-api.example.com/api/path/to/endpoint"
-    resource_method: 'GET'
     params:
       query_string_key1: :request_query_string_key1
 
   other_api_endpoint:
-    routes:          ['^/orders']
     resource:        "http://my-api.example.com/api/other/endpoint"
 
+routes:
+- path: /
 
-mounts:
-# expose the server-side directory '/usr/local/share/thing-shared' under the top-level URL path '/assets'
-#
-- mount: /assets
-  path:  /usr/local/share/thing-shared
+- path: /css/*path
+  template: main.css
+  headers:
+    'Content-Type': 'text/css'
 
-# expose the server-side directory '/usr/share/thing-shared' under the top-level URL path '/assets'
-# but return a 404 if the requested file isn't there (as opposed to trying any additional
-# mount paths after this one)
-#
-- mount: /assets
-  path:  /usr/share/thing-shared
-  passthrough: false
+
+
+# mounts:
+# # expose the server-side directory '/usr/local/share/thing-shared' under the top-level URL path '/assets'
+# #
+# - mount: /assets
+#   path:  /usr/local/share/thing-shared
+
+# # expose the server-side directory '/usr/share/thing-shared' under the top-level URL path '/assets'
+# # but return a 404 if the requested file isn't there (as opposed to trying any additional
+# # mount paths after this one)
+# #
+# - mount: /assets
+#   path:  /usr/share/thing-shared
+#   passthrough: false
