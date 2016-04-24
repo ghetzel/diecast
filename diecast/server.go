@@ -23,6 +23,11 @@ const DEFAULT_ROUTE_PREFIX = `/`
 var ParamDelimPre = `#{`
 var ParamDelimPost = `}`
 
+type Handler struct {
+	Pattern    string
+	HandleFunc func(http.ResponseWriter, *http.Request)
+}
+
 type Server struct {
 	Address       string
 	Port          int
@@ -35,6 +40,7 @@ type Server struct {
 	LogLevel      string
 	RoutePrefix   string
 	Payload       map[string]interface{}
+	Handlers      []Handler
 
 	mux    *http.ServeMux
 	router *httprouter.Router
@@ -44,14 +50,15 @@ type Server struct {
 func NewServer() *Server {
 	return &Server{
 		Address:       DEFAULT_SERVE_ADDRESS,
-		Port:          DEFAULT_SERVE_PORT,
 		ConfigPath:    DEFAULT_CONFIG_PATH,
 		DefaultEngine: engines.DEFAULT_TEMPLATE_ENGINE,
-		TemplatePath:  engines.DEFAULT_TEMPLATE_PATH,
+		Handlers:      make([]Handler, 0),
 		MountProxy:    &MountProxy{},
-		StaticPath:    DEFAULT_STATIC_PATH,
-		RoutePrefix:   DEFAULT_ROUTE_PREFIX,
 		Payload:       make(map[string]interface{}),
+		Port:          DEFAULT_SERVE_PORT,
+		RoutePrefix:   DEFAULT_ROUTE_PREFIX,
+		StaticPath:    DEFAULT_STATIC_PATH,
+		TemplatePath:  engines.DEFAULT_TEMPLATE_PATH,
 	}
 }
 
@@ -143,6 +150,11 @@ func (self *Server) Serve() error {
 			}
 		}
 	})
+
+	for i, handler := range self.Handlers {
+		log.Debugf("Setting up custom handler %d for pattern '%s'", i, handler.Pattern)
+		self.mux.HandleFunc(handler.Pattern, handler.HandleFunc)
+	}
 
 	self.mux.Handle(`/`, self.router)
 
