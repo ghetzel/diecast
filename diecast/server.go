@@ -158,22 +158,25 @@ func (self *Server) Serve() error {
 		}
 	})
 
+	// add custom http.Handlers to the mux
 	for i, handler := range self.Handlers {
 		log.Debugf("Setting up custom handler %d for pattern '%s'", i, handler.Pattern)
 		self.mux.Handle(handler.Pattern, handler.Handler)
 	}
 
+	// add custom http.HandleFuncs to the mux
 	for i, handleFunc := range self.HandleFuncs {
 		log.Debugf("Setting up custom handler function %d for pattern '%s'", i, handleFunc.Pattern)
 		self.mux.HandleFunc(handleFunc.Pattern, handleFunc.HandleFunc)
 	}
 
+	// fallback to httprouter (these are the routes defined in the configuration)
 	self.mux.Handle(`/`, self.router)
 
 	self.server = negroni.New()
 	self.server.Use(negroni.NewRecovery())
+	self.server.Use(negroni.Wrap(self.mux))
 	self.server.Use(staticHandler)
-	self.server.UseHandler(self.mux)
 
 	self.server.Run(fmt.Sprintf("%s:%d", self.Address, self.Port))
 	return nil
