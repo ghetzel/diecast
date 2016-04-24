@@ -175,8 +175,8 @@ func (self *Server) Serve() error {
 
 	self.server = negroni.New()
 	self.server.Use(negroni.NewRecovery())
-	self.server.Use(negroni.Wrap(self.mux))
 	self.server.Use(staticHandler)
+	self.server.Use(negroni.Wrap(self.mux))
 
 	self.server.Run(fmt.Sprintf("%s:%d", self.Address, self.Port))
 	return nil
