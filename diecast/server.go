@@ -24,6 +24,11 @@ var ParamDelimPre = `#{`
 var ParamDelimPost = `}`
 
 type Handler struct {
+	Pattern string
+	Handler http.Handler
+}
+
+type HandleFunc struct {
 	Pattern    string
 	HandleFunc func(http.ResponseWriter, *http.Request)
 }
@@ -41,6 +46,7 @@ type Server struct {
 	RoutePrefix   string
 	Payload       map[string]interface{}
 	Handlers      []Handler
+	HandleFuncs   []HandleFunc
 
 	mux    *http.ServeMux
 	router *httprouter.Router
@@ -53,6 +59,7 @@ func NewServer() *Server {
 		ConfigPath:    DEFAULT_CONFIG_PATH,
 		DefaultEngine: engines.DEFAULT_TEMPLATE_ENGINE,
 		Handlers:      make([]Handler, 0),
+		HandleFuncs:   make([]HandleFunc, 0),
 		MountProxy:    &MountProxy{},
 		Payload:       make(map[string]interface{}),
 		Port:          DEFAULT_SERVE_PORT,
@@ -153,7 +160,12 @@ func (self *Server) Serve() error {
 
 	for i, handler := range self.Handlers {
 		log.Debugf("Setting up custom handler %d for pattern '%s'", i, handler.Pattern)
-		self.mux.HandleFunc(handler.Pattern, handler.HandleFunc)
+		self.mux.Handle(handler.Pattern, handler.Handler)
+	}
+
+	for i, handleFunc := range self.HandleFuncs {
+		log.Debugf("Setting up custom handler function %d for pattern '%s'", i, handleFunc.Pattern)
+		self.mux.HandleFunc(handleFunc.Pattern, handleFunc.HandleFunc)
 	}
 
 	self.mux.Handle(`/`, self.router)
