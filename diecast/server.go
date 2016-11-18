@@ -98,34 +98,7 @@ func (self *Server) Initialize() error {
 
 	self.MountProxy.Fallback = http.Dir(self.StaticPath)
 
-	return nil
-}
-
-func (self *Server) SetPayload(key string, value interface{}) {
-	self.Payload[key] = value
-}
-
-func (self *Server) LoadRoutes() error {
-	for i, route := range self.Config.Routes {
-		route.Index = i
-
-		if err := route.Initialize(); err == nil {
-			if err := route.LoadTemplate(self.TemplatePath); err == nil {
-				for _, method := range route.Methods {
-					self.setupTemplateHandler(method, route)
-				}
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (self *Server) Serve() error {
+	// setup servemux and routing
 	self.mux = http.NewServeMux()
 	self.router = httprouter.New()
 
@@ -178,8 +151,40 @@ func (self *Server) Serve() error {
 	self.server.Use(staticHandler)
 	self.server.Use(negroni.Wrap(self.mux))
 
+	return nil
+}
+
+func (self *Server) SetPayload(key string, value interface{}) {
+	self.Payload[key] = value
+}
+
+func (self *Server) LoadRoutes() error {
+	for i, route := range self.Config.Routes {
+		route.Index = i
+
+		if err := route.Initialize(); err == nil {
+			if err := route.LoadTemplate(self.TemplatePath); err == nil {
+				for _, method := range route.Methods {
+					self.setupTemplateHandler(method, route)
+				}
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (self *Server) Serve() error {
 	self.server.Run(fmt.Sprintf("%s:%d", self.Address, self.Port))
 	return nil
+}
+
+func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	self.server.ServeHTTP(w, r)
 }
 
 func (self *Server) GetBindings(req *http.Request, route *Route) map[string]Binding {

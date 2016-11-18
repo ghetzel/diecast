@@ -1,11 +1,11 @@
 all: vendor fmt build
 
 update:
-	glide up --strip-vcs --update-vendored
+	glide up
 
 vendor:
 	go list github.com/Masterminds/glide
-	glide install --strip-vcs --update-vendored
+	glide install
 
 fmt:
 	gofmt -w .
