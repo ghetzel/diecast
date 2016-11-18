@@ -1,7 +1,7 @@
 package functions
 
 import (
-	"github.com/ghetzel/diecast/diecast/util"
+	"github.com/ghetzel/diecast/util"
 	"github.com/shutterstock/go-stockutil/stringutil"
 	"html/template"
 	"strconv"

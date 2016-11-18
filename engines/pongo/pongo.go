@@ -3,7 +3,7 @@ package pongo
 import (
 	"fmt"
 	"github.com/flosch/pongo2"
-	"github.com/ghetzel/diecast/diecast/engines"
+	"github.com/ghetzel/diecast/engines"
 	"io"
 	"os"
 )

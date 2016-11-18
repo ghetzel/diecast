@@ -1,5 +1,5 @@
-hash: 77ce222b8066e52ecfd1a47f90d84ef44580784fef7ccac7ffaffed06b0f32e2
-updated: 2016-04-22T14:39:21.976543047-04:00
+hash: f72c4f82927f2abcc59f02cc1eebc3735f17d0ece9b631f31cd3d10ae3cce30e
+updated: 2016-11-18T18:57:20.153611537-05:00
 imports:
 - name: github.com/cloudfoundry-incubator/candiedyaml
   version: 5cef21e2e4f0fd147973b558d4db7395176bcd95
@@ -18,12 +18,12 @@ imports:
 - name: github.com/shutterstock/go-stockutil
   version: 45fbaaaf36a08d5f6764c57cf3a2143e5d894bca
   subpackages:
-  - stringutil
   - sliceutil
+  - stringutil
 - name: github.com/Sirupsen/logrus
   version: 081307d9bc1364753142d5962fc1d795c742baaf
 - name: golang.org/x/sys
   version: f64b50fbea64174967a8882830d621a18ee1548e
   subpackages:
   - unix
-devImports: []
+testImports: []

@@ -2,7 +2,7 @@ package pongo
 
 import (
 	"github.com/flosch/pongo2"
-	"github.com/ghetzel/diecast/diecast/util"
+	"github.com/ghetzel/diecast/util"
 	"github.com/shutterstock/go-stockutil/stringutil"
 	"strconv"
 )

@@ -2,7 +2,7 @@ package mustache
 
 import (
 	"fmt"
-	"github.com/ghetzel/diecast/diecast/engines"
+	"github.com/ghetzel/diecast/engines"
 	"github.com/hoisie/mustache"
 	"io"
 	"os"

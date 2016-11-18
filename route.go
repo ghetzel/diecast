@@ -2,9 +2,9 @@ package diecast
 
 import (
 	"fmt"
-	"github.com/ghetzel/diecast/diecast/engines"
-	"github.com/ghetzel/diecast/diecast/engines/mustache"
-	"github.com/ghetzel/diecast/diecast/engines/pongo"
+	"github.com/ghetzel/diecast/engines"
+	"github.com/ghetzel/diecast/engines/mustache"
+	"github.com/ghetzel/diecast/engines/pongo"
 	"io"
 	"os"
 	"path"
