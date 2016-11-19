@@ -6,7 +6,6 @@ import (
 
 type Config struct {
 	Options  GlobalConfig       `json:"options,omitempty"`
-	Routes   []*Route           `json:"routes,omitempty"`
 	Bindings map[string]Binding `json:"bindings,omitempty"`
 	Mounts   []Mount            `json:"mounts,omitempty"`
 }

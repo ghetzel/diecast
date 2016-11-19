@@ -22,16 +22,6 @@ bindings:
   other_api_endpoint:
     resource:        "http://my-api.example.com/api/other/endpoint"
 
-routes:
-- path: /
-
-- path: /css/*path
-  template: main.css
-  headers:
-    'Content-Type': 'text/css'
-
-
-
 # mounts:
 # # expose the server-side directory '/usr/local/share/thing-shared' under the top-level URL path '/assets'
 # #

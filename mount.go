@@ -9,7 +9,6 @@ import (
 
 type Mount struct {
 	http.FileSystem
-
 	MountPoint  string `json:"mount"`
 	Path        string `json:"path"`
 	Passthrough bool   `json:"passthrough"`

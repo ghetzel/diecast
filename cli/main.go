@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/ghetzel/cli"
 	"github.com/ghetzel/diecast"
-	"github.com/ghetzel/diecast/engines"
 	"github.com/ghetzel/diecast/util"
 	"github.com/op/go-logging"
 	"os"
@@ -44,18 +43,6 @@ func main() {
 			EnvVar: `HTTP_PORT`,
 		},
 		cli.StringFlag{
-			Name:   `templates-dir, T`,
-			Usage:  `Root path where templates are stored`,
-			Value:  engines.DEFAULT_TEMPLATE_PATH,
-			EnvVar: `TEMPLATES_DIR`,
-		},
-		cli.StringFlag{
-			Name:   `static-dir, S`,
-			Usage:  `Path where static assets are located`,
-			Value:  diecast.DEFAULT_STATIC_PATH,
-			EnvVar: `STATIC_PATH`,
-		},
-		cli.StringFlag{
 			Name:   `route-prefix`,
 			Usage:  `The path prepended to all HTTP requests`,
 			Value:  diecast.DEFAULT_ROUTE_PREFIX,
@@ -84,8 +71,7 @@ func main() {
 		server.Address = c.String(`address`)
 		server.Port = c.Int(`port`)
 		server.ConfigPath = c.String(`config-file`)
-		server.StaticPath = c.String(`static-dir`)
-		server.TemplatePath = c.String(`templates-dir`)
+		server.RootPath = c.Args().First()
 		server.RoutePrefix = c.String(`route-prefix`)
 
 		if err := server.Initialize(); err == nil {
