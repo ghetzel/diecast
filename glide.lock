@@ -1,5 +1,5 @@
-hash: 4999b14565d007acd34598c3037586511a9f407a752d0f5078d81e7ce901e047
-updated: 2016-11-18T19:14:14.493388023-05:00
+hash: e05f95eea521c4ed4c9256fe99c13933792da7964066061a5a91035cef5feace
+updated: 2016-11-18T19:31:35.93582178-05:00
 imports:
 - name: github.com/cloudfoundry-incubator/candiedyaml
   version: 5cef21e2e4f0fd147973b558d4db7395176bcd95
@@ -9,6 +9,11 @@ imports:
   version: 7f5515449ea9bbeb00256d9cbb654c556e7d0146
 - name: github.com/ghetzel/cli
   version: d69b4400b5ac82448a5ab1d8462e80540c94e480
+- name: github.com/ghetzel/go-stockutil
+  version: f4bbde8ee10d00371e2880f7d7268e21a3cb662e
+  subpackages:
+  - sliceutil
+  - stringutil
 - name: github.com/ghodss/yaml
   version: 1a6f069841556a7bcaff4a397ca6e8328d266c2f
 - name: github.com/hoisie/mustache
@@ -17,9 +22,4 @@ imports:
   version: 77366a47451a56bb3ba682481eed85b64fea14e8
 - name: github.com/op/go-logging
   version: b2cb9fa56473e98db8caba80237377e83fe44db5
-- name: github.com/shutterstock/go-stockutil
-  version: 45fbaaaf36a08d5f6764c57cf3a2143e5d894bca
-  subpackages:
-  - sliceutil
-  - stringutil
 testImports: []

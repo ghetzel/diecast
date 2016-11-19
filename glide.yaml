@@ -5,12 +5,10 @@ import:
 - package: github.com/ghodss/yaml
 - package: github.com/hoisie/mustache
 - package: github.com/julienschmidt/httprouter
-- package: github.com/shutterstock/go-stockutil
-  subpackages:
-  - sliceutil
-  - stringutil
 - package: github.com/op/go-logging
   version: ^1.0.0
 - package: github.com/cloudfoundry-incubator/candiedyaml
 - package: github.com/ghetzel/cli
   version: ^1.16.0
+- package: github.com/ghetzel/go-stockutil
+  version: ^0.3.3
