@@ -110,19 +110,31 @@ func (self *Server) Initialize() error {
 		staticHandler.Prefix = self.RoutePrefix
 	}
 
-	self.mux.HandleFunc(`/_bindings`, func(w http.ResponseWriter, req *http.Request) {
-		if req.URL.Path == `/_bindings` {
-			if data, err := json.Marshal(self.Config.Bindings); err == nil {
-				w.Header().Set(`Content-Type`, `application/json`)
+	self.mux.HandleFunc(fmt.Sprintf("%s/_diecast", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
+		if data, err := json.Marshal(self); err == nil {
+			w.Header().Set(`Content-Type`, `application/json`)
 
-				if _, err := w.Write(data); err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-			} else {
+			if _, err := w.Write(data); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	})
+
+	self.mux.HandleFunc(fmt.Sprintf("%s/_bindings", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
+		if data, err := json.Marshal(self.Config.Bindings); err == nil {
+			w.Header().Set(`Content-Type`, `application/json`)
+
+			if _, err := w.Write(data); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	})
 

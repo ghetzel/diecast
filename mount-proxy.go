@@ -6,7 +6,6 @@ import (
 
 type MountProxy struct {
 	http.FileSystem
-
 	Mounts   []Mount
 	Fallback http.FileSystem
 }
