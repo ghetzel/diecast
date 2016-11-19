@@ -3,16 +3,17 @@ package diecast
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/negroni"
 	"github.com/ghetzel/diecast/engines"
-	"github.com/ghetzel/diecast/util"
 	"github.com/julienschmidt/httprouter"
+	"github.com/op/go-logging"
 	"github.com/shutterstock/go-stockutil/sliceutil"
 	"io/ioutil"
 	"net/http"
 	"strings"
 )
+
+var log = logging.MustGetLogger(`diecast`)
 
 const DEFAULT_CONFIG_PATH = `diecast.yml`
 const DEFAULT_STATIC_PATH = `static`
@@ -42,15 +43,13 @@ type Server struct {
 	DefaultEngine string
 	TemplatePath  string
 	StaticPath    string
-	LogLevel      string
 	RoutePrefix   string
 	Payload       map[string]interface{}
 	Handlers      []Handler
 	HandleFuncs   []HandleFunc
-
-	mux    *http.ServeMux
-	router *httprouter.Router
-	server *negroni.Negroni
+	mux           *http.ServeMux
+	router        *httprouter.Router
+	server        *negroni.Negroni
 }
 
 func NewServer() *Server {
@@ -70,10 +69,6 @@ func NewServer() *Server {
 }
 
 func (self *Server) Initialize() error {
-	if self.LogLevel != `` {
-		util.ParseLogLevel(self.LogLevel)
-	}
-
 	if data, err := ioutil.ReadFile(self.ConfigPath); err == nil {
 		if config, err := LoadConfig(data); err == nil {
 			self.Config = config

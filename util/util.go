@@ -2,11 +2,8 @@ package util
 
 import (
 	"fmt"
-	"os"
+	"github.com/ghetzel/cli"
 	"time"
-
-	log "github.com/Sirupsen/logrus"
-	"github.com/codegangsta/cli"
 )
 
 const ApplicationName = `diecast`
@@ -25,27 +22,5 @@ func Register() []cli.Command {
 				fmt.Println(ApplicationVersion)
 			},
 		},
-	}
-}
-
-func ParseLogLevel(logLevel string) {
-	log.SetOutput(os.Stderr)
-	log.SetFormatter(&log.TextFormatter{
-		ForceColors: true,
-	})
-
-	switch logLevel {
-	case `info`:
-		log.SetLevel(log.InfoLevel)
-	case `warn`:
-		log.SetLevel(log.WarnLevel)
-	case `error`:
-		log.SetLevel(log.ErrorLevel)
-	case `fatal`:
-		log.SetLevel(log.FatalLevel)
-	case `quiet`:
-		log.SetLevel(log.PanicLevel)
-	default:
-		log.SetLevel(log.DebugLevel)
 	}
 }

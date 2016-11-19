@@ -3,7 +3,6 @@ package diecast
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"github.com/julienschmidt/httprouter"
 	"io/ioutil"
 	"net/http"

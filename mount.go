@@ -1,7 +1,6 @@
 package diecast
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"net/http"
 	"os"
 	"path"

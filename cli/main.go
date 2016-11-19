@@ -1,13 +1,15 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/codegangsta/cli"
+	"github.com/ghetzel/cli"
 	"github.com/ghetzel/diecast"
 	"github.com/ghetzel/diecast/engines"
 	"github.com/ghetzel/diecast/util"
+	"github.com/op/go-logging"
 	"os"
 )
+
+var log = logging.MustGetLogger(`main`)
 
 func main() {
 	app := cli.NewApp()
@@ -62,7 +64,14 @@ func main() {
 	}
 
 	app.Before = func(c *cli.Context) error {
-		util.ParseLogLevel(c.String(`log-level`))
+		level := logging.DEBUG
+
+		if lvl, err := logging.LogLevel(c.String(`log-level`)); err == nil {
+			level = lvl
+		}
+
+		logging.SetFormatter(logging.MustStringFormatter(`%{color}%{level:.4s}%{color:reset}[%{id:04d}] %{module}: %{message}`))
+		logging.SetLevel(level, ``)
 
 		log.Infof("%s v%s started at %s", util.ApplicationName, util.ApplicationVersion, util.StartedAt)
 

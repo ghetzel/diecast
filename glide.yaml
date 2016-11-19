@@ -1,7 +1,5 @@
 package: github.com/ghetzel/diecast
 import:
-- package: github.com/Sirupsen/logrus
-- package: github.com/codegangsta/cli
 - package: github.com/codegangsta/negroni
 - package: github.com/flosch/pongo2
 - package: github.com/ghodss/yaml
@@ -11,3 +9,8 @@ import:
   subpackages:
   - sliceutil
   - stringutil
+- package: github.com/op/go-logging
+  version: ^1.0.0
+- package: github.com/cloudfoundry-incubator/candiedyaml
+- package: github.com/ghetzel/cli
+  version: ^1.16.0
