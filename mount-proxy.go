@@ -87,9 +87,9 @@ func (self *MountProxy) GetTemplateFromRequest(req *http.Request) (*template.Tem
 		endpointPath = endpointPath + `index.html`
 	}
 
-	if self.TemplatePatterns != nil {
-		shouldExit := true
+	shouldExit := true
 
+	if self.TemplatePatterns != nil {
 		for _, pattern := range self.TemplatePatterns {
 			if matches, err := filepath.Match(pattern, path.Base(endpointPath)); err == nil {
 				if matches {
@@ -100,10 +100,10 @@ func (self *MountProxy) GetTemplateFromRequest(req *http.Request) (*template.Tem
 				log.Warningf("Invalid template match pattern %q: %v", pattern, err)
 			}
 		}
+	}
 
-		if shouldExit {
-			return nil, fmt.Errorf("Request path %q is not a candidate for templating", endpointPath)
-		}
+	if shouldExit {
+		return nil, fmt.Errorf("Request path %q is not a candidate for templating", endpointPath)
 	}
 
 	if mount := self.FindMountForEndpoint(endpointPath); mount != nil {
