@@ -15,14 +15,7 @@ import (
 )
 
 var log = logging.MustGetLogger(`diecast`)
-var TemplatePatterns = []string{
-	`*.css`,
-	`*.html`,
-	`*.htm`,
-	`*.json`,
-	`*.txt`,
-	`*.yml`,
-}
+var TemplatePatterns = []string{}
 
 const DEFAULT_CONFIG_PATH = `diecast.yml`
 const DEFAULT_SERVE_ADDRESS = `127.0.0.1`
