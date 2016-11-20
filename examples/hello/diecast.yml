@@ -20,7 +20,7 @@ bindings:
       query_string_key1: :request_query_string_key1
 
   other_api_endpoint:
-    resource:        "http://my-api.example.com/api/other/endpoint"
+    resource:        ":/api/other/endpoint"
 
 # mounts:
 # # expose the server-side directory '/usr/local/share/thing-shared' under the top-level URL path '/assets'

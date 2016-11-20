@@ -57,6 +57,11 @@ func (self *Server) Initialize() error {
 		if config, err := LoadConfig(data); err == nil {
 			self.Config = config
 
+			for name, binding := range self.Config.Bindings {
+				binding.Name = name
+				self.Config.Bindings[name] = binding
+			}
+
 			if err := self.InitializeMounts(config.Mounts); err != nil {
 				return fmt.Errorf("Failed to initialize mounts: %v", err)
 			}

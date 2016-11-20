@@ -38,6 +38,12 @@ func (self *Binding) ShouldEvaluate(req *http.Request) bool {
 func (self *Binding) Evaluate(req *http.Request) (interface{}, error) {
 	method := strings.ToUpper(self.Method)
 
+	if strings.HasPrefix(self.Resource, `:`) {
+		self.Resource = fmt.Sprintf("http://%s/%s",
+			req.Host,
+			strings.TrimPrefix(strings.TrimPrefix(self.Resource, `:`), `/`))
+	}
+
 	if reqUrl, err := url.Parse(self.Resource); err == nil {
 		if bindingReq, err := http.NewRequest(method, reqUrl.String(), nil); err == nil {
 			client := &http.Client{}
