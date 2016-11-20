@@ -13,13 +13,13 @@ bindings:
 # query string parameter, which will be equal to the route query string
 # parameter 'request_query_string_key1'
 #
-  my_api_endpoint:
+  - name: 'my_api_endpoint'
     method: 'GET'
     resource:        "http://my-api.example.com/api/path/to/endpoint"
     params:
       query_string_key1: :request_query_string_key1
 
-  other_api_endpoint:
+  - name:            'other_api_endpoint'
     resource:        ":/api/other/endpoint"
 
 # mounts:

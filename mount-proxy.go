@@ -58,6 +58,7 @@ func (self *MountProxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			if binding.ShouldEvaluate(req) {
 				if _, ok := payload[binding.Name]; !ok {
 					if value, err := binding.Evaluate(req); err == nil && value != nil {
+						log.Debugf("Got results for binding %q", binding.Name)
 						payload[binding.Name] = value
 					} else {
 						log.Warningf("Binding %q failed: %v", binding.Name, err)

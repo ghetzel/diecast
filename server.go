@@ -49,11 +49,6 @@ func (self *Server) Initialize() error {
 		if config, err := LoadConfig(data); err == nil {
 			self.Config = config
 
-			for name, binding := range self.Config.Bindings {
-				binding.Name = name
-				self.Config.Bindings[name] = binding
-			}
-
 			if err := self.InitializeMounts(config.Mounts); err != nil {
 				return fmt.Errorf("Failed to initialize mounts: %v", err)
 			}
@@ -79,6 +74,10 @@ func (self *Server) Initialize() error {
 	self.MountProxy.Server = self
 	self.MountProxy.Fallback = http.Dir(self.RootPath)
 	self.MountProxy.TemplatePatterns = self.Config.TemplatePatterns
+
+	if self.MountProxy.TemplatePatterns != nil {
+		log.Debugf("MountProxy: templates only apply to: %s", strings.Join(self.MountProxy.TemplatePatterns, `, `))
+	}
 
 	if err := self.setupServer(); err != nil {
 		return err

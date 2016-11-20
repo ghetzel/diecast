@@ -5,9 +5,9 @@ import (
 )
 
 type Config struct {
-	TemplatePatterns []string           `json:"template_patterns"`
-	Bindings         map[string]Binding `json:"bindings,omitempty"`
-	Mounts           []Mount            `json:"mounts,omitempty"`
+	TemplatePatterns []string  `json:"template_patterns"`
+	Bindings         []Binding `json:"bindings,omitempty"`
+	Mounts           []Mount   `json:"mounts,omitempty"`
 }
 
 type GlobalConfig struct {
