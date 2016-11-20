@@ -15,7 +15,6 @@ import (
 )
 
 var log = logging.MustGetLogger(`diecast`)
-var TemplatePatterns = []string{}
 
 const DEFAULT_CONFIG_PATH = `diecast.yml`
 const DEFAULT_SERVE_ADDRESS = `127.0.0.1`
@@ -79,7 +78,7 @@ func (self *Server) Initialize() error {
 	self.RoutePrefix = strings.TrimSuffix(self.RoutePrefix, `/`)
 	self.MountProxy.Server = self
 	self.MountProxy.Fallback = http.Dir(self.RootPath)
-	self.MountProxy.TemplatePatterns = TemplatePatterns
+	self.MountProxy.TemplatePatterns = self.Config.TemplatePatterns
 
 	if err := self.setupServer(); err != nil {
 		return err
