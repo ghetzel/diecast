@@ -1,11 +1,12 @@
 all: vendor fmt build
 
 update:
-	glide up
+	-rm -rf vendor
+	govend -u
 
 vendor:
-	go list github.com/Masterminds/glide
-	glide install
+	go list github.com/govend/govend
+	govend -v -l
 
 fmt:
 	gofmt -w .

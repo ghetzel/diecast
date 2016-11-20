@@ -19,6 +19,9 @@ type MountProxy struct {
 }
 
 func (self *MountProxy) Open(name string) (http.File, error) {
+	name = strings.TrimPrefix(name, self.Server.RoutePrefix)
+	log.Debugf("MountProxy: open(%q)", name)
+
 	if mount := self.FindMountForEndpoint(name); mount != nil {
 		//  return the file if it opened without fail OR if we aren't supposed to passthrough to the next mount
 		if file, err := mount.Open(name); err == nil || !mount.Passthrough {

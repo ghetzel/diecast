@@ -1,0 +1,17 @@
+vendors:
+- path: github.com/codegangsta/negroni
+  rev: e0e50f7dc431c043cb33f91b09c3419d48b7cff5
+- path: github.com/ghetzel/cli
+  rev: 4733699ce30faa633c4db36ebfbe427963593d7d
+- path: github.com/ghetzel/go-stockutil
+  rev: 64f3dacd330c5266c3fea33d02eb67b4de39791d
+- path: github.com/ghodss/yaml
+  rev: bea76d6a4713e18b7f5321a2b020738552def3ea
+- path: github.com/julienschmidt/httprouter
+  rev: 4563b0ba73e4db6c6423b60a26f3cadd2e9a1ec9
+- path: github.com/op/go-logging
+  rev: 970db520ece77730c7e4724c61121037378659d9
+- path: gopkg.in/check.v1
+  rev: 4f90aeace3a26ad7021961c297b22c42160c7b25
+- path: gopkg.in/yaml.v2
+  rev: a5b47d31c556af34a302ce5d659e6fea44d90de0
