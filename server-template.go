@@ -52,6 +52,7 @@ func (self *Server) LoadTemplate(name string, reader io.Reader) (*template.Templ
 		for _, pattern := range self.Config.TemplatePatterns {
 			if matches, err := filepath.Match(pattern, name); err == nil {
 				if matches {
+					log.Debugf("File %q matched using pattern %q", name, pattern)
 					shouldExit = false
 					break
 				}

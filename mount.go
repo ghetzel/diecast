@@ -14,12 +14,37 @@ type Mount struct {
 	Passthrough bool   `json:"passthrough"`
 }
 
+func NewMountFromSpec(spec string) (*Mount, error) {
+	parts := strings.SplitN(spec, `:`, 2)
+	var path string
+	var mountPoint string
+
+	if len(parts) == 1 {
+		path = parts[0]
+		mountPoint = parts[0]
+	} else {
+		path = parts[0]
+		mountPoint = parts[1]
+	}
+
+	mount := &Mount{
+		Path:       path,
+		MountPoint: mountPoint,
+	}
+
+	if err := mount.Initialize(); err != nil {
+		return nil, err
+	}
+
+	return mount, nil
+}
+
 func (self *Mount) Initialize() error {
 	if _, err := os.Stat(self.Path); err != nil {
 		return err
 	}
 
-	log.Debugf("Initialize mount '%s' -> '%s'", self.MountPoint, self.Path)
+	log.Debugf("Initialize mount %q -> %q", self.MountPoint, self.Path)
 
 	return nil
 }

@@ -48,6 +48,14 @@ func main() {
 			Value:  diecast.DEFAULT_ROUTE_PREFIX,
 			EnvVar: `ROUTE_PREFIX`,
 		},
+		cli.StringSliceFlag{
+			Name:  `template-pattern, T`,
+			Usage: `A shell glob pattern matching a set of files that should be templated`,
+		},
+		cli.StringSliceFlag{
+			Name:  `mount, m`,
+			Usage: `Expose a given PATH as MOUNT when requested from the server (formatted as "PATH:MOUNT"; e.g. "/usr/share/javascript:/js")`,
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
@@ -66,13 +74,27 @@ func main() {
 	}
 
 	app.Action = func(c *cli.Context) {
-		server := diecast.NewServer()
+		server := diecast.NewServer(c.Args().First())
 
 		server.Address = c.String(`address`)
 		server.Port = c.Int(`port`)
 		server.ConfigPath = c.String(`config-file`)
-		server.RootPath = c.Args().First()
 		server.RoutePrefix = c.String(`route-prefix`)
+
+		if v := c.StringSlice(`template-pattern`); len(v) > 0 {
+			server.TemplatePatterns = v
+		}
+
+		mounts := make([]diecast.Mount, 0)
+
+		for _, mountSpec := range c.StringSlice(`mount`) {
+
+			if mount, err := diecast.NewMountFromSpec(mountSpec); err == nil {
+				mounts = append(mounts, *mount)
+			}
+		}
+
+		server.SetMounts(mounts)
 
 		if err := server.Initialize(); err == nil {
 			log.Infof("Starting HTTP server at http://%s:%d", server.Address, server.Port)

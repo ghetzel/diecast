@@ -22,26 +22,37 @@ const DEFAULT_SERVE_PORT = 28419
 const DEFAULT_ROUTE_PREFIX = `/`
 
 type Server struct {
-	Address       string
-	Port          int
-	MountProxy    *MountProxy
-	Config        Config
-	ConfigPath    string
-	DefaultEngine string
-	RootPath      string
-	RoutePrefix   string
-	router        *httprouter.Router
-	server        *negroni.Negroni
+	Address          string
+	Port             int
+	Config           Config
+	ConfigPath       string
+	DefaultEngine    string
+	RootPath         string
+	RoutePrefix      string
+	TemplatePatterns []string
+	mountProxy       *MountProxy
+	router           *httprouter.Router
+	server           *negroni.Negroni
 }
 
-func NewServer() *Server {
+func NewServer(root string) *Server {
 	return &Server{
-		Address:     DEFAULT_SERVE_ADDRESS,
-		Port:        DEFAULT_SERVE_PORT,
-		ConfigPath:  DEFAULT_CONFIG_PATH,
-		MountProxy:  &MountProxy{},
-		RoutePrefix: DEFAULT_ROUTE_PREFIX,
+		Address:          DEFAULT_SERVE_ADDRESS,
+		Port:             DEFAULT_SERVE_PORT,
+		ConfigPath:       DEFAULT_CONFIG_PATH,
+		RoutePrefix:      DEFAULT_ROUTE_PREFIX,
+		RootPath:         root,
+		TemplatePatterns: make([]string, 0),
+		mountProxy:       &MountProxy{},
 	}
+}
+
+func (self *Server) SetMounts(mounts []Mount) {
+	self.mountProxy.Mounts = mounts
+}
+
+func (self *Server) Mounts() []Mount {
+	return self.mountProxy.Mounts
 }
 
 func (self *Server) Initialize() error {
@@ -71,12 +82,12 @@ func (self *Server) Initialize() error {
 	}
 
 	self.RoutePrefix = strings.TrimSuffix(self.RoutePrefix, `/`)
-	self.MountProxy.Server = self
-	self.MountProxy.Fallback = http.Dir(self.RootPath)
-	self.MountProxy.TemplatePatterns = self.Config.TemplatePatterns
+	self.mountProxy.RoutePrefix = self.RoutePrefix
+	self.mountProxy.Fallback = http.Dir(self.RootPath)
+	self.mountProxy.TemplatePatterns = append(self.TemplatePatterns, self.Config.TemplatePatterns...)
 
-	if self.MountProxy.TemplatePatterns != nil {
-		log.Debugf("MountProxy: templates only apply to: %s", strings.Join(self.MountProxy.TemplatePatterns, `, `))
+	if self.mountProxy.TemplatePatterns != nil {
+		log.Debugf("MountProxy: templates only apply to: %s", strings.Join(self.mountProxy.TemplatePatterns, `, `))
 	}
 
 	if err := self.setupServer(); err != nil {
@@ -92,21 +103,29 @@ func (self *Server) Serve() error {
 }
 
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	var templateName string
+	self.server.ServeHTTP(w, req)
+}
+
+func (self *Server) serveTemplateHttp(w http.ResponseWriter, req *http.Request) {
+	var logicalPath string
 
 	if strings.HasSuffix(req.URL.Path, `/`) {
-		templateName = fmt.Sprintf("%s%s", req.URL.Path, `index.html`)
+		logicalPath = fmt.Sprintf("%s%s", req.URL.Path, `index.html`)
 	} else {
-		templateName = path.Base(req.URL.Path)
+		logicalPath = req.URL.Path
 	}
 
-	if file, err := self.MountProxy.Open(templateName); err == nil {
-		if found, err := self.RenderTemplateFromRequest(templateName, file, w, req); found {
+	// the RoutePrefix is a logical path that does not reflect the file's actual path
+	// on the filesystem.  remove it if it's there so we can locate the actual file.
+	logicalPath = strings.TrimPrefix(logicalPath, self.RoutePrefix)
+
+	if file, err := self.mountProxy.Open(logicalPath); err == nil {
+		if found, err := self.RenderTemplateFromRequest(logicalPath, file, w, req); found {
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
-			http.FileServer(self.MountProxy).ServeHTTP(w, req)
+			http.FileServer(self.mountProxy).ServeHTTP(w, req)
 		}
 	} else {
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -114,19 +133,16 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (self *Server) InitializeMounts(mountsConfig []Mount) error {
-	mounts := make([]Mount, 0)
+	// append configuration mounts to any that have been explicitly configured
+	self.SetMounts(append(self.Mounts(), mountsConfig...))
 
-	for _, mount := range mountsConfig {
-		log.Debugf("Initializing mount at %s", mount.Path)
-
+	// initialize all mounts
+	for _, mount := range self.Mounts() {
 		if err := mount.Initialize(); err != nil {
 			return err
 		}
-
-		mounts = append(mounts, mount)
 	}
 
-	self.MountProxy.Mounts = mounts
 	return nil
 }
 
@@ -164,8 +180,10 @@ func (self *Server) setupServer() error {
 	})
 
 	// all other routes proxy to this http.Handler
-	mux.HandleFunc(`/`, func(w http.ResponseWriter, req *http.Request) {
-		self.ServeHTTP(w, req)
+	mux.HandleFunc(fmt.Sprintf("%s/", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
+		if req.Method == `GET` {
+			self.serveTemplateHttp(w, req)
+		}
 	})
 
 	self.server.UseHandler(mux)

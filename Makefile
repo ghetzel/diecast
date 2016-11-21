@@ -11,5 +11,8 @@ vendor:
 fmt:
 	gofmt -w .
 
+test: fmt
+	go test -v .
+
 build:
 	go build -o bin/`basename ${PWD}` cli/*.go

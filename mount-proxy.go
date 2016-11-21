@@ -7,14 +7,14 @@ import (
 
 type MountProxy struct {
 	http.FileSystem
-	Server           *Server
+	RoutePrefix      string
 	TemplatePatterns []string
 	Mounts           []Mount
 	Fallback         http.FileSystem
 }
 
 func (self *MountProxy) Open(name string) (http.File, error) {
-	name = strings.TrimPrefix(name, self.Server.RoutePrefix)
+	name = strings.TrimPrefix(name, self.RoutePrefix)
 
 	if mount := self.FindMountForEndpoint(name); mount != nil {
 		//  return the file if it opened without fail OR if we aren't supposed to passthrough to the next mount
@@ -26,19 +26,21 @@ func (self *MountProxy) Open(name string) (http.File, error) {
 	file, err := self.Fallback.Open(name)
 
 	if err == nil {
-		log.Debugf("Static file found: %q", name)
+		log.Debugf("Static file %q found", name)
+	} else {
+		log.Debugf("Static file %q not found: %v", name, err)
 	}
 
 	return file, err
 }
 
 func (self *MountProxy) FindMountForEndpoint(endpointPath string) *Mount {
-	if self.Mounts != nil {
-		for i, mount := range self.Mounts {
-			if mount.WillRespondTo(endpointPath) {
-				log.Debugf("MountProxy: mount[%d] '%s' responding authoritatively to %s", i, mount.MountPoint, endpointPath)
-				return &mount
-			}
+	endpointPath = strings.TrimPrefix(endpointPath, self.RoutePrefix)
+
+	for _, mount := range self.Mounts {
+		if mount.WillRespondTo(endpointPath) {
+			log.Debugf("mount[%s] Handling %q", mount.MountPoint, endpointPath)
+			return &mount
 		}
 	}
 

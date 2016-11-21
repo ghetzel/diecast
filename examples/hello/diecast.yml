@@ -2,7 +2,7 @@
 template_patterns:
   - '*.html'
 
-bindings:
+# bindings:
 # create a binding called "my_api_endpoint" that is automatically evaluated for all
 # routes (i.e. any starting with "/") requested via the GET method
 #
@@ -19,6 +19,10 @@ bindings:
 
   # - name:            'other_api_endpoint'
   #   resource:        ":/api/other/endpoint"
+
+# mounts:
+#   - mount: /css
+#     path: ./examples/external_path/css
 
 # mounts:
 # # expose the server-side directory '/usr/local/share/thing-shared' under the top-level URL path '/assets'
