@@ -144,3 +144,125 @@ func TestStaticServerWithRoutePrefix(t *testing.T) {
 			assert.Contains(string(data[:]), `Bootstrap`)
 		})
 }
+
+func TestStaticServerTemplateSomethingInMount(t *testing.T) {
+	assert := require.New(t)
+	server := NewServer(`./examples/hello`)
+	mounts := getTestMounts(assert)
+
+	server.SetMounts(mounts)
+	server.TemplatePatterns = append(server.TemplatePatterns, `*.txt`)
+
+	assert.Nil(server.Initialize())
+
+	doTestServerRequest(server, `GET`, `/test/should-render.txt`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(200, w.Code)
+			data := w.Body.Bytes()
+			assert.Equal(string(data[:]), "GET\n")
+		})
+
+	doTestServerRequest(server, `POST`, `/test/should-render.txt`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(200, w.Code)
+			data := w.Body.Bytes()
+			assert.Equal(string(data[:]), "POST\n")
+		})
+}
+
+func TestStaticServerTemplateSomethingInMountWithRoutePrefix(t *testing.T) {
+	assert := require.New(t)
+	server := NewServer(`./examples/hello`)
+	server.RoutePrefix = `/ui`
+	mounts := getTestMounts(assert)
+
+	server.SetMounts(mounts)
+	server.TemplatePatterns = append(server.TemplatePatterns, `*.txt`)
+
+	assert.Nil(server.Initialize())
+
+	doTestServerRequest(server, `GET`, `/test/should-render.txt`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(404, w.Code)
+		})
+
+	doTestServerRequest(server, `POST`, `/test/should-render.txt`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(404, w.Code)
+		})
+
+	doTestServerRequest(server, `GET`, `/ui/test/should-render.txt`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(200, w.Code)
+			data := w.Body.Bytes()
+			assert.Equal(string(data[:]), "GET\n")
+		})
+
+	doTestServerRequest(server, `POST`, `/ui/test/should-render.txt`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(200, w.Code)
+			data := w.Body.Bytes()
+			assert.Equal(string(data[:]), "POST\n")
+		})
+}
+
+func TestFilesInSubdirectories(t *testing.T) {
+	assert := require.New(t)
+	server := NewServer(`./examples/hello`)
+	mounts := getTestMounts(assert)
+
+	server.SetMounts(mounts)
+	server.TemplatePatterns = append(server.TemplatePatterns, `*.txt`)
+
+	assert.Nil(server.Initialize())
+
+	doTestServerRequest(server, `GET`, `/test/subdir1`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(301, w.Code)
+		})
+
+	doTestServerRequest(server, `GET`, `/test/subdir1/`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(404, w.Code)
+		})
+
+	doTestServerRequest(server, `GET`, `/test/subdir1/test.html`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(200, w.Code)
+			data := w.Body.Bytes()
+			assert.Equal(string(data[:]), "<h1>GET</h1>\n")
+		})
+
+	doTestServerRequest(server, `GET`, `/test/subdir2`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(301, w.Code)
+		})
+
+	doTestServerRequest(server, `GET`, `/test/subdir2/`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(200, w.Code)
+			data := w.Body.Bytes()
+			assert.Equal(string(data[:]), "INDEX GET\n")
+		})
+
+	doTestServerRequest(server, `PUT`, `/test/subdir2/`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(200, w.Code)
+			data := w.Body.Bytes()
+			assert.Equal(string(data[:]), "INDEX PUT\n")
+		})
+
+	doTestServerRequest(server, `GET`, `/test/subdir2/index.html`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(200, w.Code)
+			data := w.Body.Bytes()
+			assert.Equal(string(data[:]), "INDEX GET\n")
+		})
+
+	doTestServerRequest(server, `PUT`, `/test/subdir2/index.html`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(200, w.Code)
+			data := w.Body.Bytes()
+			assert.Equal(string(data[:]), "INDEX PUT\n")
+		})
+}

@@ -15,6 +15,9 @@ func getTestMounts(tt *require.Assertions) []Mount {
 		}, {
 			Path:       `./examples/external_path/css`,
 			MountPoint: `/css`,
+		}, {
+			Path:       `./examples/external_path/testfiles`,
+			MountPoint: `/test`,
 		},
 	}
 

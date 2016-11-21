@@ -48,8 +48,10 @@ func (self *Server) LoadTemplate(name string, reader io.Reader) (*template.Templ
 	shouldExit := true
 	name = path.Base(name)
 
-	if self.Config.TemplatePatterns != nil {
-		for _, pattern := range self.Config.TemplatePatterns {
+	if self.mountProxy.TemplatePatterns != nil {
+		for _, pattern := range self.mountProxy.TemplatePatterns {
+			log.Debugf("Check pattern %q against %q", pattern, name)
+
 			if matches, err := filepath.Match(pattern, name); err == nil {
 				if matches {
 					log.Debugf("File %q matched using pattern %q", name, pattern)

@@ -119,6 +119,8 @@ func (self *Server) serveTemplateHttp(w http.ResponseWriter, req *http.Request) 
 	// on the filesystem.  remove it if it's there so we can locate the actual file.
 	logicalPath = strings.TrimPrefix(logicalPath, self.RoutePrefix)
 
+	log.Debugf("Opening %q in MountProxy", logicalPath)
+
 	if file, err := self.mountProxy.Open(logicalPath); err == nil {
 		if found, err := self.RenderTemplateFromRequest(logicalPath, file, w, req); found {
 			if err != nil {
@@ -181,9 +183,7 @@ func (self *Server) setupServer() error {
 
 	// all other routes proxy to this http.Handler
 	mux.HandleFunc(fmt.Sprintf("%s/", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
-		if req.Method == `GET` {
-			self.serveTemplateHttp(w, req)
-		}
+		self.serveTemplateHttp(w, req)
 	})
 
 	self.server.UseHandler(mux)
