@@ -1,8 +1,6 @@
 ---
-options:
-  default_engine: mustache
-  headers:
-    'Content-Type': 'text/html'
+template_patterns:
+  - '*.html'
 
 bindings:
 # create a binding called "my_api_endpoint" that is automatically evaluated for all
@@ -13,14 +11,14 @@ bindings:
 # query string parameter, which will be equal to the route query string
 # parameter 'request_query_string_key1'
 #
-  - name: 'my_api_endpoint'
-    method: 'GET'
-    resource:        "http://my-api.example.com/api/path/to/endpoint"
-    params:
-      query_string_key1: :request_query_string_key1
+  # - name: 'my_api_endpoint'
+  #   method: 'GET'
+  #   resource:        "http://my-api.example.com/api/path/to/endpoint"
+  #   params:
+  #     query_string_key1: :request_query_string_key1
 
-  - name:            'other_api_endpoint'
-    resource:        ":/api/other/endpoint"
+  # - name:            'other_api_endpoint'
+  #   resource:        ":/api/other/endpoint"
 
 # mounts:
 # # expose the server-side directory '/usr/local/share/thing-shared' under the top-level URL path '/assets'

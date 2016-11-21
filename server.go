@@ -92,7 +92,25 @@ func (self *Server) Serve() error {
 }
 
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	self.MountProxy.ServeHTTP(w, req)
+	var templateName string
+
+	if strings.HasSuffix(req.URL.Path, `/`) {
+		templateName = fmt.Sprintf("%s%s", req.URL.Path, `index.html`)
+	} else {
+		templateName = path.Base(req.URL.Path)
+	}
+
+	if file, err := self.MountProxy.Open(templateName); err == nil {
+		if found, err := self.RenderTemplateFromRequest(templateName, file, w, req); found {
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		} else {
+			http.FileServer(self.MountProxy).ServeHTTP(w, req)
+		}
+	} else {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	}
 }
 
 func (self *Server) InitializeMounts(mountsConfig []Mount) error {
