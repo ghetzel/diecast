@@ -53,7 +53,13 @@ func (self *Mount) WillRespondTo(name string) bool {
 	return strings.HasPrefix(name, self.MountPoint)
 }
 
-func (self *Mount) Open(name string) (http.File, error) {
+func (self *Mount) OpenFile(name string) (*os.File, error) {
 	newPath := path.Join(strings.TrimSuffix(self.Path, `/`), strings.TrimPrefix(name, self.MountPoint))
+
+	log.Debugf("OpenFile(%q)", newPath)
 	return os.Open(newPath)
+}
+
+func (self *Mount) Open(name string) (http.File, error) {
+	return self.OpenFile(name)
 }

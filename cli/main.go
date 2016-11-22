@@ -25,12 +25,6 @@ func main() {
 			EnvVar: `LOGLEVEL`,
 		},
 		cli.StringFlag{
-			Name:   `config-file, c`,
-			Usage:  `Path to the configuration file to use`,
-			Value:  diecast.DEFAULT_CONFIG_PATH,
-			EnvVar: `CONFIG_FILE`,
-		},
-		cli.StringFlag{
 			Name:   `address, a`,
 			Usage:  `Address the HTTP server should listen on`,
 			Value:  diecast.DEFAULT_SERVE_ADDRESS,
@@ -78,7 +72,6 @@ func main() {
 
 		server.Address = c.String(`address`)
 		server.Port = c.Int(`port`)
-		server.ConfigPath = c.String(`config-file`)
 		server.RoutePrefix = c.String(`route-prefix`)
 
 		if v := c.StringSlice(`template-pattern`); len(v) > 0 {
@@ -98,9 +91,7 @@ func main() {
 
 		if err := server.Initialize(); err == nil {
 			log.Infof("Starting HTTP server at http://%s:%d", server.Address, server.Port)
-			if err := server.Serve(); err != nil {
-				log.Fatalf("Cannot start server: %v", err)
-			}
+			server.Serve()
 		} else {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}

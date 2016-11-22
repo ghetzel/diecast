@@ -6,7 +6,8 @@ import (
 	"github.com/codegangsta/negroni"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
-	"io/ioutil"
+	"io"
+	"mime"
 	"net/http"
 	"os"
 	"path"
@@ -16,7 +17,6 @@ import (
 
 var log = logging.MustGetLogger(`diecast`)
 
-const DEFAULT_CONFIG_PATH = `diecast.yml`
 const DEFAULT_SERVE_ADDRESS = `127.0.0.1`
 const DEFAULT_SERVE_PORT = 28419
 const DEFAULT_ROUTE_PREFIX = `/`
@@ -24,50 +24,46 @@ const DEFAULT_ROUTE_PREFIX = `/`
 type Server struct {
 	Address          string
 	Port             int
-	Config           Config
-	ConfigPath       string
+	Bindings         []Binding
 	DefaultTemplate  string
 	RootPath         string
 	RoutePrefix      string
 	TemplatePatterns []string
-	mountProxy       *MountProxy
+	mounts           []Mount
 	router           *httprouter.Router
 	server           *negroni.Negroni
+	fs               http.FileSystem
+	fsIsSet          bool
+	fileServer       http.Handler
 }
 
 func NewServer(root string) *Server {
 	return &Server{
 		Address:          DEFAULT_SERVE_ADDRESS,
 		Port:             DEFAULT_SERVE_PORT,
-		ConfigPath:       DEFAULT_CONFIG_PATH,
 		RoutePrefix:      DEFAULT_ROUTE_PREFIX,
 		RootPath:         root,
+		Bindings:         make([]Binding, 0),
 		TemplatePatterns: make([]string, 0),
-		mountProxy:       &MountProxy{},
+		mounts:           make([]Mount, 0),
 	}
 }
 
 func (self *Server) SetMounts(mounts []Mount) {
-	self.mountProxy.Mounts = mounts
+	self.mounts = mounts
 }
 
 func (self *Server) Mounts() []Mount {
-	return self.mountProxy.Mounts
+	return self.mounts
+}
+
+func (self *Server) SetFileSystem(fs http.FileSystem) {
+	self.fs = fs
+	self.fsIsSet = true
+	self.fileServer = http.FileServer(self.fs)
 }
 
 func (self *Server) Initialize() error {
-	if data, err := ioutil.ReadFile(path.Join(self.RootPath, self.ConfigPath)); err == nil {
-		if config, err := LoadConfig(data); err == nil {
-			self.Config = config
-
-			if err := self.InitializeMounts(config.Mounts); err != nil {
-				return fmt.Errorf("Failed to initialize mounts: %v", err)
-			}
-		} else {
-			return fmt.Errorf("Cannot load configuration at %s: %v", self.ConfigPath, err)
-		}
-	}
-
 	// always make sure the root path is absolute
 	if v, err := filepath.Abs(self.RootPath); err == nil {
 		cwd, err := os.Getwd()
@@ -82,12 +78,14 @@ func (self *Server) Initialize() error {
 	}
 
 	self.RoutePrefix = strings.TrimSuffix(self.RoutePrefix, `/`)
-	self.mountProxy.RoutePrefix = self.RoutePrefix
-	self.mountProxy.Fallback = http.Dir(self.RootPath)
-	self.mountProxy.TemplatePatterns = append(self.TemplatePatterns, self.Config.TemplatePatterns...)
 
-	if self.mountProxy.TemplatePatterns != nil {
-		log.Debugf("MountProxy: templates only apply to: %s", strings.Join(self.mountProxy.TemplatePatterns, `, `))
+	// if we haven't explicitly set a filesystem, create it
+	if !self.fsIsSet {
+		self.SetFileSystem(http.Dir(self.RootPath))
+	}
+
+	if err := self.setupMounts(); err != nil {
+		return err
 	}
 
 	if err := self.setupServer(); err != nil {
@@ -97,49 +95,66 @@ func (self *Server) Initialize() error {
 	return nil
 }
 
-func (self *Server) Serve() error {
+func (self *Server) Serve() {
 	self.server.Run(fmt.Sprintf("%s:%d", self.Address, self.Port))
-	return nil
 }
 
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	self.server.ServeHTTP(w, req)
 }
 
-func (self *Server) serveTemplateHttp(w http.ResponseWriter, req *http.Request) {
-	var logicalPath string
-
-	if strings.HasSuffix(req.URL.Path, `/`) {
-		logicalPath = fmt.Sprintf("%s%s", req.URL.Path, `index.html`)
-	} else {
-		logicalPath = req.URL.Path
-	}
-
-	// the RoutePrefix is a logical path that does not reflect the file's actual path
-	// on the filesystem.  remove it if it's there so we can locate the actual file.
-	logicalPath = strings.TrimPrefix(logicalPath, self.RoutePrefix)
-
-	log.Debugf("Opening %q in MountProxy", logicalPath)
-
-	if file, err := self.mountProxy.Open(logicalPath); err == nil {
-		if found, err := self.RenderTemplateFromRequest(logicalPath, file, w, req); found {
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-		} else {
-			http.FileServer(self.mountProxy).ServeHTTP(w, req)
-		}
-	} else {
-		http.Error(w, err.Error(), http.StatusNotFound)
-	}
+func (self *Server) ShouldApplyTemplate(requestPath string) bool {
+	return false
 }
 
-func (self *Server) InitializeMounts(mountsConfig []Mount) error {
-	// append configuration mounts to any that have been explicitly configured
-	self.SetMounts(append(self.Mounts(), mountsConfig...))
+func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) {
+	// normalize filename from request path
+	requestPath := req.URL.Path
 
+	if strings.HasSuffix(requestPath, `/`) {
+		requestPath = path.Join(requestPath, `index.html`)
+	}
+
+	// find a mount that has this file
+	for _, mount := range self.mounts {
+		if file, err := mount.OpenFile(requestPath); err == nil {
+			if stat, err := file.Stat(); err == nil {
+				if !stat.IsDir() {
+					log.Debugf("File %q -> %q", requestPath, file.Name())
+
+					// we got a real actual file here, figure out if we're templating it or not
+					if self.ShouldApplyTemplate(requestPath) {
+						http.Error(w, `Not Implemented`, http.StatusNotImplemented)
+					} else {
+						mimeType := `application/octet-stream`
+
+						if v := mime.TypeByExtension(path.Ext(file.Name())); v != `` {
+							mimeType = v
+						}
+
+						w.Header().Set(`Content-Type`, mimeType)
+						io.Copy(w, file)
+					}
+
+					return
+				} else {
+					log.Debugf("Skipping %q: source file is a directory", requestPath)
+				}
+			} else {
+				log.Debugf("Skipping %q: failed to stat file: %v", requestPath, err)
+			}
+		} else {
+			log.Debugf("Skipping %q: failed to open file: %v", requestPath, err)
+		}
+	}
+
+	// if we got here, just try to serve the file as requested
+	self.fileServer.ServeHTTP(w, req)
+}
+
+func (self *Server) setupMounts() error {
 	// initialize all mounts
-	for _, mount := range self.Mounts() {
+	for _, mount := range self.mounts {
 		if err := mount.Initialize(); err != nil {
 			return err
 		}
@@ -170,7 +185,7 @@ func (self *Server) setupServer() error {
 	})
 
 	mux.HandleFunc(fmt.Sprintf("%s/_bindings", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
-		if data, err := json.Marshal(self.Config.Bindings); err == nil {
+		if data, err := json.Marshal(self.Bindings); err == nil {
 			w.Header().Set(`Content-Type`, `application/json`)
 
 			if _, err := w.Write(data); err != nil {
@@ -182,9 +197,7 @@ func (self *Server) setupServer() error {
 	})
 
 	// all other routes proxy to this http.Handler
-	mux.HandleFunc(fmt.Sprintf("%s/", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
-		self.serveTemplateHttp(w, req)
-	})
+	mux.HandleFunc(fmt.Sprintf("%s/", self.RoutePrefix), self.handleFileRequest)
 
 	self.server.UseHandler(mux)
 
