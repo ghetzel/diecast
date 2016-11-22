@@ -43,7 +43,7 @@ func main() {
 			EnvVar: `ROUTE_PREFIX`,
 		},
 		cli.StringSliceFlag{
-			Name:  `template-pattern, T`,
+			Name:  `template-pattern, P`,
 			Usage: `A shell glob pattern matching a set of files that should be templated`,
 		},
 		cli.StringSliceFlag{

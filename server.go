@@ -1,11 +1,13 @@
 package diecast
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/codegangsta/negroni"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
+	"html/template"
 	"io"
 	"mime"
 	"net/http"
@@ -25,8 +27,9 @@ type Server struct {
 	Address          string
 	Port             int
 	Bindings         []Binding
-	DefaultTemplate  string
 	RootPath         string
+	LayoutPath       string
+	EnableLayouts    bool
 	RoutePrefix      string
 	TemplatePatterns []string
 	mounts           []Mount
@@ -37,14 +40,15 @@ type Server struct {
 	fileServer       http.Handler
 }
 
-func NewServer(root string) *Server {
+func NewServer(root string, patterns ...string) *Server {
 	return &Server{
 		Address:          DEFAULT_SERVE_ADDRESS,
 		Port:             DEFAULT_SERVE_PORT,
 		RoutePrefix:      DEFAULT_ROUTE_PREFIX,
 		RootPath:         root,
+		EnableLayouts:    true,
 		Bindings:         make([]Binding, 0),
-		TemplatePatterns: make([]string, 0),
+		TemplatePatterns: patterns,
 		mounts:           make([]Mount, 0),
 	}
 }
@@ -77,6 +81,10 @@ func (self *Server) Initialize() error {
 		return err
 	}
 
+	if self.LayoutPath == `` {
+		self.LayoutPath = path.Join(self.RootPath, `_layouts`)
+	}
+
 	self.RoutePrefix = strings.TrimSuffix(self.RoutePrefix, `/`)
 
 	// if we haven't explicitly set a filesystem, create it
@@ -104,7 +112,102 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (self *Server) ShouldApplyTemplate(requestPath string) bool {
+	baseName := filepath.Base(requestPath)
+
+	for _, pattern := range self.TemplatePatterns {
+		log.Debugf("  Does %q match %q?", baseName, pattern)
+
+		if match, err := filepath.Match(pattern, baseName); err == nil && match {
+			return true
+		}
+	}
+
 	return false
+}
+
+func (self *Server) ApplyTemplate(w http.ResponseWriter, requestPath string, reader io.Reader, data interface{}, layouts ...string) error {
+	finalTemplate := bytes.NewBuffer(nil)
+	hasLayout := false
+
+	// only process layouts if we're supposed to
+	if self.EnableLayouts {
+		// if no layouts were explicitly specified, and a layout named "default" exists, add it to the list
+		if len(layouts) == 0 {
+			if _, err := self.LoadLayout(`default`); err == nil {
+				layouts = append(layouts, `default`)
+			}
+		}
+
+		if len(layouts) > 0 {
+			finalTemplate.WriteString("{{ define \"layout\" }}")
+
+			for _, layoutName := range layouts {
+				if layoutFile, err := self.LoadLayout(layoutName); err == nil {
+					if _, err := io.Copy(finalTemplate, layoutFile); err != nil {
+						return err
+					}
+
+					hasLayout = true
+				} else {
+					// we don't care if the default layout is missing
+					if layoutName != `default` {
+						return err
+					}
+				}
+			}
+
+			finalTemplate.WriteString("{{ end }}")
+		}
+	}
+
+	if hasLayout {
+		finalTemplate.WriteString("{{ define \"content\" }}")
+	}
+
+	if _, err := io.Copy(finalTemplate, reader); err != nil {
+		return err
+	}
+
+	if hasLayout {
+		finalTemplate.WriteString("{{ end }}")
+	}
+
+	if tmpl, err := template.New(self.ToTemplateName(requestPath)).Parse(finalTemplate.String()); err == nil {
+		if hasLayout {
+			return tmpl.ExecuteTemplate(w, `layout`, data)
+		} else {
+			return tmpl.Execute(w, data)
+		}
+	} else {
+		return err
+	}
+}
+
+func (self *Server) LoadLayout(name string) (io.Reader, error) {
+	return os.Open(fmt.Sprintf("%s/%s.html", self.LayoutPath, name))
+}
+
+func (self *Server) ToTemplateName(requestPath string) string {
+	requestPath = strings.Replace(requestPath, `/`, `-`, -1)
+
+	return requestPath
+}
+
+func (self *Server) GetTemplateData(req *http.Request) (interface{}, error) {
+	data := make(map[string]interface{})
+
+	for _, binding := range self.Bindings {
+		if v, err := binding.Evaluate(req); err == nil {
+			data[binding.Name] = v
+		} else {
+			return nil, err
+		}
+	}
+
+	data[`server`] = self
+	data[`request`] = req
+
+	return data, nil
 }
 
 func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) {
@@ -157,7 +260,15 @@ func (self *Server) respondToFile(requestPath string, file *os.File, w http.Resp
 
 			// we got a real actual file here, figure out if we're templating it or not
 			if self.ShouldApplyTemplate(requestPath) {
-				http.Error(w, `Not Implemented`, http.StatusNotImplemented)
+				log.Debugf("  Rendering %q as template", requestPath)
+
+				if data, err := self.GetTemplateData(req); err == nil {
+					if err := self.ApplyTemplate(w, requestPath, file, data); err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+					}
+				} else {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+				}
 			} else {
 				mimeType := `application/octet-stream`
 

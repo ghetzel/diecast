@@ -18,6 +18,9 @@ func getTestMounts(tt *require.Assertions) []Mount {
 		}, {
 			Path:       `./examples/external_path/testfiles`,
 			MountPoint: `/test`,
+		}, {
+			Path:       `./examples/external_path/mounted-layouts`,
+			MountPoint: `/layout-test`,
 		},
 	}
 

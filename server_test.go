@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -55,21 +56,21 @@ func TestStaticServer(t *testing.T) {
 	doTestServerRequest(server, `GET`, `/index.html`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
-			assert.Contains(`Hello`, string(w.Body.Bytes()))
+			assert.Contains(string(w.Body.Bytes()), `Hello`)
 		})
 
 	doTestServerRequest(server, `GET`, `/css/bootstrap.min.css`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
 			data := w.Body.Bytes()
-			assert.Contains(`Bootstrap`, string(data[:]))
+			assert.Contains(string(data[:]), `Bootstrap`)
 		})
 
 	doTestServerRequest(server, `GET`, `/js/jquery.min.js`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
 			data := w.Body.Bytes()
-			assert.Contains(`jQuery`, string(data[:]))
+			assert.Contains(string(data[:]), `jQuery`)
 		})
 }
 
@@ -77,9 +78,7 @@ func TestStaticServerWithRoutePrefix(t *testing.T) {
 	assert := require.New(t)
 	server := NewServer(`./examples/hello`)
 	server.RoutePrefix = `/ui`
-
 	mounts := getTestMounts(assert)
-
 	server.SetMounts(mounts)
 	assert.Nil(server.Initialize())
 	assert.Equal(len(mounts), len(server.Mounts()))
@@ -131,31 +130,28 @@ func TestStaticServerWithRoutePrefix(t *testing.T) {
 	doTestServerRequest(server, `GET`, `/ui/index.html`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
-			assert.Contains(`Hello`, string(w.Body.Bytes()))
+			assert.Contains(string(w.Body.Bytes()), `Hello`)
 		})
 
 	doTestServerRequest(server, `GET`, `/ui/js/jquery.min.js`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
 			data := w.Body.Bytes()
-			assert.Contains(`jQuery`, string(data[:]))
+			assert.Contains(string(data[:]), `jQuery`)
 		})
 
 	doTestServerRequest(server, `GET`, `/ui/css/bootstrap.min.css`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
 			data := w.Body.Bytes()
-			assert.Contains(`Bootstrap`, string(data[:]))
+			assert.Contains(string(data[:]), `Bootstrap`)
 		})
 }
 
 func TestStaticServerTemplateSomethingInMount(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/hello`)
-	mounts := getTestMounts(assert)
-
-	server.SetMounts(mounts)
-	server.TemplatePatterns = append(server.TemplatePatterns, `*.txt`)
+	server := NewServer(`./examples/hello`, `*.txt`)
+	server.SetMounts(getTestMounts(assert))
 
 	assert.Nil(server.Initialize())
 
@@ -176,12 +172,9 @@ func TestStaticServerTemplateSomethingInMount(t *testing.T) {
 
 func TestStaticServerTemplateSomethingInMountWithRoutePrefix(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/hello`)
+	server := NewServer(`./examples/hello`, `*.txt`)
 	server.RoutePrefix = `/ui`
-	mounts := getTestMounts(assert)
-
-	server.SetMounts(mounts)
-	server.TemplatePatterns = append(server.TemplatePatterns, `*.txt`)
+	server.SetMounts(getTestMounts(assert))
 
 	assert.Nil(server.Initialize())
 
@@ -212,29 +205,26 @@ func TestStaticServerTemplateSomethingInMountWithRoutePrefix(t *testing.T) {
 
 func TestFilesInRootSubdirectories(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/test_root1`)
+	server := NewServer(`./examples/test_root1`, `*.html`)
 	assert.Nil(server.Initialize())
 
 	doTestServerRequest(server, `GET`, `/subdir1/`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
-			assert.Contains(`Hello`, string(w.Body.Bytes()))
+			assert.Contains(string(w.Body.Bytes()), `Hello`)
 		})
 
 	doTestServerRequest(server, `GET`, `/subdir1/index.html`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
-			assert.Contains(`Hello`, string(w.Body.Bytes()))
+			assert.Contains(string(w.Body.Bytes()), `Hello`)
 		})
 }
 
 func TestFilesInMountSubdirectories(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/hello`)
-	mounts := getTestMounts(assert)
-
-	server.SetMounts(mounts)
-	server.TemplatePatterns = append(server.TemplatePatterns, `*.txt`)
+	server := NewServer(`./examples/hello`, `*.html`, `*.txt`)
+	server.SetMounts(getTestMounts(assert))
 
 	assert.Nil(server.Initialize())
 
@@ -287,4 +277,43 @@ func TestFilesInMountSubdirectories(t *testing.T) {
 			data := w.Body.Bytes()
 			assert.Equal("INDEX PUT\n", string(data[:]))
 		})
+}
+
+func TestLayoutsDisabled(t *testing.T) {
+	assert := require.New(t)
+	server := NewServer(`./examples/layouts`, `*.html`)
+	server.EnableLayouts = false
+	mounts := getTestMounts(assert)
+	server.SetMounts(mounts[3:4])
+
+	assert.Nil(server.Initialize())
+
+	fn := func(w *httptest.ResponseRecorder) {
+		assert.Equal(200, w.Code)
+		data := w.Body.Bytes()
+		assert.True(strings.HasPrefix(string(data[:]), "<b>GET</b>"))
+	}
+
+	doTestServerRequest(server, `GET`, `/`, fn)
+	doTestServerRequest(server, `GET`, `/index.html`, fn)
+	doTestServerRequest(server, `GET`, `/layout-test/test1.html`, fn)
+}
+
+func TestLayoutsDefault(t *testing.T) {
+	assert := require.New(t)
+	server := NewServer(`./examples/layouts`, `*.html`)
+	mounts := getTestMounts(assert)
+	server.SetMounts(mounts[3:4])
+
+	assert.Nil(server.Initialize())
+
+	fn := func(w *httptest.ResponseRecorder) {
+		assert.Equal(200, w.Code)
+		data := w.Body.Bytes()
+		assert.True(strings.HasPrefix(string(data[:]), "<h1><b>GET</b>"))
+	}
+
+	doTestServerRequest(server, `GET`, `/`, fn)
+	doTestServerRequest(server, `GET`, `/index.html`, fn)
+	doTestServerRequest(server, `GET`, `/layout-test/test1.html`, fn)
 }
