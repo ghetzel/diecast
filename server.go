@@ -115,41 +115,67 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 		requestPath = path.Join(requestPath, `index.html`)
 	}
 
+	requestPath = strings.TrimPrefix(requestPath, self.RoutePrefix)
+
+	log.Debugf("Requesting file %q", requestPath)
+
 	// find a mount that has this file
 	for _, mount := range self.mounts {
 		if file, err := mount.OpenFile(requestPath); err == nil {
-			if stat, err := file.Stat(); err == nil {
-				if !stat.IsDir() {
-					log.Debugf("File %q -> %q", requestPath, file.Name())
-
-					// we got a real actual file here, figure out if we're templating it or not
-					if self.ShouldApplyTemplate(requestPath) {
-						http.Error(w, `Not Implemented`, http.StatusNotImplemented)
-					} else {
-						mimeType := `application/octet-stream`
-
-						if v := mime.TypeByExtension(path.Ext(file.Name())); v != `` {
-							mimeType = v
-						}
-
-						w.Header().Set(`Content-Type`, mimeType)
-						io.Copy(w, file)
-					}
-
-					return
-				} else {
-					log.Debugf("Skipping %q: source file is a directory", requestPath)
-				}
-			} else {
-				log.Debugf("Skipping %q: failed to stat file: %v", requestPath, err)
+			if handled := self.respondToFile(requestPath, file, w, req); handled {
+				log.Debugf("  File %q was handled by mount %s", requestPath, mount.MountPoint)
+				return
 			}
 		} else {
-			log.Debugf("Skipping %q: failed to open file: %v", requestPath, err)
+			log.Debugf("  Skipping %q: failed to open file: %v", requestPath, err)
 		}
 	}
 
-	// if we got here, just try to serve the file as requested
-	self.fileServer.ServeHTTP(w, req)
+	// if we got here, try to serve the file from the filesystem
+	if file, err := os.Open(path.Join(self.RootPath, requestPath)); err == nil {
+		if handled := self.respondToFile(requestPath, file, w, req); handled {
+			log.Debugf("  File %q was handled by filesystem", requestPath)
+			return
+		}
+	}
+
+	// if we got *here*, then File Not Found
+	http.Error(w, fmt.Sprintf("File %q was not found.", requestPath), http.StatusNotFound)
+}
+
+func (self *Server) respondToFile(requestPath string, file *os.File, w http.ResponseWriter, req *http.Request) bool {
+	if stat, err := file.Stat(); err == nil {
+		if !stat.IsDir() {
+			log.Debugf("File %q -> %q", requestPath, file.Name())
+
+			// we got a real actual file here, figure out if we're templating it or not
+			if self.ShouldApplyTemplate(requestPath) {
+				http.Error(w, `Not Implemented`, http.StatusNotImplemented)
+			} else {
+				mimeType := `application/octet-stream`
+
+				if v := mime.TypeByExtension(path.Ext(file.Name())); v != `` {
+					mimeType = v
+				}
+
+				w.Header().Set(`Content-Type`, mimeType)
+				io.Copy(w, file)
+			}
+
+			return true
+		} else {
+			// we know this is a directory, but the request didn't have a trailing slash
+			// redirect
+			if !strings.HasSuffix(req.URL.Path, `/`) {
+				http.Redirect(w, req, fmt.Sprintf("%s/", req.URL.Path), http.StatusMovedPermanently)
+				return true
+			}
+		}
+	} else {
+		log.Debugf("  Skipping %q: failed to stat file: %v", requestPath, err)
+	}
+
+	return false
 }
 
 func (self *Server) setupMounts() error {
