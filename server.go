@@ -26,7 +26,7 @@ type Server struct {
 	Port             int
 	Config           Config
 	ConfigPath       string
-	DefaultEngine    string
+	DefaultTemplate  string
 	RootPath         string
 	RoutePrefix      string
 	TemplatePatterns []string

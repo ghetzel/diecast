@@ -14,6 +14,10 @@ func doTestServerRequest(s *Server, method string, path string, tester func(*htt
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, req)
 
+	if w.Code >= 400 {
+		log.Errorf("Response %d: %s", w.Code, w.Body.String())
+	}
+
 	tester(w)
 }
 
@@ -206,7 +210,25 @@ func TestStaticServerTemplateSomethingInMountWithRoutePrefix(t *testing.T) {
 		})
 }
 
-func TestFilesInSubdirectories(t *testing.T) {
+func TestFilesInRootSubdirectories(t *testing.T) {
+	assert := require.New(t)
+	server := NewServer(`./examples/test_root1`)
+	assert.Nil(server.Initialize())
+
+	doTestServerRequest(server, `GET`, `/subdir1/`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(200, w.Code)
+			assert.Contains(string(w.Body.Bytes()), `Hello`)
+		})
+
+	doTestServerRequest(server, `GET`, `/subdir1/index.html`,
+		func(w *httptest.ResponseRecorder) {
+			assert.Equal(200, w.Code)
+			assert.Contains(string(w.Body.Bytes()), `Hello`)
+		})
+}
+
+func TestFilesInMountSubdirectories(t *testing.T) {
 	assert := require.New(t)
 	server := NewServer(`./examples/hello`)
 	mounts := getTestMounts(assert)
