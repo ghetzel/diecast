@@ -6,9 +6,7 @@ vendors:
 - path: github.com/ghetzel/cli
   rev: 4733699ce30faa633c4db36ebfbe427963593d7d
 - path: github.com/ghetzel/go-stockutil
-  rev: 64f3dacd330c5266c3fea33d02eb67b4de39791d
-- path: github.com/ghodss/yaml
-  rev: bea76d6a4713e18b7f5321a2b020738552def3ea
+  rev: aa5b98b6d879ed5dce658bbe38b0dd7fa725d7be
 - path: github.com/julienschmidt/httprouter
   rev: 4563b0ba73e4db6c6423b60a26f3cadd2e9a1ec9
 - path: github.com/op/go-logging
@@ -17,7 +15,3 @@ vendors:
   rev: 792786c7400a136282c1664665ae0a8db921c6c2
 - path: github.com/stretchr/testify
   rev: 18a02ba4a312f95da08ff4cfc0055750ce50ae9e
-- path: gopkg.in/check.v1
-  rev: 4f90aeace3a26ad7021961c297b22c42160c7b25
-- path: gopkg.in/yaml.v2
-  rev: a5b47d31c556af34a302ce5d659e6fea44d90de0

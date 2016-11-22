@@ -172,7 +172,11 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, requestPath string, rea
 		finalTemplate.WriteString("{{ end }}")
 	}
 
-	if tmpl, err := template.New(self.ToTemplateName(requestPath)).Parse(finalTemplate.String()); err == nil {
+	// create the template and make it aware of our custom functions
+	tmpl := template.New(self.ToTemplateName(requestPath))
+	tmpl.Funcs(GetStandardFunctions())
+
+	if tmpl, err := tmpl.Parse(finalTemplate.String()); err == nil {
 		if hasLayout {
 			return tmpl.ExecuteTemplate(w, `layout`, data)
 		} else {
