@@ -111,17 +111,24 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 	// normalize filename from request path
 	requestPath := req.URL.Path
 
+	// if we're looking at a directory, assume we want "index.html"
 	if strings.HasSuffix(requestPath, `/`) {
 		requestPath = path.Join(requestPath, `index.html`)
 	}
 
+	// remove the Route Prefix, as that's a structural part of the path but does not
+	// represent where the files are (used for embedding diecast in other services
+	// to avoid name collisions)
+	//
 	requestPath = strings.TrimPrefix(requestPath, self.RoutePrefix)
 
 	log.Debugf("Requesting file %q", requestPath)
 
 	// find a mount that has this file
 	for _, mount := range self.mounts {
+		// attempt to open the file entry
 		if file, err := mount.OpenFile(requestPath); err == nil {
+			// try to respond with the opened file
 			if handled := self.respondToFile(requestPath, file, w, req); handled {
 				log.Debugf("  File %q was handled by mount %s", requestPath, mount.MountPoint)
 				return
@@ -176,6 +183,45 @@ func (self *Server) respondToFile(requestPath string, file *os.File, w http.Resp
 	}
 
 	return false
+}
+
+func (self *Server) verifyRequestPathIsValid(validatePath string) error {
+	if v, err := filepath.Abs(validatePath); err == nil {
+		validatePath = v
+	} else {
+		return err
+	}
+
+	prefixInBounds := false
+	validPrefixes := []string{
+		self.RootPath,
+	}
+
+	for _, mount := range self.mounts {
+		validPrefixes = append(validPrefixes, mount.Path)
+	}
+
+	for _, prefix := range validPrefixes {
+		if v, err := filepath.Abs(prefix); err == nil {
+			prefix = v
+		} else {
+			log.Warningf("Unable to get absolute path from %q: %v", prefix, err)
+			continue
+		}
+
+		log.Debugf("Trying %q against: %s", validatePath, prefix)
+
+		if strings.HasPrefix(validatePath, prefix) {
+			prefixInBounds = true
+			break
+		}
+	}
+
+	if !prefixInBounds {
+		return fmt.Errorf("Path %q is not a valid request path", validatePath)
+	}
+
+	return nil
 }
 
 func (self *Server) setupMounts() error {

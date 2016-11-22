@@ -16,19 +16,27 @@ type Mount struct {
 
 func NewMountFromSpec(spec string) (*Mount, error) {
 	parts := strings.SplitN(spec, `:`, 2)
-	var path string
+	var fsPath string
 	var mountPoint string
 
 	if len(parts) == 1 {
-		path = parts[0]
+		fsPath = parts[0]
 		mountPoint = parts[0]
 	} else {
-		path = parts[0]
+		fsPath = parts[0]
 		mountPoint = parts[1]
 	}
 
+	if !strings.HasPrefix(fsPath, `/`) {
+		if cwd, err := os.Getwd(); err == nil {
+			fsPath = path.Join(cwd, fsPath)
+		} else {
+			return nil, err
+		}
+	}
+
 	mount := &Mount{
-		Path:       path,
+		Path:       fsPath,
 		MountPoint: mountPoint,
 	}
 
