@@ -1,10 +1,10 @@
 # diecast [![GoDoc](https://godoc.org/github.com/ghetzel/diecast?status.svg)](https://godoc.org/github.com/ghetzel/diecast)
 
-A dynamic site generator that consumes REST services and renders static HTML output in realtime
+A dynamic site generator that consumes REST services and renders static HTML output.
 
 # Overview
 
-`diecast` is a utility and importable Golang package that allows you to dynamically render a directory tree of template files into HTML.  Data can be retrieved from third-party API sources and on-the-fly included during the template rendering process.  This allows you to create entire websites that consume external data sources and present complete UI from them.
+`diecast` is a utility and importable Golang package that allows you to dynamically render a directory tree of template files into HTML.  Data can be retrieved from third-party API sources and on-the-fly included during the template rendering process.  This allows you to create entire websites that consume external data sources and present a complete UI for them.
 
 # Example
 
@@ -27,31 +27,18 @@ INFO[0000] Starting HTTP server at 127.0.0.1:28419
 [negroni] listening on 127.0.0.1:28419
 ```
 
-# Template Directory
+# Templating
 
-Templates are dynamically rendered upon request. The route structure of the site matches that of the template directory.  For example, if the `templates` directory contains a file called `search.pongo`, you can access that page at [http://localhost:28419/search].  If there is another file at `orders/index.pongo`, it will be accessible at [http://localhost:28419/orders].
+By default, all files served through `diecast` will be transmitted as-is (static
+resources).  You can specify that filenames matching certain
+[glob-like](https://golang.org/pkg/path/filepath/#Match) patterns will be treated
+as templates and processed using the [rendering engine](https://golang.org/pkg/html/template/).
 
-# Configuration
+# Layouts
 
-`diecast` takes an optional YAML configuration file that can be used to specify options how the application will run. An example configuration is:
-
-```yaml
----
-bindings:
-  my_api_endpoint:
-    routes:          ['^/']
-    route_methods:   ['GET']
-    resource:        "http://my-api.example.com/api/path/to/endpoint"
-    resource_method: 'GET'
-    params:
-      query_string_key1: :request_query_string_key1
-
-  other_api_endpoint:
-    routes:          ['^/orders']
-    resource:        "http://my-api.example.com/api/other/endpoint"
-
-```
-
+Often it is desirable for some or all of a site to share a common theme (e.g.: navigation,
+headers, scripts).  This can be acheived in `diecast` using _layouts_.  Any files in
+the `_layouts` directory will be available as wrappers for templates.
 
 # Bindings
 
