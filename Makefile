@@ -6,7 +6,7 @@ update:
 
 vendor:
 	go list github.com/govend/govend
-	govend -v -l
+	govend --strict
 
 fmt:
 	gofmt -w .

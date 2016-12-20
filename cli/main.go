@@ -4,7 +4,9 @@ import (
 	"github.com/ghetzel/cli"
 	"github.com/ghetzel/diecast"
 	"github.com/ghetzel/diecast/util"
+	"github.com/ghodss/yaml"
 	"github.com/op/go-logging"
+	"io/ioutil"
 	"os"
 )
 
@@ -23,6 +25,10 @@ func main() {
 			Usage:  `Level of log output verbosity`,
 			Value:  `info`,
 			EnvVar: `LOGLEVEL`,
+		},
+		cli.StringFlag{
+			Name:  `bindings, B`,
+			Usage: `A configuration file that holds binding configurations.`,
 		},
 		cli.StringFlag{
 			Name:   `address, a`,
@@ -78,10 +84,27 @@ func main() {
 			server.TemplatePatterns = v
 		}
 
+		if v := c.String(`bindings`); v != `` {
+			if file, err := os.Open(v); err == nil {
+				if data, err := ioutil.ReadAll(file); err == nil && len(data) > 0 {
+					var bindings []diecast.Binding
+
+					if err := yaml.Unmarshal(data, &bindings); err == nil {
+						server.Bindings = bindings
+					} else {
+						log.Fatal(err)
+					}
+				} else {
+					log.Fatal(err)
+				}
+			} else {
+				log.Fatal(err)
+			}
+		}
+
 		mounts := make([]diecast.Mount, 0)
 
 		for _, mountSpec := range c.StringSlice(`mount`) {
-
 			if mount, err := diecast.NewMountFromSpec(mountSpec); err == nil {
 				mounts = append(mounts, *mount)
 			}

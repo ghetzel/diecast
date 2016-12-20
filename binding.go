@@ -11,11 +11,12 @@ import (
 )
 
 type Binding struct {
-	Name         string                 `json:"-"`
+	Name         string                 `json:"name"`
 	Restrict     []string               `json:"restrict"`
 	Method       string                 `json:"method"`
 	Resource     string                 `json:"resource"`
 	Params       map[string]interface{} `json:"params"`
+	Headers      map[string]string      `json:"headers"`
 	EscapeParams bool                   `json:"escape_params"`
 }
 
@@ -47,6 +48,12 @@ func (self *Binding) Evaluate(req *http.Request) (interface{}, error) {
 	if reqUrl, err := url.Parse(self.Resource); err == nil {
 		if bindingReq, err := http.NewRequest(method, reqUrl.String(), nil); err == nil {
 			client := &http.Client{}
+
+			if self.Headers != nil {
+				for k, v := range self.Headers {
+					bindingReq.Header.Set(k, v)
+				}
+			}
 
 			log.Debugf("Binding Request: %s %+v ? %s", method, reqUrl.String(), reqUrl.RawQuery)
 

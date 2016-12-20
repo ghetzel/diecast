@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"html/template"
@@ -23,6 +24,12 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`titleize`] = strings.ToTitle
 	rv[`trim`] = strings.TrimSpace
 	rv[`upper`] = strings.ToUpper
+
+	// encoding
+	rv[`jsonify`] = func(value interface{}) (string, error) {
+		data, err := json.Marshal(value)
+		return string(data[:]), err
+	}
 
 	// type handling and conversion
 	rv[`is_bool`] = stringutil.IsBoolean
