@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/codegangsta/negroni"
+	"github.com/ghodss/yaml"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
@@ -22,6 +24,8 @@ var log = logging.MustGetLogger(`diecast`)
 const DEFAULT_SERVE_ADDRESS = `127.0.0.1`
 const DEFAULT_SERVE_PORT = 28419
 const DEFAULT_ROUTE_PREFIX = `/`
+
+var HeaderSeparator = []byte{'-', '-', '-'}
 
 type Server struct {
 	Address             string
@@ -202,8 +206,15 @@ func (self *Server) ToTemplateName(requestPath string) string {
 	return requestPath
 }
 
-func (self *Server) GetTemplateData(req *http.Request) (interface{}, error) {
+func (self *Server) GetTemplateData(req *http.Request, headerData []byte) (interface{}, error) {
 	data := make(map[string]interface{})
+	header := make(map[string]interface{})
+
+	if headerData != nil {
+		if err := yaml.Unmarshal(headerData, &header); err != nil {
+			return nil, err
+		}
+	}
 
 	for _, binding := range self.Bindings {
 		if v, err := binding.Evaluate(req); err == nil {
@@ -291,8 +302,12 @@ func (self *Server) respondToFile(requestPath string, file *os.File, w http.Resp
 			if self.ShouldApplyTemplate(requestPath) {
 				log.Debugf("  Rendering %q as template", requestPath)
 
-				if data, err := self.GetTemplateData(req); err == nil {
-					if err := self.ApplyTemplate(w, requestPath, file, data); err != nil {
+				if headerData, templateData, err := self.SplitTemplateHeaderContent(file); err == nil {
+					if data, err := self.GetTemplateData(req, headerData); err == nil {
+						if err := self.ApplyTemplate(w, requestPath, bytes.NewBuffer(templateData), data); err != nil {
+							http.Error(w, err.Error(), http.StatusInternalServerError)
+						}
+					} else {
 						http.Error(w, err.Error(), http.StatusInternalServerError)
 					}
 				} else {
@@ -316,6 +331,22 @@ func (self *Server) respondToFile(requestPath string, file *os.File, w http.Resp
 	}
 
 	return false
+}
+
+func (self *Server) SplitTemplateHeaderContent(reader io.Reader) ([]byte, []byte, error) {
+	if data, err := ioutil.ReadAll(reader); err == nil {
+		if bytes.HasPrefix(data, HeaderSeparator) {
+			parts := bytes.SplitN(data, HeaderSeparator, 3)
+
+			if len(parts) == 3 {
+				return parts[1], parts[2], nil
+			}
+		}
+
+		return nil, data, nil
+	} else {
+		return nil, nil, err
+	}
 }
 
 func (self *Server) verifyRequestPathIsValid(validatePath string) error {
