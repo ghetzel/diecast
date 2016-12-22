@@ -28,9 +28,8 @@ const DEFAULT_ROUTE_PREFIX = `/`
 var HeaderSeparator = []byte{'-', '-', '-'}
 
 type TemplateHeader struct {
-	Title    string                 `json:"title,omitempty"`
+	Page    map[string]interface{}                 `json:"page,omitempty"`
 	Bindings []Binding              `json:"bindings,omitempty"`
-	Data     map[string]interface{} `json:"data,omitempty"`
 }
 
 type Server struct {
@@ -238,8 +237,7 @@ func (self *Server) GetTemplateData(req *http.Request, headerData []byte) (inter
 		}
 	}
 
-	data[`title`] = header.Title
-	data[`header`] = header.Data
+	data[`page`] = header.Page
 	data[`server`] = self
 	data[`request`] = req
 
