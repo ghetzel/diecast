@@ -28,7 +28,7 @@ const DEFAULT_ROUTE_PREFIX = `/`
 var HeaderSeparator = []byte{'-', '-', '-'}
 
 type TemplateHeader struct {
-	Page    map[string]interface{}                 `json:"page,omitempty"`
+	Page     map[string]interface{} `json:"page,omitempty"`
 	Bindings []Binding              `json:"bindings,omitempty"`
 }
 
