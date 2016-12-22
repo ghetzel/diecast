@@ -68,14 +68,20 @@ func (self *Binding) Evaluate(req *http.Request) (interface{}, error) {
 		if bindingReq, err := http.NewRequest(method, reqUrl.String(), nil); err == nil {
 			client := &http.Client{}
 
+			// eval and add query string parameters to request
+			qs := bindingReq.URL.Query()
+
 			for k, v := range self.Params {
 				if !self.NoTemplate {
 					v = self.Eval(v, evalData)
 				}
 
-				bindingReq.URL.Query().Set(k, v)
+				qs.Set(k, v)
 			}
 
+			bindingReq.URL.RawQuery = qs.Encode()
+
+			// add headers to request
 			for k, v := range self.Headers {
 				if !self.NoTemplate {
 					v = self.Eval(v, evalData)
