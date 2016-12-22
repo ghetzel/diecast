@@ -28,8 +28,14 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`HasSuffix`] = strings.HasSuffix
 
 	// encoding
-	rv[`Jsonify`] = func(value interface{}) (string, error) {
-		data, err := json.Marshal(value)
+	rv[`Jsonify`] = func(value interface{}, indent ...string) (string, error) {
+		indentString := ``
+
+		if len(indent) > 0 {
+			indentString = indent[0]
+		}
+
+		data, err := json.MarshalIndent(value, ``, indentString)
 		return string(data[:]), err
 	}
 
