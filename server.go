@@ -27,6 +27,11 @@ const DEFAULT_ROUTE_PREFIX = `/`
 
 var HeaderSeparator = []byte{'-', '-', '-'}
 
+type TemplateHeader struct {
+	Bindings []Binding              `json:"bindings,omitempty"`
+	Data     map[string]interface{} `json:"data,omitempty"`
+}
+
 type Server struct {
 	Address             string
 	Port                int
@@ -208,7 +213,7 @@ func (self *Server) ToTemplateName(requestPath string) string {
 
 func (self *Server) GetTemplateData(req *http.Request, headerData []byte) (interface{}, error) {
 	data := make(map[string]interface{})
-	header := make(map[string]interface{})
+	header := TemplateHeader{}
 
 	if headerData != nil {
 		if err := yaml.Unmarshal(headerData, &header); err != nil {
@@ -224,6 +229,15 @@ func (self *Server) GetTemplateData(req *http.Request, headerData []byte) (inter
 		}
 	}
 
+	for _, binding := range header.Bindings {
+		if v, err := binding.Evaluate(req); err == nil {
+			data[binding.Name] = v
+		} else {
+			return nil, err
+		}
+	}
+
+	data[`header`] = header.Data
 	data[`server`] = self
 	data[`request`] = req
 
