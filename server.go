@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/codegangsta/negroni"
+	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghodss/yaml"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
@@ -35,7 +36,7 @@ type TemplateHeader struct {
 type Server struct {
 	Address             string
 	Port                int
-	Bindings            []Binding
+	Bindings            []*Binding
 	RootPath            string
 	LayoutPath          string
 	EnableLayouts       bool
@@ -57,7 +58,7 @@ func NewServer(root string, patterns ...string) *Server {
 		RoutePrefix:      DEFAULT_ROUTE_PREFIX,
 		RootPath:         root,
 		EnableLayouts:    true,
-		Bindings:         make([]Binding, 0),
+		Bindings:         make([]*Binding, 0),
 		TemplatePatterns: patterns,
 		mounts:           make([]Mount, 0),
 	}
@@ -100,6 +101,10 @@ func (self *Server) Initialize() error {
 	// if we haven't explicitly set a filesystem, create it
 	if !self.fsIsSet {
 		self.SetFileSystem(http.Dir(self.RootPath))
+	}
+
+	for _, binding := range self.Bindings {
+		binding.server = self
 	}
 
 	if err := self.setupMounts(); err != nil {
@@ -212,7 +217,8 @@ func (self *Server) ToTemplateName(requestPath string) string {
 }
 
 func (self *Server) GetTemplateData(req *http.Request, headerData []byte) (interface{}, error) {
-	data := make(map[string]interface{})
+	data := requestToEvalData(req)
+	bindings := make(map[string]interface{})
 	header := TemplateHeader{}
 
 	if headerData != nil {
@@ -223,23 +229,32 @@ func (self *Server) GetTemplateData(req *http.Request, headerData []byte) (inter
 
 	for _, binding := range self.Bindings {
 		if v, err := binding.Evaluate(req); err == nil {
-			data[binding.Name] = v
+			bindings[binding.Name] = v
 		} else {
-			return nil, err
+			log.Warningf("Binding %q failed: %v", binding.Name, err)
+
+			if !binding.Optional {
+				return nil, err
+			}
 		}
 	}
 
 	for _, binding := range header.Bindings {
+		binding.server = self
+
 		if v, err := binding.Evaluate(req); err == nil {
-			data[binding.Name] = v
+			bindings[binding.Name] = v
 		} else {
-			return nil, err
+			log.Warningf("Binding %q failed: %v", binding.Name, err)
+
+			if !binding.Optional {
+				return nil, err
+			}
 		}
 	}
 
+	data[`bindings`] = bindings
 	data[`page`] = header.Page
-	data[`server`] = self
-	data[`request`] = req
 
 	return data, nil
 }
@@ -452,4 +467,40 @@ func (self *Server) setupServer() error {
 	self.server.UseHandler(mux)
 
 	return nil
+}
+
+func requestToEvalData(req *http.Request) map[string]interface{} {
+	rv := make(map[string]interface{})
+	request := make(map[string]interface{})
+	qs := make(map[string]interface{})
+	hdr := make(map[string]interface{})
+
+	for k, v := range req.URL.Query() {
+		qs[k] = stringutil.Autotype(strings.Join(v, `, `))
+	}
+
+	for k, v := range req.Header {
+		hdr[k] = stringutil.Autotype(strings.Join(v, `, `))
+	}
+
+	request[`method`] = req.Method
+	request[`protocol`] = req.Proto
+	request[`headers`] = hdr
+	request[`length`] = req.ContentLength
+	request[`encoding`] = req.TransferEncoding
+	request[`remote_address`] = req.RemoteAddr
+	request[`host`] = req.Host
+	request[`url`] = map[string]interface{}{
+		`unmodified`: req.RequestURI,
+		`string`:     req.URL.String(),
+		`scheme`:     req.URL.Scheme,
+		`host`:       req.URL.Host,
+		`path`:       req.URL.Path,
+		`fragment`:   req.URL.Fragment,
+		`query`:      qs,
+	}
+
+	rv[`request`] = request
+
+	return rv
 }
