@@ -1,3 +1,5 @@
+.PHONY: vendor fmt build
+
 all: vendor fmt build
 
 update:

@@ -13,34 +13,36 @@ func GetStandardFunctions() template.FuncMap {
 	rv := make(template.FuncMap)
 
 	// string processing
-	rv[`contains`] = strings.Contains
-	rv[`lower`] = strings.ToLower
-	rv[`ltrim`] = strings.TrimPrefix
-	rv[`replace`] = strings.Replace
-	rv[`rtrim`] = strings.TrimSuffix
-	rv[`split`] = strings.Split
-	rv[`splitn`] = strings.SplitN
-	rv[`strcount`] = strings.Count
-	rv[`titleize`] = strings.ToTitle
-	rv[`trim`] = strings.TrimSpace
-	rv[`upper`] = strings.ToUpper
+	rv[`Contains`] = strings.Contains
+	rv[`Lower`] = strings.ToLower
+	rv[`TrimPrefix`] = strings.TrimPrefix
+	rv[`Replace`] = strings.Replace
+	rv[`TrimSuffix`] = strings.TrimSuffix
+	rv[`Split`] = strings.Split
+	rv[`SplitN`] = strings.SplitN
+	rv[`StrCount`] = strings.Count
+	rv[`Titleize`] = strings.ToTitle
+	rv[`Trim`] = strings.TrimSpace
+	rv[`Upper`] = strings.ToUpper
+	rv[`HasPrefix`] = strings.HasPrefix
+	rv[`HasSuffix`] = strings.HasSuffix
 
 	// encoding
-	rv[`jsonify`] = func(value interface{}) (string, error) {
+	rv[`Jsonify`] = func(value interface{}) (string, error) {
 		data, err := json.Marshal(value)
 		return string(data[:]), err
 	}
 
 	// type handling and conversion
-	rv[`is_bool`] = stringutil.IsBoolean
-	rv[`is_int`] = stringutil.IsInteger
-	rv[`is_float`] = stringutil.IsFloat
-	rv[`autotype`] = stringutil.Autotype
-	rv[`as_str`] = stringutil.ToString
-	rv[`as_int`] = stringutil.ConvertToInteger
-	rv[`as_float`] = stringutil.ConvertToFloat
-	rv[`as_bool`] = stringutil.ConvertToBool
-	rv[`as_time`] = stringutil.ConvertToTime
+	rv[`IsBool`] = stringutil.IsBoolean
+	rv[`IsInt`] = stringutil.IsInteger
+	rv[`IsFloat`] = stringutil.IsFloat
+	rv[`Autotype`] = stringutil.Autotype
+	rv[`AsStr`] = stringutil.ToString
+	rv[`AsInt`] = stringutil.ConvertToInteger
+	rv[`AsFloat`] = stringutil.ConvertToFloat
+	rv[`AsBool`] = stringutil.ConvertToBool
+	rv[`AsTime`] = stringutil.ConvertToTime
 
 	// time and date formatting
 	tmFmt := func(value interface{}, format ...string) (string, error) {
@@ -88,8 +90,8 @@ func GetStandardFunctions() template.FuncMap {
 		}
 	}
 
-	rv[`time`] = tmFmt
-	rv[`now`] = func(format ...string) (string, error) {
+	rv[`Time`] = tmFmt
+	rv[`Now`] = func(format ...string) (string, error) {
 		return tmFmt(time.Now(), format...)
 	}
 

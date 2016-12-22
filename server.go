@@ -24,20 +24,21 @@ const DEFAULT_SERVE_PORT = 28419
 const DEFAULT_ROUTE_PREFIX = `/`
 
 type Server struct {
-	Address          string
-	Port             int
-	Bindings         []Binding
-	RootPath         string
-	LayoutPath       string
-	EnableLayouts    bool
-	RoutePrefix      string
-	TemplatePatterns []string
-	mounts           []Mount
-	router           *httprouter.Router
-	server           *negroni.Negroni
-	fs               http.FileSystem
-	fsIsSet          bool
-	fileServer       http.Handler
+	Address             string
+	Port                int
+	Bindings            []Binding
+	RootPath            string
+	LayoutPath          string
+	EnableLayouts       bool
+	RoutePrefix         string
+	TemplatePatterns    []string
+	AdditionalFunctions template.FuncMap
+	mounts              []Mount
+	router              *httprouter.Router
+	server              *negroni.Negroni
+	fs                  http.FileSystem
+	fsIsSet             bool
+	fileServer          http.Handler
 }
 
 func NewServer(root string, patterns ...string) *Server {
@@ -176,6 +177,10 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, requestPath string, rea
 	tmpl := template.New(self.ToTemplateName(requestPath))
 	tmpl.Funcs(GetStandardFunctions())
 
+	if self.AdditionalFunctions != nil {
+		tmpl.Funcs(self.AdditionalFunctions)
+	}
+
 	if tmpl, err := tmpl.Parse(finalTemplate.String()); err == nil {
 		if hasLayout {
 			return tmpl.ExecuteTemplate(w, `layout`, data)
@@ -223,33 +228,45 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 		requestPath = path.Join(requestPath, `index.html`)
 	}
 
-	// remove the Route Prefix, as that's a structural part of the path but does not
-	// represent where the files are (used for embedding diecast in other services
-	// to avoid name collisions)
-	//
-	requestPath = strings.TrimPrefix(requestPath, self.RoutePrefix)
-
-	log.Debugf("Requesting file %q", requestPath)
-
-	// find a mount that has this file
-	for _, mount := range self.mounts {
-		// attempt to open the file entry
-		if file, err := mount.OpenFile(requestPath); err == nil {
-			// try to respond with the opened file
-			if handled := self.respondToFile(requestPath, file, w, req); handled {
-				log.Debugf("  File %q was handled by mount %s", requestPath, mount.MountPoint)
-				return
-			}
-		} else {
-			log.Debugf("  Skipping %q: failed to open file: %v", requestPath, err)
-		}
+	requestPaths := []string{
+		requestPath,
 	}
 
-	// if we got here, try to serve the file from the filesystem
-	if file, err := os.Open(path.Join(self.RootPath, requestPath)); err == nil {
-		if handled := self.respondToFile(requestPath, file, w, req); handled {
-			log.Debugf("  File %q was handled by filesystem", requestPath)
-			return
+	// if we're requesting a path without a file extension, be a dear and try it with a .html
+	// extension if the as-is path wasn't found
+	if path.Ext(requestPath) == `` {
+		requestPaths = append(requestPaths, fmt.Sprintf("%s.html", requestPath))
+	}
+
+	for _, rPath := range requestPaths {
+		// remove the Route Prefix, as that's a structural part of the path but does not
+		// represent where the files are (used for embedding diecast in other services
+		// to avoid name collisions)
+		//
+		rPath = strings.TrimPrefix(rPath, self.RoutePrefix)
+
+		log.Debugf("Requesting file %q", rPath)
+
+		// find a mount that has this file
+		for _, mount := range self.mounts {
+			// attempt to open the file entry
+			if file, err := mount.OpenFile(rPath); err == nil {
+				// try to respond with the opened file
+				if handled := self.respondToFile(rPath, file, w, req); handled {
+					log.Debugf("  File %q was handled by mount %s", rPath, mount.MountPoint)
+					return
+				}
+			} else {
+				log.Debugf("  Skipping %q: failed to open file: %v", rPath, err)
+			}
+		}
+
+		// if we got here, try to serve the file from the filesystem
+		if file, err := os.Open(path.Join(self.RootPath, rPath)); err == nil {
+			if handled := self.respondToFile(rPath, file, w, req); handled {
+				log.Debugf("  File %q was handled by filesystem", rPath)
+				return
+			}
 		}
 	}
 
@@ -261,6 +278,14 @@ func (self *Server) respondToFile(requestPath string, file *os.File, w http.Resp
 	if stat, err := file.Stat(); err == nil {
 		if !stat.IsDir() {
 			log.Debugf("File %q -> %q", requestPath, file.Name())
+
+			mimeType := `application/octet-stream`
+
+			if v := mime.TypeByExtension(path.Ext(file.Name())); v != `` {
+				mimeType = v
+			}
+
+			w.Header().Set(`Content-Type`, mimeType)
 
 			// we got a real actual file here, figure out if we're templating it or not
 			if self.ShouldApplyTemplate(requestPath) {
@@ -274,13 +299,6 @@ func (self *Server) respondToFile(requestPath string, file *os.File, w http.Resp
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 				}
 			} else {
-				mimeType := `application/octet-stream`
-
-				if v := mime.TypeByExtension(path.Ext(file.Name())); v != `` {
-					mimeType = v
-				}
-
-				w.Header().Set(`Content-Type`, mimeType)
 				io.Copy(w, file)
 			}
 
