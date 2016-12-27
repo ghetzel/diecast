@@ -316,4 +316,28 @@ func TestLayoutsDefault(t *testing.T) {
 	doTestServerRequest(server, `GET`, `/`, fn)
 	doTestServerRequest(server, `GET`, `/index.html`, fn)
 	doTestServerRequest(server, `GET`, `/layout-test/test1.html`, fn)
+
+	doTestServerRequest(server, `GET`, `/_partial.html`, func(w *httptest.ResponseRecorder) {
+		assert.Equal(200, w.Code)
+		data := w.Body.Bytes()
+		assert.Equal("AS-IS\n", string(data[:]))
+	})
+
+	doTestServerRequest(server, `GET`, `/_partial`, func(w *httptest.ResponseRecorder) {
+		assert.Equal(200, w.Code)
+		data := w.Body.Bytes()
+		assert.Equal("AS-IS\n", string(data[:]))
+	})
+
+	doTestServerRequest(server, `GET`, `/h2layout`, func(w *httptest.ResponseRecorder) {
+		assert.Equal(200, w.Code)
+		data := w.Body.Bytes()
+		assert.Equal("<h2>\n<b>GET</b>\n</h2>\n", string(data[:]))
+	})
+
+	doTestServerRequest(server, `GET`, `/h2-nolayout`, func(w *httptest.ResponseRecorder) {
+		assert.Equal(200, w.Code)
+		data := w.Body.Bytes()
+		assert.Equal("\n<b>GET</b>\n", string(data[:]))
+	})
 }

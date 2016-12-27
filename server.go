@@ -31,6 +31,7 @@ var HeaderSeparator = []byte{'-', '-', '-'}
 type TemplateHeader struct {
 	Page     map[string]interface{} `json:"page,omitempty"`
 	Bindings []Binding              `json:"bindings,omitempty"`
+	Layout   string                 `json:"layout,omitempty"`
 }
 
 type Server struct {
@@ -130,8 +131,6 @@ func (self *Server) ShouldApplyTemplate(requestPath string) bool {
 	baseName := filepath.Base(requestPath)
 
 	for _, pattern := range self.TemplatePatterns {
-		log.Debugf("  Does %q match %q?", baseName, pattern)
-
 		if match, err := filepath.Match(pattern, baseName); err == nil && match {
 			return true
 		}
@@ -140,38 +139,50 @@ func (self *Server) ShouldApplyTemplate(requestPath string) bool {
 	return false
 }
 
-func (self *Server) ApplyTemplate(w http.ResponseWriter, requestPath string, reader io.Reader, data interface{}, layouts ...string) error {
+func (self *Server) ApplyTemplate(w http.ResponseWriter, requestPath string, reader io.Reader, header *TemplateHeader, data interface{}, layouts ...string) error {
 	finalTemplate := bytes.NewBuffer(nil)
 	hasLayout := false
+	forceSkipLayout := false
+
+	if header != nil {
+		if header.Layout == `false` {
+			forceSkipLayout = true
+		} else {
+			layouts = append([]string{header.Layout}, layouts...)
+		}
+	}
 
 	// only process layouts if we're supposed to
-	if self.EnableLayouts {
-		// if no layouts were explicitly specified, and a layout named "default" exists, add it to the list
-		if len(layouts) == 0 {
-			if _, err := self.LoadLayout(`default`); err == nil {
-				layouts = append(layouts, `default`)
-			}
-		}
-
-		if len(layouts) > 0 {
-			finalTemplate.WriteString("{{ define \"layout\" }}")
-
-			for _, layoutName := range layouts {
-				if layoutFile, err := self.LoadLayout(layoutName); err == nil {
-					if _, err := io.Copy(finalTemplate, layoutFile); err != nil {
-						return err
-					}
-
-					hasLayout = true
-				} else {
-					// we don't care if the default layout is missing
-					if layoutName != `default` {
-						return err
-					}
+	if self.EnableLayouts && !forceSkipLayout {
+		// files starting with "_" are partials and should not have layouts applied
+		if !strings.HasPrefix(path.Base(requestPath), `_`) {
+			// if no layouts were explicitly specified, and a layout named "default" exists, add it to the list
+			if len(layouts) == 0 {
+				if _, err := self.LoadLayout(`default`); err == nil {
+					layouts = append(layouts, `default`)
 				}
 			}
 
-			finalTemplate.WriteString("{{ end }}")
+			if len(layouts) > 0 {
+				finalTemplate.WriteString("{{ define \"layout\" }}")
+
+				for _, layoutName := range layouts {
+					if layoutFile, err := self.LoadLayout(layoutName); err == nil {
+						if _, err := io.Copy(finalTemplate, layoutFile); err != nil {
+							return err
+						}
+
+						hasLayout = true
+					} else {
+						// we don't care if the default layout is missing
+						if layoutName != `default` {
+							return err
+						}
+					}
+				}
+
+				finalTemplate.WriteString("{{ end }}")
+			}
 		}
 	}
 
@@ -216,16 +227,9 @@ func (self *Server) ToTemplateName(requestPath string) string {
 	return requestPath
 }
 
-func (self *Server) GetTemplateData(req *http.Request, headerData []byte) (interface{}, error) {
+func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (interface{}, error) {
 	data := requestToEvalData(req)
 	bindings := make(map[string]interface{})
-	header := TemplateHeader{}
-
-	if headerData != nil {
-		if err := yaml.Unmarshal(headerData, &header); err != nil {
-			return nil, err
-		}
-	}
 
 	for _, binding := range self.Bindings {
 		if v, err := binding.Evaluate(req); err == nil {
@@ -239,22 +243,25 @@ func (self *Server) GetTemplateData(req *http.Request, headerData []byte) (inter
 		}
 	}
 
-	for _, binding := range header.Bindings {
-		binding.server = self
+	if header != nil {
+		for _, binding := range header.Bindings {
+			binding.server = self
 
-		if v, err := binding.Evaluate(req); err == nil {
-			bindings[binding.Name] = v
-		} else {
-			log.Warningf("Binding %q failed: %v", binding.Name, err)
+			if v, err := binding.Evaluate(req); err == nil {
+				bindings[binding.Name] = v
+			} else {
+				log.Warningf("Binding %q failed: %v", binding.Name, err)
 
-			if !binding.Optional {
-				return nil, err
+				if !binding.Optional {
+					return nil, err
+				}
 			}
 		}
+
+		data[`page`] = header.Page
 	}
 
 	data[`bindings`] = bindings
-	data[`page`] = header.Page
 
 	return data, nil
 }
@@ -331,9 +338,9 @@ func (self *Server) respondToFile(requestPath string, file *os.File, w http.Resp
 			if self.ShouldApplyTemplate(requestPath) {
 				log.Debugf("  Rendering %q as template", requestPath)
 
-				if headerData, templateData, err := self.SplitTemplateHeaderContent(file); err == nil {
-					if data, err := self.GetTemplateData(req, headerData); err == nil {
-						if err := self.ApplyTemplate(w, requestPath, bytes.NewBuffer(templateData), data); err != nil {
+				if header, templateData, err := self.SplitTemplateHeaderContent(file); err == nil {
+					if data, err := self.GetTemplateData(req, header); err == nil {
+						if err := self.ApplyTemplate(w, requestPath, bytes.NewBuffer(templateData), header, data); err != nil {
 							http.Error(w, err.Error(), http.StatusInternalServerError)
 						}
 					} else {
@@ -362,13 +369,21 @@ func (self *Server) respondToFile(requestPath string, file *os.File, w http.Resp
 	return false
 }
 
-func (self *Server) SplitTemplateHeaderContent(reader io.Reader) ([]byte, []byte, error) {
+func (self *Server) SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, error) {
 	if data, err := ioutil.ReadAll(reader); err == nil {
 		if bytes.HasPrefix(data, HeaderSeparator) {
 			parts := bytes.SplitN(data, HeaderSeparator, 3)
 
 			if len(parts) == 3 {
-				return parts[1], parts[2], nil
+				header := TemplateHeader{}
+
+				if parts[1] != nil {
+					if err := yaml.Unmarshal(parts[1], &header); err != nil {
+						return nil, nil, err
+					}
+				}
+
+				return &header, parts[2], nil
 			}
 		}
 
