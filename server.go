@@ -145,10 +145,12 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, requestPath string, rea
 	forceSkipLayout := false
 
 	if header != nil {
-		if header.Layout == `false` {
-			forceSkipLayout = true
-		} else {
-			layouts = append([]string{header.Layout}, layouts...)
+		if header.Layout != `` {
+			if header.Layout == `false` {
+				forceSkipLayout = true
+			} else {
+				layouts = append([]string{header.Layout}, layouts...)
+			}
 		}
 	}
 
