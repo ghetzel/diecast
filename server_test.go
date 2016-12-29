@@ -341,3 +341,16 @@ func TestLayoutsDefault(t *testing.T) {
 		assert.Equal("\n<b>GET</b>\n", string(data[:]))
 	})
 }
+
+func TestIncludes(t *testing.T) {
+	assert := require.New(t)
+	server := NewServer(`./examples/layouts`, `*.html`)
+
+	assert.Nil(server.Initialize())
+
+	doTestServerRequest(server, `GET`, `/include-base.html`, func(w *httptest.ResponseRecorder) {
+		assert.Equal(200, w.Code)
+		data := w.Body.Bytes()
+		assert.Equal("\n<b>GET</b>\n<i>GET</i>\n\n<u>GET</u>\n\n", string(data[:]))
+	})
+}

@@ -32,6 +32,7 @@ type TemplateHeader struct {
 	Page     map[string]interface{} `json:"page,omitempty"`
 	Bindings []Binding              `json:"bindings,omitempty"`
 	Layout   string                 `json:"layout,omitempty"`
+	Includes map[string]string      `json:"includes,omitempty"`
 }
 
 type Server struct {
@@ -338,11 +339,19 @@ func (self *Server) respondToFile(requestPath string, file *os.File, w http.Resp
 
 			// we got a real actual file here, figure out if we're templating it or not
 			if self.ShouldApplyTemplate(requestPath) {
-				log.Debugf("  Rendering %q as template", requestPath)
+				log.Debugf("Rendering %q as template", requestPath)
 
+				// tease the template header out of the file
 				if header, templateData, err := self.SplitTemplateHeaderContent(file); err == nil {
-					if data, err := self.GetTemplateData(req, header); err == nil {
-						if err := self.ApplyTemplate(w, requestPath, bytes.NewBuffer(templateData), header, data); err != nil {
+					// load any included templates, add in their headers, and append them to the already-loaded template bytes
+					if templateData, err := self.InjectIncludes(path.Dir(file.Name()), templateData, header); err == nil {
+						// retrieve external data declared in the Bindings section
+						if data, err := self.GetTemplateData(req, header); err == nil {
+							// render the final template and write it out
+							if err := self.ApplyTemplate(w, requestPath, bytes.NewBuffer(templateData), header, data); err != nil {
+								http.Error(w, err.Error(), http.StatusInternalServerError)
+							}
+						} else {
 							http.Error(w, err.Error(), http.StatusInternalServerError)
 						}
 					} else {
@@ -393,6 +402,41 @@ func (self *Server) SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeade
 	} else {
 		return nil, nil, err
 	}
+}
+
+func (self *Server) InjectIncludes(cwd string, data []byte, baseHeader *TemplateHeader) ([]byte, error) {
+	if baseHeader != nil {
+		newData := data
+
+		for name, includePath := range baseHeader.Includes {
+			includePath = path.Clean(path.Join(cwd, includePath))
+
+			if err := self.verifyRequestPathIsValid(includePath); err == nil {
+				if file, err := os.Open(includePath); err == nil {
+
+					if _, includeData, err := self.SplitTemplateHeaderContent(file); err == nil {
+						// baseHeader = baseHeader.Merge(includeHeader)
+						log.Debugf("Injecting included template %q from file %s", name, file.Name())
+
+						define := fmt.Sprintf("{{ define %q }}", name)
+						end := "{{ end }}"
+
+						newData = append(newData, []byte(define)...)
+						newData = append(newData, includeData...)
+						newData = append(newData, []byte(end)...)
+					} else {
+						return data, err
+					}
+				}
+			} else {
+				return data, nil
+			}
+		}
+
+		return newData, nil
+	}
+
+	return data, nil
 }
 
 func (self *Server) verifyRequestPathIsValid(validatePath string) error {
