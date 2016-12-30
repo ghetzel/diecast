@@ -201,8 +201,8 @@ func GetStandardFunctions() template.FuncMap {
 		return calcFn(`^`, values...)
 	}
 
-	rv[`sequence`] = func(max int) []int {
-		seq := make([]int, max)
+	rv[`sequence`] = func(max float64) []int {
+		seq := make([]int, int(max))
 
 		for i, _ := range seq {
 			seq[i] = i
