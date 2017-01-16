@@ -1,14 +1,9 @@
-.PHONY: vendor fmt build
+.PHONY: deps fmt build
 
-all: vendor fmt build
+all: fmt deps build
 
-update:
-	-rm -rf vendor
-	govend -u
-
-vendor:
-	go list github.com/govend/govend
-	govend --strict
+deps:
+	go get .
 
 fmt:
 	gofmt -w .
