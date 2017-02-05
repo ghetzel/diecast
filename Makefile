@@ -9,7 +9,7 @@ fmt:
 	gofmt -w .
 
 test: fmt
-	go test -v .
+	go test .
 
 build:
 	go build -o bin/`basename ${PWD}` cli/*.go

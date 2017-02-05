@@ -12,15 +12,23 @@ import (
 	"strings"
 )
 
+type BindingErrorAction string
+
+const (
+	ActionSummarize BindingErrorAction = `summarize`
+	ActionPrint                        = `print`
+)
+
 type Binding struct {
-	Name       string            `json:"name"`
-	Restrict   []string          `json:"restrict"`
-	Method     string            `json:"method"`
-	Resource   string            `json:"resource"`
-	Params     map[string]string `json:"params"`
-	Headers    map[string]string `json:"headers"`
-	NoTemplate bool              `json:"no_template"`
-	Optional   bool              `json:"optional"`
+	Name       string             `json:"name"`
+	Restrict   []string           `json:"restrict"`
+	Method     string             `json:"method"`
+	Resource   string             `json:"resource"`
+	Params     map[string]string  `json:"params"`
+	Headers    map[string]string  `json:"headers"`
+	NoTemplate bool               `json:"no_template"`
+	Optional   bool               `json:"optional"`
+	OnError    BindingErrorAction `json:"on_error"`
 	server     *Server
 }
 
@@ -97,8 +105,8 @@ func (self *Binding) Evaluate(req *http.Request) (interface{}, error) {
 			if res, err := client.Do(bindingReq); err == nil {
 				log.Debugf("Binding Response: HTTP %d (body: %d bytes)", res.StatusCode, res.ContentLength)
 
-				if res.StatusCode < 400 {
-					if data, err := ioutil.ReadAll(res.Body); err == nil {
+				if data, err := ioutil.ReadAll(res.Body); err == nil {
+					if res.StatusCode < 400 {
 						var rv interface{}
 
 						if err := json.Unmarshal(data, &rv); err == nil {
@@ -107,10 +115,18 @@ func (self *Binding) Evaluate(req *http.Request) (interface{}, error) {
 							return nil, err
 						}
 					} else {
-						return nil, err
+						switch self.OnError {
+						case ActionPrint:
+							return nil, fmt.Errorf("%v", string(data[:]))
+						default:
+							return nil, fmt.Errorf("Request %s %v failed: %s",
+								bindingReq.Method,
+								bindingReq.URL,
+								res.Status)
+						}
 					}
 				} else {
-					return nil, fmt.Errorf("Request failed with HTTP %d: %s", res.StatusCode, res.Status)
+					return nil, fmt.Errorf("Failed to read response body: %v", err)
 				}
 			} else {
 				return nil, err
