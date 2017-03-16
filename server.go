@@ -27,6 +27,8 @@ const DEFAULT_SERVE_PORT = 28419
 const DEFAULT_ROUTE_PREFIX = `/`
 
 var HeaderSeparator = []byte{'-', '-', '-'}
+var DefaultIndexFile = `index.html`
+var DefaultVerifyFile = `/` + DefaultIndexFile
 
 type TemplateHeader struct {
 	Page     map[string]interface{} `json:"page,omitempty"`
@@ -45,6 +47,8 @@ type Server struct {
 	RoutePrefix         string
 	TemplatePatterns    []string
 	AdditionalFunctions template.FuncMap
+	IndexFile           string
+	VerifyFile          string
 	mounts              []Mount
 	router              *httprouter.Router
 	server              *negroni.Negroni
@@ -62,6 +66,8 @@ func NewServer(root string, patterns ...string) *Server {
 		EnableLayouts:    true,
 		Bindings:         make([]*Binding, 0),
 		TemplatePatterns: patterns,
+		IndexFile:        DefaultIndexFile,
+		VerifyFile:       DefaultVerifyFile,
 		mounts:           make([]Mount, 0),
 	}
 }
@@ -76,8 +82,6 @@ func (self *Server) Mounts() []Mount {
 
 func (self *Server) SetFileSystem(fs http.FileSystem) {
 	self.fs = fs
-	self.fsIsSet = true
-	self.fileServer = http.FileServer(self.fs)
 }
 
 func (self *Server) Initialize() error {
@@ -95,14 +99,22 @@ func (self *Server) Initialize() error {
 	}
 
 	if self.LayoutPath == `` {
-		self.LayoutPath = path.Join(self.RootPath, `_layouts`)
+		self.LayoutPath = path.Join(`/`, `_layouts`)
 	}
 
 	self.RoutePrefix = strings.TrimSuffix(self.RoutePrefix, `/`)
 
 	// if we haven't explicitly set a filesystem, create it
-	if !self.fsIsSet {
+	if self.fs == nil {
 		self.SetFileSystem(http.Dir(self.RootPath))
+	}
+
+	self.fileServer = http.FileServer(self.fs)
+
+	if self.VerifyFile != `` {
+		if _, err := self.fs.Open(self.VerifyFile); err != nil {
+			return fmt.Errorf("Failed to open verification file %q: %v.", self.VerifyFile, err)
+		}
 	}
 
 	for _, binding := range self.Bindings {
@@ -221,7 +233,7 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, requestPath string, rea
 }
 
 func (self *Server) LoadLayout(name string) (io.Reader, error) {
-	return os.Open(fmt.Sprintf("%s/%s.html", self.LayoutPath, name))
+	return self.fs.Open(fmt.Sprintf("%s/%s.html", self.LayoutPath, name))
 }
 
 func (self *Server) ToTemplateName(requestPath string) string {
@@ -273,9 +285,9 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 	// normalize filename from request path
 	requestPath := req.URL.Path
 
-	// if we're looking at a directory, assume we want "index.html"
+	// if we're looking at a directory, assume we want the IndexFile
 	if strings.HasSuffix(requestPath, `/`) {
-		requestPath = path.Join(requestPath, `index.html`)
+		requestPath = path.Join(requestPath, self.IndexFile)
 	}
 
 	requestPaths := []string{
@@ -312,11 +324,15 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 		}
 
 		// if we got here, try to serve the file from the filesystem
-		if file, err := os.Open(path.Join(self.RootPath, rPath)); err == nil {
+		log.Debugf("Opening file %q from filesystem", path.Join(self.RootPath, rPath))
+
+		if file, err := self.fs.Open(rPath); err == nil {
 			if handled := self.respondToFile(rPath, file, w, req); handled {
 				log.Debugf("  File %q was handled by filesystem", rPath)
 				return
 			}
+		} else {
+			log.Debug(err)
 		}
 	}
 
@@ -324,14 +340,14 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 	http.Error(w, fmt.Sprintf("File %q was not found.", requestPath), http.StatusNotFound)
 }
 
-func (self *Server) respondToFile(requestPath string, file *os.File, w http.ResponseWriter, req *http.Request) bool {
+func (self *Server) respondToFile(requestPath string, file http.File, w http.ResponseWriter, req *http.Request) bool {
 	if stat, err := file.Stat(); err == nil {
 		if !stat.IsDir() {
-			log.Debugf("File %q -> %q", requestPath, file.Name())
+			log.Debugf("File requested: %q (actual: %q, %d bytes)", requestPath, stat.Name(), stat.Size())
 
 			mimeType := `application/octet-stream`
 
-			if v := mime.TypeByExtension(path.Ext(file.Name())); v != `` {
+			if v := mime.TypeByExtension(path.Ext(stat.Name())); v != `` {
 				mimeType = v
 			}
 
@@ -344,7 +360,7 @@ func (self *Server) respondToFile(requestPath string, file *os.File, w http.Resp
 				// tease the template header out of the file
 				if header, templateData, err := self.SplitTemplateHeaderContent(file); err == nil {
 					// load any included templates, add in their headers, and append them to the already-loaded template bytes
-					if templateData, err := self.InjectIncludes(path.Dir(file.Name()), templateData, header); err == nil {
+					if templateData, err := self.InjectIncludes(templateData, header); err == nil {
 						// retrieve external data declared in the Bindings section
 						if data, err := self.GetTemplateData(req, header); err == nil {
 							// render the final template and write it out
@@ -404,19 +420,15 @@ func (self *Server) SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeade
 	}
 }
 
-func (self *Server) InjectIncludes(cwd string, data []byte, baseHeader *TemplateHeader) ([]byte, error) {
+func (self *Server) InjectIncludes(data []byte, baseHeader *TemplateHeader) ([]byte, error) {
 	if baseHeader != nil {
 		newData := data
 
 		for name, includePath := range baseHeader.Includes {
-			includePath = path.Clean(path.Join(cwd, includePath))
-
-			if err := self.verifyRequestPathIsValid(includePath); err == nil {
-				if file, err := os.Open(includePath); err == nil {
-
-					if _, includeData, err := self.SplitTemplateHeaderContent(file); err == nil {
-						// baseHeader = baseHeader.Merge(includeHeader)
-						log.Debugf("Injecting included template %q from file %s", name, file.Name())
+			if file, err := self.fs.Open(includePath); err == nil {
+				if _, includeData, err := self.SplitTemplateHeaderContent(file); err == nil {
+					if stat, err := file.Stat(); err == nil {
+						log.Debugf("Injecting included template %q from file %s", name, stat.Name())
 
 						define := fmt.Sprintf("{{ define %q }}", name)
 						end := "{{ end }}"
@@ -427,9 +439,11 @@ func (self *Server) InjectIncludes(cwd string, data []byte, baseHeader *Template
 					} else {
 						return data, err
 					}
+				} else {
+					return data, err
 				}
 			} else {
-				return data, nil
+				log.Debugf("Failed to open %q: %v", includePath, err)
 			}
 		}
 
@@ -437,45 +451,6 @@ func (self *Server) InjectIncludes(cwd string, data []byte, baseHeader *Template
 	}
 
 	return data, nil
-}
-
-func (self *Server) verifyRequestPathIsValid(validatePath string) error {
-	if v, err := filepath.Abs(validatePath); err == nil {
-		validatePath = v
-	} else {
-		return err
-	}
-
-	prefixInBounds := false
-	validPrefixes := []string{
-		self.RootPath,
-	}
-
-	for _, mount := range self.mounts {
-		validPrefixes = append(validPrefixes, mount.Path)
-	}
-
-	for _, prefix := range validPrefixes {
-		if v, err := filepath.Abs(prefix); err == nil {
-			prefix = v
-		} else {
-			log.Warningf("Unable to get absolute path from %q: %v", prefix, err)
-			continue
-		}
-
-		log.Debugf("Trying %q against: %s", validatePath, prefix)
-
-		if strings.HasPrefix(validatePath, prefix) {
-			prefixInBounds = true
-			break
-		}
-	}
-
-	if !prefixInBounds {
-		return fmt.Errorf("Path %q is not a valid request path", validatePath)
-	}
-
-	return nil
 }
 
 func (self *Server) setupMounts() error {
