@@ -8,10 +8,10 @@ import (
 )
 
 type Mount struct {
-	http.FileSystem
-	MountPoint  string `json:"mount"`
-	Path        string `json:"path"`
-	Passthrough bool   `json:"passthrough"`
+	MountPoint  string          `json:"mount"`
+	Path        string          `json:"path"`
+	Passthrough bool            `json:"passthrough"`
+	FileSystem  http.FileSystem `json:"-"`
 }
 
 func NewMountFromSpec(spec string) (*Mount, error) {
@@ -48,8 +48,10 @@ func NewMountFromSpec(spec string) (*Mount, error) {
 }
 
 func (self *Mount) Initialize() error {
-	if _, err := os.Stat(self.Path); err != nil {
-		return err
+	if self.FileSystem == nil {
+		if _, err := os.Stat(self.Path); err != nil {
+			return err
+		}
 	}
 
 	log.Debugf("Initialize mount %q -> %q", self.MountPoint, self.Path)
@@ -61,11 +63,16 @@ func (self *Mount) WillRespondTo(name string) bool {
 	return strings.HasPrefix(name, self.MountPoint)
 }
 
-func (self *Mount) OpenFile(name string) (*os.File, error) {
+func (self *Mount) OpenFile(name string) (http.File, error) {
 	newPath := path.Join(strings.TrimSuffix(self.Path, `/`), strings.TrimPrefix(name, self.MountPoint))
 
 	log.Debugf("OpenFile(%q)", newPath)
-	return os.Open(newPath)
+
+	if self.FileSystem == nil {
+		return os.Open(newPath)
+	} else {
+		return self.FileSystem.Open(newPath)
+	}
 }
 
 func (self *Mount) Open(name string) (http.File, error) {

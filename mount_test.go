@@ -1,11 +1,25 @@
 package diecast
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 )
+
+type TestFileSystem map[string]http.File
+
+func (self TestFileSystem) Open(name string) (http.File, error) {
+	fmt.Printf("Opening %q\n", name)
+
+	if file, ok := self[name]; ok {
+		return file, nil
+	}
+
+	return nil, os.ErrNotExist
+}
 
 func getTestMounts(tt *require.Assertions) []Mount {
 	mounts := []Mount{
@@ -21,6 +35,13 @@ func getTestMounts(tt *require.Assertions) []Mount {
 		}, {
 			Path:       `./examples/external_path/mounted-layouts`,
 			MountPoint: `/layout-test`,
+		}, {
+			MountPoint: `/fs-test`,
+			FileSystem: TestFileSystem{
+				`/first`:  nil,
+				`/second`: nil,
+				`/third`:  nil,
+			},
 		},
 	}
 
@@ -74,4 +95,24 @@ func TestMounts(t *testing.T) {
 	assert.False(mount.WillRespondTo(`/js/bootstrap.min.js`))
 	assert.False(mount.WillRespondTo(`/index.html`))
 	assert.False(mount.WillRespondTo(`/`))
+
+	// MOUNT 4: Custom FileSystem test
+	// --------------------------------------------------------------------------------------------
+	mount = mounts[4]
+
+	assert.True(mount.WillRespondTo(`/fs-test/first`))
+	assert.True(mount.WillRespondTo(`/fs-test/second`))
+	assert.True(mount.WillRespondTo(`/fs-test/third`))
+
+	_, err = mount.Open(`/fs-test/first`)
+	assert.Nil(err)
+
+	_, err = mount.Open(`/fs-test/second`)
+	assert.Nil(err)
+
+	_, err = mount.Open(`/fs-test/third`)
+	assert.Nil(err)
+
+	_, err = mount.Open(`/fs-test/NOPE`)
+	assert.Equal(os.ErrNotExist, err)
 }
