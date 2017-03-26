@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/russross/blackfriday"
 	"html/template"
 	"math"
 	"strings"
@@ -68,6 +70,14 @@ func GetStandardFunctions() template.FuncMap {
 
 		data, err := json.MarshalIndent(value, ``, indentString)
 		return string(data[:]), err
+	}
+
+	rv[`markdown`] = func(value interface{}) (string, error) {
+		input := fmt.Sprintf("%v", value)
+		output := blackfriday.MarkdownCommon([]byte(input[:]))
+		output = bluemonday.UGCPolicy().SanitizeBytes(output)
+
+		return string(output[:]), nil
 	}
 
 	// type handling and conversion
