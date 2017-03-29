@@ -1,80 +1,72 @@
 package diecast
 
 import (
+	"errors"
 	"net/http"
-	"os"
-	"path"
+	"path/filepath"
 	"strings"
 )
 
-type Mount struct {
-	MountPoint  string          `json:"mount"`
-	Path        string          `json:"path"`
-	Passthrough bool            `json:"passthrough"`
-	FileSystem  http.FileSystem `json:"-"`
+var MountHaltErr = errors.New(`mount halted`)
+
+type Mount interface {
+	Open(string) (http.File, error)
+	OpenWithType(string) (http.File, string, error)
+	WillRespondTo(string) bool
+	GetMountPoint() string
 }
 
-func NewMountFromSpec(spec string) (*Mount, error) {
+func NewMountFromSpec(spec string) (Mount, error) {
 	parts := strings.SplitN(spec, `:`, 2)
-	var fsPath string
 	var mountPoint string
+	var source string
+	var scheme string
 
 	if len(parts) == 1 {
-		fsPath = parts[0]
 		mountPoint = parts[0]
+		source = parts[0]
 	} else {
-		fsPath = parts[0]
-		mountPoint = parts[1]
+		mountPoint = parts[0]
+		source = parts[1]
 	}
 
-	if !strings.HasPrefix(fsPath, `/`) {
-		if cwd, err := os.Getwd(); err == nil {
-			fsPath = path.Join(cwd, fsPath)
+	sourceParts := strings.SplitN(source, `:`, 2)
+
+	if len(sourceParts) == 2 {
+		scheme = sourceParts[0]
+	}
+
+	var mount Mount
+
+	switch scheme {
+	case `http`, `https`:
+		mount = &ProxyMount{
+			URL:        source,
+			MountPoint: mountPoint,
+		}
+
+	default:
+		if absPath, err := filepath.Abs(source); err == nil {
+			source = absPath
 		} else {
 			return nil, err
 		}
+
+		mount = &FileMount{
+			Path:       source,
+			MountPoint: mountPoint,
+		}
 	}
 
-	mount := &Mount{
-		Path:       fsPath,
-		MountPoint: mountPoint,
-	}
-
-	if err := mount.Initialize(); err != nil {
-		return nil, err
-	}
+	log.Debugf("Creating mount %T: %+v", mount, mount)
 
 	return mount, nil
 }
 
-func (self *Mount) Initialize() error {
-	if self.FileSystem == nil {
-		if _, err := os.Stat(self.Path); err != nil {
-			return err
-		}
+func IsHardStop(err error) bool {
+	if err.Error() == `mount halted` {
+		return true
 	}
 
-	log.Debugf("Initialize mount %q -> %q", self.MountPoint, self.Path)
-
-	return nil
-}
-
-func (self *Mount) WillRespondTo(name string) bool {
-	return strings.HasPrefix(name, self.MountPoint)
-}
-
-func (self *Mount) OpenFile(name string) (http.File, error) {
-	newPath := path.Join(strings.TrimSuffix(self.Path, `/`), strings.TrimPrefix(name, self.MountPoint))
-
-	log.Debugf("OpenFile(%q)", newPath)
-
-	if self.FileSystem == nil {
-		return os.Open(newPath)
-	} else {
-		return self.FileSystem.Open(newPath)
-	}
-}
-
-func (self *Mount) Open(name string) (http.File, error) {
-	return self.OpenFile(name)
+	return false
 }

@@ -121,10 +121,6 @@ func (self *Server) Initialize() error {
 		binding.server = self
 	}
 
-	if err := self.setupMounts(); err != nil {
-		return err
-	}
-
 	if err := self.setupServer(); err != nil {
 		return err
 	}
@@ -285,21 +281,20 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 	// normalize filename from request path
 	requestPath := req.URL.Path
 
-	// if we're looking at a directory, assume we want the IndexFile
-	if strings.HasSuffix(requestPath, `/`) {
-		requestPath = path.Join(requestPath, self.IndexFile)
-	}
-
 	requestPaths := []string{
 		requestPath,
 	}
 
-	// if we're requesting a path without a file extension, be a dear and try it with a .html
-	// extension if the as-is path wasn't found
-	if path.Ext(requestPath) == `` {
+	// if we're looking at a directory, assume we want the IndexFile
+	if strings.HasSuffix(requestPath, `/`) {
+		requestPaths = append(requestPaths, path.Join(requestPath, self.IndexFile))
+	} else if path.Ext(requestPath) == `` {
+		// if we're requesting a path without a file extension, be a dear and try it with a .html
+		// extension if the as-is path wasn't found
 		requestPaths = append(requestPaths, fmt.Sprintf("%s.html", requestPath))
 	}
 
+PathLoop:
 	for _, rPath := range requestPaths {
 		// remove the Route Prefix, as that's a structural part of the path but does not
 		// represent where the files are (used for embedding diecast in other services
@@ -307,28 +302,30 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 		//
 		rPath = strings.TrimPrefix(rPath, self.RoutePrefix)
 
-		log.Debugf("Requesting file %q", rPath)
+		log.Debugf("request: %q", rPath)
 
 		// find a mount that has this file
 		for _, mount := range self.mounts {
-			// attempt to open the file entry
-			if file, err := mount.OpenFile(rPath); err == nil {
-				// try to respond with the opened file
-				if handled := self.respondToFile(rPath, file, w, req); handled {
-					log.Debugf("  File %q was handled by mount %s", rPath, mount.MountPoint)
-					return
+			if mount.WillRespondTo(rPath) {
+				// attempt to open the file entry
+				if file, mimeType, err := mount.OpenWithType(rPath); err == nil {
+					// try to respond with the opened file
+					if handled := self.respondToFile(rPath, mimeType, file, w, req); handled {
+						log.Debugf("File %q was handled by mount %s", rPath, mount.GetMountPoint())
+						return
+					}
+				} else if IsHardStop(err) {
+					break PathLoop
+				} else {
+					log.Warning(err)
 				}
-			} else {
-				log.Debugf("  Skipping %q: failed to open file: %v", rPath, err)
 			}
 		}
 
 		// if we got here, try to serve the file from the filesystem
-		log.Debugf("Opening file %q from filesystem", path.Join(self.RootPath, rPath))
-
 		if file, err := self.fs.Open(rPath); err == nil {
-			if handled := self.respondToFile(rPath, file, w, req); handled {
-				log.Debugf("  File %q was handled by filesystem", rPath)
+			if handled := self.respondToFile(rPath, ``, file, w, req); handled {
+				log.Debugf("File %q was handled by filesystem", rPath)
 				return
 			}
 		} else {
@@ -340,15 +337,17 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 	http.Error(w, fmt.Sprintf("File %q was not found.", requestPath), http.StatusNotFound)
 }
 
-func (self *Server) respondToFile(requestPath string, file http.File, w http.ResponseWriter, req *http.Request) bool {
+func (self *Server) respondToFile(requestPath string, mimeType string, file http.File, w http.ResponseWriter, req *http.Request) bool {
 	if stat, err := file.Stat(); err == nil {
 		if !stat.IsDir() {
 			log.Debugf("File requested: %q (actual: %q, %d bytes)", requestPath, stat.Name(), stat.Size())
 
-			mimeType := `application/octet-stream`
+			if mimeType == `` {
+				mimeType = `application/octet-stream`
 
-			if v := mime.TypeByExtension(path.Ext(stat.Name())); v != `` {
-				mimeType = v
+				if v := mime.TypeByExtension(path.Ext(stat.Name())); v != `` {
+					mimeType = v
+				}
 			}
 
 			w.Header().Set(`Content-Type`, mimeType)
@@ -451,17 +450,6 @@ func (self *Server) InjectIncludes(data []byte, baseHeader *TemplateHeader) ([]b
 	}
 
 	return data, nil
-}
-
-func (self *Server) setupMounts() error {
-	// initialize all mounts
-	for _, mount := range self.mounts {
-		if err := mount.Initialize(); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (self *Server) setupServer() error {

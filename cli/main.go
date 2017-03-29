@@ -54,7 +54,7 @@ func main() {
 		},
 		cli.StringSliceFlag{
 			Name:  `mount, m`,
-			Usage: `Expose a given PATH as MOUNT when requested from the server (formatted as "PATH:MOUNT"; e.g. "/usr/share/javascript:/js")`,
+			Usage: `Expose a given as MOUNT and SOURCE when requested from the server (formatted as "MOUNT:SOURCE"; e.g. "/js:/usr/share/javascript")`,
 		},
 	}
 
@@ -106,7 +106,7 @@ func main() {
 
 		for _, mountSpec := range c.StringSlice(`mount`) {
 			if mount, err := diecast.NewMountFromSpec(mountSpec); err == nil {
-				mounts = append(mounts, *mount)
+				mounts = append(mounts, mount)
 			}
 		}
 
