@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
 	"html/template"
@@ -158,16 +159,26 @@ func GetStandardFunctions() template.FuncMap {
 	}
 
 	// numeric/math functions
-	calcFn := func(op string, values ...float64) (float64, error) {
-		switch len(values) {
+	calcFn := func(op string, values ...interface{}) (float64, error) {
+		valuesF := make([]float64, len(values))
+
+		for i, v := range values {
+			if vF, err := stringutil.ConvertToFloat(v); err == nil {
+				valuesF[i] = vF
+			} else {
+				return 0, err
+			}
+		}
+
+		switch len(valuesF) {
 		case 0:
 			return 0.0, nil
 		case 1:
-			return values[0], nil
+			return valuesF[0], nil
 		default:
-			out := values[0]
+			out := valuesF[0]
 
-			for _, v := range values[1:] {
+			for _, v := range valuesF[1:] {
 				switch op {
 				case `+`:
 					out += v
@@ -198,41 +209,52 @@ func GetStandardFunctions() template.FuncMap {
 
 	rv[`calc`] = calcFn
 
-	rv[`add`] = func(values ...float64) float64 {
+	rv[`add`] = func(values ...interface{}) float64 {
 		out, _ := calcFn(`+`, values...)
 		return out
 	}
 
-	rv[`subtract`] = func(values ...float64) float64 {
+	rv[`subtract`] = func(values ...interface{}) float64 {
 		out, _ := calcFn(`-`, values...)
 		return out
 	}
 
-	rv[`multiply`] = func(values ...float64) float64 {
+	rv[`multiply`] = func(values ...interface{}) float64 {
 		out, _ := calcFn(`*`, values...)
 		return out
 	}
 
-	rv[`divide`] = func(values ...float64) (float64, error) {
+	rv[`divide`] = func(values ...interface{}) (float64, error) {
 		return calcFn(`/`, values...)
 	}
 
-	rv[`mod`] = func(values ...float64) (float64, error) {
+	rv[`mod`] = func(values ...interface{}) (float64, error) {
 		return calcFn(`%`, values...)
 	}
 
-	rv[`pow`] = func(values ...float64) (float64, error) {
+	rv[`pow`] = func(values ...interface{}) (float64, error) {
 		return calcFn(`^`, values...)
 	}
 
-	rv[`sequence`] = func(max float64) []int {
-		seq := make([]int, int(max))
+	rv[`sequence`] = func(max interface{}) []int {
+		if v, err := stringutil.ConvertToInteger(max); err == nil {
+			seq := make([]int, v)
 
-		for i, _ := range seq {
-			seq[i] = i
+			for i, _ := range seq {
+				seq[i] = i
+			}
+
+			return seq
+		} else {
+			return nil
 		}
+	}
 
-		return seq
+	// simpler, more relaxed comparators
+	rv[`eqx`] = typeutil.RelaxedEqual
+	rv[`nex`] = func(first interface{}, second interface{}) (bool, error) {
+		eq, err := typeutil.RelaxedEqual(first, second)
+		return !eq, err
 	}
 
 	return rv
