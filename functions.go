@@ -91,6 +91,20 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`asBool`] = stringutil.ConvertToBool
 	rv[`asTime`] = stringutil.ConvertToTime
 	rv[`autobyte`] = stringutil.ToByteString
+	rv[`thousandify`] = func(value interface{}, sepDec ...string) string {
+		var separator string
+		var decimal string
+
+		if len(sepDec) > 0 {
+			separator = sepDec[0]
+		}
+
+		if len(sepDec) > 1 {
+			decimal = sepDec[1]
+		}
+
+		return stringutil.Thousandify(value, separator, decimal)
+	}
 
 	// time and date formatting
 	tmFmt := func(value interface{}, format ...string) (string, error) {
