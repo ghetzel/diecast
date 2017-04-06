@@ -19,6 +19,8 @@ const (
 	ActionPrint                        = `print`
 )
 
+var BindingClient = http.DefaultClient
+
 type Binding struct {
 	Name       string             `json:"name"`
 	Restrict   []string           `json:"restrict"`
@@ -74,8 +76,6 @@ func (self *Binding) Evaluate(req *http.Request) (interface{}, error) {
 
 	if reqUrl, err := url.Parse(self.Resource); err == nil {
 		if bindingReq, err := http.NewRequest(method, reqUrl.String(), nil); err == nil {
-			client := &http.Client{}
-
 			// eval and add query string parameters to request
 			qs := bindingReq.URL.Query()
 
@@ -102,7 +102,7 @@ func (self *Binding) Evaluate(req *http.Request) (interface{}, error) {
 
 			log.Debugf("Binding Request: %s %+v ? %s", method, reqUrl.String(), reqUrl.RawQuery)
 
-			if res, err := client.Do(bindingReq); err == nil {
+			if res, err := BindingClient.Do(bindingReq); err == nil {
 				log.Debugf("Binding Response: HTTP %d (body: %d bytes)", res.StatusCode, res.ContentLength)
 
 				if data, err := ioutil.ReadAll(res.Body); err == nil {
