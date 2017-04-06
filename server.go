@@ -30,9 +30,15 @@ var HeaderSeparator = []byte{'-', '-', '-'}
 var DefaultIndexFile = `index.html`
 var DefaultVerifyFile = `/` + DefaultIndexFile
 
+type Redirect struct {
+	URL  string `json:"url"`
+	Code int    `json:"code"`
+}
+
 type TemplateHeader struct {
 	Page     map[string]interface{} `json:"page,omitempty"`
 	Bindings []Binding              `json:"bindings,omitempty"`
+	Redirect *Redirect              `json:"redirect,omitempty"`
 	Layout   string                 `json:"layout,omitempty"`
 	Includes map[string]string      `json:"includes,omitempty"`
 }
@@ -358,6 +364,20 @@ func (self *Server) respondToFile(requestPath string, mimeType string, file http
 
 				// tease the template header out of the file
 				if header, templateData, err := self.SplitTemplateHeaderContent(file); err == nil {
+					if header != nil {
+						if redirect := header.Redirect; redirect != nil {
+							w.Header().Set(`Location`, redirect.URL)
+
+							if redirect.Code > 0 {
+								w.WriteHeader(redirect.Code)
+							} else {
+								w.WriteHeader(http.StatusMovedPermanently)
+							}
+
+							return true
+						}
+					}
+
 					// load any included templates, add in their headers, and append them to the already-loaded template bytes
 					if templateData, err := self.InjectIncludes(templateData, header); err == nil {
 						// retrieve external data declared in the Bindings section
