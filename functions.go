@@ -3,6 +3,7 @@ package diecast
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/microcosm-cc/bluemonday"
@@ -255,6 +256,21 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`nex`] = func(first interface{}, second interface{}) (bool, error) {
 		eq, err := typeutil.RelaxedEqual(first, second)
 		return !eq, err
+	}
+
+	// set processing
+	rv[`pluck`] = func(input interface{}, key string) []interface{} {
+		return maputil.Pluck(input, strings.Split(key, `.`))
+	}
+
+	rv[`in`] = func(want interface{}, input []interface{}) bool {
+		for _, have := range input {
+			if eq, err := typeutil.RelaxedEqual(have, want); err == nil && eq == true {
+				return true
+			}
+		}
+
+		return false
 	}
 
 	return rv
