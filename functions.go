@@ -1,18 +1,25 @@
 package diecast
 
 import (
+	"crypto/rand"
+	"encoding/base32"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/jbenet/go-base58"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
+	"github.com/satori/go.uuid"
 	"html/template"
 	"math"
 	"strings"
 	"time"
 )
+
+var Base32Alphabet = base32.NewEncoding(`abcdefghijklmnopqrstuvwxyz234567`)
 
 func GetStandardFunctions() template.FuncMap {
 	rv := make(template.FuncMap)
@@ -157,6 +164,49 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`time`] = tmFmt
 	rv[`now`] = func(format ...string) (string, error) {
 		return tmFmt(time.Now(), format...)
+	}
+
+	// random numbers and encoding
+	rv[`random`] = func(count int) ([]byte, error) {
+		output := make([]byte, count)
+		if _, err := rand.Read(output); err == nil {
+			return output, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	rv[`uuid`] = func() string {
+		return uuid.NewV4().String()
+	}
+
+	rv[`uuidRaw`] = func() []byte {
+		return uuid.NewV4().Bytes()
+	}
+
+	rv[`base32`] = func(input []byte) string {
+		return Base32Alphabet.EncodeToString(input)
+	}
+
+	rv[`base58`] = func(input []byte) string {
+		return base58.Encode(input)
+	}
+
+	rv[`base64`] = func(input []byte, encoding ...string) string {
+		if len(encoding) == 0 {
+			encoding = []string{`standard`}
+		}
+
+		switch encoding[0] {
+		case `padded`:
+			return base64.StdEncoding.EncodeToString(input)
+		case `url`:
+			return base64.RawURLEncoding.EncodeToString(input)
+		case `url-padded`:
+			return base64.URLEncoding.EncodeToString(input)
+		default:
+			return base64.RawStdEncoding.EncodeToString(input)
+		}
 	}
 
 	// numeric/math functions
