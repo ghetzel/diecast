@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/jbenet/go-base58"
@@ -321,6 +322,23 @@ func GetStandardFunctions() template.FuncMap {
 		}
 
 		return false
+	}
+
+	rv[`indexOf`] = func(slice interface{}, value interface{}) (index int) {
+		index = -1
+
+		if typeutil.IsArray(slice) {
+			sliceutil.Each(slice, func(i int, v interface{}) error {
+				if eq, err := typeutil.RelaxedEqual(v, value); err == nil && eq == true {
+					index = i
+					return sliceutil.Stop
+				} else {
+					return nil
+				}
+			})
+		}
+
+		return
 	}
 
 	return rv
