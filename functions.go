@@ -94,6 +94,8 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`isBool`] = stringutil.IsBoolean
 	rv[`isInt`] = stringutil.IsInteger
 	rv[`isFloat`] = stringutil.IsFloat
+	rv[`isZero`] = typeutil.IsZero
+	rv[`isEmpty`] = typeutil.IsEmpty
 	rv[`autotype`] = stringutil.Autotype
 	rv[`asStr`] = stringutil.ToString
 	rv[`asInt`] = stringutil.ConvertToInteger
