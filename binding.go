@@ -50,7 +50,7 @@ func (self *Binding) ShouldEvaluate(req *http.Request) bool {
 	return false
 }
 
-func (self *Binding) Evaluate(req *http.Request) (interface{}, error) {
+func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader) (interface{}, error) {
 	log.Debugf("Evaluating binding %q", self.Name)
 
 	if req.Header.Get(`X-Diecast-Binding`) == self.Name {
@@ -61,7 +61,7 @@ func (self *Binding) Evaluate(req *http.Request) (interface{}, error) {
 	var evalData map[string]interface{}
 
 	if !self.NoTemplate {
-		evalData = requestToEvalData(req)
+		evalData = requestToEvalData(req, header)
 	}
 
 	if strings.HasPrefix(self.Resource, `:`) {

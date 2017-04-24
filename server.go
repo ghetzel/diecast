@@ -36,11 +36,13 @@ type Redirect struct {
 }
 
 type TemplateHeader struct {
-	Page     map[string]interface{} `json:"page,omitempty"`
-	Bindings []Binding              `json:"bindings,omitempty"`
-	Redirect *Redirect              `json:"redirect,omitempty"`
-	Layout   string                 `json:"layout,omitempty"`
-	Includes map[string]string      `json:"includes,omitempty"`
+	Page           map[string]interface{} `json:"page,omitempty"`
+	Bindings       []Binding              `json:"bindings,omitempty"`
+	Defaults       map[string]string      `json:"defaults"`
+	DefaultHeaders map[string]string      `json:"default_headers"`
+	Redirect       *Redirect              `json:"redirect,omitempty"`
+	Layout         string                 `json:"layout,omitempty"`
+	Includes       map[string]string      `json:"includes,omitempty"`
 }
 
 type Server struct {
@@ -245,11 +247,11 @@ func (self *Server) ToTemplateName(requestPath string) string {
 }
 
 func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (interface{}, error) {
-	data := requestToEvalData(req)
+	data := requestToEvalData(req, header)
 	bindings := make(map[string]interface{})
 
 	for _, binding := range self.Bindings {
-		if v, err := binding.Evaluate(req); err == nil {
+		if v, err := binding.Evaluate(req, header); err == nil {
 			bindings[binding.Name] = v
 		} else {
 			log.Warningf("Binding %q failed: %v", binding.Name, err)
@@ -264,7 +266,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		for _, binding := range header.Bindings {
 			binding.server = self
 
-			if v, err := binding.Evaluate(req); err == nil {
+			if v, err := binding.Evaluate(req, header); err == nil {
 				bindings[binding.Name] = v
 			} else {
 				log.Warningf("Binding %q failed: %v", binding.Name, err)
@@ -513,14 +515,26 @@ func (self *Server) setupServer() error {
 	return nil
 }
 
-func requestToEvalData(req *http.Request) map[string]interface{} {
+func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]interface{} {
 	rv := make(map[string]interface{})
 	request := make(map[string]interface{})
 	qs := make(map[string]interface{})
 	hdr := make(map[string]interface{})
 
+	// query strings
+	// ------------------------------------------------------------------------
+	for dK, dV := range header.Defaults {
+		qs[dK] = stringutil.Autotype(dV)
+	}
+
 	for k, v := range req.URL.Query() {
 		qs[k] = stringutil.Autotype(strings.Join(v, `, `))
+	}
+
+	// response headers
+	// ------------------------------------------------------------------------
+	for dK, dV := range header.DefaultHeaders {
+		hdr[dK] = stringutil.Autotype(dV)
 	}
 
 	for k, v := range req.Header {
