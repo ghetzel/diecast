@@ -435,7 +435,7 @@ func (self *Server) SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeade
 			}
 		}
 
-		return nil, data, nil
+		return &TemplateHeader{}, data, nil
 	} else {
 		return nil, nil, err
 	}
