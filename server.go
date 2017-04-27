@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/codegangsta/negroni"
+	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghodss/yaml"
 	"github.com/julienschmidt/httprouter"
@@ -156,7 +157,7 @@ func (self *Server) ShouldApplyTemplate(requestPath string) bool {
 	return false
 }
 
-func (self *Server) ApplyTemplate(w http.ResponseWriter, requestPath string, reader io.Reader, header *TemplateHeader, data interface{}, layouts ...string) error {
+func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requestPath string, reader io.Reader, header *TemplateHeader, data interface{}, layouts ...string) error {
 	finalTemplate := bytes.NewBuffer(nil)
 	hasLayout := false
 	forceSkipLayout := false
@@ -224,6 +225,36 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, requestPath string, rea
 	if self.AdditionalFunctions != nil {
 		tmpl.Funcs(self.AdditionalFunctions)
 	}
+
+	// add in request-specific functions
+	tmpl.Funcs(template.FuncMap{
+		`payload`: func(key ...string) interface{} {
+			if len(key) == 0 {
+				return data
+			} else {
+				return maputil.DeepGet(data, strings.Split(key[0], `.`), nil)
+			}
+		},
+		`querystrings`: func() map[string]interface{} {
+			if v := maputil.DeepGet(data, []string{`request`, `url`, `query`}, nil); v != nil {
+				if vMap, ok := v.(map[string]interface{}); ok {
+					return vMap
+				}
+			}
+
+			return make(map[string]interface{})
+		},
+		`qs`: func(key string, fallbacks ...interface{}) interface{} {
+			if len(fallbacks) == 0 {
+				fallbacks = []interface{}{nil}
+			}
+
+			return maputil.DeepGet(data, []string{`request`, `url`, `query`, key}, fallbacks[0])
+		},
+		`headers`: func(key string) string {
+			return fmt.Sprintf("%v", maputil.DeepGet(data, []string{`request`, `headers`, key}, ``))
+		},
+	})
 
 	if tmpl, err := tmpl.Parse(finalTemplate.String()); err == nil {
 		if hasLayout {
@@ -385,7 +416,7 @@ func (self *Server) respondToFile(requestPath string, mimeType string, file http
 						// retrieve external data declared in the Bindings section
 						if data, err := self.GetTemplateData(req, header); err == nil {
 							// render the final template and write it out
-							if err := self.ApplyTemplate(w, requestPath, bytes.NewBuffer(templateData), header, data); err != nil {
+							if err := self.ApplyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header, data); err != nil {
 								http.Error(w, err.Error(), http.StatusInternalServerError)
 							}
 						} else {
