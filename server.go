@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/codegangsta/negroni"
 	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/ghodss/yaml"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
@@ -564,7 +564,6 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 			qs[k] = stringutil.Autotype(vv)
 		}
 	}
-
 
 	// response headers
 	// ------------------------------------------------------------------------
