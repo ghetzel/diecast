@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/codegangsta/negroni"
 	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghodss/yaml"
 	"github.com/julienschmidt/httprouter"
@@ -559,8 +560,11 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 	}
 
 	for k, v := range req.URL.Query() {
-		qs[k] = stringutil.Autotype(strings.Join(v, `, `))
+		if vv := strings.Join(v, `, `); !typeutil.IsZero(vv) {
+			qs[k] = stringutil.Autotype(vv)
+		}
 	}
+
 
 	// response headers
 	// ------------------------------------------------------------------------
@@ -569,7 +573,9 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 	}
 
 	for k, v := range req.Header {
-		hdr[k] = stringutil.Autotype(strings.Join(v, `, `))
+		if vv := strings.Join(v, `, `); !typeutil.IsZero(vv) {
+			hdr[k] = stringutil.Autotype(vv)
+		}
 	}
 
 	request[`method`] = req.Method
