@@ -53,6 +53,7 @@ type Server struct {
 	Bindings            []*Binding
 	RootPath            string
 	LayoutPath          string
+	IncludesPath        string
 	EnableLayouts       bool
 	RoutePrefix         string
 	TemplatePatterns    []string
@@ -110,6 +111,10 @@ func (self *Server) Initialize() error {
 
 	if self.LayoutPath == `` {
 		self.LayoutPath = path.Join(`/`, `_layouts`)
+	}
+
+	if self.IncludesPath == `` {
+		self.IncludesPath = path.Join(self.RootPath, `_includes`)
 	}
 
 	self.RoutePrefix = strings.TrimSuffix(self.RoutePrefix, `/`)
@@ -171,6 +176,11 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 				layouts = append([]string{header.Layout}, layouts...)
 			}
 		}
+	}
+
+	// add in includes first
+	if err := self.InjectIncludes(finalTemplate, header); err != nil {
+		return err
 	}
 
 	// only process layouts if we're supposed to
@@ -412,15 +422,10 @@ func (self *Server) respondToFile(requestPath string, mimeType string, file http
 						}
 					}
 
-					// load any included templates, add in their headers, and append them to the already-loaded template bytes
-					if templateData, err := self.InjectIncludes(templateData, header); err == nil {
-						// retrieve external data declared in the Bindings section
-						if data, err := self.GetTemplateData(req, header); err == nil {
-							// render the final template and write it out
-							if err := self.ApplyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header, data); err != nil {
-								http.Error(w, err.Error(), http.StatusInternalServerError)
-							}
-						} else {
+					// retrieve external data declared in the Bindings section
+					if data, err := self.GetTemplateData(req, header); err == nil {
+						// render the final template and write it out
+						if err := self.ApplyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header, data); err != nil {
 							http.Error(w, err.Error(), http.StatusInternalServerError)
 						}
 					} else {
@@ -473,11 +478,26 @@ func (self *Server) SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeade
 	}
 }
 
-func (self *Server) InjectIncludes(data []byte, baseHeader *TemplateHeader) ([]byte, error) {
-	if baseHeader != nil {
-		newData := data
+func (self *Server) InjectIncludes(w io.Writer, header *TemplateHeader) error {
+	includes := make(map[string]string)
 
-		for name, includePath := range baseHeader.Includes {
+	if includesDir, err := ioutil.ReadDir(self.IncludesPath); err == nil {
+		for _, entry := range includesDir {
+			name := strings.TrimSuffix(path.Base(entry.Name()), path.Ext(entry.Name()))
+			includePath := path.Join(strings.TrimPrefix(self.IncludesPath, self.RootPath), path.Base(entry.Name()))
+
+			includes[name] = includePath
+		}
+	}
+
+	if header != nil {
+		for name, includePath := range header.Includes {
+			includes[name] = includePath
+		}
+	}
+
+	if len(includes) > 0 {
+		for name, includePath := range includes {
 			if file, err := self.fs.Open(includePath); err == nil {
 				if _, includeData, err := self.SplitTemplateHeaderContent(file); err == nil {
 					if stat, err := file.Stat(); err == nil {
@@ -486,24 +506,24 @@ func (self *Server) InjectIncludes(data []byte, baseHeader *TemplateHeader) ([]b
 						define := fmt.Sprintf("{{ define %q }}", name)
 						end := "{{ end }}"
 
-						newData = append(newData, []byte(define)...)
-						newData = append(newData, includeData...)
-						newData = append(newData, []byte(end)...)
+						w.Write([]byte(define))
+						w.Write(includeData)
+						w.Write([]byte(end))
 					} else {
-						return data, err
+						return err
 					}
 				} else {
-					return data, err
+					return err
 				}
 			} else {
 				log.Debugf("Failed to open %q: %v", includePath, err)
 			}
 		}
 
-		return newData, nil
+		return nil
 	}
 
-	return data, nil
+	return nil
 }
 
 func (self *Server) setupServer() error {
