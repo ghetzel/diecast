@@ -53,7 +53,6 @@ type Server struct {
 	Bindings            []*Binding
 	RootPath            string
 	LayoutPath          string
-	IncludesPath        string
 	EnableLayouts       bool
 	RoutePrefix         string
 	TemplatePatterns    []string
@@ -111,10 +110,6 @@ func (self *Server) Initialize() error {
 
 	if self.LayoutPath == `` {
 		self.LayoutPath = path.Join(`/`, `_layouts`)
-	}
-
-	if self.IncludesPath == `` {
-		self.IncludesPath = path.Join(self.RootPath, `_includes`)
 	}
 
 	self.RoutePrefix = strings.TrimSuffix(self.RoutePrefix, `/`)
@@ -195,11 +190,18 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 			}
 
 			if len(layouts) > 0 {
-				finalTemplate.WriteString("{{ define \"layout\" }}")
-
 				for _, layoutName := range layouts {
 					if layoutFile, err := self.LoadLayout(layoutName); err == nil {
-						if _, err := io.Copy(finalTemplate, layoutFile); err != nil {
+						if layoutHeader, layoutData, err := self.SplitTemplateHeaderContent(layoutFile); err == nil {
+							// add in layout includes
+							if err := self.InjectIncludes(finalTemplate, layoutHeader); err != nil {
+								return err
+							}
+
+							finalTemplate.WriteString("{{ define \"layout\" }}")
+							finalTemplate.Write(layoutData)
+							finalTemplate.WriteString("{{ end }}\n")
+						} else {
 							return err
 						}
 
@@ -211,8 +213,6 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 						}
 					}
 				}
-
-				finalTemplate.WriteString("{{ end }}")
 			}
 		}
 	}
@@ -228,6 +228,8 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 	if hasLayout {
 		finalTemplate.WriteString("{{ end }}")
 	}
+
+	// log.Errorf("TD: %v\n", finalTemplate.String())
 
 	// create the template and make it aware of our custom functions
 	tmpl := template.New(self.ToTemplateName(requestPath))
@@ -480,15 +482,6 @@ func (self *Server) SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeade
 
 func (self *Server) InjectIncludes(w io.Writer, header *TemplateHeader) error {
 	includes := make(map[string]string)
-
-	if includesDir, err := ioutil.ReadDir(self.IncludesPath); err == nil {
-		for _, entry := range includesDir {
-			name := strings.TrimSuffix(path.Base(entry.Name()), path.Ext(entry.Name()))
-			includePath := path.Join(strings.TrimPrefix(self.IncludesPath, self.RootPath), path.Base(entry.Name()))
-
-			includes[name] = includePath
-		}
-	}
 
 	if header != nil {
 		for name, includePath := range header.Includes {
