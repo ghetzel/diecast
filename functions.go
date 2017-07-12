@@ -12,6 +12,7 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/jbenet/go-base58"
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/montanaflynn/stats"
 	"github.com/russross/blackfriday"
 	"github.com/satori/go.uuid"
 	"html/template"
@@ -21,6 +22,8 @@ import (
 )
 
 var Base32Alphabet = base32.NewEncoding(`abcdefghijklmnopqrstuvwxyz234567`)
+
+type statsUnary func(stats.Float64Data) (float64, error)
 
 func GetStandardFunctions() template.FuncMap {
 	rv := make(template.FuncMap)
@@ -304,6 +307,38 @@ func GetStandardFunctions() template.FuncMap {
 		}
 	}
 
+	// numeric aggregation functions
+	for fnName, fn := range map[string]statsUnary{
+		`maximum`: stats.Max,
+		`mean`:    stats.Mean,
+		`median`:  stats.Median,
+		`minimum`: stats.Min,
+		`stddev`:  stats.StandardDeviation,
+		`sum`:     stats.Sum,
+	} {
+		rv[fnName] = func(in interface{}) (float64, error) {
+			var input []float64
+
+			if err := sliceutil.Each(in, func(i int, value interface{}) error {
+				if v, err := stringutil.ConvertToFloat(value); err == nil {
+					input = append(input, v)
+				} else {
+					return err
+				}
+
+				return nil
+			}); err == nil {
+				if vv, err := fn(stats.Float64Data(input)); err == nil {
+					return vv, nil
+				} else {
+					return 0, err
+				}
+			} else {
+				return 0, err
+			}
+		}
+	}
+
 	// simpler, more relaxed comparators
 	rv[`eqx`] = typeutil.RelaxedEqual
 	rv[`nex`] = func(first interface{}, second interface{}) (bool, error) {
@@ -341,6 +376,14 @@ func GetStandardFunctions() template.FuncMap {
 		}
 
 		return
+	}
+
+	rv[`uniq`] = func(slice interface{}) []interface{} {
+		return sliceutil.Unique(slice)
+	}
+
+	rv[`stringify`] = func(slice interface{}) []string {
+		return sliceutil.Stringify(slice)
 	}
 
 	return rv
