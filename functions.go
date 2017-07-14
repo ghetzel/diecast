@@ -347,6 +347,10 @@ func GetStandardFunctions() template.FuncMap {
 	}
 
 	// set processing
+	rv[`asList`] = func(input ...interface{}) []interface{} {
+		return input
+	}
+
 	rv[`pluck`] = func(input interface{}, key string) []interface{} {
 		return maputil.Pluck(input, strings.Split(key, `.`))
 	}
