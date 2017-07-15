@@ -41,6 +41,12 @@ func GetStandardFunctions() template.FuncMap {
 			return strings.SplitN(input, delimiter, n[0])
 		}
 	}
+
+	rv[`join`] = func(input interface{}, delimiter string) string {
+		inStr := sliceutil.Stringify(input)
+		return strings.Join(inStr, delimiter)
+	}
+
 	rv[`strcount`] = strings.Count
 	rv[`titleize`] = strings.Title
 	rv[`trim`] = strings.TrimSpace
@@ -101,7 +107,14 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`isEmpty`] = typeutil.IsEmpty
 	rv[`autotype`] = stringutil.Autotype
 	rv[`asStr`] = stringutil.ToString
-	rv[`asInt`] = stringutil.ConvertToInteger
+	rv[`asInt`] = func(value interface{}) (int64, error) {
+		if v, err := stringutil.ConvertToFloat(value); err == nil {
+			return int64(v), nil
+		} else {
+			return 0, err
+		}
+	}
+
 	rv[`asFloat`] = stringutil.ConvertToFloat
 	rv[`asBool`] = stringutil.ConvertToBool
 	rv[`asTime`] = stringutil.ConvertToTime
@@ -308,6 +321,8 @@ func GetStandardFunctions() template.FuncMap {
 	}
 
 	// numeric aggregation functions
+	type statsTplFunc func(in interface{}) (float64, error) // {}
+
 	for fnName, fn := range map[string]statsUnary{
 		`maximum`: stats.Max,
 		`mean`:    stats.Mean,
@@ -316,27 +331,29 @@ func GetStandardFunctions() template.FuncMap {
 		`stddev`:  stats.StandardDeviation,
 		`sum`:     stats.Sum,
 	} {
-		rv[fnName] = func(in interface{}) (float64, error) {
-			var input []float64
+		rv[fnName] = func(statsFn statsUnary) statsTplFunc {
+			return func(in interface{}) (float64, error) {
+				var input []float64
 
-			if err := sliceutil.Each(in, func(i int, value interface{}) error {
-				if v, err := stringutil.ConvertToFloat(value); err == nil {
-					input = append(input, v)
-				} else {
-					return err
-				}
+				if err := sliceutil.Each(in, func(i int, value interface{}) error {
+					if v, err := stringutil.ConvertToFloat(value); err == nil {
+						input = append(input, v)
+					} else {
+						return err
+					}
 
-				return nil
-			}); err == nil {
-				if vv, err := fn(stats.Float64Data(input)); err == nil {
-					return vv, nil
+					return nil
+				}); err == nil {
+					if vv, err := statsFn(stats.Float64Data(input)); err == nil {
+						return vv, nil
+					} else {
+						return 0, err
+					}
 				} else {
 					return 0, err
 				}
-			} else {
-				return 0, err
 			}
-		}
+		}(fn)
 	}
 
 	// simpler, more relaxed comparators
@@ -384,6 +401,78 @@ func GetStandardFunctions() template.FuncMap {
 
 	rv[`uniq`] = func(slice interface{}) []interface{} {
 		return sliceutil.Unique(slice)
+	}
+
+	rv[`compact`] = func(slice []interface{}) []interface{} {
+		return sliceutil.Compact(slice)
+	}
+
+	rv[`first`] = func(slice interface{}) (out interface{}, err error) {
+		err = sliceutil.Each(slice, func(i int, value interface{}) error {
+			out = value
+			return sliceutil.Stop
+		})
+
+		return
+	}
+
+	rv[`last`] = func(slice interface{}) (out interface{}, err error) {
+		err = sliceutil.Each(slice, func(i int, value interface{}) error {
+			out = value
+			return nil
+		})
+
+		return
+	}
+
+	commonses := func(slice interface{}, cmp string) (interface{}, error) {
+		counts := make(map[interface{}]int)
+
+		if err := sliceutil.Each(slice, func(i int, value interface{}) error {
+			if c, ok := counts[value]; ok {
+				counts[value] = c + 1
+			} else {
+				counts[value] = 1
+			}
+
+			return nil
+		}); err == nil {
+			var out interface{}
+			var threshold int
+
+			for value, count := range counts {
+				if out == nil {
+					out = value
+				}
+
+				switch cmp {
+				case `most`:
+					if count > threshold {
+						out = value
+						threshold = count
+					}
+				case `least`:
+					if count < threshold {
+						out = value
+						threshold = count
+					}
+				default:
+					return nil, fmt.Errorf("Unknown comparator %q", cmp)
+				}
+			}
+
+			return out, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	rv[`mostcommon`] = func(slice interface{}) (interface{}, error) {
+		return commonses(slice, `most`)
+	}
+
+	rv[`leastcommon`] = func(slice interface{}) (interface{}, error) {
+		return commonses(slice, `least`)
 	}
 
 	rv[`stringify`] = func(slice interface{}) []string {
