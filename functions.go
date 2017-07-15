@@ -347,7 +347,7 @@ func GetStandardFunctions() template.FuncMap {
 					if vv, err := statsFn(stats.Float64Data(input)); err == nil {
 						return vv, nil
 					} else {
-						return 0, err
+						return 0, nil
 					}
 				} else {
 					return 0, err
