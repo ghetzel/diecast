@@ -2,8 +2,9 @@ package util
 
 import (
 	"fmt"
-	"github.com/ghetzel/cli"
 	"time"
+
+	"github.com/ghetzel/cli"
 )
 
 const ApplicationName = `diecast`

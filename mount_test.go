@@ -2,11 +2,12 @@ package diecast
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type TestFileSystem map[string]http.File

@@ -64,10 +64,22 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader) (interf
 		evalData = requestToEvalData(req, header)
 	}
 
+	// bindings may specify that a request should be made to the currently server address by
+	// prefixing the URL path with a colon (":").
+	//
 	if strings.HasPrefix(self.Resource, `:`) {
-		self.Resource = fmt.Sprintf("http://%s/%s",
-			req.Host,
-			strings.TrimPrefix(strings.TrimPrefix(self.Resource, `:`), `/`))
+		var prefix string
+
+		if self.server.BindingPrefix != `` {
+			prefix = self.server.BindingPrefix
+		} else {
+			prefix = fmt.Sprintf("http://%s", req.Host)
+		}
+
+		self.Resource = fmt.Sprintf("%s/%s",
+			strings.TrimSuffix(prefix, `/`),
+			strings.TrimPrefix(strings.TrimPrefix(self.Resource, `:`), `/`),
+		)
 	}
 
 	if !self.NoTemplate {

@@ -6,6 +6,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"math"
+	"strings"
+	"time"
+
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -15,10 +20,6 @@ import (
 	"github.com/montanaflynn/stats"
 	"github.com/russross/blackfriday"
 	"github.com/satori/go.uuid"
-	"html/template"
-	"math"
-	"strings"
-	"time"
 )
 
 var Base32Alphabet = base32.NewEncoding(`abcdefghijklmnopqrstuvwxyz234567`)

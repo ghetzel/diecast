@@ -1,13 +1,14 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+
 	"github.com/ghetzel/cli"
 	"github.com/ghetzel/diecast"
 	"github.com/ghetzel/diecast/util"
 	"github.com/ghodss/yaml"
 	"github.com/op/go-logging"
-	"io/ioutil"
-	"os"
 )
 
 var log = logging.MustGetLogger(`main`)

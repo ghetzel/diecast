@@ -3,10 +3,11 @@ package diecast
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func doTestServerRequest(s *Server, method string, path string, tester func(*httptest.ResponseRecorder)) {

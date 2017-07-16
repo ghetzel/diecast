@@ -4,13 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/codegangsta/negroni"
-	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
-	"github.com/ghodss/yaml"
-	"github.com/julienschmidt/httprouter"
-	"github.com/op/go-logging"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -20,6 +13,14 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/codegangsta/negroni"
+	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/ghodss/yaml"
+	"github.com/julienschmidt/httprouter"
+	"github.com/op/go-logging"
 )
 
 var log = logging.MustGetLogger(`diecast`)
@@ -51,6 +52,7 @@ type Server struct {
 	Address             string
 	Port                int
 	Bindings            []*Binding
+	BindingPrefix       string
 	RootPath            string
 	LayoutPath          string
 	EnableLayouts       bool
@@ -125,6 +127,10 @@ func (self *Server) Initialize() error {
 		if _, err := self.fs.Open(self.VerifyFile); err != nil {
 			return fmt.Errorf("Failed to open verification file %q: %v.", self.VerifyFile, err)
 		}
+	}
+
+	if self.BindingPrefix != `` {
+		log.Debugf("Binding prefix is %v", self.BindingPrefix)
 	}
 
 	for _, binding := range self.Bindings {
