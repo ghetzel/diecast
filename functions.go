@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"math"
+	"regexp"
 	"strings"
 	"time"
 
@@ -34,6 +35,17 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`lower`] = strings.ToLower
 	rv[`ltrim`] = strings.TrimPrefix
 	rv[`replace`] = strings.Replace
+	rv[`rxreplace`] = func(in interface{}, pattern string, repl string) (string, error) {
+		if inS, err := stringutil.ToString(in); err == nil {
+			if rx, err := regexp.Compile(pattern); err == nil {
+				return rx.ReplaceAllString(inS, repl), nil
+			} else {
+				return ``, err
+			}
+		} else {
+			return ``, err
+		}
+	}
 	rv[`rtrim`] = strings.TrimSuffix
 	rv[`split`] = func(input string, delimiter string, n ...int) []string {
 		if len(n) == 0 {

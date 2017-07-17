@@ -164,7 +164,7 @@ func (self *Server) ShouldApplyTemplate(requestPath string) bool {
 	return false
 }
 
-func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requestPath string, reader io.Reader, header *TemplateHeader, data interface{}, layouts ...string) error {
+func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requestPath string, reader io.Reader, header *TemplateHeader, data interface{}, funcs template.FuncMap, layouts ...string) error {
 	finalTemplate := bytes.NewBuffer(nil)
 	hasLayout := false
 	forceSkipLayout := false
@@ -239,41 +239,7 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 
 	// create the template and make it aware of our custom functions
 	tmpl := template.New(self.ToTemplateName(requestPath))
-	tmpl.Funcs(GetStandardFunctions())
-
-	if self.AdditionalFunctions != nil {
-		tmpl.Funcs(self.AdditionalFunctions)
-	}
-
-	// add in request-specific functions
-	tmpl.Funcs(template.FuncMap{
-		`payload`: func(key ...string) interface{} {
-			if len(key) == 0 {
-				return data
-			} else {
-				return maputil.DeepGet(data, strings.Split(key[0], `.`), nil)
-			}
-		},
-		`querystrings`: func() map[string]interface{} {
-			if v := maputil.DeepGet(data, []string{`request`, `url`, `query`}, nil); v != nil {
-				if vMap, ok := v.(map[string]interface{}); ok {
-					return vMap
-				}
-			}
-
-			return make(map[string]interface{})
-		},
-		`qs`: func(key string, fallbacks ...interface{}) interface{} {
-			if len(fallbacks) == 0 {
-				fallbacks = []interface{}{nil}
-			}
-
-			return maputil.DeepGet(data, []string{`request`, `url`, `query`, key}, fallbacks[0])
-		},
-		`headers`: func(key string) string {
-			return fmt.Sprintf("%v", maputil.DeepGet(data, []string{`request`, `headers`, key}, ``))
-		},
-	})
+	tmpl.Funcs(funcs)
 
 	if tmpl, err := tmpl.Parse(finalTemplate.String()); err == nil {
 		if hasLayout {
@@ -286,6 +252,52 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 	}
 }
 
+func (self *Server) GetTemplateFunctions(data interface{}) template.FuncMap {
+	funcs := make(template.FuncMap)
+
+	for k, v := range GetStandardFunctions() {
+		funcs[k] = v
+	}
+
+	if self.AdditionalFunctions != nil {
+		for k, v := range self.AdditionalFunctions {
+			funcs[k] = v
+		}
+	}
+
+	funcs[`payload`] = func(key ...string) interface{} {
+		if len(key) == 0 {
+			return data
+		} else {
+			return maputil.DeepGet(data, strings.Split(key[0], `.`), nil)
+		}
+	}
+
+	funcs[`querystrings`] = func() map[string]interface{} {
+		if v := maputil.DeepGet(data, []string{`request`, `url`, `query`}, nil); v != nil {
+			if vMap, ok := v.(map[string]interface{}); ok {
+				return vMap
+			}
+		}
+
+		return make(map[string]interface{})
+	}
+
+	funcs[`qs`] = func(key string, fallbacks ...interface{}) interface{} {
+		if len(fallbacks) == 0 {
+			fallbacks = []interface{}{nil}
+		}
+
+		return maputil.DeepGet(data, []string{`request`, `url`, `query`, key}, fallbacks[0])
+	}
+
+	funcs[`headers`] = func(key string) string {
+		return fmt.Sprintf("%v", maputil.DeepGet(data, []string{`request`, `headers`, key}, ``))
+	}
+
+	return funcs
+}
+
 func (self *Server) LoadLayout(name string) (io.Reader, error) {
 	return self.fs.Open(fmt.Sprintf("%s/%s.html", self.LayoutPath, name))
 }
@@ -296,18 +308,26 @@ func (self *Server) ToTemplateName(requestPath string) string {
 	return requestPath
 }
 
-func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (interface{}, error) {
+func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (template.FuncMap, interface{}, error) {
 	data := requestToEvalData(req, header)
 	bindings := make(map[string]interface{})
 
+	if header != nil {
+		data[`page`] = header.Page
+	}
+
+	// these are the functions that will be available to every part of the rendering process
+	funcs := self.GetTemplateFunctions(data)
+
 	for _, binding := range self.Bindings {
-		if v, err := binding.Evaluate(req, header); err == nil {
+		if v, err := binding.Evaluate(req, header, data, funcs); err == nil {
 			bindings[binding.Name] = v
+			data[`bindings`] = bindings
 		} else {
 			log.Warningf("Binding %q failed: %v", binding.Name, err)
 
 			if !binding.Optional {
-				return nil, err
+				return funcs, nil, err
 			}
 		}
 	}
@@ -316,23 +336,22 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		for _, binding := range header.Bindings {
 			binding.server = self
 
-			if v, err := binding.Evaluate(req, header); err == nil {
+			if v, err := binding.Evaluate(req, header, data, funcs); err == nil {
 				bindings[binding.Name] = v
+				data[`bindings`] = bindings
 			} else {
 				log.Warningf("Binding %q failed: %v", binding.Name, err)
 
 				if !binding.Optional {
-					return nil, err
+					return funcs, nil, err
 				}
 			}
 		}
-
-		data[`page`] = header.Page
 	}
 
 	data[`bindings`] = bindings
 
-	return data, nil
+	return funcs, data, nil
 }
 
 func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) {
@@ -431,9 +450,9 @@ func (self *Server) respondToFile(requestPath string, mimeType string, file http
 					}
 
 					// retrieve external data declared in the Bindings section
-					if data, err := self.GetTemplateData(req, header); err == nil {
+					if funcs, data, err := self.GetTemplateData(req, header); err == nil {
 						// render the final template and write it out
-						if err := self.ApplyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header, data); err != nil {
+						if err := self.ApplyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header, data, funcs); err != nil {
 							http.Error(w, err.Error(), http.StatusInternalServerError)
 						}
 					} else {

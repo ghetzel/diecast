@@ -10,6 +10,9 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 type BindingErrorAction string
@@ -24,10 +27,14 @@ var BindingClient = http.DefaultClient
 type Binding struct {
 	Name       string             `json:"name"`
 	Restrict   []string           `json:"restrict"`
+	OnlyIfExpr string             `json:"only_if"`
+	NotIfExpr  string             `json:"not_if"`
 	Method     string             `json:"method"`
 	Resource   string             `json:"resource"`
 	Params     map[string]string  `json:"params"`
 	Headers    map[string]string  `json:"headers"`
+	BodyParams map[string]string  `json:"body"`
+	Formatter  string             `json:"formatter"`
 	NoTemplate bool               `json:"no_template"`
 	Optional   bool               `json:"optional"`
 	OnError    BindingErrorAction `json:"on_error"`
@@ -50,7 +57,7 @@ func (self *Binding) ShouldEvaluate(req *http.Request) bool {
 	return false
 }
 
-func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader) (interface{}, error) {
+func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data map[string]interface{}, funcs template.FuncMap) (interface{}, error) {
 	log.Debugf("Evaluating binding %q", self.Name)
 
 	if req.Header.Get(`X-Diecast-Binding`) == self.Name {
@@ -58,11 +65,6 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader) (interf
 	}
 
 	method := strings.ToUpper(self.Method)
-	var evalData map[string]interface{}
-
-	if !self.NoTemplate {
-		evalData = requestToEvalData(req, header)
-	}
 
 	// bindings may specify that a request should be made to the currently server address by
 	// prefixing the URL path with a colon (":").
@@ -83,8 +85,22 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader) (interf
 	}
 
 	if !self.NoTemplate {
-		self.Resource = self.Eval(self.Resource, evalData)
+		if self.OnlyIfExpr != `` {
+			if v := self.Eval(self.OnlyIfExpr, data, funcs); typeutil.IsEmpty(v) {
+				return nil, fmt.Errorf("Binding not being evaluated because only_if expression was false")
+			}
+		}
+
+		if self.NotIfExpr != `` {
+			if v := self.Eval(self.NotIfExpr, data, funcs); !typeutil.IsEmpty(v) {
+				return nil, fmt.Errorf("Binding not being evaluated because not_if expression was truthy")
+			}
+		}
+
+		self.Resource = self.Eval(self.Resource, data, funcs)
 	}
+
+	log.Debugf("  binding %q: resource=%v", self.Name, self.Resource)
 
 	if reqUrl, err := url.Parse(self.Resource); err == nil {
 		if bindingReq, err := http.NewRequest(method, reqUrl.String(), nil); err == nil {
@@ -93,9 +109,10 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader) (interf
 
 			for k, v := range self.Params {
 				if !self.NoTemplate {
-					v = self.Eval(v, evalData)
+					v = self.Eval(v, data, funcs)
 				}
 
+				log.Debugf("  binding %q: param %v=%v", self.Name, k, v)
 				qs.Set(k, v)
 			}
 
@@ -104,10 +121,40 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader) (interf
 			// add headers to request
 			for k, v := range self.Headers {
 				if !self.NoTemplate {
-					v = self.Eval(v, evalData)
+					v = self.Eval(v, data, funcs)
 				}
 
+				log.Debugf("  binding %q: header %v=%v", self.Name, k, v)
 				bindingReq.Header.Set(k, v)
+			}
+
+			// add body to request
+			var body bytes.Buffer
+
+			if self.BodyParams != nil {
+				bodyParams := make(map[string]interface{})
+
+				for k, v := range self.BodyParams {
+					if !self.NoTemplate {
+						v = self.Eval(v, data, funcs)
+					}
+
+					log.Debugf("  binding %q: bodyparam %v=%v", self.Name, k, v)
+					bodyParams[k] = stringutil.Autotype(v)
+				}
+
+				if len(bodyParams) > 0 {
+					switch self.Formatter {
+					case `json`, ``:
+						if err := json.NewEncoder(&body).Encode(&bodyParams); err != nil {
+							return nil, err
+						}
+
+						bindingReq.Body = ioutil.NopCloser(&body)
+					default:
+						return nil, fmt.Errorf("Unknown request formatter %q", self.Formatter)
+					}
+				}
 			}
 
 			bindingReq.Header.Set(`X-Diecast-Binding`, self.Name)
@@ -151,19 +198,17 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader) (interf
 	}
 }
 
-func (self *Binding) Eval(input string, data map[string]interface{}) string {
+func (self *Binding) Eval(input string, data map[string]interface{}, funcs template.FuncMap) string {
 	tmpl := template.New(`inline`)
-	tmpl.Funcs(GetStandardFunctions())
-
-	if self.server != nil && self.server.AdditionalFunctions != nil {
-		tmpl.Funcs(self.server.AdditionalFunctions)
-	}
+	tmpl.Funcs(funcs)
 
 	if _, err := tmpl.Parse(input); err == nil {
 		output := bytes.NewBuffer(nil)
 
 		if err := tmpl.Execute(output, data); err == nil {
 			return output.String()
+		} else {
+			log.Debugf("error evaluating %q: %v", input, err)
 		}
 	}
 
