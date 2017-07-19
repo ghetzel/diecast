@@ -416,9 +416,11 @@ PathLoop:
 			}
 		}
 
-		if handled := self.respondToFile(rPath, mimeType, file, w, req); handled {
-			log.Debug(message)
-			return
+		if file != nil {
+			if handled := self.respondToFile(rPath, mimeType, file, w, req); handled {
+				log.Debug(message)
+				return
+			}
 		}
 	}
 
