@@ -6,3 +6,6 @@
 /config
 /diecast.yml
 /test.*
+/*.deb
+/*.rpm
+/pkg

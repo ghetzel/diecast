@@ -16,3 +16,16 @@ test: fmt
 
 build:
 	go build -o bin/`basename ${PWD}` cli/*.go
+
+package:
+	-rm -rf pkg
+	mkdir -p pkg/usr/bin
+	cp bin/diecast pkg/usr/bin/diecast
+	fpm \
+		--input-type  dir \
+		--output-type deb \
+		--deb-user    root \
+		--deb-group   root \
+		--name        diecast \
+		--version     `./pkg/usr/bin/diecast -v | cut -d' ' -f3` \
+		-C            pkg
