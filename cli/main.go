@@ -61,6 +61,10 @@ func main() {
 			Name:  `local-first`,
 			Usage: `Attempt to lookup files locally before evaluating mounts.`,
 		},
+		cli.StringFlag{
+			Name:  `verify-file`,
+			Usage: `Specifies a filename to verify the existence of (relative to the server root).`,
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
@@ -85,6 +89,7 @@ func main() {
 		server.Port = c.Int(`port`)
 		server.RoutePrefix = c.String(`route-prefix`)
 		server.TryLocalFirst = c.Bool(`local-first`)
+		server.VerifyFile = c.String(`verify-file`)
 
 		if v := c.StringSlice(`template-pattern`); len(v) > 0 {
 			server.TemplatePatterns = v
