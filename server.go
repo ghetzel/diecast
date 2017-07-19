@@ -59,6 +59,7 @@ type Server struct {
 	RoutePrefix         string
 	TemplatePatterns    []string
 	AdditionalFunctions template.FuncMap
+	TryLocalFirst       bool
 	IndexFile           string
 	VerifyFile          string
 	mounts              []Mount
@@ -364,7 +365,7 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 
 	// if we're looking at a directory, assume we want the IndexFile
 	if strings.HasSuffix(requestPath, `/`) {
-		requestPaths = append(requestPaths, path.Join(requestPath, self.IndexFile))
+		requestPaths = append([]string{path.Join(requestPath, self.IndexFile)}, requestPaths...)
 	} else if path.Ext(requestPath) == `` {
 		// if we're requesting a path without a file extension, be a dear and try it with a .html
 		// extension if the as-is path wasn't found
@@ -378,40 +379,78 @@ PathLoop:
 		// to avoid name collisions)
 		//
 		rPath = strings.TrimPrefix(rPath, self.RoutePrefix)
+		var file http.File
+		var mimeType string
+		var message string
 
 		log.Debugf("request: %q", rPath)
 
-		// find a mount that has this file
-		for _, mount := range self.mounts {
-			if mount.WillRespondTo(rPath) {
-				// attempt to open the file entry
-				if file, mimeType, err := mount.OpenWithType(rPath); err == nil {
-					// try to respond with the opened file
-					if handled := self.respondToFile(rPath, mimeType, file, w, req); handled {
-						log.Debugf("File %q was handled by mount %s", rPath, mount.GetMountPoint())
-						return
-					}
-				} else if IsHardStop(err) {
-					break PathLoop
-				} else {
-					log.Warning(err)
-				}
+		if self.TryLocalFirst {
+			if f, m, err := self.tryLocalFile(rPath); err == nil {
+				file = f
+				mimeType = m
+				message = fmt.Sprintf("File %q was handled by filesystem", rPath)
+
+			} else if mnt, f, m, err := self.tryMounts(rPath); err == nil {
+				file = f
+				mimeType = m
+				message = fmt.Sprintf("File %q was handled by mount %s", rPath, mnt.GetMountPoint())
+
+			} else if IsHardStop(err) {
+				break PathLoop
+			}
+		} else {
+			if mnt, f, m, err := self.tryMounts(rPath); err == nil {
+				file = f
+				mimeType = m
+				message = fmt.Sprintf("File %q was handled by mount %s", rPath, mnt.GetMountPoint())
+
+			} else if IsHardStop(err) {
+				break PathLoop
+
+			} else if f, m, err := self.tryLocalFile(rPath); err == nil {
+				file = f
+				mimeType = m
+				message = fmt.Sprintf("File %q was handled by filesystem", rPath)
+
 			}
 		}
 
-		// if we got here, try to serve the file from the filesystem
-		if file, err := self.fs.Open(rPath); err == nil {
-			if handled := self.respondToFile(rPath, ``, file, w, req); handled {
-				log.Debugf("File %q was handled by filesystem", rPath)
-				return
-			}
-		} else {
-			log.Debug(err)
+		if handled := self.respondToFile(rPath, mimeType, file, w, req); handled {
+			log.Debug(message)
+			return
 		}
 	}
 
 	// if we got *here*, then File Not Found
 	http.Error(w, fmt.Sprintf("File %q was not found.", requestPath), http.StatusNotFound)
+}
+
+func (self *Server) tryLocalFile(requestPath string) (http.File, string, error) {
+	// if we got here, try to serve the file from the filesystem
+	if file, err := self.fs.Open(requestPath); err == nil {
+		return file, ``, nil
+	} else {
+		return nil, ``, err
+	}
+}
+
+func (self *Server) tryMounts(requestPath string) (Mount, http.File, string, error) {
+	// find a mount that has this file
+	for _, mount := range self.mounts {
+		if mount.WillRespondTo(requestPath) {
+			// attempt to open the file entry
+			if file, mimeType, err := mount.OpenWithType(requestPath); err == nil {
+				return mount, file, mimeType, nil
+			} else if IsHardStop(err) {
+				return nil, nil, ``, err
+			} else {
+				log.Warning(err)
+			}
+		}
+	}
+
+	return nil, nil, ``, fmt.Errorf("%q not found", requestPath)
 }
 
 func (self *Server) respondToFile(requestPath string, mimeType string, file http.File, w http.ResponseWriter, req *http.Request) bool {

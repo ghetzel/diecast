@@ -57,6 +57,10 @@ func main() {
 			Name:  `mount, m`,
 			Usage: `Expose a given as MOUNT and SOURCE when requested from the server (formatted as "MOUNT:SOURCE"; e.g. "/js:/usr/share/javascript")`,
 		},
+		cli.BoolTFlag{
+			Name:  `local-first`,
+			Usage: `Attempt to lookup files locally before evaluating mounts.`,
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
@@ -80,6 +84,7 @@ func main() {
 		server.Address = c.String(`address`)
 		server.Port = c.Int(`port`)
 		server.RoutePrefix = c.String(`route-prefix`)
+		server.TryLocalFirst = c.Bool(`local-first`)
 
 		if v := c.StringSlice(`template-pattern`); len(v) > 0 {
 			server.TemplatePatterns = v
