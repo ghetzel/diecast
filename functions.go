@@ -152,13 +152,18 @@ func GetStandardFunctions() template.FuncMap {
 	tmFmt := func(value interface{}, format ...string) (string, error) {
 		if v, err := stringutil.ConvertToTime(value); err == nil {
 			var tmFormat string
+			var formatName string
 
 			if len(format) == 0 {
 				tmFormat = time.RFC3339
 			} else {
-				switch format[0] {
+				formatName = format[0]
+
+				switch formatName {
 				case `kitchen`:
 					tmFormat = time.Kitchen
+				case `timer`:
+					tmFormat = `15:04:05`
 				case `rfc3339`:
 					tmFormat = time.RFC3339
 				case `rfc3339ns`:
@@ -184,11 +189,19 @@ func GetStandardFunctions() template.FuncMap {
 				case `ruby`:
 					tmFormat = time.RubyDate
 				default:
-					tmFormat = format[0]
+					tmFormat = formatName
 				}
 			}
 
-			return v.Format(tmFormat), nil
+			vStr := v.Format(tmFormat)
+
+			if formatName == `timer` {
+				if len(strings.Split(vStr, `:`)) == 3 {
+					vStr = strings.TrimPrefix(vStr, `00:`)
+				}
+			}
+
+			return vStr, nil
 		} else {
 			return ``, err
 		}
@@ -197,6 +210,45 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`time`] = tmFmt
 	rv[`now`] = func(format ...string) (string, error) {
 		return tmFmt(time.Now(), format...)
+	}
+
+	rv[`duration`] = func(value interface{}, unit string, formats ...string) (string, error) {
+		if v, err := stringutil.ConvertToInteger(value); err == nil {
+			duration := time.Duration(v)
+			format := `timer`
+
+			if len(formats) > 0 {
+				format = formats[0]
+			}
+
+			switch unit {
+			case `ns`, ``:
+				break
+			case `us`:
+				duration = duration * time.Microsecond
+			case `ms`:
+				duration = duration * time.Millisecond
+			case `s`:
+				duration = duration * time.Second
+			case `m`:
+				duration = duration * time.Minute
+			case `h`:
+				duration = duration * time.Hour
+			case `d`:
+				duration = duration * time.Hour * 24
+			case `y`:
+				duration = duration * time.Hour * 24 * 365
+			default:
+				return ``, fmt.Errorf("Unrecognized unit %q", unit)
+			}
+
+			basetime := time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC)
+			basetime = basetime.Add(duration)
+
+			return tmFmt(basetime, format)
+		} else {
+			return ``, err
+		}
 	}
 
 	// random numbers and encoding
@@ -245,7 +297,7 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`murmur3`] = func(input interface{}) (uint64, error) {
 		if v, err := stringutil.ToString(input); err == nil {
 			return murmur3.Sum64([]byte(v)), nil
-		}else{
+		} else {
 			return 0, err
 		}
 	}
