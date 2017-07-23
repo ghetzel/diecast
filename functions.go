@@ -21,6 +21,7 @@ import (
 	"github.com/montanaflynn/stats"
 	"github.com/russross/blackfriday"
 	"github.com/satori/go.uuid"
+	"github.com/spaolacci/murmur3"
 )
 
 var Base32Alphabet = base32.NewEncoding(`abcdefghijklmnopqrstuvwxyz234567`)
@@ -238,6 +239,14 @@ func GetStandardFunctions() template.FuncMap {
 			return base64.URLEncoding.EncodeToString(input)
 		default:
 			return base64.RawStdEncoding.EncodeToString(input)
+		}
+	}
+
+	rv[`murmur3`] = func(input interface{}) (uint64, error) {
+		if v, err := stringutil.ToString(input); err == nil {
+			return murmur3.Sum64([]byte(v)), nil
+		}else{
+			return 0, err
 		}
 	}
 
