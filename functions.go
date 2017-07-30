@@ -28,6 +28,16 @@ var Base32Alphabet = base32.NewEncoding(`abcdefghijklmnopqrstuvwxyz234567`)
 
 type statsUnary func(stats.Float64Data) (float64, error)
 
+func MinNonZero(data stats.Float64Data) (float64, error) {
+	for i, v := range data {
+		if v == 0 {
+			data = append(data[:i], data[i+1:]...)
+		}
+	}
+
+	return stats.Min(data)
+}
+
 func GetStandardFunctions() template.FuncMap {
 	rv := make(template.FuncMap)
 
@@ -398,12 +408,13 @@ func GetStandardFunctions() template.FuncMap {
 	type statsTplFunc func(in interface{}) (float64, error) // {}
 
 	for fnName, fn := range map[string]statsUnary{
-		`maximum`: stats.Max,
-		`mean`:    stats.Mean,
-		`median`:  stats.Median,
-		`minimum`: stats.Min,
-		`stddev`:  stats.StandardDeviation,
-		`sum`:     stats.Sum,
+		`maximum`:    stats.Max,
+		`mean`:       stats.Mean,
+		`median`:     stats.Median,
+		`minimum`:    stats.Min,
+		`minimum_nz`: MinNonZero,
+		`stddev`:     stats.StandardDeviation,
+		`sum`:        stats.Sum,
 	} {
 		rv[fnName] = func(statsFn statsUnary) statsTplFunc {
 			return func(in interface{}) (float64, error) {
