@@ -442,9 +442,9 @@ func GetStandardFunctions() template.FuncMap {
 	}
 
 	// simpler, more relaxed comparators
-	rv[`eqx`] = typeutil.RelaxedEqual
+	rv[`eqx`] = stringutil.RelaxedEqual
 	rv[`nex`] = func(first interface{}, second interface{}) (bool, error) {
-		eq, err := typeutil.RelaxedEqual(first, second)
+		eq, err := stringutil.RelaxedEqual(first, second)
 		return !eq, err
 	}
 
@@ -459,7 +459,7 @@ func GetStandardFunctions() template.FuncMap {
 
 	rv[`in`] = func(want interface{}, input []interface{}) bool {
 		for _, have := range input {
-			if eq, err := typeutil.RelaxedEqual(have, want); err == nil && eq == true {
+			if eq, err := stringutil.RelaxedEqual(have, want); err == nil && eq == true {
 				return true
 			}
 		}
@@ -472,7 +472,7 @@ func GetStandardFunctions() template.FuncMap {
 
 		if typeutil.IsArray(slice) {
 			sliceutil.Each(slice, func(i int, v interface{}) error {
-				if eq, err := typeutil.RelaxedEqual(v, value); err == nil && eq == true {
+				if eq, err := stringutil.RelaxedEqual(v, value); err == nil && eq == true {
 					index = i
 					return sliceutil.Stop
 				} else {
