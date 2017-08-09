@@ -38,6 +38,7 @@ type Binding struct {
 	NoTemplate bool               `json:"no_template"`
 	Optional   bool               `json:"optional"`
 	OnError    BindingErrorAction `json:"on_error"`
+	SkipInheritHeaders bool `json:"skip_inherit_headers"`
 	server     *Server
 }
 
@@ -118,13 +119,22 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 			bindingReq.URL.RawQuery = qs.Encode()
 
+			// if specified, have the binding request inherit the headers from the initiating request
+			if !self.SkipInheritHeaders {
+				for k, _ := range req.Header {
+					v := req.Header.Get(k)
+					log.Debugf("  binding %q: inherit %v=%v", self.Name, k, v)
+					bindingReq.Header.Set(k, v)
+				}
+			}
+
 			// add headers to request
 			for k, v := range self.Headers {
 				if !self.NoTemplate {
 					v = self.Eval(v, data, funcs)
 				}
 
-				log.Debugf("  binding %q: header %v=%v", self.Name, k, v)
+				log.Debugf("  binding %q:  header %v=%v", self.Name, k, v)
 				bindingReq.Header.Set(k, v)
 			}
 
