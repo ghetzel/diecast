@@ -25,21 +25,21 @@ const (
 var BindingClient = http.DefaultClient
 
 type Binding struct {
-	Name       string             `json:"name"`
-	Restrict   []string           `json:"restrict"`
-	OnlyIfExpr string             `json:"only_if"`
-	NotIfExpr  string             `json:"not_if"`
-	Method     string             `json:"method"`
-	Resource   string             `json:"resource"`
-	Params     map[string]string  `json:"params"`
-	Headers    map[string]string  `json:"headers"`
-	BodyParams map[string]string  `json:"body"`
-	Formatter  string             `json:"formatter"`
-	NoTemplate bool               `json:"no_template"`
-	Optional   bool               `json:"optional"`
-	OnError    BindingErrorAction `json:"on_error"`
-	SkipInheritHeaders bool `json:"skip_inherit_headers"`
-	server     *Server
+	Name               string             `json:"name"`
+	Restrict           []string           `json:"restrict"`
+	OnlyIfExpr         string             `json:"only_if"`
+	NotIfExpr          string             `json:"not_if"`
+	Method             string             `json:"method"`
+	Resource           string             `json:"resource"`
+	Params             map[string]string  `json:"params"`
+	Headers            map[string]string  `json:"headers"`
+	BodyParams         map[string]string  `json:"body"`
+	Formatter          string             `json:"formatter"`
+	NoTemplate         bool               `json:"no_template"`
+	Optional           bool               `json:"optional"`
+	OnError            BindingErrorAction `json:"on_error"`
+	SkipInheritHeaders bool               `json:"skip_inherit_headers"`
+	server             *Server
 }
 
 func (self *Binding) ShouldEvaluate(req *http.Request) bool {
