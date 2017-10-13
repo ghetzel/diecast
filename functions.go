@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"math"
+	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -101,6 +102,19 @@ func GetStandardFunctions() template.FuncMap {
 		} else {
 			return ``, err
 		}
+	}
+
+	// file pathname handling
+	rv[`basename`] = func(value interface{}) string {
+		return path.Base(fmt.Sprintf("%v", value))
+	}
+
+	rv[`extname`] = func(value interface{}) string {
+		return path.Ext(fmt.Sprintf("%v", value))
+	}
+
+	rv[`dirname`] = func(value interface{}) string {
+		return path.Dir(fmt.Sprintf("%v", value))
 	}
 
 	// encoding
