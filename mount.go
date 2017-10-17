@@ -2,6 +2,7 @@ package diecast
 
 import (
 	"errors"
+	"io"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -11,8 +12,8 @@ var MountHaltErr = errors.New(`mount halted`)
 
 type Mount interface {
 	Open(string) (http.File, error)
-	OpenWithType(string) (http.File, string, error)
-	WillRespondTo(string) bool
+	OpenWithType(string, *http.Request, io.Reader) (http.File, string, error)
+	WillRespondTo(string, *http.Request, io.Reader) bool
 	GetMountPoint() string
 }
 

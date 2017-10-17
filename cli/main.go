@@ -65,6 +65,19 @@ func main() {
 			Name:  `verify-file`,
 			Usage: `Specifies a filename to verify the existence of (relative to the server root).`,
 		},
+		cli.StringFlag{
+			Name:  `index-file`,
+			Usage: `Specifies a default filename for paths ending in "/".`,
+			Value: diecast.DefaultIndexFile,
+		},
+		cli.BoolFlag{
+			Name:  `mounts-passthrough-requests, R`,
+			Usage: `Whether to passthrough client requests to proxy mounts.`,
+		},
+		cli.BoolFlag{
+			Name:  `mounts-passthrough-errors, E`,
+			Usage: `Whether proxy mounts that return non 2xx HTTP statuses should be counted as valid responses.`,
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
@@ -90,6 +103,7 @@ func main() {
 		server.RoutePrefix = c.String(`route-prefix`)
 		server.TryLocalFirst = c.Bool(`local-first`)
 		server.VerifyFile = c.String(`verify-file`)
+		server.IndexFile = c.String(`index-file`)
 
 		if v := c.StringSlice(`template-pattern`); len(v) > 0 {
 			server.TemplatePatterns = v
@@ -115,8 +129,21 @@ func main() {
 
 		mounts := make([]diecast.Mount, 0)
 
-		for _, mountSpec := range c.StringSlice(`mount`) {
+		for i, mountSpec := range c.StringSlice(`mount`) {
 			if mount, err := diecast.NewMountFromSpec(mountSpec); err == nil {
+				if proxyMount, ok := mount.(*diecast.ProxyMount); ok {
+					proxyMount.PassthroughRequests = c.Bool(`mounts-passthrough-requests`)
+					proxyMount.PassthroughErrors = c.Bool(`mounts-passthrough-errors`)
+
+					if proxyMount.PassthroughRequests {
+						log.Debugf("%T %d configured to passthrough client requests", proxyMount, i)
+					}
+
+					if proxyMount.PassthroughErrors {
+						log.Debugf("%T %d configured to consider HTTP 4xx/5xx responses as valid", proxyMount, i)
+					}
+				}
+
 				mounts = append(mounts, mount)
 			}
 		}

@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"io"
 	"mime"
 	"net/http"
 	"os"
@@ -19,11 +20,11 @@ func (self *FileMount) GetMountPoint() string {
 	return self.MountPoint
 }
 
-func (self *FileMount) WillRespondTo(name string) bool {
+func (self *FileMount) WillRespondTo(name string, req *http.Request, requestBody io.Reader) bool {
 	return strings.HasPrefix(name, self.GetMountPoint())
 }
 
-func (self *FileMount) OpenWithType(name string) (http.File, string, error) {
+func (self *FileMount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (http.File, string, error) {
 	if self.FileSystem == nil {
 		if _, err := os.Stat(self.Path); err != nil {
 			return nil, ``, err
@@ -49,6 +50,6 @@ func (self *FileMount) OpenWithType(name string) (http.File, string, error) {
 }
 
 func (self *FileMount) Open(name string) (http.File, error) {
-	file, _, err := self.OpenWithType(name)
+	file, _, err := self.OpenWithType(name, nil, nil)
 	return file, err
 }

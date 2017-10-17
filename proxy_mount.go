@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -75,23 +76,27 @@ func (self *responseFile) Stat() (os.FileInfo, error) {
 }
 
 type ProxyMount struct {
-	MountPoint string            `json:"mount"`
-	URL        string            `json:"url"`
-	Method     string            `json:"method,omitempty"`
-	Headers    map[string]string `json:"headers,omitempty"`
-	Timeout    time.Duration     `json:"timeout,omitempty"`
-	Client     *http.Client
+	MountPoint          string            `json:"mount"`
+	URL                 string            `json:"url"`
+	Method              string            `json:"method,omitempty"`
+	Headers             map[string]string `json:"headers,omitempty"`
+	Timeout             time.Duration     `json:"timeout,omitempty"`
+	PassthroughRequests bool              `json:"passthrough_requests"`
+	PassthroughErrors   bool              `json:"passthrough_errors"`
+	Client              *http.Client
 }
 
 func (self *ProxyMount) GetMountPoint() string {
 	return self.MountPoint
 }
 
-func (self *ProxyMount) WillRespondTo(name string) bool {
+func (self *ProxyMount) WillRespondTo(name string, req *http.Request, requestBody io.Reader) bool {
 	return strings.HasPrefix(name, self.GetMountPoint())
 }
 
-func (self *ProxyMount) OpenWithType(name string) (http.File, string, error) {
+func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (http.File, string, error) {
+	var proxyURI string
+
 	if self.Client == nil {
 		if self.Timeout == 0 {
 			self.Timeout = DefaultProxyMountTimeout
@@ -111,22 +116,74 @@ func (self *ProxyMount) OpenWithType(name string) (http.File, string, error) {
 		self.Method = `get`
 	}
 
-	url := strings.Join([]string{
-		strings.TrimSuffix(self.URL, `/`),
-		strings.TrimPrefix(name, `/`),
-	}, `/`)
+	if req != nil && self.PassthroughRequests {
+		if newURL, err := url.Parse(self.URL); err == nil {
+			req.URL.Scheme = newURL.Scheme
+			req.URL.Host = newURL.Host
+
+			if newURL.User != nil {
+				req.URL.User = newURL.User
+			}
+
+			if newURL.Fragment != `` {
+				req.URL.Fragment = newURL.Fragment
+			}
+
+			// merge incoming query strings with proxy query strings
+			qs := req.URL.Query()
+
+			for newQs, newVs := range newURL.Query() {
+				for _, v := range newVs {
+					qs.Add(newQs, v)
+				}
+			}
+
+			req.URL.RawQuery = qs.Encode()
+
+			proxyURI = req.URL.String()
+		} else {
+			return nil, ``, fmt.Errorf("Failed to parse proxy URL: %v", err)
+		}
+	} else {
+		proxyURI = strings.Join([]string{
+			strings.TrimSuffix(self.URL, `/`),
+			strings.TrimPrefix(name, `/`),
+		}, `/`)
+	}
 
 	method := strings.ToUpper(self.Method)
 
-	log.Debugf("url: %v", url)
+	if req != nil && self.PassthroughRequests {
+		method = req.Method
+	}
 
-	if req, err := http.NewRequest(method, url, nil); err == nil {
-		for name, value := range self.Headers {
-			req.Header.Set(name, value)
+	log.Debugf("Proxy URI: %v", proxyURI)
+
+	if newReq, err := http.NewRequest(method, proxyURI, nil); err == nil {
+		if req != nil && self.PassthroughRequests {
+			for name, values := range req.Header {
+				for _, value := range values {
+					newReq.Header.Set(name, value)
+				}
+			}
 		}
 
-		if response, err := self.Client.Do(req); err == nil {
-			if response.StatusCode < 400 {
+		for name, value := range self.Headers {
+			newReq.Header.Set(name, value)
+		}
+
+		if requestBody != nil && self.PassthroughRequests {
+			newReq.Body = ioutil.NopCloser(requestBody)
+		}
+
+		log.Debugf("ProxyMount: %v %v", newReq.Method, newReq.URL)
+
+		for k, v := range newReq.Header {
+			log.Debugf("ProxyMount: [H] %v=%v", k, strings.Join(v, ` `))
+		}
+
+		if response, err := self.Client.Do(newReq); err == nil {
+			if response.StatusCode < 400 || self.PassthroughErrors {
 				if data, err := ioutil.ReadAll(response.Body); err == nil {
 					payload := bytes.NewReader(data)
 
@@ -139,7 +196,7 @@ func (self *ProxyMount) OpenWithType(name string) (http.File, string, error) {
 					return nil, ``, err
 				}
 			} else {
-				log.Debugf("ProxyMount: %s %s: %s", method, url, response.Status)
+				log.Debugf("ProxyMount: %s %s: %s", method, proxyURI, response.Status)
 				return nil, ``, MountHaltErr
 			}
 		} else {
@@ -151,6 +208,6 @@ func (self *ProxyMount) OpenWithType(name string) (http.File, string, error) {
 }
 
 func (self *ProxyMount) Open(name string) (http.File, error) {
-	file, _, err := self.OpenWithType(name)
+	file, _, err := self.OpenWithType(name, nil, nil)
 	return file, err
 }

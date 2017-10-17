@@ -66,12 +66,12 @@ func TestMounts(t *testing.T) {
 	// --------------------------------------------------------------------------------------------
 	mount = mounts[0]
 
-	assert.True(mount.WillRespondTo(`/js/bootstrap.min.js`))
-	assert.True(mount.WillRespondTo(`/js/jquery.min.js`))
-	assert.True(mount.WillRespondTo(`/js/nonexistent.whatever`))
-	assert.False(mount.WillRespondTo(`/css/bootstrap.min.css`))
-	assert.False(mount.WillRespondTo(`/index.html`))
-	assert.False(mount.WillRespondTo(`/`))
+	assert.True(mount.WillRespondTo(`/js/bootstrap.min.js`, nil, nil))
+	assert.True(mount.WillRespondTo(`/js/jquery.min.js`, nil, nil))
+	assert.True(mount.WillRespondTo(`/js/nonexistent.whatever`, nil, nil))
+	assert.False(mount.WillRespondTo(`/css/bootstrap.min.css`, nil, nil))
+	assert.False(mount.WillRespondTo(`/index.html`, nil, nil))
+	assert.False(mount.WillRespondTo(`/`, nil, nil))
 
 	// file read test
 	file, err = mount.Open(`/js/bootstrap.min.js`)
@@ -90,18 +90,18 @@ func TestMounts(t *testing.T) {
 	// --------------------------------------------------------------------------------------------
 	mount = mounts[1]
 
-	assert.True(mount.WillRespondTo(`/css/bootstrap.min.css`))
-	assert.False(mount.WillRespondTo(`/js/bootstrap.min.js`))
-	assert.False(mount.WillRespondTo(`/index.html`))
-	assert.False(mount.WillRespondTo(`/`))
+	assert.True(mount.WillRespondTo(`/css/bootstrap.min.css`, nil, nil))
+	assert.False(mount.WillRespondTo(`/js/bootstrap.min.js`, nil, nil))
+	assert.False(mount.WillRespondTo(`/index.html`, nil, nil))
+	assert.False(mount.WillRespondTo(`/`, nil, nil))
 
 	// MOUNT 4: Custom FileSystem test
 	// --------------------------------------------------------------------------------------------
 	mount = mounts[4]
 
-	assert.True(mount.WillRespondTo(`/fs-test/first`))
-	assert.True(mount.WillRespondTo(`/fs-test/second`))
-	assert.True(mount.WillRespondTo(`/fs-test/third`))
+	assert.True(mount.WillRespondTo(`/fs-test/first`, nil, nil))
+	assert.True(mount.WillRespondTo(`/fs-test/second`, nil, nil))
+	assert.True(mount.WillRespondTo(`/fs-test/third`, nil, nil))
 
 	_, err = mount.Open(`/fs-test/first`)
 	assert.Nil(err)

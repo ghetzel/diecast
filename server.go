@@ -372,6 +372,8 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 		requestPaths = append(requestPaths, fmt.Sprintf("%s.html", requestPath))
 	}
 
+	var triedLocal bool
+
 PathLoop:
 	for _, rPath := range requestPaths {
 		// remove the Route Prefix, as that's a structural part of the path but does not
@@ -383,15 +385,15 @@ PathLoop:
 		var mimeType string
 		var message string
 
-		log.Debugf("request: %q", rPath)
+		if self.TryLocalFirst && !triedLocal {
+			triedLocal = true
 
-		if self.TryLocalFirst {
-			if f, m, err := self.tryLocalFile(rPath); err == nil {
+			if f, m, err := self.tryLocalFile(rPath, req); err == nil {
 				file = f
 				mimeType = m
 				message = fmt.Sprintf("File %q was handled by filesystem", rPath)
 
-			} else if mnt, f, m, err := self.tryMounts(rPath); err == nil {
+			} else if mnt, f, m, err := self.tryMounts(rPath, req); err == nil {
 				file = f
 				mimeType = m
 				message = fmt.Sprintf("File %q was handled by mount %s", rPath, mnt.GetMountPoint())
@@ -400,7 +402,7 @@ PathLoop:
 				break PathLoop
 			}
 		} else {
-			if mnt, f, m, err := self.tryMounts(rPath); err == nil {
+			if mnt, f, m, err := self.tryMounts(rPath, req); err == nil {
 				file = f
 				mimeType = m
 				message = fmt.Sprintf("File %q was handled by mount %s", rPath, mnt.GetMountPoint())
@@ -408,7 +410,7 @@ PathLoop:
 			} else if IsHardStop(err) {
 				break PathLoop
 
-			} else if f, m, err := self.tryLocalFile(rPath); err == nil {
+			} else if f, m, err := self.tryLocalFile(rPath, req); err == nil {
 				file = f
 				mimeType = m
 				message = fmt.Sprintf("File %q was handled by filesystem", rPath)
@@ -428,7 +430,7 @@ PathLoop:
 	http.Error(w, fmt.Sprintf("File %q was not found.", requestPath), http.StatusNotFound)
 }
 
-func (self *Server) tryLocalFile(requestPath string) (http.File, string, error) {
+func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.File, string, error) {
 	// if we got here, try to serve the file from the filesystem
 	if file, err := self.fs.Open(requestPath); err == nil {
 		return file, ``, nil
@@ -437,12 +439,29 @@ func (self *Server) tryLocalFile(requestPath string) (http.File, string, error) 
 	}
 }
 
-func (self *Server) tryMounts(requestPath string) (Mount, http.File, string, error) {
+func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, http.File, string, error) {
+	var body *bytes.Reader
+
+	// buffer the request body because we need to repeatedly pass it to multiple mounts
+	if data, err := ioutil.ReadAll(req.Body); err == nil {
+		log.Debugf("Read %d bytes from request body\n%v", len(data), string(data))
+		body = bytes.NewReader(data)
+	} else {
+		return nil, nil, ``, err
+	}
+
 	// find a mount that has this file
 	for _, mount := range self.mounts {
-		if mount.WillRespondTo(requestPath) {
+		log.Debugf("Request path %q: trying mount %T", requestPath, mount)
+
+		// seek the body buffer back to the beginning
+		if _, err := body.Seek(0, 0); err != nil {
+			return nil, nil, ``, err
+		}
+
+		if mount.WillRespondTo(requestPath, req, body) {
 			// attempt to open the file entry
-			if file, mimeType, err := mount.OpenWithType(requestPath); err == nil {
+			if file, mimeType, err := mount.OpenWithType(requestPath, req, body); err == nil {
 				return mount, file, mimeType, nil
 			} else if IsHardStop(err) {
 				return nil, nil, ``, err
