@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"mime"
+	"net"
 	"net/http"
 	"os"
 	"path"
@@ -147,6 +148,21 @@ func (self *Server) Initialize() error {
 
 func (self *Server) Serve() {
 	self.server.Run(fmt.Sprintf("%s:%d", self.Address, self.Port))
+}
+
+func (self *Server) ListenAndServe(address string) error {
+	if addr, port, err := net.SplitHostPort(address); err == nil {
+		self.Address = addr
+
+		if port != `` {
+			self.Port = int(stringutil.MustInteger(port))
+		}
+
+		self.Serve()
+		return nil
+	} else {
+		return err
+	}
 }
 
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
