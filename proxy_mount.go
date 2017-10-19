@@ -8,72 +8,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 )
 
 var DefaultProxyMountTimeout = time.Duration(10) * time.Second
-
-type responseFile struct {
-	http.File
-	payload io.ReadSeeker
-	name    string
-	size    int64
-}
-
-func (self *responseFile) Read(p []byte) (int, error) {
-	if self.payload == nil {
-		return 0, fmt.Errorf("Cannot read from closed response")
-	} else {
-		return self.payload.Read(p)
-	}
-}
-
-func (self *responseFile) Seek(offset int64, whence int) (int64, error) {
-	if self.payload == nil {
-		return 0, fmt.Errorf("Cannot seek in closed response")
-	} else {
-		return self.payload.Seek(offset, whence)
-	}
-}
-
-func (self *responseFile) Close() error {
-	self.payload = nil
-	return nil
-}
-
-func (self *responseFile) Readdir(count int) ([]os.FileInfo, error) {
-	return nil, fmt.Errorf("readdir() not valid on response objects")
-}
-
-func (self *responseFile) Name() string {
-	return self.name
-}
-
-func (self *responseFile) Size() int64 {
-	return self.size
-}
-
-func (self *responseFile) Mode() os.FileMode {
-	return 0666
-}
-
-func (self *responseFile) ModTime() time.Time {
-	return time.Now()
-}
-
-func (self *responseFile) IsDir() bool {
-	return false
-}
-
-func (self *responseFile) Sys() interface{} {
-	return nil
-}
-
-func (self *responseFile) Stat() (os.FileInfo, error) {
-	return self, nil
-}
 
 type ProxyMount struct {
 	MountPoint          string            `json:"mount"`
@@ -94,7 +33,7 @@ func (self *ProxyMount) WillRespondTo(name string, req *http.Request, requestBod
 	return strings.HasPrefix(name, self.GetMountPoint())
 }
 
-func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (http.File, string, error) {
+func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (*MountResponse, error) {
 	var proxyURI string
 
 	if self.Client == nil {
@@ -142,7 +81,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 
 			proxyURI = req.URL.String()
 		} else {
-			return nil, ``, fmt.Errorf("Failed to parse proxy URL: %v", err)
+			return nil, fmt.Errorf("Failed to parse proxy URL: %v", err)
 		}
 	} else {
 		proxyURI = strings.Join([]string{
@@ -183,31 +122,38 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		}
 
 		if response, err := self.Client.Do(newReq); err == nil {
+			log.Debugf("ProxyMount: [R] %v", response.Status)
+
+			for k, v := range response.Header {
+				log.Debugf("ProxyMount: [R] %v: %v", k, strings.Join(v, ` `))
+			}
+
 			if response.StatusCode < 400 || self.PassthroughErrors {
 				if data, err := ioutil.ReadAll(response.Body); err == nil {
 					payload := bytes.NewReader(data)
+					mountResponse := NewMountResponse(name, payload.Size(), payload)
+					mountResponse.ContentType = response.Header.Get(`Content-Type`)
 
-					return &responseFile{
-						name:    name,
-						size:    payload.Size(),
-						payload: payload,
-					}, response.Header.Get(`Content-Type`), nil
+					for k, v := range response.Header {
+						mountResponse.Metadata[k] = strings.Join(v, `,`)
+					}
+
+					return mountResponse, nil
 				} else {
-					return nil, ``, err
+					return nil, err
 				}
 			} else {
 				log.Debugf("ProxyMount: %s %s: %s", method, proxyURI, response.Status)
-				return nil, ``, MountHaltErr
+				return nil, MountHaltErr
 			}
 		} else {
-			return nil, ``, err
+			return nil, err
 		}
 	} else {
-		return nil, ``, err
+		return nil, err
 	}
 }
 
 func (self *ProxyMount) Open(name string) (http.File, error) {
-	file, _, err := self.OpenWithType(name, nil, nil)
-	return file, err
+	return openAsHttpFile(self, name)
 }

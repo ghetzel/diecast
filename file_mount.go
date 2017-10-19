@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"fmt"
 	"io"
 	"mime"
 	"net/http"
@@ -24,10 +25,10 @@ func (self *FileMount) WillRespondTo(name string, req *http.Request, requestBody
 	return strings.HasPrefix(name, self.GetMountPoint())
 }
 
-func (self *FileMount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (http.File, string, error) {
+func (self *FileMount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (*MountResponse, error) {
 	if self.FileSystem == nil {
 		if _, err := os.Stat(self.Path); err != nil {
-			return nil, ``, err
+			return nil, err
 		}
 	}
 
@@ -43,13 +44,24 @@ func (self *FileMount) OpenWithType(name string, req *http.Request, requestBody 
 	}
 
 	if err != nil {
-		return nil, ``, err
+		return nil, err
+	} else if file == nil {
+		return nil, fmt.Errorf("Invalid file object for '%v'", name)
+	} else if stat, err := file.Stat(); err == nil {
+		response := NewMountResponse(stat.Name(), stat.Size(), file)
+		response.ContentType = mime.TypeByExtension(path.Ext(newPath))
+
+		if stat.IsDir() {
+			response.RedirectCode = http.StatusMovedPermanently
+		}
+
+		return response, nil
+
 	} else {
-		return file, mime.TypeByExtension(path.Ext(newPath)), err
+		return nil, err
 	}
 }
 
 func (self *FileMount) Open(name string) (http.File, error) {
-	file, _, err := self.OpenWithType(name, nil, nil)
-	return file, err
+	return openAsHttpFile(self, name)
 }

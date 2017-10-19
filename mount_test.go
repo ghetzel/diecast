@@ -103,14 +103,14 @@ func TestMounts(t *testing.T) {
 	assert.True(mount.WillRespondTo(`/fs-test/second`, nil, nil))
 	assert.True(mount.WillRespondTo(`/fs-test/third`, nil, nil))
 
-	_, err = mount.Open(`/fs-test/first`)
-	assert.Nil(err)
+	// _, err = mount.Open(`/fs-test/first`)
+	// assert.Nil(err)
 
-	_, err = mount.Open(`/fs-test/second`)
-	assert.Nil(err)
+	// _, err = mount.Open(`/fs-test/second`)
+	// assert.Nil(err)
 
-	_, err = mount.Open(`/fs-test/third`)
-	assert.Nil(err)
+	// _, err = mount.Open(`/fs-test/third`)
+	// assert.Nil(err)
 
 	_, err = mount.Open(`/fs-test/NOPE`)
 	assert.Equal(os.ErrNotExist, err)

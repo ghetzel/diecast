@@ -2,6 +2,7 @@ package diecast
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -12,7 +13,7 @@ var MountHaltErr = errors.New(`mount halted`)
 
 type Mount interface {
 	Open(string) (http.File, error)
-	OpenWithType(string, *http.Request, io.Reader) (http.File, string, error)
+	OpenWithType(string, *http.Request, io.Reader) (*MountResponse, error)
 	WillRespondTo(string, *http.Request, io.Reader) bool
 	GetMountPoint() string
 }
@@ -65,9 +66,21 @@ func NewMountFromSpec(spec string) (Mount, error) {
 }
 
 func IsHardStop(err error) bool {
-	if err.Error() == `mount halted` {
+	if err != nil && err.Error() == `mount halted` {
 		return true
 	}
 
 	return false
+}
+
+func openAsHttpFile(mount Mount, name string) (http.File, error) {
+	if file, err := mount.OpenWithType(name, nil, nil); err == nil {
+		if hfile, ok := file.GetPayload().(http.File); ok && hfile != nil {
+			return hfile, nil
+		} else {
+			return nil, fmt.Errorf("Wrong response type")
+		}
+	} else {
+		return nil, err
+	}
 }

@@ -400,6 +400,9 @@ PathLoop:
 		var file http.File
 		var mimeType string
 		var message string
+		var headers map[string]interface{}
+		var redirectTo string
+		var redirectCode int
 
 		if self.TryLocalFirst && !triedLocal {
 			triedLocal = true
@@ -409,19 +412,25 @@ PathLoop:
 				mimeType = m
 				message = fmt.Sprintf("File %q was handled by filesystem", rPath)
 
-			} else if mnt, f, m, err := self.tryMounts(rPath, req); err == nil {
-				file = f
-				mimeType = m
-				message = fmt.Sprintf("File %q was handled by mount %s", rPath, mnt.GetMountPoint())
+			} else if mnt, response, err := self.tryMounts(rPath, req); err == nil {
+				file = response.GetFile()
+				mimeType = response.ContentType
+				headers = response.Metadata
+				redirectTo = response.RedirectTo
+				redirectCode = response.RedirectCode
+				message = fmt.Sprintf("File %q was handled by mount %s after trying local first", rPath, mnt.GetMountPoint())
 
 			} else if IsHardStop(err) {
 				break PathLoop
 			}
 		} else {
-			if mnt, f, m, err := self.tryMounts(rPath, req); err == nil {
-				file = f
-				mimeType = m
-				message = fmt.Sprintf("File %q was handled by mount %s", rPath, mnt.GetMountPoint())
+			if mnt, response, err := self.tryMounts(rPath, req); err == nil && response != nil {
+				file = response.GetFile()
+				mimeType = response.ContentType
+				headers = response.Metadata
+				redirectTo = response.RedirectTo
+				redirectCode = response.RedirectCode
+				message = fmt.Sprintf("File %q was handled by mount %s (redir=%v)", rPath, mnt.GetMountPoint(), redirectCode)
 
 			} else if IsHardStop(err) {
 				break PathLoop
@@ -430,12 +439,21 @@ PathLoop:
 				file = f
 				mimeType = m
 				message = fmt.Sprintf("File %q was handled by filesystem", rPath)
-
 			}
 		}
 
+		if redirectCode > 0 && !strings.HasSuffix(req.URL.Path, `/`) {
+			if redirectTo == `` {
+				redirectTo = fmt.Sprintf("%s/", req.URL.Path)
+			}
+
+			http.Redirect(w, req, redirectTo, redirectCode)
+			log.Debugf("Redirecting to %v (HTTP %d)", redirectTo, redirectCode)
+			return
+		}
+
 		if file != nil {
-			if handled := self.respondToFile(rPath, mimeType, file, w, req); handled {
+			if handled := self.respondToFile(rPath, mimeType, file, headers, w, req); handled {
 				log.Debug(message)
 				return
 			}
@@ -455,7 +473,7 @@ func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.Fi
 	}
 }
 
-func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, http.File, string, error) {
+func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *MountResponse, error) {
 	var body *bytes.Reader
 
 	// buffer the request body because we need to repeatedly pass it to multiple mounts
@@ -463,7 +481,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, htt
 		log.Debugf("Read %d bytes from request body\n%v", len(data), string(data))
 		body = bytes.NewReader(data)
 	} else {
-		return nil, nil, ``, err
+		return nil, nil, err
 	}
 
 	// find a mount that has this file
@@ -472,28 +490,33 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, htt
 
 		// seek the body buffer back to the beginning
 		if _, err := body.Seek(0, 0); err != nil {
-			return nil, nil, ``, err
+			return nil, nil, err
 		}
 
 		if mount.WillRespondTo(requestPath, req, body) {
 			// attempt to open the file entry
-			if file, mimeType, err := mount.OpenWithType(requestPath, req, body); err == nil {
-				return mount, file, mimeType, nil
+			if mountResponse, err := mount.OpenWithType(requestPath, req, body); err == nil {
+				return mount, mountResponse, nil
 			} else if IsHardStop(err) {
-				return nil, nil, ``, err
+				return nil, nil, err
 			} else {
 				log.Warning(err)
 			}
 		}
 	}
 
-	return nil, nil, ``, fmt.Errorf("%q not found", requestPath)
+	return nil, nil, fmt.Errorf("%q not found", requestPath)
 }
 
-func (self *Server) respondToFile(requestPath string, mimeType string, file http.File, w http.ResponseWriter, req *http.Request) bool {
+func (self *Server) respondToFile(requestPath string, mimeType string, file http.File, headers map[string]interface{}, w http.ResponseWriter, req *http.Request) bool {
 	if stat, err := file.Stat(); err == nil {
 		if !stat.IsDir() {
-			log.Debugf("File requested: %q (actual: %q, %d bytes)", requestPath, stat.Name(), stat.Size())
+			log.Debugf("File requested: %q (actual: %q, dir=%v, %d bytes)", requestPath, stat.Name(), stat.IsDir(), stat.Size())
+
+			// add in any metadata as response headers
+			for k, v := range headers {
+				w.Header().Set(k, fmt.Sprintf("%v", v))
+			}
 
 			if mimeType == `` {
 				mimeType = `application/octet-stream`
