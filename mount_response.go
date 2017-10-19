@@ -36,7 +36,7 @@ func (self *MountResponse) GetFile() http.File {
 	if file, ok := self.payload.(http.File); ok {
 		return file
 	} else {
-		return nil
+		return self
 	}
 }
 
