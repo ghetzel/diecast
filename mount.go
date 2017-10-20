@@ -16,6 +16,7 @@ type Mount interface {
 	OpenWithType(string, *http.Request, io.Reader) (*MountResponse, error)
 	WillRespondTo(string, *http.Request, io.Reader) bool
 	GetMountPoint() string
+	String() string
 }
 
 func NewMountFromSpec(spec string) (Mount, error) {
@@ -67,6 +68,14 @@ func NewMountFromSpec(spec string) (Mount, error) {
 
 func IsHardStop(err error) bool {
 	if err != nil && err.Error() == `mount halted` {
+		return true
+	}
+
+	return false
+}
+
+func IsDirectoryError(err error) bool {
+	if err != nil && err.Error() == `is a directory` {
 		return true
 	}
 

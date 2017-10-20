@@ -52,7 +52,11 @@ func (self *FileMount) OpenWithType(name string, req *http.Request, requestBody 
 		response.ContentType = mime.TypeByExtension(path.Ext(newPath))
 
 		if stat.IsDir() {
-			response.RedirectCode = http.StatusMovedPermanently
+			if strings.HasSuffix(req.URL.Path, `/`) {
+				return response, fmt.Errorf("is a directory")
+			} else {
+				response.RedirectCode = http.StatusMovedPermanently
+			}
 		}
 
 		return response, nil
@@ -60,6 +64,10 @@ func (self *FileMount) OpenWithType(name string, req *http.Request, requestBody 
 	} else {
 		return nil, err
 	}
+}
+
+func (self *FileMount) String() string {
+	return fmt.Sprintf("%T('%s')", self, self.GetMountPoint())
 }
 
 func (self *FileMount) Open(name string) (http.File, error) {

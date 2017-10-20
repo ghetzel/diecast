@@ -96,6 +96,7 @@ func (self *Server) Mounts() []Mount {
 
 func (self *Server) SetFileSystem(fs http.FileSystem) {
 	self.fs = fs
+	log.Debugf("FileSystem: %+v", fs)
 }
 
 func (self *Server) Initialize() error {
@@ -372,6 +373,8 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 }
 
 func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) {
+	log.Infof("REQUEST: %v %v", req.Method, req.URL)
+
 	// normalize filename from request path
 	requestPath := req.URL.Path
 
@@ -379,9 +382,9 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 		requestPath,
 	}
 
-	// if we're looking at a directory, assume we want the IndexFile
+	// if we're looking at a directory, throw in the index file if the path as given doesn't respond
 	if strings.HasSuffix(requestPath, `/`) {
-		requestPaths = append([]string{path.Join(requestPath, self.IndexFile)}, requestPaths...)
+		requestPaths = append(requestPaths, path.Join(requestPath, self.IndexFile))
 	} else if path.Ext(requestPath) == `` {
 		// if we're requesting a path without a file extension, be a dear and try it with a .html
 		// extension if the as-is path wasn't found
@@ -404,13 +407,15 @@ PathLoop:
 		var redirectTo string
 		var redirectCode int
 
+		log.Debugf("> trying path: %v", rPath)
+
 		if self.TryLocalFirst && !triedLocal {
 			triedLocal = true
 
 			if f, m, err := self.tryLocalFile(rPath, req); err == nil {
 				file = f
 				mimeType = m
-				message = fmt.Sprintf("File %q was handled by filesystem", rPath)
+				message = fmt.Sprintf("  handled by filesystem")
 
 			} else if mnt, response, err := self.tryMounts(rPath, req); err == nil {
 				file = response.GetFile()
@@ -418,7 +423,7 @@ PathLoop:
 				headers = response.Metadata
 				redirectTo = response.RedirectTo
 				redirectCode = response.RedirectCode
-				message = fmt.Sprintf("File %q was handled by mount %s after trying local first", rPath, mnt.GetMountPoint())
+				message = fmt.Sprintf("  handled by %v after trying local first", mnt)
 
 			} else if IsHardStop(err) {
 				break PathLoop
@@ -430,7 +435,7 @@ PathLoop:
 				headers = response.Metadata
 				redirectTo = response.RedirectTo
 				redirectCode = response.RedirectCode
-				message = fmt.Sprintf("File %q was handled by mount %s (redir=%v)", rPath, mnt.GetMountPoint(), redirectCode)
+				message = fmt.Sprintf("  handled by %v", mnt)
 
 			} else if IsHardStop(err) {
 				break PathLoop
@@ -438,36 +443,50 @@ PathLoop:
 			} else if f, m, err := self.tryLocalFile(rPath, req); err == nil {
 				file = f
 				mimeType = m
-				message = fmt.Sprintf("File %q was handled by filesystem", rPath)
+				message = fmt.Sprintf("  handled by filesystem")
 			}
 		}
 
-		if redirectCode > 0 && !strings.HasSuffix(req.URL.Path, `/`) {
+		if redirectCode > 0 {
 			if redirectTo == `` {
 				redirectTo = fmt.Sprintf("%s/", req.URL.Path)
 			}
 
 			http.Redirect(w, req, redirectTo, redirectCode)
-			log.Debugf("Redirecting to %v (HTTP %d)", redirectTo, redirectCode)
+			log.Debugf("  path %v redirecting to %v (HTTP %d)", rPath, redirectTo, redirectCode)
 			return
 		}
 
 		if file != nil {
 			if handled := self.respondToFile(rPath, mimeType, file, headers, w, req); handled {
-				log.Debug(message)
+				log.Info(message)
 				return
 			}
+		} else {
+			log.Debugf("No mounts or filesystems handled path: %v", rPath)
 		}
 	}
 
 	// if we got *here*, then File Not Found
+	log.Infof("  not found")
 	http.Error(w, fmt.Sprintf("File %q was not found.", requestPath), http.StatusNotFound)
 }
 
+// Attempt to resolve the given path into a real file and return that file and mime type.
+// Non-existent files, unreadable files, and directories will return an error.
 func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.File, string, error) {
 	// if we got here, try to serve the file from the filesystem
 	if file, err := self.fs.Open(requestPath); err == nil {
-		return file, ``, nil
+		if stat, err := file.Stat(); err == nil {
+			if !stat.IsDir() {
+				mimeType := mime.TypeByExtension(path.Ext(stat.Name()))
+				return file, mimeType, nil
+			} else {
+				return nil, ``, fmt.Errorf("is a directory")
+			}
+		} else {
+			return nil, ``, fmt.Errorf("failed to stat file %v: %v", requestPath, err)
+		}
 	} else {
 		return nil, ``, err
 	}
@@ -478,15 +497,18 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 
 	// buffer the request body because we need to repeatedly pass it to multiple mounts
 	if data, err := ioutil.ReadAll(req.Body); err == nil {
-		log.Debugf("Read %d bytes from request body\n%v", len(data), string(data))
+		if len(data) > 0 {
+			log.Debugf("  read %d bytes from request body\n%v", len(data), string(data))
+		}
+
 		body = bytes.NewReader(data)
 	} else {
 		return nil, nil, err
 	}
 
 	// find a mount that has this file
-	for _, mount := range self.mounts {
-		log.Debugf("Request path %q: trying mount %T", requestPath, mount)
+	for i, mount := range self.mounts {
+		log.Debugf("  trying mount %d %v", i, mount)
 
 		// seek the body buffer back to the beginning
 		if _, err := body.Seek(0, 0); err != nil {
@@ -509,75 +531,54 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 }
 
 func (self *Server) respondToFile(requestPath string, mimeType string, file http.File, headers map[string]interface{}, w http.ResponseWriter, req *http.Request) bool {
-	if stat, err := file.Stat(); err == nil {
-		if !stat.IsDir() {
-			log.Debugf("File requested: %q (actual: %q, dir=%v, %d bytes)", requestPath, stat.Name(), stat.IsDir(), stat.Size())
+	// add in any metadata as response headers
+	for k, v := range headers {
+		w.Header().Set(k, fmt.Sprintf("%v", v))
+	}
 
-			// add in any metadata as response headers
-			for k, v := range headers {
-				w.Header().Set(k, fmt.Sprintf("%v", v))
-			}
+	if mimeType == `` {
+		mimeType = `application/octet-stream`
+	}
 
-			if mimeType == `` {
-				mimeType = `application/octet-stream`
+	w.Header().Set(`Content-Type`, mimeType)
 
-				if v := mime.TypeByExtension(path.Ext(stat.Name())); v != `` {
-					mimeType = v
+	// we got a real actual file here, figure out if we're templating it or not
+	if self.ShouldApplyTemplate(requestPath) {
+		log.Debugf("Rendering %q as template", requestPath)
+
+		// tease the template header out of the file
+		if header, templateData, err := self.SplitTemplateHeaderContent(file); err == nil {
+			if header != nil {
+				if redirect := header.Redirect; redirect != nil {
+					w.Header().Set(`Location`, redirect.URL)
+
+					if redirect.Code > 0 {
+						w.WriteHeader(redirect.Code)
+					} else {
+						w.WriteHeader(http.StatusMovedPermanently)
+					}
+
+					return true
 				}
 			}
 
-			w.Header().Set(`Content-Type`, mimeType)
-
-			// we got a real actual file here, figure out if we're templating it or not
-			if self.ShouldApplyTemplate(requestPath) {
-				log.Debugf("Rendering %q as template", requestPath)
-
-				// tease the template header out of the file
-				if header, templateData, err := self.SplitTemplateHeaderContent(file); err == nil {
-					if header != nil {
-						if redirect := header.Redirect; redirect != nil {
-							w.Header().Set(`Location`, redirect.URL)
-
-							if redirect.Code > 0 {
-								w.WriteHeader(redirect.Code)
-							} else {
-								w.WriteHeader(http.StatusMovedPermanently)
-							}
-
-							return true
-						}
-					}
-
-					// retrieve external data declared in the Bindings section
-					if funcs, data, err := self.GetTemplateData(req, header); err == nil {
-						// render the final template and write it out
-						if err := self.ApplyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header, data, funcs); err != nil {
-							http.Error(w, err.Error(), http.StatusInternalServerError)
-						}
-					} else {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-					}
-				} else {
+			// retrieve external data declared in the Bindings section
+			if funcs, data, err := self.GetTemplateData(req, header); err == nil {
+				// render the final template and write it out
+				if err := self.ApplyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header, data, funcs); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 				}
 			} else {
-				io.Copy(w, file)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-
-			return true
 		} else {
-			// we know this is a directory, but the request didn't have a trailing slash
-			// redirect
-			if !strings.HasSuffix(req.URL.Path, `/`) {
-				http.Redirect(w, req, fmt.Sprintf("%s/", req.URL.Path), http.StatusMovedPermanently)
-				return true
-			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else {
-		log.Debugf("  Skipping %q: failed to stat file: %v", requestPath, err)
+		io.Copy(w, file)
 	}
 
-	return false
+	return true
 }
 
 func (self *Server) SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, error) {

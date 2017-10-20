@@ -96,8 +96,6 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		method = req.Method
 	}
 
-	log.Debugf("Proxy URI: %v", proxyURI)
-
 	if newReq, err := http.NewRequest(method, proxyURI, nil); err == nil {
 		if req != nil && self.PassthroughRequests {
 			for name, values := range req.Header {
@@ -115,18 +113,29 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			newReq.Body = ioutil.NopCloser(requestBody)
 		}
 
-		log.Debugf("ProxyMount: %v %v", newReq.Method, newReq.URL)
+		log.Infof("  proxying '%v %v' to '%v %v'", req.Method, req.URL, newReq.Method, proxyURI)
+
+		log.Debugf("  %v: %v %v", self, newReq.Method, newReq.URL)
 
 		for k, v := range newReq.Header {
-			log.Debugf("ProxyMount: [H] %v=%v", k, strings.Join(v, ` `))
+			log.Debugf("  %v: [H] %v=%v", self, k, strings.Join(v, ` `))
 		}
 
 		if response, err := self.Client.Do(newReq); err == nil {
-			log.Debugf("ProxyMount: [R] %v", response.Status)
+			log.Debugf("  %v: [R] %v", self, response.Status)
 
 			for k, v := range response.Header {
-				log.Debugf("ProxyMount: [R] %v: %v", k, strings.Join(v, ` `))
+				log.Debugf("  %v: [R]   %v: %v", self, k, strings.Join(v, ` `))
 			}
+
+			log.Infof(
+				"%v: %v %v responded with: %v (Content-Length: %v)",
+				self,
+				newReq.Method,
+				proxyURI,
+				response.Status,
+				response.ContentLength,
+			)
 
 			if response.StatusCode < 400 || self.PassthroughErrors {
 				if data, err := ioutil.ReadAll(response.Body); err == nil {
@@ -143,7 +152,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 					return nil, err
 				}
 			} else {
-				log.Debugf("ProxyMount: %s %s: %s", method, proxyURI, response.Status)
+				log.Debugf("  %v: %s %s: %s", self, method, proxyURI, response.Status)
 				return nil, MountHaltErr
 			}
 		} else {
@@ -152,6 +161,10 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 	} else {
 		return nil, err
 	}
+}
+
+func (self *ProxyMount) String() string {
+	return fmt.Sprintf("%T('%s')", self, self.GetMountPoint())
 }
 
 func (self *ProxyMount) Open(name string) (http.File, error) {
