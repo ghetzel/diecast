@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
@@ -24,21 +25,24 @@ const (
 
 var BindingClient = http.DefaultClient
 
+var DefaultParamJoiner = `;`
+
 type Binding struct {
-	Name               string             `json:"name"`
-	Restrict           []string           `json:"restrict"`
-	OnlyIfExpr         string             `json:"only_if"`
-	NotIfExpr          string             `json:"not_if"`
-	Method             string             `json:"method"`
-	Resource           string             `json:"resource"`
-	Params             map[string]string  `json:"params"`
-	Headers            map[string]string  `json:"headers"`
-	BodyParams         map[string]string  `json:"body"`
-	Formatter          string             `json:"formatter"`
-	NoTemplate         bool               `json:"no_template"`
-	Optional           bool               `json:"optional"`
-	OnError            BindingErrorAction `json:"on_error"`
-	SkipInheritHeaders bool               `json:"skip_inherit_headers"`
+	Name               string                 `json:"name"`
+	Restrict           []string               `json:"restrict"`
+	OnlyIfExpr         string                 `json:"only_if"`
+	NotIfExpr          string                 `json:"not_if"`
+	Method             string                 `json:"method"`
+	Resource           string                 `json:"resource"`
+	ParamJoiner        string                 `json:"param_joiner"`
+	Params             map[string]interface{} `json:"params"`
+	Headers            map[string]string      `json:"headers"`
+	BodyParams         map[string]string      `json:"body"`
+	Formatter          string                 `json:"formatter"`
+	NoTemplate         bool                   `json:"no_template"`
+	Optional           bool                   `json:"optional"`
+	OnError            BindingErrorAction     `json:"on_error"`
+	SkipInheritHeaders bool                   `json:"skip_inherit_headers"`
 	server             *Server
 }
 
@@ -109,12 +113,26 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 			qs := bindingReq.URL.Query()
 
 			for k, v := range self.Params {
-				if !self.NoTemplate {
-					v = self.Eval(v, data, funcs)
+				var vS string
+
+				if typeutil.IsArray(v) {
+					joiner := DefaultParamJoiner
+
+					if j := self.ParamJoiner; j != `` {
+						joiner = j
+					}
+
+					vS = strings.Join(sliceutil.Stringify(v), joiner)
+				} else {
+					vS = stringutil.MustString(v)
 				}
 
-				log.Debugf("  binding %q: param %v=%v", self.Name, k, v)
-				qs.Set(k, v)
+				if !self.NoTemplate {
+					vS = self.Eval(vS, data, funcs)
+				}
+
+				log.Debugf("  binding %q: param %v=%v", self.Name, k, vS)
+				qs.Set(k, vS)
 			}
 
 			bindingReq.URL.RawQuery = qs.Encode()

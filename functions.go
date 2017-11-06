@@ -202,6 +202,8 @@ func GetStandardFunctions() template.FuncMap {
 					return fmt.Sprintf("%d", int64(v.UnixNano()/1000000)), nil
 				case `epoch-us`:
 					return fmt.Sprintf("%d", int64(v.UnixNano()/1000)), nil
+				case `epoch-ns`:
+					return fmt.Sprintf("%d", int64(v.UnixNano())), nil
 				case `day`:
 					tmFormat = `Monday`
 				case `slash`:
@@ -234,6 +236,20 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`time`] = tmFmt
 	rv[`now`] = func(format ...string) (string, error) {
 		return tmFmt(time.Now(), format...)
+	}
+
+	rv[`ago`] = func(durationString string, fromTime ...time.Time) (time.Time, error) {
+		from := time.Now()
+
+		if len(fromTime) > 0 {
+			from = fromTime[0]
+		}
+
+		if duration, err := time.ParseDuration(durationString); err == nil {
+			return from.Add(-1 * duration), nil
+		} else {
+			return time.Time{}, err
+		}
 	}
 
 	rv[`duration`] = func(value interface{}, unit string, formats ...string) (string, error) {
