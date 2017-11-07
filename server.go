@@ -17,6 +17,7 @@ import (
 
 	"github.com/codegangsta/negroni"
 	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/ghodss/yaml"
@@ -47,6 +48,50 @@ type TemplateHeader struct {
 	Redirect       *Redirect              `json:"redirect,omitempty"`
 	Layout         string                 `json:"layout,omitempty"`
 	Includes       map[string]string      `json:"includes,omitempty"`
+}
+
+func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error) {
+	if other == nil {
+		return self, nil
+	}
+
+	newHeader := &TemplateHeader{
+		Bindings: append(self.Bindings, other.Bindings...),      // ours first, then other's
+		Layout:   sliceutil.OrString(other.Layout, self.Layout), // prefer other, fallback to ours
+	}
+
+	// Redirect: prefer other, fallback to ours
+	if redir, ok := sliceutil.Or(other.Redirect, self.Redirect).(*Redirect); ok {
+		newHeader.Redirect = redir
+	}
+
+	// maps: merge other's over top of ours
+
+	if v, err := maputil.Merge(self.Page, other.Page); err == nil {
+		newHeader.Page = v
+	} else {
+		return nil, err
+	}
+
+	if v, err := maputil.Merge(self.Defaults, other.Defaults); err == nil {
+		newHeader.Defaults = maputil.Stringify(v)
+	} else {
+		return nil, err
+	}
+
+	if v, err := maputil.Merge(self.DefaultHeaders, other.DefaultHeaders); err == nil {
+		newHeader.DefaultHeaders = maputil.Stringify(v)
+	} else {
+		return nil, err
+	}
+
+	if v, err := maputil.Merge(self.Includes, other.Includes); err == nil {
+		newHeader.Includes = maputil.Stringify(v)
+	} else {
+		return nil, err
+	}
+
+	return newHeader, nil
 }
 
 type Server struct {
@@ -182,12 +227,15 @@ func (self *Server) ShouldApplyTemplate(requestPath string) bool {
 	return false
 }
 
-func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requestPath string, reader io.Reader, header *TemplateHeader, data interface{}, funcs template.FuncMap, layouts ...string) error {
+func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requestPath string, reader io.Reader, header *TemplateHeader, layouts ...string) error {
 	finalTemplate := bytes.NewBuffer(nil)
 	hasLayout := false
 	forceSkipLayout := false
+	headers := make([]*TemplateHeader, 0)
 
 	if header != nil {
+		headers = append(headers, header)
+
 		if header.Layout != `` {
 			if header.Layout == `false` {
 				forceSkipLayout = true
@@ -217,9 +265,13 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 				for _, layoutName := range layouts {
 					if layoutFile, err := self.LoadLayout(layoutName); err == nil {
 						if layoutHeader, layoutData, err := self.SplitTemplateHeaderContent(layoutFile); err == nil {
-							// add in layout includes
-							if err := self.InjectIncludes(finalTemplate, layoutHeader); err != nil {
-								return err
+							if layoutHeader != nil {
+								headers = append([]*TemplateHeader{layoutHeader}, headers...)
+
+								// add in layout includes
+								if err := self.InjectIncludes(finalTemplate, layoutHeader); err != nil {
+									return err
+								}
 							}
 
 							finalTemplate.WriteString("{{ define \"layout\" }}")
@@ -254,16 +306,39 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 	}
 
 	// log.Errorf("TD: %v\n", finalTemplate.String())
+	var finalHeader *TemplateHeader
 
-	// create the template and make it aware of our custom functions
-	tmpl := template.New(self.ToTemplateName(requestPath))
-	tmpl.Funcs(funcs)
+	for i, header := range headers {
+		if finalHeader == nil {
+			finalHeader = header
+			log.Debugf("FH: %#+v", finalHeader)
+		}
 
-	if tmpl, err := tmpl.Parse(finalTemplate.String()); err == nil {
-		if hasLayout {
-			return tmpl.ExecuteTemplate(w, `layout`, data)
+		if (i + 1) < len(headers) {
+			if fh, err := finalHeader.Merge(headers[i+1]); err == nil {
+				finalHeader = fh
+				log.Debugf("FH: %#+v", finalHeader)
+			} else {
+				return err
+			}
+		}
+	}
+
+	log.Debugf("FH FINAL: %#+v", finalHeader)
+
+	if funcs, data, err := self.GetTemplateData(req, finalHeader); err == nil {
+		// create the template and make it aware of our custom functions
+		tmpl := template.New(self.ToTemplateName(requestPath))
+		tmpl.Funcs(funcs)
+
+		if tmpl, err := tmpl.Parse(finalTemplate.String()); err == nil {
+			if hasLayout {
+				return tmpl.ExecuteTemplate(w, `layout`, data)
+			} else {
+				return tmpl.Execute(w, data)
+			}
 		} else {
-			return tmpl.Execute(w, data)
+			return err
 		}
 	} else {
 		return err
@@ -326,7 +401,7 @@ func (self *Server) ToTemplateName(requestPath string) string {
 	return requestPath
 }
 
-func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (template.FuncMap, interface{}, error) {
+func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (template.FuncMap, map[string]interface{}, error) {
 	data := requestToEvalData(req, header)
 	bindings := make(map[string]interface{})
 
@@ -562,13 +637,8 @@ func (self *Server) respondToFile(requestPath string, mimeType string, file http
 				}
 			}
 
-			// retrieve external data declared in the Bindings section
-			if funcs, data, err := self.GetTemplateData(req, header); err == nil {
-				// render the final template and write it out
-				if err := self.ApplyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header, data, funcs); err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-				}
-			} else {
+			// render the final template and write it out
+			if err := self.ApplyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
@@ -599,7 +669,7 @@ func (self *Server) SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeade
 			}
 		}
 
-		return &TemplateHeader{}, data, nil
+		return nil, data, nil
 	} else {
 		return nil, nil, err
 	}

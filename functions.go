@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"math"
 	"path"
+	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -143,6 +144,10 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`isFloat`] = stringutil.IsFloat
 	rv[`isZero`] = typeutil.IsZero
 	rv[`isEmpty`] = typeutil.IsEmpty
+	rv[`isArray`] = typeutil.IsArray
+	rv[`isMap`] = func(value interface{}) bool {
+		return typeutil.IsKind(value, reflect.Map)
+	}
 	rv[`autotype`] = stringutil.Autotype
 	rv[`asStr`] = stringutil.ToString
 	rv[`asInt`] = func(value interface{}) (int64, error) {
