@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -224,7 +225,14 @@ func GetStandardFunctions() template.FuncMap {
 				}
 			}
 
-			vStr := v.Format(tmFormat)
+			var vStr string
+
+			switch tmFormat {
+			case `human`:
+				vStr = humanize.Time(v)
+			default:
+				vStr = v.Format(tmFormat)
+			}
 
 			if formatName == `timer` {
 				if len(strings.Split(vStr, `:`)) == 3 {
