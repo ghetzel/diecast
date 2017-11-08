@@ -80,6 +80,13 @@ func GetStandardFunctions() template.FuncMap {
 	rv[`upper`] = strings.ToUpper
 	rv[`hasPrefix`] = strings.HasPrefix
 	rv[`hasSuffix`] = strings.HasSuffix
+	rv[`surroundedBy`] = func(value interface{}, prefix string, suffix string) bool {
+		if v := fmt.Sprintf("%v", value); strings.HasPrefix(v, prefix) && strings.HasSuffix(v, suffix) {
+			return true
+		}
+
+		return false
+	}
 
 	rv[`percent`] = func(value interface{}, args ...interface{}) (string, error) {
 		if v, err := stringutil.ConvertToFloat(value); err == nil {
