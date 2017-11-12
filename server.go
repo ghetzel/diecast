@@ -311,20 +311,16 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 	for i, header := range headers {
 		if finalHeader == nil {
 			finalHeader = header
-			log.Debugf("FH: %#+v", finalHeader)
 		}
 
 		if (i + 1) < len(headers) {
 			if fh, err := finalHeader.Merge(headers[i+1]); err == nil {
 				finalHeader = fh
-				log.Debugf("FH: %#+v", finalHeader)
 			} else {
 				return err
 			}
 		}
 	}
-
-	log.Debugf("FH FINAL: %#+v", finalHeader)
 
 	if funcs, data, err := self.GetTemplateData(req, finalHeader); err == nil {
 		// create the template and make it aware of our custom functions
@@ -763,8 +759,10 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 
 	// query strings
 	// ------------------------------------------------------------------------
-	for dK, dV := range header.Defaults {
-		qs[dK] = stringutil.Autotype(dV)
+	if header != nil {
+		for dK, dV := range header.Defaults {
+			qs[dK] = stringutil.Autotype(dV)
+		}
 	}
 
 	for k, v := range req.URL.Query() {
@@ -775,8 +773,10 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 
 	// response headers
 	// ------------------------------------------------------------------------
-	for dK, dV := range header.DefaultHeaders {
-		hdr[dK] = stringutil.Autotype(dV)
+	if header != nil {
+		for dK, dV := range header.DefaultHeaders {
+			hdr[dK] = stringutil.Autotype(dV)
+		}
 	}
 
 	for k, v := range req.Header {

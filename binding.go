@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"html"
 	"html/template"
 	"io/ioutil"
 	"net/http"
@@ -234,7 +235,8 @@ func (self *Binding) Eval(input string, data map[string]interface{}, funcs templ
 		output := bytes.NewBuffer(nil)
 
 		if err := tmpl.Execute(output, data); err == nil {
-			return output.String()
+			// since this data may have been entity escaped by html/template, unescape it here
+			return html.UnescapeString(output.String())
 		} else {
 			log.Debugf("error evaluating %q: %v", input, err)
 		}
