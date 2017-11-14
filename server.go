@@ -141,7 +141,6 @@ func (self *Server) Mounts() []Mount {
 
 func (self *Server) SetFileSystem(fs http.FileSystem) {
 	self.fs = fs
-	log.Debugf("FileSystem: %+v", fs)
 }
 
 func (self *Server) Initialize() error {
