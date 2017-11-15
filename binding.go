@@ -2,10 +2,12 @@ package diecast
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"html"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -192,8 +194,21 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 			if res, err := BindingClient.Do(bindingReq); err == nil {
 				log.Debugf("Binding Response: HTTP %d (body: %d bytes)", res.StatusCode, res.ContentLength)
+				for k, v := range res.Header {
+					log.Debugf("  %v=%v", k, strings.Join(v, ` `))
+				}
 
-				if data, err := ioutil.ReadAll(res.Body); err == nil {
+				var reader io.ReadCloser
+
+				switch res.Header.Get(`Content-Encoding`) {
+				case `gzip`:
+					reader, err = gzip.NewReader(res.Body)
+					defer reader.Close()
+				default:
+					reader = res.Body
+				}
+
+				if data, err := ioutil.ReadAll(reader); err == nil {
 					if res.StatusCode < 400 {
 						var rv interface{}
 
