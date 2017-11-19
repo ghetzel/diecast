@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"math"
 	"path"
 	"reflect"
@@ -41,8 +40,8 @@ func MinNonZero(data stats.Float64Data) (float64, error) {
 	return stats.Min(data)
 }
 
-func GetStandardFunctions() template.FuncMap {
-	rv := make(template.FuncMap)
+func GetStandardFunctions() FuncMap {
+	rv := make(FuncMap)
 
 	// string processing
 	rv[`contains`] = strings.Contains

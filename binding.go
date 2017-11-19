@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
-	"html/template"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -65,7 +64,7 @@ func (self *Binding) ShouldEvaluate(req *http.Request) bool {
 	return false
 }
 
-func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data map[string]interface{}, funcs template.FuncMap) (interface{}, error) {
+func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data map[string]interface{}, funcs FuncMap) (interface{}, error) {
 	log.Debugf("Evaluating binding %q", self.Name)
 
 	if req.Header.Get(`X-Diecast-Binding`) == self.Name {
@@ -242,14 +241,14 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	}
 }
 
-func (self *Binding) Eval(input string, data map[string]interface{}, funcs template.FuncMap) string {
-	tmpl := template.New(`inline`)
+func (self *Binding) Eval(input string, data map[string]interface{}, funcs FuncMap) string {
+	tmpl := NewTemplate(`inline`, HtmlEngine)
 	tmpl.Funcs(funcs)
 
-	if _, err := tmpl.Parse(input); err == nil {
+	if err := tmpl.Parse(input); err == nil {
 		output := bytes.NewBuffer(nil)
 
-		if err := tmpl.Execute(output, data); err == nil {
+		if err := tmpl.Render(output, data, ``); err == nil {
 			// since this data may have been entity escaped by html/template, unescape it here
 			return html.UnescapeString(output.String())
 		} else {

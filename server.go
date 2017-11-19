@@ -15,7 +15,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/codegangsta/negroni"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -23,6 +22,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
+	"github.com/urfave/negroni"
 )
 
 var log = logging.MustGetLogger(`diecast`)
@@ -218,8 +218,14 @@ func (self *Server) ShouldApplyTemplate(requestPath string) bool {
 	baseName := filepath.Base(requestPath)
 
 	for _, pattern := range self.TemplatePatterns {
-		if match, err := filepath.Match(pattern, baseName); err == nil && match {
-			return true
+		if strings.HasPrefix(pattern, `/`) {
+			if match, err := filepath.Match(pattern, requestPath); err == nil && match {
+				return true
+			}
+		} else {
+			if match, err := filepath.Match(pattern, baseName); err == nil && match {
+				return true
+			}
 		}
 	}
 
@@ -323,14 +329,20 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 
 	if funcs, data, err := self.GetTemplateData(req, finalHeader); err == nil {
 		// create the template and make it aware of our custom functions
-		tmpl := template.New(self.ToTemplateName(requestPath))
+		tmpl := NewTemplate(
+			self.ToTemplateName(requestPath),
+			GetEngineForFile(requestPath),
+		)
+
 		tmpl.Funcs(funcs)
 
-		if tmpl, err := tmpl.Parse(finalTemplate.String()); err == nil {
+		if err := tmpl.Parse(finalTemplate.String()); err == nil {
+			log.Debugf("Rendering %q as %v template", requestPath, tmpl.Engine())
+
 			if hasLayout {
-				return tmpl.ExecuteTemplate(w, `layout`, data)
+				return tmpl.Render(w, data, `layout`)
 			} else {
-				return tmpl.Execute(w, data)
+				return tmpl.Render(w, data, ``)
 			}
 		} else {
 			return err
@@ -340,8 +352,8 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 	}
 }
 
-func (self *Server) GetTemplateFunctions(data interface{}) template.FuncMap {
-	funcs := make(template.FuncMap)
+func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
+	funcs := make(FuncMap)
 
 	for k, v := range GetStandardFunctions() {
 		funcs[k] = v
@@ -396,7 +408,7 @@ func (self *Server) ToTemplateName(requestPath string) string {
 	return requestPath
 }
 
-func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (template.FuncMap, map[string]interface{}, error) {
+func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}, error) {
 	data := requestToEvalData(req, header)
 	bindings := make(map[string]interface{})
 
@@ -614,8 +626,6 @@ func (self *Server) respondToFile(requestPath string, mimeType string, file http
 
 	// we got a real actual file here, figure out if we're templating it or not
 	if self.ShouldApplyTemplate(requestPath) {
-		log.Debugf("Rendering %q as template", requestPath)
-
 		// tease the template header out of the file
 		if header, templateData, err := self.SplitTemplateHeaderContent(file); err == nil {
 			if header != nil {
