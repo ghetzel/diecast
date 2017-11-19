@@ -68,14 +68,26 @@ func (self *Template) Engine() Engine {
 func (self *Template) Parse(input string) error {
 	switch self.engine {
 	case TextEngine:
-		if t, err := text.New(self.name).Parse(input); err == nil {
+		tmpl := text.New(self.name)
+
+		if self.funcs != nil {
+			tmpl.Funcs(text.FuncMap(self.funcs))
+		}
+
+		if t, err := tmpl.Parse(input); err == nil {
 			self.tmpl = t
 		} else {
 			return err
 		}
 
 	case HtmlEngine:
-		if t, err := html.New(self.name).Parse(input); err == nil {
+		tmpl := html.New(self.name)
+
+		if self.funcs != nil {
+			tmpl.Funcs(html.FuncMap(self.funcs))
+		}
+
+		if t, err := tmpl.Parse(input); err == nil {
 			self.tmpl = t
 		} else {
 			return err
@@ -97,13 +109,10 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 		return fmt.Errorf("No template input provided")
 	}
 
+
 	switch self.engine {
 	case TextEngine:
 		if t, ok := self.tmpl.(*text.Template); ok {
-			if self.funcs != nil {
-				t.Funcs(text.FuncMap(self.funcs))
-			}
-
 			if subtemplate == `` {
 				return t.Execute(w, data)
 			} else {
@@ -115,10 +124,6 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 
 	case HtmlEngine:
 		if t, ok := self.tmpl.(*html.Template); ok {
-			if self.funcs != nil {
-				t.Funcs(html.FuncMap(self.funcs))
-			}
-
 			if subtemplate == `` {
 				return t.Execute(w, data)
 			} else {
