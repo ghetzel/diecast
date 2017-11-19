@@ -109,7 +109,6 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 		return fmt.Errorf("No template input provided")
 	}
 
-
 	switch self.engine {
 	case TextEngine:
 		if t, ok := self.tmpl.(*text.Template); ok {
