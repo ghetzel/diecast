@@ -4,11 +4,11 @@ A dynamic site generator that consumes REST services and renders static HTML out
 
 # Overview
 
-`diecast` is a utility and importable Golang package that allows you to dynamically render a directory tree of template files into HTML.  Data can be retrieved from third-party API sources and on-the-fly included during the template rendering process.  This allows you to create entire websites that consume external data sources and present a complete UI for them.
+Diecast is a utility and importable Golang package that allows you to dynamically render a directory tree of template files into HTML.  Data can be retrieved from third-party API sources and on-the-fly included during the template rendering process.  This allows you to create entire websites that consume external data sources and present a complete UI for them.
 
 # Example
 
-The following shows an example that illustrates basic usage of `diecast` for a simple "Hello World" site with no external content.  You can try this out by installing Diecast (`go get github.com/ghetzel/diecast`), changing to the `examples/hello` directory, and running `diecast serve`.  The site is available at [http://localhost:28419].
+The following shows an example that illustrates basic usage of `diecast` for a simple "Hello World" site with no external content.  You can try this out by installing Diecast (`go get github.com/ghetzel/diecast`), changing to the `examples/hello` directory, and running `diecast`.  The site is available at [http://localhost:28419].
 
 Directory tree:
 ```
@@ -82,7 +82,7 @@ as templates and processed using the [rendering engine](https://golang.org/pkg/h
 # Layouts
 
 Often it is desirable for some or all of a site to share a common theme (e.g.: navigation,
-headers, scripts).  This can be achieved in `diecast` using _layouts_.  Any files in
+headers, scripts).  This can be achieved in Diecast using _layouts_.  Any files in
 the `_layouts` directory will be available as wrappers for templates.  If the file `_layouts/default.html` exists,
 all templated files will be wrapped in that layout by default with no additional configuration.
 
@@ -92,6 +92,6 @@ rendered as templates then included via AJAX calls or via the `{{ template }}` s
 
 # Bindings
 
-Bindings are a mechanism that tell `diecast` which (if any) remote API resources should be loaded before rendering a template.  In the example above, there are two bindings configured: `current_user` and `objects`.  The `current_user` binding is flagged as _optional_, meaning that if there is an error in the request (connection error, SSL error, non-2xx HTTP status), the value will return `nil` instead of causing a fatal error. The `objects` binding is required, so any errors in retrieval will cause a fatal error in the page.
+Bindings are a mechanism that tell Diecast which (if any) remote API resources should be loaded before rendering a template.  In the example above, there are two bindings configured: `current_user` and `objects`.  The `current_user` binding is flagged as _optional_, meaning that if there is an error in the request (connection error, SSL error, non-2xx HTTP status), the value will return `nil` instead of causing a fatal error. The `objects` binding is required, so any errors in retrieval will cause a fatal error in the page.
 
 Bindings, in concert with Templates, are how you consume third-party remote APIs and turn those responses into usable web applications.
