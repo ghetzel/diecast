@@ -34,6 +34,7 @@ const DEFAULT_ROUTE_PREFIX = `/`
 var HeaderSeparator = []byte{'-', '-', '-'}
 var DefaultIndexFile = `index.html`
 var DefaultVerifyFile = `/` + DefaultIndexFile
+var DefaultTemplatePatterns = []string{`*.html`}
 
 type Redirect struct {
 	URL  string `json:"url"`
@@ -117,6 +118,10 @@ type Server struct {
 }
 
 func NewServer(root string, patterns ...string) *Server {
+	if len(patterns) == 0 {
+		patterns = DefaultTemplatePatterns
+	}
+
 	return &Server{
 		Address:          DEFAULT_SERVE_ADDRESS,
 		Port:             DEFAULT_SERVE_PORT,

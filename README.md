@@ -15,40 +15,83 @@ Directory tree:
 $ cd ./examples/hello
 $ tree
 .
-├── public
-│   └── image.gif
-└── templates
-    └── index.pongo
+├── functions.html
+├── home.html
+├── image.gif
+├── index.html
+├── main.css
+└── thing
+    └── index.html
 
-2 directories, 2 files
-$ diecast serve
-INFO[0000] diecast v0.0.1 started at 2016-01-23 17:39:09.38016741 -0500 EST
-INFO[0000] Starting HTTP server at 127.0.0.1:28419
-[negroni] listening on 127.0.0.1:28419
+1 directory, 6 files
+$ diecast
+2017/11/19 15:37:41 INFO[0001] main: diecast v1.3.1 started at 2017-11-19 15:37:41.351414477 -0500 EST m=+0.003960887
+2017/11/19 15:37:41 INFO[0002] main: Starting HTTP server at http://127.0.0.1:28419
+```
+
+## A More Complete Example
+```
+---
+bindings:
+- name:     current_user
+  resource: 'http://my-service.example.com/api/v1/users/me'
+  optional: true
+
+- name:     objects
+  resource: 'http://my-service.example.com/api/v1/objects'
+  params:
+    apiKey:  '{{ qs `apiKey` }}' # passthrough the value of the ?apiKey query string in
+                                 # the request as a querystring parameter of this resource.
+
+    version: 1                   # this will become 'version=1' in the upstream URL being requested
+
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <title>Hello!</title>
+  </head>
+
+  <body>
+    {{ if .bindings.current_user }}
+    Welcome, <bold>{{ .bindings.current_user.name }}</bold>!
+    {{ else }}
+    Welcome, Guest!
+    {{ end }}
+
+    <h1>Objects</h1>
+    <ul>
+    <!-- iterate through each object that came from the "objects" call above. -->
+    {{ range .bindings.objects }}
+        <!-- ".name" is relative to the current object we're iterating on -->
+        <li>{{ .name }}</li>
+    {{ end }}
+    </ul>
+  </body>
+</html>
 ```
 
 # Templating
 
-By default, all files served through `diecast` will be transmitted as-is (static
-resources).  You can specify that filenames matching certain
+By default, HTML files served through `diecast` will treated as templates and rendered, with all other files being served as-is (static resources).  You can specify that filenames matching certain
 [glob-like](https://golang.org/pkg/path/filepath/#Match) patterns will be treated
 as templates and processed using the [rendering engine](https://golang.org/pkg/html/template/).
 
 # Layouts
 
 Often it is desirable for some or all of a site to share a common theme (e.g.: navigation,
-headers, scripts).  This can be acheived in `diecast` using _layouts_.  Any files in
-the `_layouts` directory will be available as wrappers for templates.
+headers, scripts).  This can be achieved in `diecast` using _layouts_.  Any files in
+the `_layouts` directory will be available as wrappers for templates.  If the file `_layouts/default.html` exists,
+all templated files will be wrapped in that layout by default with no additional configuration.
+
+A _partial_ is a file whose name starts with an underscore (e.g: `_list.html`).  Partials do *not* get templates
+applied to them automatically, and are designed for making composable and dynamic pages by allowing them to be
+rendered as templates then included via AJAX calls or via the `{{ template }}` statement.
 
 # Bindings
 
-Bindings are a mechanism that tell `diecast` which (if any) remote API resources should be loaded before rendering a template.  In the configuration example above, there are two bindings configured: `my_api_endpoint` and `other_api_endpoint`.  When the user requests a route, all bindings that have a pattern in the `routes` array matching the requested route will be evaluated.  Their output will be available to the template as a map-type structure under the top level "data" key.  The results of requesting the `/orders` route in this case would be:
+Bindings are a mechanism that tell `diecast` which (if any) remote API resources should be loaded before rendering a template.  In the example above, there are two bindings configured: `current_user` and `objects`.  The `current_user` binding is flagged as _optional_, meaning that if there is an error in the request (connection error, SSL error, non-2xx HTTP status), the value will return `nil` instead of causing a fatal error. The `objects` binding is required, so any errors in retrieval will cause a fatal error in the page.
 
-```
-{
-  "data": {
-    "my_api_endpoint": <deserialized response body>,
-    "other_api_endpoint": <deserialized response body>
-  }
-}
-```
+Bindings, in concert with Templates, are how you consume third-party remote APIs and turn those responses into usable web applications.
