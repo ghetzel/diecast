@@ -49,6 +49,7 @@ type TemplateHeader struct {
 	Redirect       *Redirect              `json:"redirect,omitempty"`
 	Layout         string                 `json:"layout,omitempty"`
 	Includes       map[string]string      `json:"includes,omitempty"`
+	Headers        map[string]interface{} `json:"headers"`
 }
 
 func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error) {
@@ -318,9 +319,9 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 	// log.Errorf("TD: %v\n", finalTemplate.String())
 	var finalHeader *TemplateHeader
 
-	for i, header := range headers {
+	for i, templateHeader := range headers {
 		if finalHeader == nil {
-			finalHeader = header
+			finalHeader = templateHeader
 		}
 
 		if (i + 1) < len(headers) {
@@ -343,6 +344,13 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 
 		if err := tmpl.Parse(finalTemplate.String()); err == nil {
 			log.Debugf("Rendering %q as %v template", requestPath, tmpl.Engine())
+
+			if finalHeader != nil {
+				// include any configured response headers now
+				for name, value := range finalHeader.Headers {
+					w.Header().Set(name, fmt.Sprintf("%v", value))
+				}
+			}
 
 			if hasLayout {
 				return tmpl.Render(w, data, `layout`)

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -41,6 +42,7 @@ type Binding struct {
 	Headers            map[string]string      `json:"headers"`
 	BodyParams         map[string]string      `json:"body"`
 	Formatter          string                 `json:"formatter"`
+	Parser             string                 `json:"parser"`
 	NoTemplate         bool                   `json:"no_template"`
 	Optional           bool                   `json:"optional"`
 	OnError            BindingErrorAction     `json:"on_error"`
@@ -181,6 +183,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						}
 
 						bindingReq.Body = ioutil.NopCloser(&body)
+
 					default:
 						return nil, fmt.Errorf("Unknown request formatter %q", self.Formatter)
 					}
@@ -209,12 +212,21 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 				if data, err := ioutil.ReadAll(reader); err == nil {
 					if res.StatusCode < 400 {
-						var rv interface{}
+						switch self.Parser {
+						case `json`, ``:
+							var rv interface{}
 
-						if err := json.Unmarshal(data, &rv); err == nil {
-							return rv, nil
-						} else {
-							return nil, err
+							if err := json.Unmarshal(data, &rv); err == nil {
+								return rv, nil
+							} else {
+								return nil, err
+							}
+
+						case `raw`:
+							return template.HTML(string(data)), nil
+
+						default:
+							return nil, fmt.Errorf("Unknown response parser %q", self.Parser)
 						}
 					} else {
 						switch self.OnError {
