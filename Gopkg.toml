@@ -29,8 +29,8 @@
   version = "1.16.0"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/ghetzel/go-stockutil"
-  version = "master"
 
 [[constraint]]
   name = "github.com/ghodss/yaml"
