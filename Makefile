@@ -3,7 +3,7 @@
 PKGS=`go list ./... | grep -v /vendor/`
 LOCALS=`find . -type f -name '*.go' -not -path "./vendor/*"`
 
-all: deps fmt build
+all: deps fmt test build
 
 deps:
 	@which dep || go get -u github.com/golang/dep/cmd/dep
@@ -23,10 +23,10 @@ fmt:
 	go vet $(PKGS)
 
 test:
-	go test --tags json1 $(PKGS)
+	go test $(PKGS)
 
 build: deps fmt
-	test -d cli && go build --tags json1 -o bin/`basename ${PWD}` cli/*.go || make test
+	test -d cli && go build -o bin/`basename ${PWD}` cli/*.go
 
 package:
 	-rm -rf pkg
