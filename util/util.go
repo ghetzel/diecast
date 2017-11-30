@@ -9,7 +9,7 @@ import (
 
 const ApplicationName = `diecast`
 const ApplicationSummary = `a dynamic site generator that consumes REST services and renders static HTML output in realtime`
-const ApplicationVersion = `1.4.0`
+const ApplicationVersion = `1.4.1`
 
 var StartedAt = time.Now()
 var SiSuffixes = []string{`bytes`, `KB`, `MB`, `GB`, `TB`, `PB`, `EB`, `YB`}

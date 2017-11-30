@@ -20,10 +20,10 @@
   version = "v1.16.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/ghetzel/go-stockutil"
   packages = ["maputil","sliceutil","stringutil","typeutil"]
-  revision = "502ecfbcb72b8d6f18e192564ae56e1e4625e796"
-  version = "1.0.1"
+  revision = "6e827d1b7c070cf54842d2e57acf382ea3647aae"
 
 [[projects]]
   name = "github.com/ghodss/yaml"
@@ -80,10 +80,10 @@
   version = "v1.1.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/spaolacci/murmur3"
   packages = ["."]
-  revision = "0d12bf811670bf6a1a63828dfbd003eded177fce"
-  version = "v1.0"
+  revision = "9f5d223c60793748f04a9d5b4b4eacddfc1f755d"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -112,6 +112,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ca86dfb32114f43b76c82864822d01f43be8329c152f5f42b82b750a46b02a14"
+  inputs-digest = "140032c6ef893475f2c00926b33b6ec1afeeeee446f6edaaa31e64a9e74fbc53"
   solver-name = "gps-cdcl"
   solver-version = 1
