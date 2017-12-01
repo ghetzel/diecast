@@ -35,7 +35,7 @@ func GenerateFunctionDocs(funcs diecast.FuncMap, sourcefile string) ([]*function
 			doc := &functionDoc{}
 
 			for _, comment := range group.List {
-				if match := rxutil.Match(comment.Text, rxFnDocString); match != nil {
+				if match := rxutil.Match(rxFnDocString, comment.Text); match != nil {
 					fnname := match.Group(`func`)
 					docstring := match.Group(`docstring`)
 
@@ -44,7 +44,7 @@ func GenerateFunctionDocs(funcs diecast.FuncMap, sourcefile string) ([]*function
 					if fn, ok := funcs[fnname]; ok && docstring != `` {
 						var argNames []string
 
-						if an := rxutil.Match(docstring, `(?:\*(\w+)\*)+`); an != nil {
+						if an := rxutil.Match(`(?:\*(\w+)\*)+`, docstring); an != nil {
 							argNames = an.AllCaptures()
 						}
 
