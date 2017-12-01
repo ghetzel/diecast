@@ -6,8 +6,8 @@ LOCALS=`find . -type f -name '*.go' -not -path "./vendor/*"`
 all: deps fmt test build
 
 deps:
-	@which dep || go get -u github.com/golang/dep/cmd/dep
-	@go list github.com/mjibson/esc || go get github.com/mjibson/esc/...
+	@which dep                                || go get -u github.com/golang/dep/cmd/dep
+	@go list github.com/mjibson/esc           || go get github.com/mjibson/esc/...
 	@go list golang.org/x/tools/cmd/goimports || go get golang.org/x/tools/cmd/goimports
 	go generate -x
 	dep ensure
@@ -26,7 +26,7 @@ test:
 	go test $(PKGS)
 
 build: deps fmt
-	test -d cli && go build -o bin/`basename ${PWD}` cli/*.go
+	test -d cli && go build -o bin/`basename ${PWD}` cli/main.go
 
 package:
 	-rm -rf pkg

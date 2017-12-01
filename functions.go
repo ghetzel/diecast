@@ -44,10 +44,19 @@ func GetStandardFunctions() FuncMap {
 	rv := make(FuncMap)
 
 	// string processing
+
+	// fn contains: Return whether a string *s* contains *substr*.
 	rv[`contains`] = strings.Contains
+
+	// fn lower: Return a copy of string *s* with all Unicode letters mapped to their lower case.
 	rv[`lower`] = strings.ToLower
+
+	// fn ltrim: Return a copy of string *s* with the leading *prefix* removed.
 	rv[`ltrim`] = strings.TrimPrefix
+
+	// fn replace: Return a copy of *s* with occurrences of *old* replaced with *new*, up to *n* times.
 	rv[`replace`] = strings.Replace
+
 	rv[`rxreplace`] = func(in interface{}, pattern string, repl string) (string, error) {
 		if inS, err := stringutil.ToString(in); err == nil {
 			if rx, err := regexp.Compile(pattern); err == nil {

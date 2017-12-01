@@ -22,8 +22,8 @@
 [[projects]]
   branch = "master"
   name = "github.com/ghetzel/go-stockutil"
-  packages = ["maputil","sliceutil","stringutil","typeutil"]
-  revision = "6e827d1b7c070cf54842d2e57acf382ea3647aae"
+  packages = ["maputil","rxutil","sliceutil","stringutil","typeutil"]
+  revision = "0ead864ba628952599e54460167b4a1c32c11a1c"
 
 [[projects]]
   name = "github.com/ghodss/yaml"
@@ -112,6 +112,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "140032c6ef893475f2c00926b33b6ec1afeeeee446f6edaaa31e64a9e74fbc53"
+  inputs-digest = "9564de9394273b8d9dd590ad3f1dcf977203068b191be239981889ad70e03d50"
   solver-name = "gps-cdcl"
   solver-version = 1
