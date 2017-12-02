@@ -170,12 +170,13 @@ func main() {
 				}
 			}
 
+			fmt.Printf("<hr />\n")
 			fmt.Printf("<a name=\"%s\"></a>\n", doc.Name)
 			fmt.Printf("```go\n")
 			fmt.Printf("%s(%s)%s\n", doc.Name, doc.Signature, returnSignature)
 			fmt.Printf("```\n")
 
-			fmt.Printf("%s\n\n\n\n", doc.DocString)
+			fmt.Printf("%s\n\n", doc.DocString)
 		}
 	} else {
 		fmt.Printf("err: %v\n", err)
