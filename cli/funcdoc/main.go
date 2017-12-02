@@ -92,7 +92,7 @@ func getFnSignature(fn interface{}, inArgNames []string) (string, string, error)
 			typename := inT.Name()
 
 			switch typename {
-			case `interface{}`:
+			case `interface{}`, ``:
 				typename = `any`
 			}
 
@@ -142,7 +142,10 @@ func main() {
 				}
 			}
 
+			fmt.Printf("```go\n")
 			fmt.Printf("%s(%s)%s\n", doc.Name, doc.Signature, returnSignature)
+			fmt.Printf("```\n")
+
 			fmt.Printf("%s\n\n", doc.DocString)
 		}
 	} else {

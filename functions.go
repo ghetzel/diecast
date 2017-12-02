@@ -43,7 +43,8 @@ func MinNonZero(data stats.Float64Data) (float64, error) {
 func GetStandardFunctions() FuncMap {
 	rv := make(FuncMap)
 
-	// string processing
+	// String Processing
+	// ---------------------------------------------------------------------------------------------
 
 	// fn contains: Return whether a string *s* contains *substr*.
 	rv[`contains`] = strings.Contains
@@ -57,6 +58,7 @@ func GetStandardFunctions() FuncMap {
 	// fn replace: Return a copy of *s* with occurrences of *old* replaced with *new*, up to *n* times.
 	rv[`replace`] = strings.Replace
 
+	// fn rxreplace: Return a copy of *s* with all occurrences of *pattern* replaced with *repl*.
 	rv[`rxreplace`] = func(in interface{}, pattern string, repl string) (string, error) {
 		if inS, err := stringutil.ToString(in); err == nil {
 			if rx, err := regexp.Compile(pattern); err == nil {
@@ -68,7 +70,12 @@ func GetStandardFunctions() FuncMap {
 			return ``, err
 		}
 	}
+
+	// fn rtrim: Return a copy of string *s* with the trailing *suffix* removed.
 	rv[`rtrim`] = strings.TrimSuffix
+
+	// fn split: Return a string array of elements resulting from *s* being split by *delimiter*,
+	//           up to *n* times (if specified).
 	rv[`split`] = func(input string, delimiter string, n ...int) []string {
 		if len(n) == 0 {
 			return strings.Split(input, delimiter)
@@ -77,17 +84,31 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
+	// fn join: Join the *input* array on *delimiter* and return a string.
 	rv[`join`] = func(input interface{}, delimiter string) string {
 		inStr := sliceutil.Stringify(input)
 		return strings.Join(inStr, delimiter)
 	}
 
+	// fn strcount: Count *s* for the number of non-overlapping instances of *substr*.
 	rv[`strcount`] = strings.Count
+
+	// fn titleize: Return a copy of *s* with all Unicode letters that begin words mapped to their title case.
 	rv[`titleize`] = strings.Title
+
+	// fn trim: Return a copy of *s* with all leading and trailing whitespace characters removed.
 	rv[`trim`] = strings.TrimSpace
+
+	// fn trim: Return a copy of *s* with all letters capitalized.
 	rv[`upper`] = strings.ToUpper
+
+	// fn hasPrefix: Return whether string *s* has the given *prefix*.
 	rv[`hasPrefix`] = strings.HasPrefix
+
+	// fn hasSuffix: Return whether string *s* has the given *suffix*.
 	rv[`hasSuffix`] = strings.HasSuffix
+
+	// fn surroundedBy: Return whether string *s* starts with *prefix* and ends with *suffix*.
 	rv[`surroundedBy`] = func(value interface{}, prefix string, suffix string) bool {
 		if v := fmt.Sprintf("%v", value); strings.HasPrefix(v, prefix) && strings.HasSuffix(v, suffix) {
 			return true
@@ -96,6 +117,8 @@ func GetStandardFunctions() FuncMap {
 		return false
 	}
 
+	// fn percent: Return the given floating point *value* as a percentage of *n*, or 100.0 if
+	//             *n* is not specified.
 	rv[`percent`] = func(value interface{}, args ...interface{}) (string, error) {
 		if v, err := stringutil.ConvertToFloat(value); err == nil {
 			outOf := 100.0
@@ -121,20 +144,29 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
-	// file pathname handling
+	// File Pathname Handling
+	// ---------------------------------------------------------------------------------------------
+
+	// fn basename: Return the filename component of the given *path*.
 	rv[`basename`] = func(value interface{}) string {
 		return path.Base(fmt.Sprintf("%v", value))
 	}
 
+	// fn extname: Return the extension component of the given *path* (always prefixed with a dot [.]).
 	rv[`extname`] = func(value interface{}) string {
 		return path.Ext(fmt.Sprintf("%v", value))
 	}
 
+	// fn dirname: Return the directory path component of the given *path*.
 	rv[`dirname`] = func(value interface{}) string {
 		return path.Dir(fmt.Sprintf("%v", value))
 	}
 
-	// encoding
+	// Encoding
+	// ---------------------------------------------------------------------------------------------
+
+	// fn jsonify: Encode the given *value* as a JSON string, optionally using *indent* to pretty
+	//             format the output.
 	rv[`jsonify`] = func(value interface{}, indent ...string) (string, error) {
 		indentString := ``
 
@@ -146,6 +178,7 @@ func GetStandardFunctions() FuncMap {
 		return string(data[:]), err
 	}
 
+	// fn markdown: Render the given Markdown string *value* as sanitized HTML.
 	rv[`markdown`] = func(value interface{}) (string, error) {
 		input := fmt.Sprintf("%v", value)
 		output := blackfriday.MarkdownCommon([]byte(input[:]))
@@ -154,18 +187,39 @@ func GetStandardFunctions() FuncMap {
 		return string(output[:]), nil
 	}
 
-	// type handling and conversion
+	// Type Handling and Conversion
+	// ---------------------------------------------------------------------------------------------
+
+	// fn isBool: Return whether the given *value* is a boolean type.
 	rv[`isBool`] = stringutil.IsBoolean
+
+	// fn isInt: Return whether the given *value* is an integer type.
 	rv[`isInt`] = stringutil.IsInteger
+
+	// fn isFloat: Return whether the given *value* is a floating-point type.
 	rv[`isFloat`] = stringutil.IsFloat
+
+	// fn isZero: Return whether the given *value* is an zero-valued variable.
 	rv[`isZero`] = typeutil.IsZero
+
+	// fn isEmpty: Return whether the given *value* is empty.
 	rv[`isEmpty`] = typeutil.IsEmpty
+
+	// fn isArray: Return whether the given *value* is an iterable array or slice.
 	rv[`isArray`] = typeutil.IsArray
+
+	// fn isMap: Return whether the given *value* is a key-value map type.
 	rv[`isMap`] = func(value interface{}) bool {
 		return typeutil.IsKind(value, reflect.Map)
 	}
+
+	// fn autotype: Attempt to automatically determine the type if *value* and return the converted output.
 	rv[`autotype`] = stringutil.Autotype
+
+	// fn asStr: Return the *value* as a string.
 	rv[`asStr`] = stringutil.ToString
+
+	// fn asInt: Attempt to convert the given *value* to an integer.
 	rv[`asInt`] = func(value interface{}) (int64, error) {
 		if v, err := stringutil.ConvertToFloat(value); err == nil {
 			return int64(v), nil
@@ -174,10 +228,19 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
+	// fn asFloat: Attempt to convert the given *value* to a floating-point number.
 	rv[`asFloat`] = stringutil.ConvertToFloat
+
+	// fn asBool: Attempt to convert the given *value* to a boolean value.
 	rv[`asBool`] = stringutil.ConvertToBool
+
+	// fn asTime: Attempt to parse the given *value* as a date/time value.
 	rv[`asTime`] = stringutil.ConvertToTime
+
+	// fn autobyte: Attempt to convert the given *bytesize* number to a string representation of the value in bytes.
 	rv[`autobyte`] = stringutil.ToByteString
+
+	// fn thousandify: Return a copy of *value* separated by *sep* (or comma by default) every three decimal places.
 	rv[`thousandify`] = func(value interface{}, sepDec ...string) string {
 		var separator string
 		var decimal string
@@ -193,7 +256,9 @@ func GetStandardFunctions() FuncMap {
 		return stringutil.Thousandify(value, separator, decimal)
 	}
 
-	// time and date formatting
+	// Time and Date Formatting
+	// ---------------------------------------------------------------------------------------------
+
 	tmFmt := func(value interface{}, format ...string) (string, error) {
 		if v, err := stringutil.ConvertToTime(value); err == nil {
 			var tmFormat string
@@ -280,6 +345,27 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
+	rv[`since`] = func(at interface{}, round ...string) (time.Duration, error) {
+		if tm, err := stringutil.ConvertToTime(at); err == nil {
+			since := time.Since(tm)
+
+			if len(round) > 0 {
+				switch strings.ToLower(round[0]) {
+				case `s`, `sec`, `second`:
+					since = since.Round(time.Second)
+				case `m`, `min`, `minute`:
+					since = since.Round(time.Minute)
+				case `h`, `hr`, `hour`:
+					since = since.Round(time.Hour)
+				}
+			}
+
+			return since, nil
+		} else {
+			return 0, err
+		}
+	}
+
 	rv[`duration`] = func(value interface{}, unit string, formats ...string) (string, error) {
 		if v, err := stringutil.ConvertToInteger(value); err == nil {
 			duration := time.Duration(v)
@@ -319,7 +405,9 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
-	// random numbers and encoding
+	// Random Numbers and Encoding
+	// ---------------------------------------------------------------------------------------------
+
 	rv[`random`] = func(count int) ([]byte, error) {
 		output := make([]byte, count)
 		if _, err := rand.Read(output); err == nil {
@@ -370,7 +458,8 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
-	// numeric/math functions
+	// Numeric/Math Functions
+	// ---------------------------------------------------------------------------------------------
 	calcFn := func(op string, values ...interface{}) (float64, error) {
 		valuesF := make([]float64, len(values))
 
@@ -462,7 +551,9 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
-	// numeric aggregation functions
+	// Numeric Aggregation Functions
+	// ---------------------------------------------------------------------------------------------
+
 	type statsTplFunc func(in interface{}) (float64, error) // {}
 
 	for fnName, fn := range map[string]statsUnary{
@@ -499,14 +590,18 @@ func GetStandardFunctions() FuncMap {
 		}(fn)
 	}
 
-	// simpler, more relaxed comparators
+	// Simplified Comparators
+	// ---------------------------------------------------------------------------------------------
+
 	rv[`eqx`] = stringutil.RelaxedEqual
 	rv[`nex`] = func(first interface{}, second interface{}) (bool, error) {
 		eq, err := stringutil.RelaxedEqual(first, second)
 		return !eq, err
 	}
 
-	// set processing
+	// Set Processing
+	// ---------------------------------------------------------------------------------------------
+
 	rv[`asList`] = func(input ...interface{}) []interface{} {
 		return input
 	}
