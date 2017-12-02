@@ -24,6 +24,7 @@ test:
 build: deps fmt
 	test -d cli && go build -o bin/`basename ${PWD}` cli/main.go
 	test -d cli/funcdoc && go build -o bin/funcdoc cli/funcdoc/main.go
+	./bin/funcdoc > FUNCTIONS.md
 
 package:
 	-rm -rf pkg

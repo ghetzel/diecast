@@ -6,6 +6,8 @@ which functions are available and how to use them.
 
 ## Function List
 
+- [add](#add)
+- [ago](#ago)
 - [asBool](#asBool)
 - [asFloat](#asFloat)
 - [asInt](#asInt)
@@ -13,12 +15,23 @@ which functions are available and how to use them.
 - [asTime](#asTime)
 - [autobyte](#autobyte)
 - [autotype](#autotype)
+- [base32](#base32)
+- [base32](#base32)
+- [base58](#base58)
+- [base64](#base64)
 - [basename](#basename)
+- [compact](#compact)
 - [contains](#contains)
 - [dirname](#dirname)
+- [divide](#divide)
+- [duration](#duration)
+- [eqx](#eqx)
 - [extname](#extname)
+- [first](#first)
 - [hasPrefix](#hasPrefix)
 - [hasSuffix](#hasSuffix)
+- [in](#in)
+- [indexOf](#indexOf)
 - [isArray](#isArray)
 - [isBool](#isBool)
 - [isEmpty](#isEmpty)
@@ -28,21 +41,55 @@ which functions are available and how to use them.
 - [isZero](#isZero)
 - [join](#join)
 - [jsonify](#jsonify)
+- [last](#last)
+- [leastcommon](#leastcommon)
 - [lower](#lower)
 - [ltrim](#ltrim)
 - [markdown](#markdown)
+- [mod](#mod)
+- [mostcommon](#mostcommon)
+- [multiply](#multiply)
+- [nex](#nex)
+- [now](#now)
 - [percent](#percent)
+- [pluck](#pluck)
+- [pow](#pow)
+- [random](#random)
 - [replace](#replace)
 - [rtrim](#rtrim)
 - [rxreplace](#rxreplace)
+- [sequence](#sequence)
+- [since](#since)
 - [split](#split)
 - [strcount](#strcount)
+- [stringify](#stringify)
+- [subtract](#subtract)
 - [surroundedBy](#surroundedBy)
 - [thousandify](#thousandify)
+- [time](#time)
 - [titleize](#titleize)
 - [trim](#trim)
+- [uniq](#uniq)
 - [upper](#upper)
+- [uuid](#uuid)
+- [uuidRaw](#uuidRaw)
 ## Function Usage
+
+---
+
+<a name="add"></a>
+```go
+add(values ...any) float64
+```
+Return the sum of all of the given *values*.
+
+---
+
+<a name="ago"></a>
+```go
+ago(duration string, ...any) (Time, error)
+```
+Return a Time subtracted by the given *duration*.
 
 ---
 
@@ -102,11 +149,51 @@ Attempt to automatically determine the type if *value* and return the converted 
 
 ---
 
+<a name="base32"></a>
+```go
+base32(input any) string
+```
+hash the *input* data using the Murmur 3 algorithm.
+
+---
+
+<a name="base32"></a>
+```go
+base32(input any) string
+```
+Encode the *input* bytes with the Base32 encoding scheme.
+
+---
+
+<a name="base58"></a>
+```go
+base58(input any) string
+```
+Encode the *input* bytes with the Base58 (Bitcoin alphabet) encoding scheme.
+
+---
+
+<a name="base64"></a>
+```go
+base64(input any, ...any) string
+```
+Encode the *input* bytes with the Base64 encoding scheme.  Optionally specify the encoding mode: one of "padded", "url", "url-padded", or empty (unpadded, default).
+
+---
+
 <a name="basename"></a>
 ```go
 basename(path any) string
 ```
 Return the filename component of the given *path*.
+
+---
+
+<a name="compact"></a>
+```go
+compact(input any)
+```
+Return an copy of given *input* array with all zero-valued elements removed.
 
 ---
 
@@ -126,11 +213,43 @@ Return the directory path component of the given *path*.
 
 ---
 
+<a name="divide"></a>
+```go
+divide(values ...any) (float64, error)
+```
+Sequentially divide all of the given *values*.
+
+---
+
+<a name="duration"></a>
+```go
+duration(value any, unit string, format ...any) (string, error)
+```
+Convert the given *value* from a duration of *unit* into the given time *format*.
+
+---
+
+<a name="eqx"></a>
+```go
+eqx(eq any, any) (bool, error)
+```
+A relaxed-type version of the **eq** builtin function.
+
+---
+
 <a name="extname"></a>
 ```go
 extname(path any) string
 ```
 Return the extension component of the given *path* (always prefixed with a dot [.]).
+
+---
+
+<a name="first"></a>
+```go
+first(input any) (, error)
+```
+Return the first value from the given *input* array.
 
 ---
 
@@ -147,6 +266,22 @@ Return whether string *s* has the given *prefix*.
 hasSuffix(s string, suffix string) bool
 ```
 Return whether string *s* has the given *suffix*.
+
+---
+
+<a name="in"></a>
+```go
+in(in any, input any) bool
+```
+Return whether *in* is an element of the given *input* array.
+
+---
+
+<a name="indexOf"></a>
+```go
+indexOf(input any, value any) int
+```
+Iterate through the *input* array and return the index of *value*, or -1 if not present.
 
 ---
 
@@ -222,6 +357,22 @@ Encode the given *value* as a JSON string, optionally using *indent* to pretty f
 
 ---
 
+<a name="last"></a>
+```go
+last(input any) (, error)
+```
+Return the last value from the given *input* array.
+
+---
+
+<a name="leastcommon"></a>
+```go
+leastcommon(input any) (, error)
+```
+Return element in the *input* array that appears the least frequently.
+
+---
+
 <a name="lower"></a>
 ```go
 lower(s string) string
@@ -246,11 +397,75 @@ Render the given Markdown string *value* as sanitized HTML.
 
 ---
 
+<a name="mod"></a>
+```go
+mod(values ...any) (float64, error)
+```
+Return the modulus of all of the given *values*.
+
+---
+
+<a name="mostcommon"></a>
+```go
+mostcommon(input any) (, error)
+```
+Return element in the *input* array that appears the most frequently.
+
+---
+
+<a name="multiply"></a>
+```go
+multiply(values ...any) float64
+```
+Return the product of all of the given *values*.
+
+---
+
+<a name="nex"></a>
+```go
+nex(ne any, any) (bool, error)
+```
+A relaxed-type version of the **ne** builtin function.
+
+---
+
+<a name="now"></a>
+```go
+now(format ...any) (string, error)
+```
+Return the current time formatted using *format*.  See [Time Formats](#time-formats) for acceptable formats.
+
+---
+
 <a name="percent"></a>
 ```go
 percent(value any, n ...any) (string, error)
 ```
 Return the given floating point *value* as a percentage of *n*, or 100.0 if *n* is not specified.
+
+---
+
+<a name="pluck"></a>
+```go
+pluck(input any, key string)
+```
+Given an *input* array of maps, retrieve the values of *key* from all elements.
+
+---
+
+<a name="pow"></a>
+```go
+pow(values ...any) (float64, error)
+```
+Sequentially exponentiate of all of the given *values*.
+
+---
+
+<a name="random"></a>
+```go
+random(n int) (, error)
+```
+Return a random array of *n* bytes. The random source used is suitable for cryptographic purposes.
 
 ---
 
@@ -278,6 +493,22 @@ Return a copy of *s* with all occurrences of *pattern* replaced with *repl*.
 
 ---
 
+<a name="sequence"></a>
+```go
+sequence(n any)
+```
+Return an array of integers representing a sequence from [0, *n*).
+
+---
+
+<a name="since"></a>
+```go
+since(time any, ...any) (Duration, error)
+```
+Return the amount of time that has elapsed since *time*, optionally rounded to the nearest *interval*.
+
+---
+
 <a name="split"></a>
 ```go
 split(s string, delimiter string, ...any)
@@ -291,6 +522,22 @@ Return a string array of elements resulting from *s* being split by *delimiter*,
 strcount(s string, substr string) int
 ```
 Count *s* for the number of non-overlapping instances of *substr*.
+
+---
+
+<a name="stringify"></a>
+```go
+stringify(input any)
+```
+Return the given *input* array with all values converted to strings.
+
+---
+
+<a name="subtract"></a>
+```go
+subtract(values ...any) float64
+```
+Sequentially subtract all of the given *values*.
 
 ---
 
@@ -310,6 +557,14 @@ Return a copy of *value* separated by *sep* (or comma by default) every three de
 
 ---
 
+<a name="time"></a>
+```go
+time(format any, ...any) (string, error)
+```
+Return the given Time formatted using *format*.  See [Time Formats](#time-formats) for acceptable formats.
+
+---
+
 <a name="titleize"></a>
 ```go
 titleize(s string) string
@@ -326,9 +581,33 @@ Return a copy of *s* with all leading and trailing whitespace characters removed
 
 ---
 
+<a name="uniq"></a>
+```go
+uniq(input any)
+```
+Return an array of unique values from the given *input* array.
+
+---
+
 <a name="upper"></a>
 ```go
 upper(s string) string
 ```
 Return a copy of *s* with all letters capitalized.
+
+---
+
+<a name="uuid"></a>
+```go
+uuid() string
+```
+Generate a new Version 4 UUID.
+
+---
+
+<a name="uuidRaw"></a>
+```go
+uuidRaw()
+```
+Generate the raw bytes of a new Version 4 UUID.
 

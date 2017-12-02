@@ -326,11 +326,17 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
+	// fn time: Return the given Time formatted using *format*.  See [Time Formats](#time-formats) for
+	//          acceptable formats.
 	rv[`time`] = tmFmt
+
+	// fn now: Return the current time formatted using *format*.  See [Time Formats](#time-formats) for
+	//          acceptable formats.
 	rv[`now`] = func(format ...string) (string, error) {
 		return tmFmt(time.Now(), format...)
 	}
 
+	// fn ago: Return a Time subtracted by the given *duration*.
 	rv[`ago`] = func(durationString string, fromTime ...time.Time) (time.Time, error) {
 		from := time.Now()
 
@@ -345,12 +351,14 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
-	rv[`since`] = func(at interface{}, round ...string) (time.Duration, error) {
+	// fn since: Return the amount of time that has elapsed since *time*, optionally rounded
+	//           to the nearest *interval*.
+	rv[`since`] = func(at interface{}, interval ...string) (time.Duration, error) {
 		if tm, err := stringutil.ConvertToTime(at); err == nil {
 			since := time.Since(tm)
 
-			if len(round) > 0 {
-				switch strings.ToLower(round[0]) {
+			if len(interval) > 0 {
+				switch strings.ToLower(interval[0]) {
 				case `s`, `sec`, `second`:
 					since = since.Round(time.Second)
 				case `m`, `min`, `minute`:
@@ -366,6 +374,7 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
+	// fn duration: Convert the given *value* from a duration of *unit* into the given time *format*.
 	rv[`duration`] = func(value interface{}, unit string, formats ...string) (string, error) {
 		if v, err := stringutil.ConvertToInteger(value); err == nil {
 			duration := time.Duration(v)
@@ -408,6 +417,8 @@ func GetStandardFunctions() FuncMap {
 	// Random Numbers and Encoding
 	// ---------------------------------------------------------------------------------------------
 
+	// fn random: Return a random array of *n* bytes. The random source used is suitable for
+	//            cryptographic purposes.
 	rv[`random`] = func(count int) ([]byte, error) {
 		output := make([]byte, count)
 		if _, err := rand.Read(output); err == nil {
@@ -417,22 +428,28 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
+	// fn uuid: Generate a new Version 4 UUID.
 	rv[`uuid`] = func() string {
 		return uuid.NewV4().String()
 	}
 
+	// fn uuidRaw: Generate the raw bytes of a new Version 4 UUID.
 	rv[`uuidRaw`] = func() []byte {
 		return uuid.NewV4().Bytes()
 	}
 
+	// fn base32: Encode the *input* bytes with the Base32 encoding scheme.
 	rv[`base32`] = func(input []byte) string {
 		return Base32Alphabet.EncodeToString(input)
 	}
 
+	// fn base58: Encode the *input* bytes with the Base58 (Bitcoin alphabet) encoding scheme.
 	rv[`base58`] = func(input []byte) string {
 		return base58.Encode(input)
 	}
 
+	// fn base64: Encode the *input* bytes with the Base64 encoding scheme.  Optionally specify
+	//            the encoding mode: one of "padded", "url", "url-padded", or empty (unpadded, default).
 	rv[`base64`] = func(input []byte, encoding ...string) string {
 		if len(encoding) == 0 {
 			encoding = []string{`standard`}
@@ -450,6 +467,7 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
+	// fn base32: hash the *input* data using the Murmur 3 algorithm.
 	rv[`murmur3`] = func(input interface{}) (uint64, error) {
 		if v, err := stringutil.ToString(input); err == nil {
 			return murmur3.Sum64([]byte(v)), nil
@@ -457,6 +475,12 @@ func GetStandardFunctions() FuncMap {
 			return 0, err
 		}
 	}
+
+	// rv[`md5`] =
+	// rv[`sha1`] =
+	// rv[`sha256`] =
+	// rv[`sha384`] =
+	// rv[`sha512`] =
 
 	// Numeric/Math Functions
 	// ---------------------------------------------------------------------------------------------
@@ -510,33 +534,40 @@ func GetStandardFunctions() FuncMap {
 
 	rv[`calc`] = calcFn
 
+	// fn add: Return the sum of all of the given *values*.
 	rv[`add`] = func(values ...interface{}) float64 {
 		out, _ := calcFn(`+`, values...)
 		return out
 	}
 
+	// fn subtract: Sequentially subtract all of the given *values*.
 	rv[`subtract`] = func(values ...interface{}) float64 {
 		out, _ := calcFn(`-`, values...)
 		return out
 	}
 
+	// fn multiply: Return the product of all of the given *values*.
 	rv[`multiply`] = func(values ...interface{}) float64 {
 		out, _ := calcFn(`*`, values...)
 		return out
 	}
 
+	// fn divide: Sequentially divide all of the given *values*.
 	rv[`divide`] = func(values ...interface{}) (float64, error) {
 		return calcFn(`/`, values...)
 	}
 
+	// fn mod: Return the modulus of all of the given *values*.
 	rv[`mod`] = func(values ...interface{}) (float64, error) {
 		return calcFn(`%`, values...)
 	}
 
+	// fn pow: Sequentially exponentiate of all of the given *values*.
 	rv[`pow`] = func(values ...interface{}) (float64, error) {
 		return calcFn(`^`, values...)
 	}
 
+	// fn sequence: Return an array of integers representing a sequence from [0, *n*).
 	rv[`sequence`] = func(max interface{}) []int {
 		if v, err := stringutil.ConvertToInteger(max); err == nil {
 			seq := make([]int, v)
@@ -593,7 +624,10 @@ func GetStandardFunctions() FuncMap {
 	// Simplified Comparators
 	// ---------------------------------------------------------------------------------------------
 
+	// fn eqx: A relaxed-type version of the **eq** builtin function.
 	rv[`eqx`] = stringutil.RelaxedEqual
+
+	// fn nex: A relaxed-type version of the **ne** builtin function.
 	rv[`nex`] = func(first interface{}, second interface{}) (bool, error) {
 		eq, err := stringutil.RelaxedEqual(first, second)
 		return !eq, err
@@ -602,16 +636,14 @@ func GetStandardFunctions() FuncMap {
 	// Set Processing
 	// ---------------------------------------------------------------------------------------------
 
-	rv[`asList`] = func(input ...interface{}) []interface{} {
-		return input
-	}
-
+	// fn pluck: Given an *input* array of maps, retrieve the values of *key* from all elements.
 	rv[`pluck`] = func(input interface{}, key string) []interface{} {
 		return maputil.Pluck(input, strings.Split(key, `.`))
 	}
 
-	rv[`in`] = func(want interface{}, input []interface{}) bool {
-		for _, have := range input {
+	// fn in: Return whether *in* is an element of the given *input* array.
+	rv[`in`] = func(want interface{}, input interface{}) bool {
+		for _, have := range sliceutil.Sliceify(input) {
 			if eq, err := stringutil.RelaxedEqual(have, want); err == nil && eq == true {
 				return true
 			}
@@ -620,6 +652,7 @@ func GetStandardFunctions() FuncMap {
 		return false
 	}
 
+	// fn indexOf: Iterate through the *input* array and return the index of *value*, or -1 if not present.
 	rv[`indexOf`] = func(slice interface{}, value interface{}) (index int) {
 		index = -1
 
@@ -637,14 +670,17 @@ func GetStandardFunctions() FuncMap {
 		return
 	}
 
+	// fn uniq: Return an array of unique values from the given *input* array.
 	rv[`uniq`] = func(slice interface{}) []interface{} {
 		return sliceutil.Unique(slice)
 	}
 
+	// fn compact: Return an copy of given *input* array with all zero-valued elements removed.
 	rv[`compact`] = func(slice []interface{}) []interface{} {
 		return sliceutil.Compact(slice)
 	}
 
+	// fn first: Return the first value from the given *input* array.
 	rv[`first`] = func(slice interface{}) (out interface{}, err error) {
 		err = sliceutil.Each(slice, func(i int, value interface{}) error {
 			out = value
@@ -654,6 +690,7 @@ func GetStandardFunctions() FuncMap {
 		return
 	}
 
+	// fn last: Return the last value from the given *input* array.
 	rv[`last`] = func(slice interface{}) (out interface{}, err error) {
 		err = sliceutil.Each(slice, func(i int, value interface{}) error {
 			out = value
@@ -705,14 +742,17 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
+	// fn mostcommon: Return element in the *input* array that appears the most frequently.
 	rv[`mostcommon`] = func(slice interface{}) (interface{}, error) {
 		return commonses(slice, `most`)
 	}
 
+	// fn leastcommon: Return element in the *input* array that appears the least frequently.
 	rv[`leastcommon`] = func(slice interface{}) (interface{}, error) {
 		return commonses(slice, `least`)
 	}
 
+	// fn stringify: Return the given *input* array with all values converted to strings.
 	rv[`stringify`] = func(slice interface{}) []string {
 		return sliceutil.Stringify(slice)
 	}
