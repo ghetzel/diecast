@@ -4,7 +4,7 @@ Diecast templates have access to a standard set of functions that aim to make
 working with data and building web pages easier. Use the reference below to see
 which functions are available and how to use them.
 
-## Functions
+## Function List
 
 - [asBool](#asBool)
 - [asFloat](#asFloat)
@@ -42,6 +42,8 @@ which functions are available and how to use them.
 - [titleize](#titleize)
 - [trim](#trim)
 - [upper](#upper)
+## Function Usage
+
 <a name="asBool"></a>
 ```go
 asBool(value any) (bool, error)

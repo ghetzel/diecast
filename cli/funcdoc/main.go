@@ -151,11 +151,13 @@ func main() {
 		fmt.Printf("working with data and building web pages easier. Use the reference below to see\n")
 		fmt.Printf("which functions are available and how to use them.\n\n")
 
-		fmt.Printf("## Functions\n\n")
+		fmt.Printf("## Function List\n\n")
 
 		for _, doc := range docs {
 			fmt.Printf("- [%s](#%s)\n", doc.Name, doc.Name)
 		}
+
+		fmt.Printf("## Function Usage\n\n")
 
 		for _, doc := range docs {
 			returnSignature := doc.Returns
