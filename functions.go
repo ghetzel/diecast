@@ -99,7 +99,7 @@ func GetStandardFunctions() FuncMap {
 	// fn trim: Return a copy of *s* with all leading and trailing whitespace characters removed.
 	rv[`trim`] = strings.TrimSpace
 
-	// fn trim: Return a copy of *s* with all letters capitalized.
+	// fn upper: Return a copy of *s* with all letters capitalized.
 	rv[`upper`] = strings.ToUpper
 
 	// fn hasPrefix: Return whether string *s* has the given *prefix*.

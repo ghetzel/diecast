@@ -5,6 +5,7 @@ import (
 	"go/parser"
 	"go/token"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/ghetzel/diecast"
@@ -26,8 +27,20 @@ type functionDoc struct {
 	Returns   string
 }
 
-func GenerateFunctionDocs(funcs diecast.FuncMap, sourcefile string) ([]*functionDoc, error) {
-	docs := make([]*functionDoc, 0)
+type functionDocSet []*functionDoc
+
+func (self functionDocSet) Len() int {
+	return len(self)
+}
+func (self functionDocSet) Swap(i, j int) {
+	self[i], self[j] = self[j], self[i]
+}
+func (self functionDocSet) Less(i, j int) bool {
+	return self[i].Name < self[j].Name
+}
+
+func GenerateFunctionDocs(funcs diecast.FuncMap, sourcefile string) (functionDocSet, error) {
+	docs := make(functionDocSet, 0)
 
 	if source, err := parser.ParseFile(token.NewFileSet(), sourcefile, nil, parser.ParseComments); err == nil {
 	NextComment:
@@ -131,6 +144,8 @@ func getFnSignature(fn interface{}, inArgNames []string) (string, string, error)
 
 func main() {
 	if docs, err := GenerateFunctionDocs(diecast.GetStandardFunctions(), `functions.go`); err == nil {
+		sort.Sort(docs)
+
 		for _, doc := range docs {
 			returnSignature := doc.Returns
 
