@@ -168,7 +168,7 @@ func main() {
 				}
 			}
 
-			fmt.Printf("<a name=\"%s\">\n", doc.Name)
+			fmt.Printf("<a name=\"%s\"></a>\n", doc.Name)
 			fmt.Printf("```go\n")
 			fmt.Printf("%s(%s)%s\n", doc.Name, doc.Signature, returnSignature)
 			fmt.Printf("```\n")
