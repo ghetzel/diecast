@@ -82,7 +82,7 @@ as templates and processed using the [rendering engine](https://golang.org/pkg/h
 # Functions
 
 Diecast ships with a suite of built-in functions that can be used to make template development easier.  Check out the
-[Diecast Function Reference](FUNCTIONS.md).
+[Diecast Function Reference](FUNCTIONS.md) for more details.
 
 # Layouts
 
