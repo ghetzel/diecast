@@ -79,6 +79,11 @@ By default, HTML files served through `diecast` will treated as templates and re
 [glob-like](https://golang.org/pkg/path/filepath/#Match) patterns will be treated
 as templates and processed using the [rendering engine](https://golang.org/pkg/html/template/).
 
+# Functions
+
+Diecast ships with a suite of built-in functions that can be used to make template development easier.  Check out the
+[Diecast Function Reference](FUNCTIONS.md).
+
 # Layouts
 
 Often it is desirable for some or all of a site to share a common theme (e.g.: navigation,
