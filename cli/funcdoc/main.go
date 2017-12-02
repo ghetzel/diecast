@@ -170,7 +170,7 @@ func main() {
 				}
 			}
 
-			fmt.Printf("<hr />\n")
+			fmt.Printf("---\n\n")
 			fmt.Printf("<a name=\"%s\"></a>\n", doc.Name)
 			fmt.Printf("```go\n")
 			fmt.Printf("%s(%s)%s\n", doc.Name, doc.Signature, returnSignature)
