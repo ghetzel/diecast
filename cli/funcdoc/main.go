@@ -146,6 +146,17 @@ func main() {
 	if docs, err := GenerateFunctionDocs(diecast.GetStandardFunctions(), `functions.go`); err == nil {
 		sort.Sort(docs)
 
+		fmt.Printf("# Diecast Function Reference\n\n")
+		fmt.Printf("Diecast templates have access to a standard set of functions that aim to make\n")
+		fmt.Printf("working with data and building web pages easier. Use the reference below to see\n")
+		fmt.Printf("which functions are available and how to use them.\n\n")
+
+		fmt.Printf("## Functions\n\n")
+
+		for _, doc := range docs {
+			fmt.Printf("- [%s](#%s)\n", doc.Name, doc.Name)
+		}
+
 		for _, doc := range docs {
 			returnSignature := doc.Returns
 
@@ -157,6 +168,7 @@ func main() {
 				}
 			}
 
+			fmt.Printf("<a name=\"%s\">\n", doc.Name)
 			fmt.Printf("```go\n")
 			fmt.Printf("%s(%s)%s\n", doc.Name, doc.Signature, returnSignature)
 			fmt.Printf("```\n")
