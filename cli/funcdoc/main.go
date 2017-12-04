@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"go/parser"
 	"go/token"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"sort"
 	"strings"
@@ -143,13 +145,15 @@ func getFnSignature(fn interface{}, inArgNames []string) (string, string, error)
 }
 
 func main() {
+	if f, err := os.Open(`docs/functions_pre.md`); err == nil {
+		defer f.Close()
+		if data, err := ioutil.ReadAll(f); err == nil {
+			fmt.Printf("%s\n", string(data))
+		}
+	}
+
 	if docs, err := GenerateFunctionDocs(diecast.GetStandardFunctions(), `functions.go`); err == nil {
 		sort.Sort(docs)
-
-		fmt.Printf("# Diecast Function Reference\n\n")
-		fmt.Printf("Diecast templates have access to a standard set of functions that aim to make\n")
-		fmt.Printf("working with data and building web pages easier. Use the reference below to see\n")
-		fmt.Printf("which functions are available and how to use them.\n\n")
 
 		fmt.Printf("## Function List\n\n")
 
@@ -178,7 +182,16 @@ func main() {
 
 			fmt.Printf("%s\n\n", doc.DocString)
 		}
+
 	} else {
 		fmt.Printf("err: %v\n", err)
+		os.Exit(1)
+	}
+
+	if f, err := os.Open(`docs/functions_post.md`); err == nil {
+		defer f.Close()
+		if data, err := ioutil.ReadAll(f); err == nil {
+			fmt.Printf("%s\n", string(data))
+		}
 	}
 }

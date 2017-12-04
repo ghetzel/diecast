@@ -1,8 +1,8 @@
 # Diecast Function Reference
 
-Diecast templates have access to a standard set of functions that aim to make
-working with data and building web pages easier. Use the reference below to see
-which functions are available and how to use them.
+Diecast templates have access to a standard set of functions that aim to make working with data and
+building web pages easier. Use the reference below to see which functions are available and how to
+use them.
 
 ## Function List
 
@@ -610,4 +610,6 @@ Generate a new Version 4 UUID.
 uuidRaw()
 ```
 Generate the raw bytes of a new Version 4 UUID.
+
+# Time Formats
 
