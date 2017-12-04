@@ -21,16 +21,20 @@ use them.
 - [basename](#basename)
 - [compact](#compact)
 - [contains](#contains)
+- [dir](#dir)
 - [dirname](#dirname)
 - [divide](#divide)
 - [duration](#duration)
 - [eqx](#eqx)
 - [extname](#extname)
+- [filter](#filter)
 - [first](#first)
 - [hasPrefix](#hasPrefix)
 - [hasSuffix](#hasSuffix)
+- [headers](#headers)
 - [in](#in)
 - [indexOf](#indexOf)
+- [ireverse](#ireverse)
 - [isArray](#isArray)
 - [isBool](#isBool)
 - [isEmpty](#isEmpty)
@@ -38,6 +42,7 @@ use them.
 - [isInt](#isInt)
 - [isMap](#isMap)
 - [isZero](#isZero)
+- [isort](#isort)
 - [join](#join)
 - [jsonify](#jsonify)
 - [last](#last)
@@ -45,21 +50,30 @@ use them.
 - [lower](#lower)
 - [ltrim](#ltrim)
 - [markdown](#markdown)
+- [mimeparams](#mimeparams)
+- [mimetype](#mimetype)
 - [mod](#mod)
 - [mostcommon](#mostcommon)
 - [multiply](#multiply)
 - [murmur3](#murmur3)
 - [nex](#nex)
 - [now](#now)
+- [pathjoin](#pathjoin)
+- [payload](#payload)
 - [percent](#percent)
 - [pluck](#pluck)
 - [pow](#pow)
+- [pwd](#pwd)
+- [qs](#qs)
+- [querystrings](#querystrings)
 - [random](#random)
 - [replace](#replace)
+- [reverse](#reverse)
 - [rtrim](#rtrim)
 - [rxreplace](#rxreplace)
 - [sequence](#sequence)
 - [since](#since)
+- [sort](#sort)
 - [split](#split)
 - [strcount](#strcount)
 - [stringify](#stringify)
@@ -197,6 +211,14 @@ Return whether a string *s* contains *substr*.
 
 ---
 
+<a name="dir"></a>
+```go
+dir(path ...any) (, error)
+```
+Return a list of files and directories in *path*, or in the current directory if not specified.
+
+---
+
 <a name="dirname"></a>
 ```go
 dirname(path any) string
@@ -237,6 +259,14 @@ Return the extension component of the given *path* (always prefixed with a dot [
 
 ---
 
+<a name="filter"></a>
+```go
+filter(input any, expression string) (, error)
+```
+Return the given *input* array with only elements where *expression* evaluates to a truthy value.
+
+---
+
 <a name="first"></a>
 ```go
 first(input any) (, error)
@@ -261,6 +291,14 @@ Return whether string *s* has the given *suffix*.
 
 ---
 
+<a name="headers"></a>
+```go
+headers(header string) string
+```
+Return the value of the *header* HTTP request header from the request used to generate the current view.
+
+---
+
 <a name="in"></a>
 ```go
 in(in any, input any) bool
@@ -274,6 +312,14 @@ Return whether *in* is an element of the given *input* array.
 indexOf(input any, value any) int
 ```
 Iterate through the *input* array and return the index of *value*, or -1 if not present.
+
+---
+
+<a name="ireverse"></a>
+```go
+ireverse(input any, ...any)
+```
+Return the *input* array sorted in lexical descending order (case insensitive).
 
 ---
 
@@ -333,6 +379,14 @@ Return whether the given *value* is an zero-valued variable.
 
 ---
 
+<a name="isort"></a>
+```go
+isort(input any, ...any)
+```
+Return the *input* array sorted in lexical ascending order (case insensitive).
+
+---
+
 <a name="join"></a>
 ```go
 join(input any, delimiter string) string
@@ -389,6 +443,22 @@ Render the given Markdown string *value* as sanitized HTML.
 
 ---
 
+<a name="mimeparams"></a>
+```go
+mimeparams(string)
+```
+Returns the parameters portion of the MIME type of the given filename
+
+---
+
+<a name="mimetype"></a>
+```go
+mimetype(string) string
+```
+Returns a best guess MIME type for the given filename
+
+---
+
 <a name="mod"></a>
 ```go
 mod(values ...any) (float64, error)
@@ -437,6 +507,22 @@ Return the current time formatted using *format*.  See [Time Formats](#time-form
 
 ---
 
+<a name="pathjoin"></a>
+```go
+pathjoin(values ...any) string
+```
+Return the value of all *values* join on the system path separator.
+
+---
+
+<a name="payload"></a>
+```go
+payload(...any)
+```
+Return the body supplied with the request used to generate the current view.
+
+---
+
 <a name="percent"></a>
 ```go
 percent(value any, n ...any) (string, error)
@@ -461,6 +547,30 @@ Sequentially exponentiate of all of the given *values*.
 
 ---
 
+<a name="pwd"></a>
+```go
+pwd() (string, error)
+```
+Return the present working directory
+
+---
+
+<a name="qs"></a>
+```go
+qs(key any, fallback ...any)
+```
+Return the value of query string parameter *key* in the current URL, or return *fallback*.
+
+---
+
+<a name="querystrings"></a>
+```go
+querystrings()
+```
+Return a map of all of the query string parameters in the current URL.
+
+---
+
 <a name="random"></a>
 ```go
 random(n int) (, error)
@@ -474,6 +584,14 @@ Return a random array of *n* bytes. The random source used is suitable for crypt
 replace(s string, old string, new string, n int) string
 ```
 Return a copy of *s* with occurrences of *old* replaced with *new*, up to *n* times.
+
+---
+
+<a name="reverse"></a>
+```go
+reverse(input any, ...any)
+```
+Return the *input* array sorted in lexical descending order.
 
 ---
 
@@ -506,6 +624,14 @@ Return an array of integers representing a sequence from [0, *n*).
 since(time any, ...any) (Duration, error)
 ```
 Return the amount of time that has elapsed since *time*, optionally rounded to the nearest *interval*.
+
+---
+
+<a name="sort"></a>
+```go
+sort(input any, ...any)
+```
+Return the *input* array sorted in lexical ascending order.
 
 ---
 

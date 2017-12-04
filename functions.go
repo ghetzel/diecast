@@ -1,20 +1,26 @@
 package diecast
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
+	"mime"
+	"os"
 	"path"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/pathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -27,6 +33,14 @@ import (
 )
 
 var Base32Alphabet = base32.NewEncoding(`abcdefghijklmnopqrstuvwxyz234567`)
+
+type fileInfo struct {
+	os.FileInfo
+}
+
+func (self *fileInfo) String() string {
+	return self.Name()
+}
 
 type statsUnary func(stats.Float64Data) (float64, error)
 
@@ -160,6 +174,71 @@ func GetStandardFunctions() FuncMap {
 	// fn dirname: Return the directory path component of the given *path*.
 	rv[`dirname`] = func(value interface{}) string {
 		return path.Dir(fmt.Sprintf("%v", value))
+	}
+
+	// fn pathjoin: Return the value of all *values* join on the system path separator.
+	rv[`pathjoin`] = func(values ...interface{}) string {
+		return path.Join(sliceutil.Stringify(values)...)
+	}
+
+	// fn pwd: Return the present working directory
+	rv[`pwd`] = os.Getwd
+
+	// fn dir: Return a list of files and directories in *path*, or in the current directory if not specified.
+	rv[`dir`] = func(dirs ...string) ([]*fileInfo, error) {
+		var dir string
+		entries := make([]*fileInfo, 0)
+
+		if len(dirs) == 0 || dirs[0] == `` {
+			if wd, err := os.Getwd(); err == nil {
+				dir = wd
+			} else {
+				return nil, err
+			}
+		} else {
+			dir = dirs[0]
+		}
+
+		if d, err := pathutil.ExpandUser(dir); err == nil {
+			dir = d
+		} else {
+			return nil, err
+		}
+
+		if e, err := ioutil.ReadDir(dir); err == nil {
+			for _, info := range e {
+				entries = append(entries, &fileInfo{
+					FileInfo: info,
+				})
+			}
+
+			sort.Slice(entries, func(i, j int) bool {
+				return strings.ToLower(entries[i].Name()) < strings.ToLower(entries[j].Name())
+			})
+
+			return entries, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	// fn mimetype: Returns a best guess MIME type for the given filename
+	rv[`mimetype`] = func(filename string) string {
+		mime, _ := stringutil.SplitPair(mime.TypeByExtension(path.Ext(filename)), `;`)
+		return strings.TrimSpace(mime)
+	}
+
+	// fn mimeparams: Returns the parameters portion of the MIME type of the given filename
+	rv[`mimeparams`] = func(filename string) map[string]interface{} {
+		_, params := stringutil.SplitPair(mime.TypeByExtension(path.Ext(filename)), `;`)
+		rv := make(map[string]interface{})
+
+		for _, paramPair := range strings.Split(params, `;`) {
+			key, value := stringutil.SplitPair(paramPair, `=`)
+			rv[key] = stringutil.Autotype(value)
+		}
+
+		return rv
 	}
 
 	// Encoding
@@ -636,6 +715,44 @@ func GetStandardFunctions() FuncMap {
 	// Set Processing
 	// ---------------------------------------------------------------------------------------------
 
+	// fn filter: Return the given *input* array with only elements where *expression* evaluates to
+	//            a truthy value.
+	rv[`filter`] = func(input interface{}, expr string) ([]interface{}, error) {
+		out := make([]interface{}, 0)
+
+		for i, value := range sliceutil.Sliceify(input) {
+			tmpl := NewTemplate(`inline`, TextEngine)
+			tmpl.Funcs(rv)
+
+			if !strings.HasPrefix(expr, `{{`) {
+				expr = `{{` + expr
+			}
+
+			if !strings.HasSuffix(expr, `}}`) {
+				expr = expr + `}}`
+			}
+
+			if err := tmpl.Parse(expr); err == nil {
+				output := bytes.NewBuffer(nil)
+
+				if err := tmpl.Render(output, value, ``); err == nil {
+					evalValue := stringutil.Autotype(output.String())
+
+					// since this data may have been entity escaped by html/template, unescape it here
+					if !typeutil.IsZero(evalValue) {
+						out = append(out, value)
+					}
+				} else {
+					return nil, fmt.Errorf("item %d: %v", i, err)
+				}
+			} else {
+				return nil, fmt.Errorf("failed to parse template: %v", err)
+			}
+		}
+
+		return out, nil
+	}
+
 	// fn pluck: Given an *input* array of maps, retrieve the values of *key* from all elements.
 	rv[`pluck`] = func(input interface{}, key string) []interface{} {
 		return maputil.Pluck(input, strings.Split(key, `.`))
@@ -698,6 +815,54 @@ func GetStandardFunctions() FuncMap {
 		})
 
 		return
+	}
+
+	sorter := func(input interface{}, reverse bool, keys ...string) []interface{} {
+		out := sliceutil.Sliceify(input)
+
+		sort.Slice(out, func(i, j int) bool {
+			var iVal, jVal string
+
+			if len(keys) > 0 {
+				iVal = maputil.DeepGetString(out[i], strings.Split(keys[0], `.`))
+				jVal = maputil.DeepGetString(out[j], strings.Split(keys[0], `.`))
+			} else {
+				iVal, _ = stringutil.ToString(out[i])
+				jVal, _ = stringutil.ToString(out[j])
+			}
+
+			if reverse {
+				return iVal > jVal
+			} else {
+				return iVal < jVal
+			}
+		})
+
+		return out
+	}
+
+	// fn sort: Return the *input* array sorted in lexical ascending order.
+	rv[`sort`] = func(input interface{}, keys ...string) []interface{} {
+		return sorter(input, false, keys...)
+	}
+
+	// fn reverse: Return the *input* array sorted in lexical descending order.
+	rv[`reverse`] = func(input interface{}, keys ...string) []interface{} {
+		return sorter(input, true, keys...)
+	}
+
+	// fn isort: Return the *input* array sorted in lexical ascending order (case insensitive).
+	rv[`isort`] = func(input interface{}, keys ...string) []interface{} {
+		return sorter(sliceutil.MapString(input, func(_ int, v string) string {
+			return strings.ToLower(v)
+		}), true, keys...)
+	}
+
+	// fn ireverse: Return the *input* array sorted in lexical descending order (case insensitive).
+	rv[`ireverse`] = func(input interface{}, keys ...string) []interface{} {
+		return sorter(sliceutil.MapString(input, func(_ int, v string) string {
+			return strings.ToLower(v)
+		}), true, keys...)
 	}
 
 	commonses := func(slice interface{}, cmp string) (interface{}, error) {

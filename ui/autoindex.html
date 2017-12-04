@@ -1,0 +1,65 @@
+<html>
+    <head>
+        <style type="text/css">
+            html, body {
+                font-family: monospace;
+            }
+
+            th {
+                text-align: left;
+            }
+
+            .size {
+                text-align: right;
+                padding-right: 2em;
+            }
+        </style>
+    </head>
+    <body>
+        {{ $p := (qs `p` pwd) }}
+
+        <h1>{{ $p }}</h1>
+
+        <hr />
+
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th class="size">Size</th>
+                    <th>Modified</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <a href="?p={{ dirname $p }}">..</a>
+                    </td>
+                    <td></td>
+                    <td class="size"></td>
+                    <td></td>
+                </tr>
+
+            {{ range filter (dir $p) `.IsDir` }}
+                <tr>
+                    <td>
+                        <a href="?p={{ pathjoin $p .Name }}">{{ .Name }}</a>
+                    </td>
+                    <td>{{ if .IsDir }}directory{{ else }}{{ mimetype .Name }}{{ end }}</td>
+                    <td class="size"></td>
+                    <td>{{ time .ModTime `rfc822` }}</td>
+                </tr>
+            {{ end }}
+            {{ range filter (dir $p) `not .IsDir` }}
+                <tr>
+                    <td>{{ .Name }}</td>
+                    <td>{{ if .IsDir }}directory{{ else }}{{ mimetype .Name }}{{ end }}</td>
+                    <td class="size">{{ rtrim (rtrim (autobyte .Size "%.1f") `B`) `.0` }}</td>
+                    <td>{{ time .ModTime `rfc822` }}</td>
+                </tr>
+            {{ end }}
+            </tbody>
+        </table>
+    </body>
+</html>

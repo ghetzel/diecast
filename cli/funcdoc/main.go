@@ -152,40 +152,50 @@ func main() {
 		}
 	}
 
-	if docs, err := GenerateFunctionDocs(diecast.GetStandardFunctions(), `functions.go`); err == nil {
-		sort.Sort(docs)
+	var docs functionDocSet
 
-		fmt.Printf("## Function List\n\n")
-
-		for _, doc := range docs {
-			fmt.Printf("- [%s](#%s)\n", doc.Name, doc.Name)
-		}
-
-		fmt.Printf("## Function Usage\n\n")
-
-		for _, doc := range docs {
-			returnSignature := doc.Returns
-
-			if returnSignature != `` {
-				if len(strings.Split(returnSignature, `,`)) > 1 {
-					returnSignature = ` (` + returnSignature + `)`
-				} else {
-					returnSignature = ` ` + returnSignature
-				}
-			}
-
-			fmt.Printf("---\n\n")
-			fmt.Printf("<a name=\"%s\"></a>\n", doc.Name)
-			fmt.Printf("```go\n")
-			fmt.Printf("%s(%s)%s\n", doc.Name, doc.Signature, returnSignature)
-			fmt.Printf("```\n")
-
-			fmt.Printf("%s\n\n", doc.DocString)
-		}
-
+	if d, err := GenerateFunctionDocs(diecast.GetStandardFunctions(), `functions.go`); err == nil {
+		docs = append(docs, d...)
 	} else {
 		fmt.Printf("err: %v\n", err)
 		os.Exit(1)
+	}
+
+	if d, err := GenerateFunctionDocs(new(diecast.Server).GetTemplateFunctions(nil), `server.go`); err == nil {
+		docs = append(docs, d...)
+	} else {
+		fmt.Printf("err: %v\n", err)
+		os.Exit(1)
+	}
+
+	sort.Sort(docs)
+
+	fmt.Printf("## Function List\n\n")
+
+	for _, doc := range docs {
+		fmt.Printf("- [%s](#%s)\n", doc.Name, doc.Name)
+	}
+
+	fmt.Printf("## Function Usage\n\n")
+
+	for _, doc := range docs {
+		returnSignature := doc.Returns
+
+		if returnSignature != `` {
+			if len(strings.Split(returnSignature, `,`)) > 1 {
+				returnSignature = ` (` + returnSignature + `)`
+			} else {
+				returnSignature = ` ` + returnSignature
+			}
+		}
+
+		fmt.Printf("---\n\n")
+		fmt.Printf("<a name=\"%s\"></a>\n", doc.Name)
+		fmt.Printf("```go\n")
+		fmt.Printf("%s(%s)%s\n", doc.Name, doc.Signature, returnSignature)
+		fmt.Printf("```\n")
+
+		fmt.Printf("%s\n\n", doc.DocString)
 	}
 
 	if f, err := os.Open(`docs/functions_post.md`); err == nil {

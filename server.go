@@ -378,6 +378,7 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 		}
 	}
 
+	// fn payload: Return the body supplied with the request used to generate the current view.
 	funcs[`payload`] = func(key ...string) interface{} {
 		if len(key) == 0 {
 			return data
@@ -386,6 +387,7 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 		}
 	}
 
+	// fn querystrings: Return a map of all of the query string parameters in the current URL.
 	funcs[`querystrings`] = func() map[string]interface{} {
 		if v := maputil.DeepGet(data, []string{`request`, `url`, `query`}, nil); v != nil {
 			if vMap, ok := v.(map[string]interface{}); ok {
@@ -396,14 +398,17 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 		return make(map[string]interface{})
 	}
 
-	funcs[`qs`] = func(key string, fallbacks ...interface{}) interface{} {
+	// fn qs: Return the value of query string parameter *key* in the current URL, or return *fallback*.
+	funcs[`qs`] = func(key interface{}, fallbacks ...interface{}) interface{} {
 		if len(fallbacks) == 0 {
 			fallbacks = []interface{}{nil}
 		}
 
-		return maputil.DeepGet(data, []string{`request`, `url`, `query`, key}, fallbacks[0])
+		return maputil.DeepGet(data, []string{`request`, `url`, `query`, fmt.Sprintf("%v", key)}, fallbacks[0])
 	}
 
+	// fn headers: Return the value of the *header* HTTP request header from the request used to
+	//             generate the current view.
 	funcs[`headers`] = func(key string) string {
 		return fmt.Sprintf("%v", maputil.DeepGet(data, []string{`request`, `headers`, key}, ``))
 	}

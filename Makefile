@@ -3,7 +3,7 @@
 PKGS=`go list ./... | grep -v /vendor/`
 LOCALS=`find . -type f -name '*.go' -not -path "./vendor/*"`
 
-all: deps fmt test build
+all: fmt deps test build
 
 deps:
 	@go list github.com/mjibson/esc           || go get github.com/mjibson/esc/...
