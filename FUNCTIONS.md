@@ -16,7 +16,6 @@ which functions are available and how to use them.
 - [autobyte](#autobyte)
 - [autotype](#autotype)
 - [base32](#base32)
-- [base32](#base32)
 - [base58](#base58)
 - [base64](#base64)
 - [basename](#basename)
@@ -49,6 +48,7 @@ which functions are available and how to use them.
 - [mod](#mod)
 - [mostcommon](#mostcommon)
 - [multiply](#multiply)
+- [murmur3](#murmur3)
 - [nex](#nex)
 - [now](#now)
 - [percent](#percent)
@@ -146,14 +146,6 @@ Attempt to convert the given *bytesize* number to a string representation of the
 autotype(value any)
 ```
 Attempt to automatically determine the type if *value* and return the converted output.
-
----
-
-<a name="base32"></a>
-```go
-base32(input any) string
-```
-hash the *input* data using the Murmur 3 algorithm.
 
 ---
 
@@ -418,6 +410,14 @@ Return element in the *input* array that appears the most frequently.
 multiply(values ...any) float64
 ```
 Return the product of all of the given *values*.
+
+---
+
+<a name="murmur3"></a>
+```go
+murmur3(input any) (uint64, error)
+```
+hash the *input* data using the Murmur 3 algorithm.
 
 ---
 

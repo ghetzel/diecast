@@ -467,7 +467,7 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
-	// fn base32: hash the *input* data using the Murmur 3 algorithm.
+	// fn murmur3: hash the *input* data using the Murmur 3 algorithm.
 	rv[`murmur3`] = func(input interface{}) (uint64, error) {
 		if v, err := stringutil.ToString(input); err == nil {
 			return murmur3.Sum64([]byte(v)), nil
