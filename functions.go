@@ -769,6 +769,19 @@ func GetStandardFunctions() FuncMap {
 		return false
 	}
 
+	// fn any: Return whether *input* array contains any of the the elements *wanted*.
+	rv[`any`] = func(input interface{}, wants ...interface{}) bool {
+		for _, have := range sliceutil.Sliceify(input) {
+			for _, want := range wants {
+				if eq, err := stringutil.RelaxedEqual(have, want); err == nil && eq == true {
+					return true
+				}
+			}
+		}
+
+		return false
+	}
+
 	// fn indexOf: Iterate through the *input* array and return the index of *value*, or -1 if not present.
 	rv[`indexOf`] = func(slice interface{}, value interface{}) (index int) {
 		index = -1
@@ -815,6 +828,11 @@ func GetStandardFunctions() FuncMap {
 		})
 
 		return
+	}
+
+	// fn count: A type-relaxed version of **len**.
+	rv[`count`] = func(in interface{}) int {
+		return sliceutil.Len(in)
 	}
 
 	sorter := func(input interface{}, reverse bool, keys ...string) []interface{} {

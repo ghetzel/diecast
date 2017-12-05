@@ -109,30 +109,52 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 		return fmt.Errorf("No template input provided")
 	}
 
+	var err error
+
 	switch self.engine {
 	case TextEngine:
 		if t, ok := self.tmpl.(*text.Template); ok {
 			if subtemplate == `` {
-				return t.Execute(w, data)
+				err = t.Execute(w, data)
 			} else {
-				return t.ExecuteTemplate(w, subtemplate, data)
+				err = t.ExecuteTemplate(w, subtemplate, data)
 			}
 		} else {
-			return fmt.Errorf("invalid internal type for TextEngine")
+			err = fmt.Errorf("invalid internal type for TextEngine")
 		}
 
 	case HtmlEngine:
 		if t, ok := self.tmpl.(*html.Template); ok {
 			if subtemplate == `` {
-				return t.Execute(w, data)
+				err = t.Execute(w, data)
 			} else {
-				return t.ExecuteTemplate(w, subtemplate, data)
+				err = t.ExecuteTemplate(w, subtemplate, data)
 			}
 		} else {
-			return fmt.Errorf("invalid internal type for HtmlEngine")
+			err = fmt.Errorf("invalid internal type for HtmlEngine")
 		}
 
 	default:
-		return fmt.Errorf("Unknown template engine")
+		err = fmt.Errorf("Unknown template engine")
+	}
+
+	if err == nil {
+		return nil
+	} else if terr, ok := err.(*text.ExecError); ok {
+		return fmt.Errorf(
+			"template %s: %v",
+			self.name,
+			terr.Err,
+		)
+	} else if herr, ok := err.(*html.Error); ok {
+		return fmt.Errorf(
+			"template %s: %v at line %d: %v",
+			self.name,
+			herr.ErrorCode,
+			herr.Line,
+			herr.Description,
+		)
+	} else {
+		return fmt.Errorf("template %s: %v", self.name, err)
 	}
 }

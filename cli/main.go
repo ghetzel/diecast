@@ -28,10 +28,6 @@ func main() {
 			EnvVar: `LOGLEVEL`,
 		},
 		cli.StringFlag{
-			Name:  `bindings, B`,
-			Usage: `A configuration file that holds binding configurations.`,
-		},
-		cli.StringFlag{
 			Name:   `address, a`,
 			Usage:  `Address the HTTP server should listen on`,
 			Value:  diecast.DEFAULT_SERVE_ADDRESS,
@@ -42,6 +38,14 @@ func main() {
 			Usage:  `TCP port the HTTP server should listen on`,
 			Value:  diecast.DEFAULT_SERVE_PORT,
 			EnvVar: `HTTP_PORT`,
+		},
+		cli.StringFlag{
+			Name:  `binding-prefix, b`,
+			Usage: `The URL to be used for templates when resolving the loopback operator (:)`,
+		},
+		cli.StringFlag{
+			Name:  `bindings, B`,
+			Usage: `A configuration file that holds binding configurations.`,
 		},
 		cli.StringFlag{
 			Name:   `route-prefix`,
@@ -100,6 +104,7 @@ func main() {
 
 		server.Address = c.String(`address`)
 		server.Port = c.Int(`port`)
+		server.BindingPrefix = c.String(`binding-prefix`)
 		server.RoutePrefix = c.String(`route-prefix`)
 		server.TryLocalFirst = c.Bool(`local-first`)
 		server.VerifyFile = c.String(`verify-file`)

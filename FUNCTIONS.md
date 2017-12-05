@@ -8,6 +8,7 @@ use them.
 
 - [add](#add)
 - [ago](#ago)
+- [any](#any)
 - [asBool](#asBool)
 - [asFloat](#asFloat)
 - [asInt](#asInt)
@@ -21,6 +22,7 @@ use them.
 - [basename](#basename)
 - [compact](#compact)
 - [contains](#contains)
+- [count](#count)
 - [dir](#dir)
 - [dirname](#dirname)
 - [divide](#divide)
@@ -104,6 +106,14 @@ Return the sum of all of the given *values*.
 ago(duration string, ...any) (Time, error)
 ```
 Return a Time subtracted by the given *duration*.
+
+---
+
+<a name="any"></a>
+```go
+any(input any, wanted ...any) bool
+```
+Return whether *input* array contains any of the the elements *wanted*.
 
 ---
 
@@ -208,6 +218,14 @@ Return an copy of given *input* array with all zero-valued elements removed.
 contains(s string, substr string) bool
 ```
 Return whether a string *s* contains *substr*.
+
+---
+
+<a name="count"></a>
+```go
+count(len any) int
+```
+A type-relaxed version of **len**.
 
 ---
 
