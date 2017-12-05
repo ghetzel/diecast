@@ -486,8 +486,10 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 	if strings.HasSuffix(requestPath, `/`) {
 		requestPaths = append(requestPaths, path.Join(requestPath, self.IndexFile))
 	} else if path.Ext(requestPath) == `` {
-		// if we're requesting a path without a file extension, be a dear and try it with a .html
-		// extension if the as-is path wasn't found
+		// if we're requesting a path without a file extension, try an index file in a directory with that name,
+		// then try just <filename>.html
+
+		requestPaths = append(requestPaths, fmt.Sprintf("%s/%s", requestPath, self.IndexFile))
 		requestPaths = append(requestPaths, fmt.Sprintf("%s.html", requestPath))
 	}
 
