@@ -758,8 +758,8 @@ func GetStandardFunctions() FuncMap {
 		return maputil.Pluck(input, strings.Split(key, `.`))
 	}
 
-	// fn in: Return whether *in* is an element of the given *input* array.
-	rv[`in`] = func(want interface{}, input interface{}) bool {
+	// fn has: Return whether *want* is an element of the given *input* array.
+	rv[`has`] = func(want interface{}, input interface{}) bool {
 		for _, have := range sliceutil.Sliceify(input) {
 			if eq, err := stringutil.RelaxedEqual(have, want); err == nil && eq == true {
 				return true

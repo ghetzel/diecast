@@ -31,10 +31,10 @@ use them.
 - [extname](#extname)
 - [filter](#filter)
 - [first](#first)
+- [has](#has)
 - [hasPrefix](#hasPrefix)
 - [hasSuffix](#hasSuffix)
 - [headers](#headers)
-- [in](#in)
 - [indexOf](#indexOf)
 - [ireverse](#ireverse)
 - [isArray](#isArray)
@@ -293,6 +293,14 @@ Return the first value from the given *input* array.
 
 ---
 
+<a name="has"></a>
+```go
+has(want any, input any) bool
+```
+Return whether *want* is an element of the given *input* array.
+
+---
+
 <a name="hasPrefix"></a>
 ```go
 hasPrefix(s string, prefix string) bool
@@ -314,14 +322,6 @@ Return whether string *s* has the given *suffix*.
 headers(header string) string
 ```
 Return the value of the *header* HTTP request header from the request used to generate the current view.
-
----
-
-<a name="in"></a>
-```go
-in(in any, input any) bool
-```
-Return whether *in* is an element of the given *input* array.
 
 ---
 

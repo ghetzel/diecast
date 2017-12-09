@@ -50,6 +50,7 @@ type TemplateHeader struct {
 	Layout         string                 `json:"layout,omitempty"`
 	Includes       map[string]string      `json:"includes,omitempty"`
 	Headers        map[string]interface{} `json:"headers"`
+	lines          int
 }
 
 func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error) {
@@ -242,10 +243,12 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 	finalTemplate := bytes.NewBuffer(nil)
 	hasLayout := false
 	forceSkipLayout := false
+	headerOffset := 0
 	headers := make([]*TemplateHeader, 0)
 
 	if header != nil {
 		headers = append(headers, header)
+		headerOffset = header.lines - 2
 
 		if header.Layout != `` {
 			if header.Layout == `false` {
@@ -341,9 +344,10 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 		)
 
 		tmpl.Funcs(funcs)
+		tmpl.SetHeaderOffset(headerOffset)
 
 		if err := tmpl.Parse(finalTemplate.String()); err == nil {
-			log.Debugf("Rendering %q as %v template", requestPath, tmpl.Engine())
+			log.Debugf("Rendering %q as %v template (header offset by %d lines)", requestPath, tmpl.Engine(), headerOffset)
 
 			if finalHeader != nil {
 				// include any configured response headers now
@@ -685,6 +689,8 @@ func (self *Server) SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeade
 				header := TemplateHeader{}
 
 				if parts[1] != nil {
+					header.lines = len(strings.Split(string(parts[1]), "\n"))
+
 					if err := yaml.Unmarshal(parts[1], &header); err != nil {
 						return nil, nil, err
 					}

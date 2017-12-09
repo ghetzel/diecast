@@ -5,7 +5,11 @@ import (
 	html "html/template"
 	"io"
 	"path"
+	"strings"
 	text "text/template"
+
+	"github.com/ghetzel/go-stockutil/rxutil"
+	"github.com/ghetzel/go-stockutil/stringutil"
 )
 
 type Engine int
@@ -35,10 +39,12 @@ type Templated interface {
 }
 
 type Template struct {
-	name   string
-	engine Engine
-	tmpl   interface{}
-	funcs  FuncMap
+	name          string
+	engine        Engine
+	tmpl          interface{}
+	funcs         FuncMap
+	headerOffset  int64
+	contentOffset int64
 }
 
 func GetEngineForFile(filename string) Engine {
@@ -57,6 +63,10 @@ func NewTemplate(name string, engine Engine) *Template {
 	}
 }
 
+func (self *Template) SetHeaderOffset(offset int) {
+	self.headerOffset = int64(offset)
+}
+
 func (self *Template) SetEngine(engine Engine) {
 	self.engine = engine
 }
@@ -66,6 +76,16 @@ func (self *Template) Engine() Engine {
 }
 
 func (self *Template) Parse(input string) error {
+	// determine the line that the "content" template starts on
+	for i, line := range strings.Split(input, "\n") {
+		if i > 0 && strings.Contains(line, `{{ define "content" }}`) {
+			self.contentOffset = int64(i - 1)
+			break
+		}
+	}
+
+	log.Debugf("Template parsed: content offset is %d lines", self.contentOffset)
+
 	switch self.engine {
 	case TextEngine:
 		tmpl := text.New(self.name)
@@ -77,7 +97,7 @@ func (self *Template) Parse(input string) error {
 		if t, err := tmpl.Parse(input); err == nil {
 			self.tmpl = t
 		} else {
-			return err
+			return self.prepareError(err)
 		}
 
 	case HtmlEngine:
@@ -90,7 +110,7 @@ func (self *Template) Parse(input string) error {
 		if t, err := tmpl.Parse(input); err == nil {
 			self.tmpl = t
 		} else {
-			return err
+			return self.prepareError(err)
 		}
 
 	default:
@@ -102,6 +122,46 @@ func (self *Template) Parse(input string) error {
 
 func (self *Template) Funcs(funcs FuncMap) {
 	self.funcs = funcs
+}
+
+func (self *Template) prepareError(err error) error {
+	if err == nil {
+		return nil
+	} else {
+		msg := err.Error()
+
+		// get the filename to look like a relative path
+		if match := rxutil.Match(`^template: ([^:]+)`, msg); match != nil {
+			msg = match.ReplaceGroup(
+				1,
+				strings.TrimPrefix(strings.Replace(match.Group(1), `-`, `/`, -1), `/`),
+			)
+		}
+
+		// adjust the line number to match the file by accounting for offsets
+		if match := rxutil.Match(`(?:line|:)(\d+)`, msg); match != nil {
+			if v := match.Group(1); v != `` {
+				if vI, err := stringutil.ConvertToInteger(v); err == nil {
+					if vI > self.contentOffset {
+						vI = (vI - self.contentOffset) + self.headerOffset
+						msg = match.ReplaceGroup(1, fmt.Sprintf("%v", vI))
+					}
+				}
+			}
+		}
+
+		// prettify the sentence a little
+		if match := rxutil.Match(`^template: [^:]+(:\d+)`, msg); match != nil {
+			msg = match.ReplaceGroup(
+				1,
+				fmt.Sprintf(", line %s", strings.TrimPrefix(match.Group(1), `:`)),
+			)
+
+			msg = fmt.Sprintf("Error in %v", strings.TrimPrefix(msg, `template: `))
+		}
+
+		return fmt.Errorf("%v", msg)
+	}
 }
 
 func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) error {
@@ -138,23 +198,5 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 		err = fmt.Errorf("Unknown template engine")
 	}
 
-	if err == nil {
-		return nil
-	} else if terr, ok := err.(*text.ExecError); ok {
-		return fmt.Errorf(
-			"template %s: %v",
-			self.name,
-			terr.Err,
-		)
-	} else if herr, ok := err.(*html.Error); ok {
-		return fmt.Errorf(
-			"template %s: %v at line %d: %v",
-			self.name,
-			herr.ErrorCode,
-			herr.Line,
-			herr.Description,
-		)
-	} else {
-		return fmt.Errorf("template %s: %v", self.name, err)
-	}
+	return self.prepareError(err)
 }
