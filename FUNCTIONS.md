@@ -30,6 +30,7 @@ use them.
 - [eqx](#eqx)
 - [extname](#extname)
 - [filter](#filter)
+- [findkey](#findkey)
 - [first](#first)
 - [has](#has)
 - [hasPrefix](#hasPrefix)
@@ -282,6 +283,14 @@ Return the extension component of the given *path* (always prefixed with a dot [
 filter(input any, expression string) (, error)
 ```
 Return the given *input* array with only elements where *expression* evaluates to a truthy value.
+
+---
+
+<a name="findkey"></a>
+```go
+findkey(input any, key string) (, error)
+```
+Recursively scans the given *input* array or map and returns all values of the given *key*.
 
 ---
 

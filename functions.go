@@ -758,6 +758,23 @@ func GetStandardFunctions() FuncMap {
 		return maputil.Pluck(input, strings.Split(key, `.`))
 	}
 
+	// fn findkey: Recursively scans the given *input* array or map and returns all values of the given *key*.
+	rv[`findkey`] = func(input interface{}, key string) ([]interface{}, error) {
+		values := make([]interface{}, 0)
+
+		if err := maputil.Walk(input, func(value interface{}, path []string, isLeaf bool) error {
+			if isLeaf && path[len(path)-1] == key {
+				values = append(values, value)
+			}
+
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+
+		return values, nil
+	}
+
 	// fn has: Return whether *want* is an element of the given *input* array.
 	rv[`has`] = func(want interface{}, input interface{}) bool {
 		for _, have := range sliceutil.Sliceify(input) {
