@@ -248,7 +248,10 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 
 	if header != nil {
 		headers = append(headers, header)
-		headerOffset = header.lines - 2
+
+		if header.lines > 0 {
+			headerOffset = header.lines - 1
+		}
 
 		if header.Layout != `` {
 			if header.Layout == `false` {

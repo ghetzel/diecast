@@ -79,7 +79,7 @@ func (self *Template) Parse(input string) error {
 	// determine the line that the "content" template starts on
 	for i, line := range strings.Split(input, "\n") {
 		if i > 0 && strings.Contains(line, `{{ define "content" }}`) {
-			self.contentOffset = int64(i - 1)
+			self.contentOffset = int64(i + 2)
 			break
 		}
 	}
