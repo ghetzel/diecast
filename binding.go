@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -40,7 +41,8 @@ type Binding struct {
 	ParamJoiner        string                 `json:"param_joiner"`
 	Params             map[string]interface{} `json:"params"`
 	Headers            map[string]string      `json:"headers"`
-	BodyParams         map[string]string      `json:"body"`
+	BodyParams         map[string]interface{} `json:"body"`
+	RawBody            string                 `json:"rawbody"`
 	Formatter          string                 `json:"formatter"`
 	Parser             string                 `json:"parser"`
 	NoTemplate         bool                   `json:"no_template"`
@@ -166,13 +168,22 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 			if self.BodyParams != nil {
 				bodyParams := make(map[string]interface{})
 
-				for k, v := range self.BodyParams {
-					if !self.NoTemplate {
-						v = self.Eval(v, data, funcs)
-					}
+				if len(self.BodyParams) > 0 {
+					if err := maputil.Walk(self.BodyParams, func(value interface{}, path []string, isLeaf bool) error {
+						if isLeaf {
+							if !self.NoTemplate {
+								value = self.Eval(fmt.Sprintf("%v", value), data, funcs)
+							}
 
-					log.Debugf("  binding %q: bodyparam %v=%v", self.Name, k, v)
-					bodyParams[k] = stringutil.Autotype(v)
+							maputil.DeepSet(bodyParams, path, stringutil.Autotype(value))
+						}
+
+						return nil
+					}); err == nil {
+						log.Debugf("  binding %q: bodyparam %#+v", self.Name, bodyParams)
+					} else {
+						return nil, err
+					}
 				}
 
 				if len(bodyParams) > 0 {
@@ -188,6 +199,11 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						return nil, fmt.Errorf("Unknown request formatter %q", self.Formatter)
 					}
 				}
+			} else if self.RawBody != `` {
+				payload := self.Eval(self.RawBody, data, funcs)
+				log.Debugf("  binding %q: rawbody %s", self.Name, payload)
+
+				bindingReq.Body = ioutil.NopCloser(bytes.NewBufferString(payload))
 			}
 
 			bindingReq.Header.Set(`X-Diecast-Binding`, self.Name)
