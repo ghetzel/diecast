@@ -310,8 +310,8 @@ func TestLayoutsDefault(t *testing.T) {
 
 	fn := func(w *httptest.ResponseRecorder) {
 		assert.Equal(200, w.Code)
-		data := w.Body.Bytes()
-		assert.True(strings.HasPrefix(string(data[:]), "<h1><b>GET</b>"))
+		data := strings.TrimSpace(w.Body.String())
+		assert.True(strings.HasPrefix(data, "<h1>\n<b>GET</b>"))
 	}
 
 	doTestServerRequest(server, `GET`, `/`, fn)
@@ -320,26 +320,26 @@ func TestLayoutsDefault(t *testing.T) {
 
 	doTestServerRequest(server, `GET`, `/_partial.html`, func(w *httptest.ResponseRecorder) {
 		assert.Equal(200, w.Code)
-		data := w.Body.Bytes()
-		assert.Equal("AS-IS\n", string(data[:]))
+		data := strings.TrimSpace(w.Body.String())
+		assert.Equal("AS-IS", data)
 	})
 
 	doTestServerRequest(server, `GET`, `/_partial`, func(w *httptest.ResponseRecorder) {
 		assert.Equal(200, w.Code)
-		data := w.Body.Bytes()
-		assert.Equal("AS-IS\n", string(data[:]))
+		data := strings.TrimSpace(w.Body.String())
+		assert.Equal("AS-IS", data)
 	})
 
 	doTestServerRequest(server, `GET`, `/h2layout`, func(w *httptest.ResponseRecorder) {
 		assert.Equal(200, w.Code)
-		data := w.Body.Bytes()
-		assert.Equal("<h2>\n<b>GET</b>\n</h2>\n", string(data[:]))
+		data := strings.TrimSpace(w.Body.String())
+		assert.Equal("<h2>\n\n<b>GET</b>\n\n</h2>", data)
 	})
 
 	doTestServerRequest(server, `GET`, `/h2-nolayout`, func(w *httptest.ResponseRecorder) {
 		assert.Equal(200, w.Code)
-		data := w.Body.Bytes()
-		assert.Equal("\n<b>GET</b>\n", string(data[:]))
+		data := strings.TrimSpace(w.Body.String())
+		assert.Equal("<b>GET</b>", data)
 	})
 }
 
@@ -351,7 +351,7 @@ func TestIncludes(t *testing.T) {
 
 	doTestServerRequest(server, `GET`, `/include-base.html`, func(w *httptest.ResponseRecorder) {
 		assert.Equal(200, w.Code)
-		data := w.Body.Bytes()
-		assert.Equal("\n<b>GET</b>\n<i>GET</i>\n\n<u>GET</u>\n\n", string(data[:]))
+		data := strings.TrimSpace(w.Body.String())
+		assert.Equal("<b>GET</b>\n\n<i>GET</i>\n\n\n\n<u>GET</u>", data)
 	})
 }

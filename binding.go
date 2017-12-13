@@ -97,18 +97,18 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 	if !self.NoTemplate {
 		if self.OnlyIfExpr != `` {
-			if v := self.Eval(self.OnlyIfExpr, data, funcs); typeutil.IsEmpty(v) {
+			if v := EvalInline(self.OnlyIfExpr, data, funcs); typeutil.IsEmpty(v) {
 				return nil, fmt.Errorf("Binding not being evaluated because only_if expression was false")
 			}
 		}
 
 		if self.NotIfExpr != `` {
-			if v := self.Eval(self.NotIfExpr, data, funcs); !typeutil.IsEmpty(v) {
+			if v := EvalInline(self.NotIfExpr, data, funcs); !typeutil.IsEmpty(v) {
 				return nil, fmt.Errorf("Binding not being evaluated because not_if expression was truthy")
 			}
 		}
 
-		self.Resource = self.Eval(self.Resource, data, funcs)
+		self.Resource = EvalInline(self.Resource, data, funcs)
 	}
 
 	log.Debugf("  binding %q: resource=%v", self.Name, self.Resource)
@@ -134,7 +134,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				}
 
 				if !self.NoTemplate {
-					vS = self.Eval(vS, data, funcs)
+					vS = EvalInline(vS, data, funcs)
 				}
 
 				log.Debugf("  binding %q: param %v=%v", self.Name, k, vS)
@@ -155,7 +155,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 			// add headers to request
 			for k, v := range self.Headers {
 				if !self.NoTemplate {
-					v = self.Eval(v, data, funcs)
+					v = EvalInline(v, data, funcs)
 				}
 
 				log.Debugf("  binding %q:  header %v=%v", self.Name, k, v)
@@ -172,7 +172,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					if err := maputil.Walk(self.BodyParams, func(value interface{}, path []string, isLeaf bool) error {
 						if isLeaf {
 							if !self.NoTemplate {
-								value = self.Eval(fmt.Sprintf("%v", value), data, funcs)
+								value = EvalInline(fmt.Sprintf("%v", value), data, funcs)
 							}
 
 							maputil.DeepSet(bodyParams, path, stringutil.Autotype(value))
@@ -200,7 +200,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					}
 				}
 			} else if self.RawBody != `` {
-				payload := self.Eval(self.RawBody, data, funcs)
+				payload := EvalInline(self.RawBody, data, funcs)
 				log.Debugf("  binding %q: rawbody %s", self.Name, payload)
 
 				bindingReq.Body = ioutil.NopCloser(bytes.NewBufferString(payload))
@@ -269,7 +269,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	}
 }
 
-func (self *Binding) Eval(input string, data map[string]interface{}, funcs FuncMap) string {
+func EvalInline(input string, data map[string]interface{}, funcs FuncMap) string {
 	tmpl := NewTemplate(`inline`, HtmlEngine)
 	tmpl.Funcs(funcs)
 

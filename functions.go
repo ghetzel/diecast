@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"math"
 	"mime"
@@ -258,12 +259,27 @@ func GetStandardFunctions() FuncMap {
 	}
 
 	// fn markdown: Render the given Markdown string *value* as sanitized HTML.
-	rv[`markdown`] = func(value interface{}) (string, error) {
+	rv[`markdown`] = func(value interface{}) (template.HTML, error) {
 		input := fmt.Sprintf("%v", value)
 		output := blackfriday.MarkdownCommon([]byte(input[:]))
 		output = bluemonday.UGCPolicy().SanitizeBytes(output)
 
-		return string(output[:]), nil
+		return template.HTML(output[:]), nil
+	}
+
+	// fn unsafe: Return an unescaped raw HTML segment for direct inclusion in the rendered
+	//            template output.  This is a common antipattern that leads to all kinds of
+	//            security issues from poorly-constrained implementations, so you are forced
+	//            to acknowledge this by typing "unsafe".
+	rv[`unsafe`] = func(value string) template.HTML {
+		return template.HTML(value)
+	}
+
+	// fn sanitize: Takes a raw HTML string and santizes it, removing attributes and elements
+	//              that can be used to evaluate scripts, but leaving the rest.  Useful for
+	//              preparing user-generated HTML for display.
+	rv[`sanitize`] = func(value string) template.HTML {
+		return template.HTML(bluemonday.UGCPolicy().Sanitize(value))
 	}
 
 	// Type Handling and Conversion
@@ -555,6 +571,8 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
+	// TODO:
+	// urlencode/urldecode
 	// rv[`md5`] =
 	// rv[`sha1`] =
 	// rv[`sha256`] =

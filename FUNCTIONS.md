@@ -61,6 +61,7 @@ use them.
 - [murmur3](#murmur3)
 - [nex](#nex)
 - [now](#now)
+- [param](#param)
 - [pathjoin](#pathjoin)
 - [payload](#payload)
 - [percent](#percent)
@@ -74,6 +75,7 @@ use them.
 - [reverse](#reverse)
 - [rtrim](#rtrim)
 - [rxreplace](#rxreplace)
+- [sanitize](#sanitize)
 - [sequence](#sequence)
 - [since](#since)
 - [sort](#sort)
@@ -87,6 +89,7 @@ use them.
 - [titleize](#titleize)
 - [trim](#trim)
 - [uniq](#uniq)
+- [unsafe](#unsafe)
 - [upper](#upper)
 - [uuid](#uuid)
 - [uuidRaw](#uuidRaw)
@@ -464,7 +467,7 @@ Return a copy of string *s* with the leading *prefix* removed.
 
 <a name="markdown"></a>
 ```go
-markdown(value any) (string, error)
+markdown(value any) (HTML, error)
 ```
 Render the given Markdown string *value* as sanitized HTML.
 
@@ -531,6 +534,14 @@ A relaxed-type version of the **ne** builtin function.
 now(format ...any) (string, error)
 ```
 Return the current time formatted using *format*.  See [Time Formats](#time-formats) for acceptable formats.
+
+---
+
+<a name="param"></a>
+```go
+param(any)
+```
+Return the value of the named or indexed URL parameter, or nil of none are present.
 
 ---
 
@@ -638,6 +649,14 @@ Return a copy of *s* with all occurrences of *pattern* replaced with *repl*.
 
 ---
 
+<a name="sanitize"></a>
+```go
+sanitize(string) HTML
+```
+Takes a raw HTML string and santizes it, removing attributes and elements that can be used to evaluate scripts, but leaving the rest.  Useful for preparing user-generated HTML for display.
+
+---
+
 <a name="sequence"></a>
 ```go
 sequence(n any)
@@ -739,6 +758,14 @@ Return a copy of *s* with all leading and trailing whitespace characters removed
 uniq(input any)
 ```
 Return an array of unique values from the given *input* array.
+
+---
+
+<a name="unsafe"></a>
+```go
+unsafe(string) HTML
+```
+Return an unescaped raw HTML segment for direct inclusion in the rendered template output.  This is a common antipattern that leads to all kinds of security issues from poorly-constrained implementations, so you are forced to acknowledge this by typing "unsafe".
 
 ---
 

@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -50,6 +51,8 @@ type TemplateHeader struct {
 	Layout         string                 `json:"layout,omitempty"`
 	Includes       map[string]string      `json:"includes,omitempty"`
 	Headers        map[string]interface{} `json:"headers"`
+	UrlParams      map[string]interface{} `json:"params"`
+	FlagDefs       map[string]interface{} `json:"flags"`
 	lines          int
 }
 
@@ -72,6 +75,12 @@ func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error
 
 	if v, err := maputil.Merge(self.Page, other.Page); err == nil {
 		newHeader.Page = v
+	} else {
+		return nil, err
+	}
+
+	if v, err := maputil.Merge(self.FlagDefs, other.FlagDefs); err == nil {
+		newHeader.FlagDefs = v
 	} else {
 		return nil, err
 	}
@@ -239,12 +248,13 @@ func (self *Server) ShouldApplyTemplate(requestPath string) bool {
 	return false
 }
 
-func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requestPath string, reader io.Reader, header *TemplateHeader, layouts ...string) error {
+func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requestPath string, reader io.Reader, header *TemplateHeader, urlParams map[string]interface{}) error {
 	finalTemplate := bytes.NewBuffer(nil)
 	hasLayout := false
 	forceSkipLayout := false
 	headerOffset := 0
 	headers := make([]*TemplateHeader, 0)
+	layouts := make([]string, 0)
 
 	if header != nil {
 		headers = append(headers, header)
@@ -291,9 +301,11 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 								}
 							}
 
-							finalTemplate.WriteString("{{ define \"layout\" }}")
+							finalTemplate.WriteString("{{/* BEGIN LAYOUT '" + layoutName + "' */}}\n")
+							finalTemplate.WriteString("\n{{ define \"layout\" }}\n")
 							finalTemplate.Write(layoutData)
-							finalTemplate.WriteString("{{ end }}\n")
+							finalTemplate.WriteString("\n{{ end }}\n")
+							finalTemplate.WriteString("{{/* BEGIN LAYOUT '" + layoutName + "' */}}\n")
 						} else {
 							return err
 						}
@@ -311,7 +323,7 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 	}
 
 	if hasLayout {
-		finalTemplate.WriteString("{{ define \"content\" }}")
+		finalTemplate.WriteString("\n{{ define \"content\" }}\n")
 	}
 
 	if _, err := io.Copy(finalTemplate, reader); err != nil {
@@ -319,10 +331,9 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 	}
 
 	if hasLayout {
-		finalTemplate.WriteString("{{ end }}")
+		finalTemplate.WriteString("\n{{ end }}\n")
 	}
 
-	// log.Errorf("TD: %v\n", finalTemplate.String())
 	var finalHeader *TemplateHeader
 
 	for i, templateHeader := range headers {
@@ -337,6 +348,11 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 				return err
 			}
 		}
+	}
+
+	if finalHeader != nil {
+		// and put any url route params in there too
+		finalHeader.UrlParams = urlParams
 	}
 
 	if funcs, data, err := self.GetTemplateData(req, finalHeader); err == nil {
@@ -359,11 +375,31 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 				}
 			}
 
-			if hasLayout {
-				return tmpl.Render(w, data, `layout`)
+			if httputil.QBool(req, `__viewsource`) {
+				w.Header().Set(`Content-Type`, `text/plain`)
+				w.Write(finalTemplate.Bytes())
+				return nil
 			} else {
-				return tmpl.Render(w, data, ``)
+				if hasLayout {
+					return tmpl.Render(w, data, `layout`)
+				} else {
+					return tmpl.Render(w, data, ``)
+				}
 			}
+		} else if httputil.QBool(req, `__viewsource`) {
+			var tplstr string
+			lines := strings.Split(finalTemplate.String(), "\n")
+			lineNoSpaces := fmt.Sprintf("%d", len(fmt.Sprintf("%d", len(lines)))+1)
+
+			for i, line := range lines {
+				tplstr += fmt.Sprintf("% "+lineNoSpaces+"d | %s\n", i+1, line)
+			}
+
+			tplstr = fmt.Sprintf("ERROR: %v\n\n", err) + tplstr
+
+			w.Header().Set(`Content-Type`, `text/plain`)
+			w.Write([]byte(tplstr))
+			return nil
 		} else {
 			return err
 		}
@@ -420,6 +456,17 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 		return fmt.Sprintf("%v", maputil.DeepGet(data, []string{`request`, `headers`, key}, ``))
 	}
 
+	// fn param: Return the value of the named or indexed URL parameter, or nil of none are present.
+	funcs[`param`] = func(nameOrIndex interface{}) interface{} {
+		if v := maputil.DeepGet(data, []string{
+			`request`, `url`, `params`, fmt.Sprintf("%v", nameOrIndex),
+		}, nil); v != nil {
+			return stringutil.Autotype(v)
+		} else {
+			return nil
+		}
+	}
+
 	return funcs
 }
 
@@ -437,17 +484,12 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	data := requestToEvalData(req, header)
 	bindings := make(map[string]interface{})
 
-	if header != nil {
-		data[`page`] = header.Page
-	}
-
 	// these are the functions that will be available to every part of the rendering process
 	funcs := self.GetTemplateFunctions(data)
 
 	for _, binding := range self.Bindings {
 		if v, err := binding.Evaluate(req, header, data, funcs); err == nil {
 			bindings[binding.Name] = v
-			data[`bindings`] = bindings
 		} else {
 			log.Warningf("Binding %q failed: %v", binding.Name, err)
 
@@ -463,7 +505,6 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 
 			if v, err := binding.Evaluate(req, header, data, funcs); err == nil {
 				bindings[binding.Name] = v
-				data[`bindings`] = bindings
 			} else {
 				log.Warningf("Binding %q failed: %v", binding.Name, err)
 
@@ -475,6 +516,49 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	}
 
 	data[`bindings`] = bindings
+
+	if header != nil {
+		flags := make(map[string]bool)
+
+		for name, def := range header.FlagDefs {
+			switch def.(type) {
+			case bool:
+				flags[name] = def.(bool)
+				continue
+
+			default:
+				if v, err := stringutil.ConvertToBool(
+					EvalInline(fmt.Sprintf("%v", def), data, funcs),
+				); err == nil {
+					flags[name] = v
+					continue
+				}
+			}
+
+			flags[name] = false
+		}
+
+		data[`flags`] = flags
+
+		pageData := make(map[string]interface{})
+
+		maputil.Walk(header.Page, func(value interface{}, path []string, isLeaf bool) error {
+
+			if isLeaf {
+				switch value.(type) {
+				case string:
+					value = EvalInline(value.(string), data, funcs)
+					value = stringutil.Autotype(value)
+				}
+
+				maputil.DeepSet(pageData, path, value)
+			}
+
+			return nil
+		})
+
+		data[`page`] = pageData
+	}
 
 	return funcs, data, nil
 }
@@ -500,6 +584,12 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 		requestPaths = append(requestPaths, fmt.Sprintf("%s.html", requestPath))
 	}
 
+	// finally, add handlers for implementing a junky form of url routing
+	if parent := path.Dir(requestPath); parent != `.` {
+		requestPaths = append(requestPaths, fmt.Sprintf("%s/index__id.html", parent))
+		requestPaths = append(requestPaths, fmt.Sprintf("%s__id.html", parent))
+	}
+
 	var triedLocal bool
 
 PathLoop:
@@ -512,9 +602,10 @@ PathLoop:
 		var file http.File
 		var mimeType string
 		var message string
-		var headers map[string]interface{}
 		var redirectTo string
 		var redirectCode int
+		var headers = make(map[string]interface{})
+		var urlParams = make(map[string]interface{})
 
 		log.Debugf("> trying path: %v", rPath)
 
@@ -567,7 +658,12 @@ PathLoop:
 		}
 
 		if file != nil {
-			if handled := self.respondToFile(rPath, mimeType, file, headers, w, req); handled {
+			if strings.Contains(rPath, `__id.`) {
+				urlParams[`1`] = strings.Trim(path.Base(req.URL.Path), `/`)
+				urlParams[`id`] = strings.Trim(path.Base(req.URL.Path), `/`)
+			}
+
+			if handled := self.respondToFile(rPath, mimeType, file, headers, urlParams, w, req); handled {
 				log.Info(message)
 				return
 			}
@@ -639,7 +735,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 	return nil, nil, fmt.Errorf("%q not found", requestPath)
 }
 
-func (self *Server) respondToFile(requestPath string, mimeType string, file http.File, headers map[string]interface{}, w http.ResponseWriter, req *http.Request) bool {
+func (self *Server) respondToFile(requestPath string, mimeType string, file http.File, headers map[string]interface{}, urlParams map[string]interface{}, w http.ResponseWriter, req *http.Request) bool {
 	// add in any metadata as response headers
 	for k, v := range headers {
 		w.Header().Set(k, fmt.Sprintf("%v", v))
@@ -670,7 +766,7 @@ func (self *Server) respondToFile(requestPath string, mimeType string, file http
 			}
 
 			// render the final template and write it out
-			if err := self.ApplyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header); err != nil {
+			if err := self.ApplyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header, urlParams); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
@@ -725,8 +821,10 @@ func (self *Server) InjectIncludes(w io.Writer, header *TemplateHeader) error {
 					if stat, err := file.Stat(); err == nil {
 						log.Debugf("Injecting included template %q from file %s", name, stat.Name())
 
-						define := fmt.Sprintf("{{ define %q }}", name)
-						end := "{{ end }}"
+						define := "{{/* BEGIN INCLUDE '" + includePath + "' */}}\n"
+						define += "{{ define \"" + name + "\" }}\n"
+						end := "\n{{ end }}\n"
+						end += "{{/* END INCLUDE '" + includePath + "' */}}\n"
 
 						w.Write([]byte(define))
 						w.Write(includeData)
@@ -830,7 +928,8 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 	request[`encoding`] = req.TransferEncoding
 	request[`remote_address`] = req.RemoteAddr
 	request[`host`] = req.Host
-	request[`url`] = map[string]interface{}{
+
+	url := map[string]interface{}{
 		`unmodified`: req.RequestURI,
 		`string`:     req.URL.String(),
 		`scheme`:     req.URL.Scheme,
@@ -839,6 +938,12 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 		`fragment`:   req.URL.Fragment,
 		`query`:      qs,
 	}
+
+	if header != nil {
+		url[`params`] = header.UrlParams
+	}
+
+	request[`url`] = url
 
 	rv[`request`] = request
 
