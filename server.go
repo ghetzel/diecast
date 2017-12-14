@@ -109,7 +109,7 @@ func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error
 type Server struct {
 	Address             string
 	Port                int
-	Bindings            []*Binding
+	Bindings            []Binding
 	BindingPrefix       string
 	RootPath            string
 	LayoutPath          string
@@ -139,7 +139,7 @@ func NewServer(root string, patterns ...string) *Server {
 		RoutePrefix:      DEFAULT_ROUTE_PREFIX,
 		RootPath:         root,
 		EnableLayouts:    true,
-		Bindings:         make([]*Binding, 0),
+		Bindings:         make([]Binding, 0),
 		TemplatePatterns: patterns,
 		IndexFile:        DefaultIndexFile,
 		VerifyFile:       DefaultVerifyFile,
@@ -483,33 +483,58 @@ func (self *Server) ToTemplateName(requestPath string) string {
 func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}, error) {
 	data := requestToEvalData(req, header)
 	bindings := make(map[string]interface{})
+	bindingsToEval := make([]Binding, 0)
 
 	// these are the functions that will be available to every part of the rendering process
 	funcs := self.GetTemplateFunctions(data)
 
-	for _, binding := range self.Bindings {
-		if v, err := binding.Evaluate(req, header, data, funcs); err == nil {
-			bindings[binding.Name] = v
-		} else {
-			log.Warningf("Binding %q failed: %v", binding.Name, err)
-
-			if !binding.Optional {
-				return funcs, nil, err
-			}
-		}
-	}
+	bindingsToEval = append(bindingsToEval, self.Bindings...)
 
 	if header != nil {
-		for _, binding := range header.Bindings {
-			binding.server = self
+		bindingsToEval = append(bindingsToEval, header.Bindings...)
+	}
 
+	for _, binding := range bindingsToEval {
+		binding.server = self
+
+		if binding.Repeat == `` {
 			if v, err := binding.Evaluate(req, header, data, funcs); err == nil {
 				bindings[binding.Name] = v
+				data[`bindings`] = bindings
 			} else {
 				log.Warningf("Binding %q failed: %v", binding.Name, err)
 
 				if !binding.Optional {
 					return funcs, nil, err
+				}
+			}
+		} else {
+			results := make([]interface{}, 0)
+
+			repeatExpr := fmt.Sprintf("{{ range $index, $item := (%v) }}\n", binding.Repeat)
+			repeatExpr += fmt.Sprintf("%v\n", binding.Resource)
+			repeatExpr += "{{ end }}"
+
+			log.Debugf("Repeater: \n%v", repeatExpr)
+
+			for i, resource := range strings.Split(strings.TrimSpace(EvalInline(repeatExpr, data, funcs)), "\n") {
+				binding.Resource = strings.TrimSpace(resource)
+				binding.Repeat = ``
+
+				if v, err := binding.Evaluate(req, header, data, funcs); err == nil {
+					results = append(results, v)
+					bindings[binding.Name] = results
+					data[`bindings`] = bindings
+				} else {
+					log.Warningf("Binding %q (iteration %d) failed: %v", binding.Name, i, err)
+
+					if binding.OnError == ActionContinue {
+						continue
+					} else if binding.OnError == ActionBreak {
+						break
+					} else if !binding.Optional {
+						return funcs, nil, err
+					}
 				}
 			}
 		}

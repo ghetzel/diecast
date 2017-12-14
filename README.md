@@ -25,8 +25,7 @@ $ tree
 
 1 directory, 6 files
 $ diecast
-2017/11/19 15:37:41 INFO[0001] main: diecast v1.3.1 started at 2017-11-19 15:37:41.351414477 -0500 EST m=+0.003960887
-2017/11/19 15:37:41 INFO[0002] main: Starting HTTP server at http://127.0.0.1:28419
+INFO[0002] main: Starting HTTP server at http://127.0.0.1:28419
 ```
 
 ## A More Complete Example

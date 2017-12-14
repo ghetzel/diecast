@@ -86,6 +86,16 @@ func GetStandardFunctions() FuncMap {
 		}
 	}
 
+	rv[`concat`] = func(in ...interface{}) string {
+		out := make([]string, len(in))
+
+		for i, v := range in {
+			out[i] = fmt.Sprintf("%v", v)
+		}
+
+		return strings.Join(out, ``)
+	}
+
 	// fn rtrim: Return a copy of string *s* with the trailing *suffix* removed.
 	rv[`rtrim`] = strings.TrimSuffix
 
@@ -838,6 +848,11 @@ func GetStandardFunctions() FuncMap {
 	// fn uniq: Return an array of unique values from the given *input* array.
 	rv[`uniq`] = func(slice interface{}) []interface{} {
 		return sliceutil.Unique(slice)
+	}
+
+	// fn flatten: Return an array of values with all nested subarrays merged into a single level.
+	rv[`flatten`] = func(slice interface{}) []interface{} {
+		return sliceutil.Flatten(slice)
 	}
 
 	// fn compact: Return an copy of given *input* array with all zero-valued elements removed.

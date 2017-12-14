@@ -32,6 +32,7 @@ use them.
 - [filter](#filter)
 - [findkey](#findkey)
 - [first](#first)
+- [flatten](#flatten)
 - [has](#has)
 - [hasPrefix](#hasPrefix)
 - [hasSuffix](#hasSuffix)
@@ -302,6 +303,14 @@ Recursively scans the given *input* array or map and returns all values of the g
 first(input any) (, error)
 ```
 Return the first value from the given *input* array.
+
+---
+
+<a name="flatten"></a>
+```go
+flatten(any)
+```
+Return an array of values with all nested subarrays merged into a single level.
 
 ---
 

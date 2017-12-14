@@ -25,6 +25,8 @@ type BindingErrorAction string
 const (
 	ActionSummarize BindingErrorAction = `summarize`
 	ActionPrint                        = `print`
+	ActionContinue                     = `continue`
+	ActionBreak                        = `break`
 )
 
 var BindingClient = http.DefaultClient
@@ -48,6 +50,7 @@ type Binding struct {
 	NoTemplate         bool                   `json:"no_template"`
 	Optional           bool                   `json:"optional"`
 	OnError            BindingErrorAction     `json:"on_error"`
+	Repeat             string                 `json:"repeat"`
 	SkipInheritHeaders bool                   `json:"skip_inherit_headers"`
 	server             *Server
 }

@@ -117,7 +117,7 @@ func main() {
 		if v := c.String(`bindings`); v != `` {
 			if file, err := os.Open(v); err == nil {
 				if data, err := ioutil.ReadAll(file); err == nil && len(data) > 0 {
-					var bindings []*diecast.Binding
+					var bindings []diecast.Binding
 
 					if err := yaml.Unmarshal(data, &bindings); err == nil {
 						server.Bindings = bindings
