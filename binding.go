@@ -283,7 +283,7 @@ func EvalInline(input string, data map[string]interface{}, funcs FuncMap) string
 			// since this data may have been entity escaped by html/template, unescape it here
 			return html.UnescapeString(output.String())
 		} else {
-			log.Debugf("error evaluating %q: %v", input, err)
+			panic(fmt.Sprintf("error evaluating %q: %v", input, err))
 		}
 	}
 
