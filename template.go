@@ -93,7 +93,9 @@ func (self *Template) Parse(input string) error {
 		}
 	}
 
-	log.Debugf("Template parsed: content offset is %d lines", self.contentOffset)
+	if self.contentOffset > 0 {
+		log.Debugf("Template parsed: content offset is %d lines", self.contentOffset)
+	}
 
 	switch self.engine {
 	case TextEngine:

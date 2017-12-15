@@ -211,10 +211,10 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 			bindingReq.Header.Set(`X-Diecast-Binding`, self.Name)
 
-			log.Debugf("Binding Request: %s %+v ? %s", method, reqUrl.String(), reqUrl.RawQuery)
+			log.Infof("Binding: > %s %+v ? %s", strings.ToUpper(sliceutil.OrString(method, `get`)), reqUrl.String(), reqUrl.RawQuery)
 
 			if res, err := BindingClient.Do(bindingReq); err == nil {
-				log.Debugf("Binding Response: HTTP %d (body: %d bytes)", res.StatusCode, res.ContentLength)
+				log.Infof("Binding: < HTTP %d (body: %d bytes)", res.StatusCode, res.ContentLength)
 				for k, v := range res.Header {
 					log.Debugf("  %v=%v", k, strings.Join(v, ` `))
 				}
