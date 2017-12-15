@@ -1,13 +1,11 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 
 	"github.com/ghetzel/cli"
 	"github.com/ghetzel/diecast"
 	"github.com/ghetzel/diecast/util"
-	"github.com/ghodss/yaml"
 	"github.com/op/go-logging"
 )
 
@@ -28,30 +26,23 @@ func main() {
 			EnvVar: `LOGLEVEL`,
 		},
 		cli.StringFlag{
-			Name:   `address, a`,
-			Usage:  `Address the HTTP server should listen on`,
-			Value:  diecast.DEFAULT_SERVE_ADDRESS,
-			EnvVar: `HTTP_ADDR`,
+			Name:  `config, c`,
+			Usage: `The name of the configuration file to load (if present)`,
+			Value: diecast.DefaultConfigFile,
 		},
-		cli.IntFlag{
-			Name:   `port, p`,
-			Usage:  `TCP port the HTTP server should listen on`,
-			Value:  diecast.DEFAULT_SERVE_PORT,
-			EnvVar: `HTTP_PORT`,
+		cli.StringFlag{
+			Name:  `address, a`,
+			Usage: `Address the HTTP server should listen on`,
+			Value: diecast.DefaultAddress,
 		},
 		cli.StringFlag{
 			Name:  `binding-prefix, b`,
 			Usage: `The URL to be used for templates when resolving the loopback operator (:)`,
 		},
 		cli.StringFlag{
-			Name:  `bindings, B`,
-			Usage: `A configuration file that holds binding configurations.`,
-		},
-		cli.StringFlag{
-			Name:   `route-prefix`,
-			Usage:  `The path prepended to all HTTP requests`,
-			Value:  diecast.DEFAULT_ROUTE_PREFIX,
-			EnvVar: `ROUTE_PREFIX`,
+			Name:  `route-prefix`,
+			Usage: `The path prepended to all HTTP requests`,
+			Value: diecast.DefaultRoutePrefix,
 		},
 		cli.StringSliceFlag{
 			Name:  `template-pattern, P`,
@@ -94,8 +85,6 @@ func main() {
 		logging.SetFormatter(logging.MustStringFormatter(`%{color}%{level:.4s}%{color:reset}[%{id:04d}] %{module}: %{message}`))
 		logging.SetLevel(level, ``)
 
-		log.Infof("%s v%s started at %s", util.ApplicationName, util.ApplicationVersion, util.StartedAt)
-
 		return nil
 	}
 
@@ -103,34 +92,17 @@ func main() {
 		server := diecast.NewServer(c.Args().First())
 
 		server.Address = c.String(`address`)
-		server.Port = c.Int(`port`)
 		server.BindingPrefix = c.String(`binding-prefix`)
 		server.RoutePrefix = c.String(`route-prefix`)
 		server.TryLocalFirst = c.Bool(`local-first`)
 		server.VerifyFile = c.String(`verify-file`)
 		server.IndexFile = c.String(`index-file`)
 
-		if v := c.StringSlice(`template-pattern`); len(v) > 0 {
-			server.TemplatePatterns = v
+		if err := server.LoadConfig(c.String(`config`)); err != nil {
+			log.Fatalf("config error: %v", err)
 		}
 
-		if v := c.String(`bindings`); v != `` {
-			if file, err := os.Open(v); err == nil {
-				if data, err := ioutil.ReadAll(file); err == nil && len(data) > 0 {
-					var bindings []diecast.Binding
-
-					if err := yaml.Unmarshal(data, &bindings); err == nil {
-						server.Bindings = bindings
-					} else {
-						log.Fatal(err)
-					}
-				} else {
-					log.Fatal(err)
-				}
-			} else {
-				log.Fatal(err)
-			}
-		}
+		server.TemplatePatterns = append(server.TemplatePatterns, c.StringSlice(`template-pattern`)...)
 
 		mounts := make([]diecast.Mount, 0)
 
@@ -155,8 +127,12 @@ func main() {
 
 		server.SetMounts(mounts)
 
+		for _, mount := range server.Mounts {
+			log.Debugf("mount %T: %+v", mount, mount)
+		}
+
 		if err := server.Initialize(); err == nil {
-			log.Infof("Starting HTTP server at http://%s:%d", server.Address, server.Port)
+			log.Infof("Starting HTTP server at http://%s", server.Address)
 			server.Serve()
 		} else {
 			log.Fatalf("Failed to start HTTP server: %v", err)

@@ -6,8 +6,15 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
-	"strings"
+
+	"github.com/ghetzel/go-stockutil/stringutil"
 )
+
+type MountConfig struct {
+	Mount   string                 `json:"mount"`
+	To      string                 `json:"to"`
+	Options map[string]interface{} `json:"options"`
+}
 
 var MountHaltErr = errors.New(`mount halted`)
 
@@ -20,24 +27,13 @@ type Mount interface {
 }
 
 func NewMountFromSpec(spec string) (Mount, error) {
-	parts := strings.SplitN(spec, `:`, 2)
-	var mountPoint string
-	var source string
-	var scheme string
+	mountPoint, source := stringutil.SplitPair(spec, `:`)
 
-	if len(parts) == 1 {
-		mountPoint = parts[0]
-		source = parts[0]
-	} else {
-		mountPoint = parts[0]
-		source = parts[1]
+	if source == `` {
+		source = mountPoint
 	}
 
-	sourceParts := strings.SplitN(source, `:`, 2)
-
-	if len(sourceParts) == 2 {
-		scheme = sourceParts[0]
-	}
+	scheme, _ := stringutil.SplitPair(source, `:`)
 
 	var mount Mount
 
@@ -60,8 +56,6 @@ func NewMountFromSpec(spec string) (Mount, error) {
 			MountPoint: mountPoint,
 		}
 	}
-
-	log.Debugf("Creating mount %T: %+v", mount, mount)
 
 	return mount, nil
 }

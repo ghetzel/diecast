@@ -12,7 +12,7 @@ import (
 
 func doTestServerRequest(s *Server, method string, path string, tester func(*httptest.ResponseRecorder)) {
 	req := httptest.NewRequest(method,
-		fmt.Sprintf("http://%s:%d%s", DEFAULT_SERVE_ADDRESS, DEFAULT_SERVE_PORT, path), nil)
+		fmt.Sprintf("http://%s%s", DefaultAddress, path), nil)
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, req)
 
@@ -30,7 +30,7 @@ func TestStaticServer(t *testing.T) {
 
 	server.SetMounts(mounts)
 	assert.Nil(server.Initialize())
-	assert.Equal(len(mounts), len(server.Mounts()))
+	assert.Equal(len(mounts), len(server.Mounts))
 
 	doTestServerRequest(server, `GET`, `/_diecast`,
 		func(w *httptest.ResponseRecorder) {
@@ -82,7 +82,7 @@ func TestStaticServerWithRoutePrefix(t *testing.T) {
 	mounts := getTestMounts(assert)
 	server.SetMounts(mounts)
 	assert.Nil(server.Initialize())
-	assert.Equal(len(mounts), len(server.Mounts()))
+	assert.Equal(len(mounts), len(server.Mounts))
 
 	// paths without RoutePrefix should fail
 	doTestServerRequest(server, `GET`, `/_diecast`,

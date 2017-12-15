@@ -8,16 +8,16 @@ import (
 	"io"
 	"io/ioutil"
 	"mime"
-	"net"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/fatih/structs"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/sliceutil"
+	"github.com/ghetzel/go-stockutil/pathutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/ghodss/yaml"
@@ -28,100 +28,31 @@ import (
 
 var log = logging.MustGetLogger(`diecast`)
 
-const DEFAULT_SERVE_ADDRESS = `127.0.0.1`
-const DEFAULT_SERVE_PORT = 28419
-const DEFAULT_ROUTE_PREFIX = `/`
+const DefaultAddress = `127.0.0.1:28419`
+const DefaultRoutePrefix = `/`
+const DefaultConfigFile = `diecast.yml`
 
 var HeaderSeparator = []byte{'-', '-', '-'}
 var DefaultIndexFile = `index.html`
 var DefaultVerifyFile = `/` + DefaultIndexFile
 var DefaultTemplatePatterns = []string{`*.html`}
 
-type Redirect struct {
-	URL  string `json:"url"`
-	Code int    `json:"code"`
-}
-
-type TemplateHeader struct {
-	Page           map[string]interface{} `json:"page,omitempty"`
-	Bindings       []Binding              `json:"bindings,omitempty"`
-	Defaults       map[string]string      `json:"defaults"`
-	DefaultHeaders map[string]string      `json:"default_headers"`
-	Redirect       *Redirect              `json:"redirect,omitempty"`
-	Layout         string                 `json:"layout,omitempty"`
-	Includes       map[string]string      `json:"includes,omitempty"`
-	Headers        map[string]interface{} `json:"headers"`
-	UrlParams      map[string]interface{} `json:"params"`
-	FlagDefs       map[string]interface{} `json:"flags"`
-	lines          int
-}
-
-func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error) {
-	if other == nil {
-		return self, nil
-	}
-
-	newHeader := &TemplateHeader{
-		Bindings: append(self.Bindings, other.Bindings...),      // ours first, then other's
-		Layout:   sliceutil.OrString(other.Layout, self.Layout), // prefer other, fallback to ours
-	}
-
-	// Redirect: prefer other, fallback to ours
-	if redir, ok := sliceutil.Or(other.Redirect, self.Redirect).(*Redirect); ok {
-		newHeader.Redirect = redir
-	}
-
-	// maps: merge other's over top of ours
-
-	if v, err := maputil.Merge(self.Page, other.Page); err == nil {
-		newHeader.Page = v
-	} else {
-		return nil, err
-	}
-
-	if v, err := maputil.Merge(self.FlagDefs, other.FlagDefs); err == nil {
-		newHeader.FlagDefs = v
-	} else {
-		return nil, err
-	}
-
-	if v, err := maputil.Merge(self.Defaults, other.Defaults); err == nil {
-		newHeader.Defaults = maputil.Stringify(v)
-	} else {
-		return nil, err
-	}
-
-	if v, err := maputil.Merge(self.DefaultHeaders, other.DefaultHeaders); err == nil {
-		newHeader.DefaultHeaders = maputil.Stringify(v)
-	} else {
-		return nil, err
-	}
-
-	if v, err := maputil.Merge(self.Includes, other.Includes); err == nil {
-		newHeader.Includes = maputil.Stringify(v)
-	} else {
-		return nil, err
-	}
-
-	return newHeader, nil
-}
-
 type Server struct {
-	Address             string
-	Port                int
-	Bindings            []Binding
-	BindingPrefix       string
-	RootPath            string
-	LayoutPath          string
-	ErrorsPath          string
-	EnableLayouts       bool
-	RoutePrefix         string
-	TemplatePatterns    []string
-	AdditionalFunctions template.FuncMap
-	TryLocalFirst       bool
-	IndexFile           string
-	VerifyFile          string
-	mounts              []Mount
+	Address             string           `json:"address"`
+	Bindings            []Binding        `json:"bindings"`
+	BindingPrefix       string           `json:"bindingPrefix"`
+	RootPath            string           `json:"root"`
+	LayoutPath          string           `json:"layouts"`
+	ErrorsPath          string           `json:"errors"`
+	EnableLayouts       bool             `json:"enableLayouts"`
+	RoutePrefix         string           `json:"routePrefix"`
+	TemplatePatterns    []string         `json:"patterns"`
+	AdditionalFunctions template.FuncMap `json:"-"`
+	TryLocalFirst       bool             `json:"localFirst"`
+	IndexFile           string           `json:"indexFile"`
+	VerifyFile          string           `json:"verifyFile"`
+	Mounts              []Mount
+	MountConfigs        []MountConfig `json:"mounts"`
 	router              *httprouter.Router
 	server              *negroni.Negroni
 	fs                  http.FileSystem
@@ -135,25 +66,67 @@ func NewServer(root string, patterns ...string) *Server {
 	}
 
 	return &Server{
-		Address:          DEFAULT_SERVE_ADDRESS,
-		Port:             DEFAULT_SERVE_PORT,
-		RoutePrefix:      DEFAULT_ROUTE_PREFIX,
+		Address:          DefaultAddress,
+		RoutePrefix:      DefaultRoutePrefix,
 		RootPath:         root,
 		EnableLayouts:    true,
 		Bindings:         make([]Binding, 0),
 		TemplatePatterns: patterns,
 		IndexFile:        DefaultIndexFile,
 		VerifyFile:       DefaultVerifyFile,
-		mounts:           make([]Mount, 0),
+		Mounts:           make([]Mount, 0),
 	}
 }
 
-func (self *Server) SetMounts(mounts []Mount) {
-	self.mounts = mounts
+func (self *Server) LoadConfig(filename string) error {
+	if pathutil.FileExists(filename) {
+		if file, err := os.Open(filename); err == nil {
+			if data, err := ioutil.ReadAll(file); err == nil && len(data) > 0 {
+				if err := yaml.Unmarshal(data, self); err == nil {
+					// process mount configs into mount instances
+					for i, config := range self.MountConfigs {
+						if mount, err := NewMountFromSpec(fmt.Sprintf("%s:%s", config.Mount, config.To)); err == nil {
+							mstruct := structs.New(mount)
+
+							for k, v := range config.Options {
+								for _, field := range mstruct.Fields() {
+									if tag := field.Tag(`json`); tag != `` {
+										if tag == k || strings.HasPrefix(tag, k+`,`) {
+											if err := field.Set(v); err != nil {
+												return fmt.Errorf("mount %d: field %v error: %v", i, k, err)
+											}
+
+											break
+										}
+									}
+								}
+							}
+
+							self.Mounts = append(self.Mounts, mount)
+						} else {
+							return fmt.Errorf("invalid mount %d: %v", i, err)
+						}
+					}
+				} else {
+					return err
+				}
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func (self *Server) Mounts() []Mount {
-	return self.mounts
+func (self *Server) SetMounts(mounts []Mount) {
+	if len(self.Mounts) > 0 {
+		self.Mounts = append(self.Mounts, mounts...)
+	} else {
+		self.Mounts = mounts
+	}
 }
 
 func (self *Server) SetFileSystem(fs http.FileSystem) {
@@ -213,22 +186,12 @@ func (self *Server) Initialize() error {
 }
 
 func (self *Server) Serve() {
-	self.server.Run(fmt.Sprintf("%s:%d", self.Address, self.Port))
+	http.ListenAndServe(self.Address, self.server)
 }
 
 func (self *Server) ListenAndServe(address string) error {
-	if addr, port, err := net.SplitHostPort(address); err == nil {
-		self.Address = addr
-
-		if port != `` {
-			self.Port = int(stringutil.MustInteger(port))
-		}
-
-		self.Serve()
-		return nil
-	} else {
-		return err
-	}
+	self.Serve()
+	return nil
 }
 
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -596,7 +559,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 }
 
 func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) {
-	log.Infof("REQUEST: %v %v", req.Method, req.URL)
+	log.Infof("%v %v", req.Method, req.URL)
 
 	// normalize filename from request path
 	requestPath := req.URL.Path
@@ -647,7 +610,7 @@ PathLoop:
 			if f, m, err := self.tryLocalFile(rPath, req); err == nil {
 				file = f
 				mimeType = m
-				message = fmt.Sprintf("  handled by filesystem")
+				message = fmt.Sprintf("< handled by filesystem")
 
 			} else if mnt, response, err := self.tryMounts(rPath, req); err == nil {
 				file = response.GetFile()
@@ -655,7 +618,7 @@ PathLoop:
 				headers = response.Metadata
 				redirectTo = response.RedirectTo
 				redirectCode = response.RedirectCode
-				message = fmt.Sprintf("  handled by %v after trying local first", mnt)
+				message = fmt.Sprintf("< handled by %v after trying local first", mnt)
 
 			} else if IsHardStop(err) {
 				break PathLoop
@@ -667,7 +630,7 @@ PathLoop:
 				headers = response.Metadata
 				redirectTo = response.RedirectTo
 				redirectCode = response.RedirectCode
-				message = fmt.Sprintf("  handled by %v", mnt)
+				message = fmt.Sprintf("< handled by %v", mnt)
 
 			} else if IsHardStop(err) {
 				break PathLoop
@@ -675,7 +638,7 @@ PathLoop:
 			} else if f, m, err := self.tryLocalFile(rPath, req); err == nil {
 				file = f
 				mimeType = m
-				message = fmt.Sprintf("  handled by filesystem")
+				message = fmt.Sprintf("< handled by filesystem")
 			}
 		}
 
@@ -696,7 +659,7 @@ PathLoop:
 			}
 
 			if handled := self.respondToFile(rPath, mimeType, file, headers, urlParams, w, req); handled {
-				log.Info(message)
+				log.Debug(message)
 				return
 			}
 		} else {
@@ -705,7 +668,7 @@ PathLoop:
 	}
 
 	// if we got *here*, then File Not Found
-	log.Infof("  not found")
+	log.Debugf("< not found")
 
 	self.respondError(w, fmt.Errorf("File %q was not found.", requestPath), http.StatusNotFound)
 }
@@ -745,7 +708,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 	}
 
 	// find a mount that has this file
-	for i, mount := range self.mounts {
+	for i, mount := range self.Mounts {
 		log.Debugf("  trying mount %d %v", i, mount)
 
 		// seek the body buffer back to the beginning
@@ -813,7 +776,12 @@ func (self *Server) respondToFile(requestPath string, mimeType string, file http
 
 func (self *Server) respondError(w http.ResponseWriter, resErr error, code int) {
 	tmpl := NewTemplate(`error`, HtmlEngine)
-	log.Debugf("> responding to error: %v (HTTP %d)", resErr, code)
+
+	if code >= 400 && code < 500 {
+		log.Warningf("ERR %v (HTTP %d)", resErr, code)
+	} else {
+		log.Errorf("ERR %v (HTTP %d)", resErr, code)
+	}
 
 	if resErr == nil {
 		resErr = fmt.Errorf("Unknown Error")

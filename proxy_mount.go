@@ -10,13 +10,15 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/ghetzel/go-stockutil/sliceutil"
 )
 
 var DefaultProxyMountTimeout = time.Duration(10) * time.Second
 
 type ProxyMount struct {
-	MountPoint          string            `json:"mount"`
-	URL                 string            `json:"url"`
+	MountPoint          string            `json:"-"`
+	URL                 string            `json:"-"`
 	Method              string            `json:"method,omitempty"`
 	Headers             map[string]string `json:"headers,omitempty"`
 	Timeout             time.Duration     `json:"timeout,omitempty"`
@@ -164,7 +166,14 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 }
 
 func (self *ProxyMount) String() string {
-	return fmt.Sprintf("%T('%s')", self, self.GetMountPoint())
+	return fmt.Sprintf(
+		"%v -> %v %v (passthrough requests=%v errors=%v)",
+		self.MountPoint,
+		strings.ToUpper(sliceutil.OrString(self.Method, `get`)),
+		self.URL,
+		self.PassthroughRequests,
+		self.PassthroughErrors,
+	)
 }
 
 func (self *ProxyMount) Open(name string) (http.File, error) {
