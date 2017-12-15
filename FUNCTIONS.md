@@ -33,6 +33,7 @@ use them.
 - [findkey](#findkey)
 - [first](#first)
 - [flatten](#flatten)
+- [get](#get)
 - [has](#has)
 - [hasPrefix](#hasPrefix)
 - [hasSuffix](#hasSuffix)
@@ -311,6 +312,14 @@ Return the first value from the given *input* array.
 flatten(any)
 ```
 Return an array of values with all nested subarrays merged into a single level.
+
+---
+
+<a name="get"></a>
+```go
+get(any, string, ...any)
+```
+Get a key from a map.
 
 ---
 

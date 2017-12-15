@@ -4,6 +4,7 @@ import (
 	"fmt"
 	html "html/template"
 	"io"
+	"io/ioutil"
 	"path"
 	"strings"
 	text "text/template"
@@ -73,6 +74,14 @@ func (self *Template) SetEngine(engine Engine) {
 
 func (self *Template) Engine() Engine {
 	return self.engine
+}
+
+func (self *Template) ParseFrom(r io.Reader) error {
+	if data, err := ioutil.ReadAll(r); err == nil {
+		return self.Parse(string(data))
+	} else {
+		return err
+	}
 }
 
 func (self *Template) Parse(input string) error {

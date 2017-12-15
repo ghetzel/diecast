@@ -113,6 +113,7 @@ type Server struct {
 	BindingPrefix       string
 	RootPath            string
 	LayoutPath          string
+	ErrorsPath          string
 	EnableLayouts       bool
 	RoutePrefix         string
 	TemplatePatterns    []string
@@ -177,6 +178,10 @@ func (self *Server) Initialize() error {
 		self.LayoutPath = path.Join(`/`, `_layouts`)
 	}
 
+	if self.ErrorsPath == `` {
+		self.ErrorsPath = path.Join(`/`, `_errors`)
+	}
+
 	self.RoutePrefix = strings.TrimSuffix(self.RoutePrefix, `/`)
 
 	// if we haven't explicitly set a filesystem, create it
@@ -230,7 +235,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	self.server.ServeHTTP(w, req)
 }
 
-func (self *Server) ShouldApplyTemplate(requestPath string) bool {
+func (self *Server) shouldApplyTemplate(requestPath string) bool {
 	baseName := filepath.Base(requestPath)
 
 	for _, pattern := range self.TemplatePatterns {
@@ -248,7 +253,7 @@ func (self *Server) ShouldApplyTemplate(requestPath string) bool {
 	return false
 }
 
-func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requestPath string, reader io.Reader, header *TemplateHeader, urlParams map[string]interface{}) error {
+func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requestPath string, reader io.Reader, header *TemplateHeader, urlParams map[string]interface{}, mimeType string) error {
 	finalTemplate := bytes.NewBuffer(nil)
 	hasLayout := false
 	forceSkipLayout := false
@@ -380,6 +385,8 @@ func (self *Server) ApplyTemplate(w http.ResponseWriter, req *http.Request, requ
 				w.Write(finalTemplate.Bytes())
 				return nil
 			} else {
+				w.Header().Set(`Content-Type`, mimeType)
+
 				if hasLayout {
 					return tmpl.Render(w, data, `layout`)
 				} else {
@@ -699,7 +706,8 @@ PathLoop:
 
 	// if we got *here*, then File Not Found
 	log.Infof("  not found")
-	http.Error(w, fmt.Sprintf("File %q was not found.", requestPath), http.StatusNotFound)
+
+	self.respondError(w, fmt.Errorf("File %q was not found.", requestPath), http.StatusNotFound)
 }
 
 // Attempt to resolve the given path into a real file and return that file and mime type.
@@ -770,10 +778,8 @@ func (self *Server) respondToFile(requestPath string, mimeType string, file http
 		mimeType = `application/octet-stream`
 	}
 
-	w.Header().Set(`Content-Type`, mimeType)
-
 	// we got a real actual file here, figure out if we're templating it or not
-	if self.ShouldApplyTemplate(requestPath) {
+	if self.shouldApplyTemplate(requestPath) {
 		// tease the template header out of the file
 		if header, templateData, err := self.SplitTemplateHeaderContent(file); err == nil {
 			if header != nil {
@@ -791,17 +797,53 @@ func (self *Server) respondToFile(requestPath string, mimeType string, file http
 			}
 
 			// render the final template and write it out
-			if err := self.ApplyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header, urlParams); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+			if err := self.applyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header, urlParams, mimeType); err != nil {
+				self.respondError(w, err, http.StatusInternalServerError)
 			}
 		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			self.respondError(w, err, http.StatusInternalServerError)
 		}
 	} else {
+		w.Header().Set(`Content-Type`, mimeType)
 		io.Copy(w, file)
 	}
 
 	return true
+}
+
+func (self *Server) respondError(w http.ResponseWriter, resErr error, code int) {
+	tmpl := NewTemplate(`error`, HtmlEngine)
+	log.Debugf("> responding to error: %v (HTTP %d)", resErr, code)
+
+	if resErr == nil {
+		resErr = fmt.Errorf("Unknown Error")
+	}
+
+	for _, filename := range []string{
+		fmt.Sprintf("%s/%d.html", self.ErrorsPath, code),
+		fmt.Sprintf("%s/%dxx.html", self.ErrorsPath, int(code/100.0)),
+		fmt.Sprintf("%s/default.html", self.ErrorsPath),
+	} {
+		log.Debugf("> error path: %v", filename)
+
+		if f, err := self.fs.Open(filename); err == nil {
+			if err := tmpl.ParseFrom(f); err == nil {
+				w.Header().Set(`Content-Type`, `text/html`)
+
+				if err := tmpl.Render(w, map[string]interface{}{
+					`error`: resErr.Error(),
+				}, ``); err == nil {
+					return
+				} else {
+					log.Warningf("Error template %v render failed: %v", filename, err)
+				}
+			} else {
+				log.Warningf("Error template %v failed: %v", filename, err)
+			}
+		}
+	}
+
+	http.Error(w, resErr.Error(), code)
 }
 
 func (self *Server) SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, error) {

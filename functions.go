@@ -786,6 +786,17 @@ func GetStandardFunctions() FuncMap {
 		return maputil.Pluck(input, strings.Split(key, `.`))
 	}
 
+	// fn get: Get a key from a map.
+	rv[`get`] = func(input interface{}, key string, fallback ...interface{}) interface{} {
+		var fb interface{}
+
+		if len(fallback) > 0 {
+			fb = fallback[0]
+		}
+
+		return maputil.DeepGet(input, strings.Split(key, `.`), fb)
+	}
+
 	// fn findkey: Recursively scans the given *input* array or map and returns all values of the given *key*.
 	rv[`findkey`] = func(input interface{}, key string) ([]interface{}, error) {
 		values := make([]interface{}, 0)
