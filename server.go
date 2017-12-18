@@ -1,5 +1,7 @@
 package diecast
 
+//go:generate esc -o static.go -pkg diecast -modtime 1500000000 -prefix ui ui
+
 import (
 	"bytes"
 	"encoding/json"
