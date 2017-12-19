@@ -133,7 +133,10 @@ func main() {
 
 		if err := server.Initialize(); err == nil {
 			log.Infof("Starting HTTP server at http://%s", server.Address)
-			server.Serve()
+
+			if err := server.Serve(); err != nil {
+				log.Fatal(err)
+			}
 		} else {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}

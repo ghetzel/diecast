@@ -187,8 +187,8 @@ func (self *Server) Initialize() error {
 	return nil
 }
 
-func (self *Server) Serve() {
-	http.ListenAndServe(self.Address, self.server)
+func (self *Server) Serve() error {
+	return http.ListenAndServe(self.Address, self.server)
 }
 
 func (self *Server) ListenAndServe(address string) error {
@@ -454,6 +454,16 @@ func (self *Server) ToTemplateName(requestPath string) string {
 
 func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}, error) {
 	data := requestToEvalData(req, header)
+
+	data[`diecast`] = map[string]interface{}{
+		`binding_prefix`:    self.BindingPrefix,
+		`route_prefix`:      self.RoutePrefix,
+		`template_patterns`: self.TemplatePatterns,
+		`try_local_first`:   self.TryLocalFirst,
+		`index_file`:        self.IndexFile,
+		`verify_file`:       self.VerifyFile,
+	}
+
 	bindings := make(map[string]interface{})
 	bindingsToEval := make([]Binding, 0)
 
