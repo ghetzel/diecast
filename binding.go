@@ -49,6 +49,7 @@ type Binding struct {
 	Parser             string                 `json:"parser"`
 	NoTemplate         bool                   `json:"no_template"`
 	Optional           bool                   `json:"optional"`
+	Fallback           interface{}            `json:"fallback"`
 	OnError            BindingErrorAction     `json:"on_error"`
 	Repeat             string                 `json:"repeat"`
 	SkipInheritHeaders bool                   `json:"skip_inherit_headers"`

@@ -470,7 +470,10 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		binding.server = self
 
 		if binding.Repeat == `` {
-			if v, err := binding.Evaluate(req, header, data, funcs); err == nil {
+			bindings[binding.Name] = binding.Fallback
+			data[`bindings`] = bindings
+
+			if v, err := binding.Evaluate(req, header, data, funcs); err == nil && v != nil {
 				bindings[binding.Name] = v
 				data[`bindings`] = bindings
 			} else {
@@ -492,6 +495,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			for i, resource := range strings.Split(strings.TrimSpace(EvalInline(repeatExpr, data, funcs)), "\n") {
 				binding.Resource = strings.TrimSpace(resource)
 				binding.Repeat = ``
+				bindings[binding.Name] = binding.Fallback
 
 				if v, err := binding.Evaluate(req, header, data, funcs); err == nil {
 					results = append(results, v)
@@ -508,6 +512,8 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 						return funcs, nil, err
 					}
 				}
+
+				data[`bindings`] = bindings
 			}
 		}
 	}
