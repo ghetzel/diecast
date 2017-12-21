@@ -53,8 +53,8 @@ type Server struct {
 	TryLocalFirst       bool             `json:"localFirst"`
 	IndexFile           string           `json:"indexFile"`
 	VerifyFile          string           `json:"verifyFile"`
-	Mounts              []Mount
-	MountConfigs        []MountConfig `json:"mounts"`
+	Mounts              []Mount          `json:"-"`
+	MountConfigs        []MountConfig    `json:"mounts"`
 	router              *httprouter.Router
 	server              *negroni.Negroni
 	fs                  http.FileSystem
