@@ -22,8 +22,8 @@ test:
 	go test $(PKGS)
 
 build: deps fmt
-	test -d cli && go build -o bin/`basename ${PWD}` cli/main.go
-	test -d cli/funcdoc && go build -o bin/funcdoc cli/funcdoc/main.go
+	test -d diecast && go build -o bin/`basename ${PWD}` diecast/main.go
+	test -d diecast/funcdoc && go build -o bin/funcdoc diecast/funcdoc/main.go
 	./bin/funcdoc > FUNCTIONS.md
 
 package:
