@@ -65,6 +65,12 @@ func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error
 		return nil, err
 	}
 
+	if v, err := maputil.Merge(self.Headers, other.Headers); err == nil {
+		newHeader.Headers = v
+	} else {
+		return nil, err
+	}
+
 	if v, err := maputil.Merge(self.Includes, other.Includes); err == nil {
 		newHeader.Includes = maputil.Stringify(v)
 	} else {

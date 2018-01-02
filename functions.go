@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/base64"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -275,6 +276,45 @@ func GetStandardFunctions() FuncMap {
 		output = bluemonday.UGCPolicy().SanitizeBytes(output)
 
 		return template.HTML(output[:]), nil
+	}
+
+	// fn csv: Render the given *values* as a line suitable for inclusion in a common-separated
+	//         values file.
+	rv[`csv`] = func(values ...interface{}) (string, error) {
+		output := bytes.NewBufferString(``)
+		csvwriter := csv.NewWriter(output)
+
+		if err := csvwriter.Write(sliceutil.Stringify(values)); err == nil {
+			csvwriter.Flush()
+
+			if err := csvwriter.Error(); err == nil {
+				return output.String(), nil
+			} else {
+				return ``, err
+			}
+		} else {
+			return ``, err
+		}
+	}
+
+	// fn tsv: Render the given *values* as a line suitable for inclusion in a tab-separated
+	//         values file.
+	rv[`tsv`] = func(values ...interface{}) (string, error) {
+		output := bytes.NewBufferString(``)
+		csvwriter := csv.NewWriter(output)
+		csvwriter.Comma = '\t'
+
+		if err := csvwriter.Write(sliceutil.Stringify(values)); err == nil {
+			csvwriter.Flush()
+
+			if err := csvwriter.Error(); err == nil {
+				return output.String(), nil
+			} else {
+				return ``, err
+			}
+		} else {
+			return ``, err
+		}
 	}
 
 	// fn unsafe: Return an unescaped raw HTML segment for direct inclusion in the rendered
@@ -766,7 +806,6 @@ func GetStandardFunctions() FuncMap {
 				if err := tmpl.Render(output, value, ``); err == nil {
 					evalValue := stringutil.Autotype(output.String())
 
-					// since this data may have been entity escaped by html/template, unescape it here
 					if !typeutil.IsZero(evalValue) {
 						out = append(out, value)
 					}
@@ -779,6 +818,58 @@ func GetStandardFunctions() FuncMap {
 		}
 
 		return out, nil
+	}
+
+	var filterByKey = func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
+		out := make([]interface{}, 0)
+		expr := sliceutil.First(exprs)
+		exprStr := fmt.Sprintf("%v", expr)
+
+		for i, submap := range sliceutil.Sliceify(input) {
+			if typeutil.IsMap(submap) {
+				if item := maputil.DeepGet(submap, strings.Split(key, `.`)); item != nil {
+
+					if stringutil.IsSurroundedBy(exprStr, `{{`, `}}`) {
+						tmpl := NewTemplate(`inline`, TextEngine)
+						tmpl.Funcs(rv)
+
+						if err := tmpl.Parse(exprStr); err == nil {
+							output := bytes.NewBuffer(nil)
+
+							if err := tmpl.Render(output, item, ``); err == nil {
+								evalValue := stringutil.Autotype(output.String())
+
+								if !typeutil.IsZero(evalValue) {
+									out = append(out, submap)
+								}
+							} else {
+								return nil, fmt.Errorf("item %d: %v", i, err)
+							}
+						} else {
+							return nil, fmt.Errorf("failed to parse template: %v", err)
+						}
+					} else if ok, err := stringutil.RelaxedEqual(item, expr); err == nil && ok {
+						out = append(out, submap)
+					}
+				}
+			}
+		}
+
+		return out, nil
+	}
+
+	// fn filterByKey: Return a subset of the elements in the *input* array whose map values
+	//                 contain the *key*, optionally matching *expression*.
+	rv[`filterByKey`] = filterByKey
+
+	// fn firstByKey: Return the first elements in the *input* array whose map values
+	//                 contain the *key*, optionally matching *expression*.
+	rv[`firstByKey`] = func(input interface{}, key string, exprs ...interface{}) (interface{}, error) {
+		if v, err := filterByKey(input, key, exprs...); err == nil {
+			return sliceutil.First(v), nil
+		} else {
+			return nil, err
+		}
 	}
 
 	// fn pluck: Given an *input* array of maps, retrieve the values of *key* from all elements.

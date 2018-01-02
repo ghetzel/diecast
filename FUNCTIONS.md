@@ -23,6 +23,7 @@ use them.
 - [compact](#compact)
 - [contains](#contains)
 - [count](#count)
+- [csv](#csv)
 - [dir](#dir)
 - [dirname](#dirname)
 - [divide](#divide)
@@ -30,8 +31,10 @@ use them.
 - [eqx](#eqx)
 - [extname](#extname)
 - [filter](#filter)
+- [filterByKey](#filterByKey)
 - [findkey](#findkey)
 - [first](#first)
+- [firstByKey](#firstByKey)
 - [flatten](#flatten)
 - [get](#get)
 - [has](#has)
@@ -90,6 +93,7 @@ use them.
 - [time](#time)
 - [titleize](#titleize)
 - [trim](#trim)
+- [tsv](#tsv)
 - [uniq](#uniq)
 - [unsafe](#unsafe)
 - [upper](#upper)
@@ -235,6 +239,14 @@ A type-relaxed version of **len**.
 
 ---
 
+<a name="csv"></a>
+```go
+csv(values ...any) (string, error)
+```
+Render the given *values* as a line suitable for inclusion in a common-separated values file.
+
+---
+
 <a name="dir"></a>
 ```go
 dir(path ...any) (, error)
@@ -291,6 +303,14 @@ Return the given *input* array with only elements where *expression* evaluates t
 
 ---
 
+<a name="filterByKey"></a>
+```go
+filterByKey(input any, string, ...any) (, error)
+```
+Return a subset of the elements in the *input* array whose map values contain the *key*, optionally matching *expression*.
+
+---
+
 <a name="findkey"></a>
 ```go
 findkey(input any, key string) (, error)
@@ -304,6 +324,14 @@ Recursively scans the given *input* array or map and returns all values of the g
 first(input any) (, error)
 ```
 Return the first value from the given *input* array.
+
+---
+
+<a name="firstByKey"></a>
+```go
+firstByKey(input any, string, ...any) (, error)
+```
+Return the first elements in the *input* array whose map values contain the *key*, optionally matching *expression*.
 
 ---
 
@@ -768,6 +796,14 @@ Return a copy of *s* with all Unicode letters that begin words mapped to their t
 trim(s string) string
 ```
 Return a copy of *s* with all leading and trailing whitespace characters removed.
+
+---
+
+<a name="tsv"></a>
+```go
+tsv(values ...any) (string, error)
+```
+Render the given *values* as a line suitable for inclusion in a tab-separated values file.
 
 ---
 

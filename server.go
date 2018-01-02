@@ -234,7 +234,7 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 		}
 
 		if header.Layout != `` {
-			if header.Layout == `false` {
+			if header.Layout == `false` || header.Layout == `none` {
 				forceSkipLayout = true
 			} else {
 				layouts = append([]string{header.Layout}, layouts...)
