@@ -21,6 +21,7 @@ type TemplateHeader struct {
 	Headers        map[string]interface{} `json:"headers"`
 	UrlParams      map[string]interface{} `json:"params"`
 	FlagDefs       map[string]interface{} `json:"flags"`
+	Postprocessors []string               `json:"postprocessors"`
 	lines          int
 }
 
@@ -29,9 +30,12 @@ func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error
 		return self, nil
 	}
 
+	log.Debugf("self: %+v, other: %+v", self.Postprocessors, other.Postprocessors)
+
 	newHeader := &TemplateHeader{
-		Bindings: append(self.Bindings, other.Bindings...),      // ours first, then other's
-		Layout:   sliceutil.OrString(other.Layout, self.Layout), // prefer other, fallback to ours
+		Bindings:       append(self.Bindings, other.Bindings...),             // ours first, then other's
+		Layout:         sliceutil.OrString(other.Layout, self.Layout),        // prefer other, fallback to ours
+		Postprocessors: append(self.Postprocessors, other.Postprocessors...), // ours first, then other's
 	}
 
 	// Redirect: prefer other, fallback to ours

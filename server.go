@@ -20,6 +20,7 @@ import (
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/pathutil"
+	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/ghodss/yaml"
@@ -55,6 +56,7 @@ type Server struct {
 	VerifyFile          string           `json:"verifyFile"`
 	Mounts              []Mount          `json:"-"`
 	MountConfigs        []MountConfig    `json:"mounts"`
+	BaseHeader          *TemplateHeader  `json:"header"`
 	router              *httprouter.Router
 	server              *negroni.Negroni
 	fs                  http.FileSystem
@@ -304,19 +306,19 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 		finalTemplate.WriteString("\n{{ end }}\n")
 	}
 
-	var finalHeader *TemplateHeader
+	var baseHeader TemplateHeader
 
-	for i, templateHeader := range headers {
-		if finalHeader == nil {
-			finalHeader = templateHeader
-		}
+	if self.BaseHeader != nil {
+		baseHeader = *self.BaseHeader
+	}
 
-		if (i + 1) < len(headers) {
-			if fh, err := finalHeader.Merge(headers[i+1]); err == nil {
-				finalHeader = fh
-			} else {
-				return err
-			}
+	finalHeader := &baseHeader
+
+	for _, templateHeader := range headers {
+		if fh, err := finalHeader.Merge(templateHeader); err == nil {
+			finalHeader = fh
+		} else {
+			return err
 		}
 	}
 
@@ -334,6 +336,9 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 
 		tmpl.Funcs(funcs)
 		tmpl.SetHeaderOffset(headerOffset)
+		tmpl.SetPostProcessors(finalHeader.Postprocessors)
+
+		log.Debugf("pp: %v", typeutil.Dump(finalHeader))
 
 		if err := tmpl.Parse(finalTemplate.String()); err == nil {
 			log.Debugf("Rendering %q as %v template (header offset by %d lines)", requestPath, tmpl.Engine(), headerOffset)
@@ -439,6 +444,55 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 		}
 	}
 
+	// fn var: Set the runtime variable *name* to *value*.
+	funcs[`var`] = func(name string, vI ...interface{}) interface{} {
+		var value interface{}
+
+		if len(vI) > 0 {
+			value = vI[0]
+		}
+
+		maputil.DeepSet(data, []string{`vars`, name}, value)
+		return ``
+	}
+
+	// fn push: Append to variable *name* to *value*.
+	funcs[`push`] = func(name string, vI ...interface{}) interface{} {
+		var values []interface{}
+
+		if existing := maputil.DeepGet(data, []string{`vars`, name}); existing != nil {
+			values = append(values, sliceutil.Sliceify(existing)...)
+		}
+
+		values = append(values, vI...)
+		maputil.DeepSet(data, []string{`vars`, name}, values)
+
+		return ``
+	}
+
+	// fn pop: Remove the last item from *name* and return it.
+	funcs[`pop`] = func(name string) interface{} {
+		var out interface{}
+
+		if existing := maputil.DeepGet(data, []string{`vars`, name}); existing != nil {
+			values := sliceutil.Sliceify(existing)
+
+			switch len(values) {
+			case 0:
+				return nil
+			case 1:
+				out = values[0]
+				maputil.DeepSet(data, []string{`vars`, name}, nil)
+			default:
+				out = values[len(values)-1]
+				values = values[0 : len(values)-1]
+				maputil.DeepSet(data, []string{`vars`, name}, values)
+			}
+		}
+
+		return out
+	}
+
 	return funcs
 }
 
@@ -454,6 +508,8 @@ func (self *Server) ToTemplateName(requestPath string) string {
 
 func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}, error) {
 	data := requestToEvalData(req, header)
+
+	data[`vars`] = map[string]interface{}{}
 
 	data[`diecast`] = map[string]interface{}{
 		`binding_prefix`:    self.BindingPrefix,

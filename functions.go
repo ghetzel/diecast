@@ -122,6 +122,12 @@ func GetStandardFunctions() FuncMap {
 	// fn titleize: Return a copy of *s* with all Unicode letters that begin words mapped to their title case.
 	rv[`titleize`] = strings.Title
 
+	// fn camelize: Return a copy of *s* transformed into CamelCase.
+	rv[`camelize`] = stringutil.Camelize
+
+	// fn underscore: Return a copy of *s* transformed into snake_case.
+	rv[`underscore`] = stringutil.Underscore
+
 	// fn trim: Return a copy of *s* with all leading and trailing whitespace characters removed.
 	rv[`trim`] = strings.TrimSpace
 
@@ -284,7 +290,13 @@ func GetStandardFunctions() FuncMap {
 		output := bytes.NewBufferString(``)
 		csvwriter := csv.NewWriter(output)
 
-		if err := csvwriter.Write(sliceutil.Stringify(values)); err == nil {
+		for i, value := range values {
+			if typeutil.IsArray(value) && len(sliceutil.Compact(sliceutil.Sliceify(value))) == 0 {
+				values = append(values[:i], values[i+1:]...)
+			}
+		}
+
+		if err := csvwriter.Write(sliceutil.Stringify(sliceutil.Flatten(values))); err == nil {
 			csvwriter.Flush()
 
 			if err := csvwriter.Error(); err == nil {
@@ -304,7 +316,13 @@ func GetStandardFunctions() FuncMap {
 		csvwriter := csv.NewWriter(output)
 		csvwriter.Comma = '\t'
 
-		if err := csvwriter.Write(sliceutil.Stringify(values)); err == nil {
+		for i, value := range values {
+			if typeutil.IsArray(value) && len(sliceutil.Compact(sliceutil.Sliceify(value))) == 0 {
+				values = append(values[:i], values[i+1:]...)
+			}
+		}
+
+		if err := csvwriter.Write(sliceutil.Stringify(sliceutil.Flatten(values))); err == nil {
 			csvwriter.Flush()
 
 			if err := csvwriter.Error(); err == nil {
@@ -958,7 +976,7 @@ func GetStandardFunctions() FuncMap {
 	}
 
 	// fn compact: Return an copy of given *input* array with all zero-valued elements removed.
-	rv[`compact`] = func(slice []interface{}) []interface{} {
+	rv[`compact`] = func(slice interface{}) []interface{} {
 		return sliceutil.Compact(slice)
 	}
 

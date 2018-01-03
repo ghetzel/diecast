@@ -1,11 +1,13 @@
 package diecast
 
 import (
+	"bytes"
 	"fmt"
 	html "html/template"
 	"io"
 	"io/ioutil"
 	"path"
+	"regexp"
 	"strings"
 	text "text/template"
 
@@ -14,6 +16,8 @@ import (
 )
 
 type Engine int
+
+var rxEmptyLine = regexp.MustCompile(`(?m)^\s*$[\r\n]*|[\r\n]+\s+\z`)
 
 const (
 	TextEngine Engine = iota
@@ -40,12 +44,13 @@ type Templated interface {
 }
 
 type Template struct {
-	name          string
-	engine        Engine
-	tmpl          interface{}
-	funcs         FuncMap
-	headerOffset  int64
-	contentOffset int64
+	name           string
+	engine         Engine
+	tmpl           interface{}
+	funcs          FuncMap
+	headerOffset   int64
+	contentOffset  int64
+	postprocessors []string
 }
 
 func GetEngineForFile(filename string) Engine {
@@ -66,6 +71,10 @@ func NewTemplate(name string, engine Engine) *Template {
 
 func (self *Template) SetHeaderOffset(offset int) {
 	self.headerOffset = int64(offset)
+}
+
+func (self *Template) SetPostProcessors(postprocessors []string) {
+	self.postprocessors = postprocessors
 }
 
 func (self *Template) SetEngine(engine Engine) {
@@ -180,15 +189,16 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 		return fmt.Errorf("No template input provided")
 	}
 
+	output := bytes.NewBuffer(nil)
 	var err error
 
 	switch self.engine {
 	case TextEngine:
 		if t, ok := self.tmpl.(*text.Template); ok {
 			if subtemplate == `` {
-				err = t.Execute(w, data)
+				err = t.Execute(output, data)
 			} else {
-				err = t.ExecuteTemplate(w, subtemplate, data)
+				err = t.ExecuteTemplate(output, subtemplate, data)
 			}
 		} else {
 			err = fmt.Errorf("invalid internal type for TextEngine")
@@ -197,9 +207,9 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 	case HtmlEngine:
 		if t, ok := self.tmpl.(*html.Template); ok {
 			if subtemplate == `` {
-				err = t.Execute(w, data)
+				err = t.Execute(output, data)
 			} else {
-				err = t.ExecuteTemplate(w, subtemplate, data)
+				err = t.ExecuteTemplate(output, subtemplate, data)
 			}
 		} else {
 			err = fmt.Errorf("invalid internal type for HtmlEngine")
@@ -207,6 +217,19 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 
 	default:
 		err = fmt.Errorf("Unknown template engine")
+	}
+
+	if err == nil {
+		outstr := output.String()
+
+		for _, postprocessor := range self.postprocessors {
+			switch postprocessor {
+			case `trim-empty-lines`:
+				outstr = rxEmptyLine.ReplaceAllString(outstr, ``) + "\n"
+			}
+		}
+
+		_, err = w.Write([]byte(outstr))
 	}
 
 	return self.prepareError(err)

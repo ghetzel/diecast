@@ -20,6 +20,7 @@ use them.
 - [base58](#base58)
 - [base64](#base64)
 - [basename](#basename)
+- [camelize](#camelize)
 - [compact](#compact)
 - [contains](#contains)
 - [count](#count)
@@ -71,7 +72,9 @@ use them.
 - [payload](#payload)
 - [percent](#percent)
 - [pluck](#pluck)
+- [pop](#pop)
 - [pow](#pow)
+- [push](#push)
 - [pwd](#pwd)
 - [qs](#qs)
 - [querystrings](#querystrings)
@@ -94,11 +97,13 @@ use them.
 - [titleize](#titleize)
 - [trim](#trim)
 - [tsv](#tsv)
+- [underscore](#underscore)
 - [uniq](#uniq)
 - [unsafe](#unsafe)
 - [upper](#upper)
 - [uuid](#uuid)
 - [uuidRaw](#uuidRaw)
+- [var](#var)
 ## Function Usage
 
 ---
@@ -212,6 +217,14 @@ Encode the *input* bytes with the Base64 encoding scheme.  Optionally specify th
 basename(path any) string
 ```
 Return the filename component of the given *path*.
+
+---
+
+<a name="camelize"></a>
+```go
+camelize(s any) string
+```
+Return a copy of *s* transformed into CamelCase.
 
 ---
 
@@ -623,11 +636,27 @@ Given an *input* array of maps, retrieve the values of *key* from all elements.
 
 ---
 
+<a name="pop"></a>
+```go
+pop(name string)
+```
+Remove the last item from *name* and return it.
+
+---
+
 <a name="pow"></a>
 ```go
 pow(values ...any) (float64, error)
 ```
 Sequentially exponentiate of all of the given *values*.
+
+---
+
+<a name="push"></a>
+```go
+push(name string, value ...any)
+```
+Append to variable *name* to *value*.
 
 ---
 
@@ -807,6 +836,14 @@ Render the given *values* as a line suitable for inclusion in a tab-separated va
 
 ---
 
+<a name="underscore"></a>
+```go
+underscore(s any) string
+```
+Return a copy of *s* transformed into snake_case.
+
+---
+
 <a name="uniq"></a>
 ```go
 uniq(input any)
@@ -844,6 +881,14 @@ Generate a new Version 4 UUID.
 uuidRaw()
 ```
 Generate the raw bytes of a new Version 4 UUID.
+
+---
+
+<a name="var"></a>
+```go
+var(name string, value ...any)
+```
+Set the runtime variable *name* to *value*.
 
 # Time Formats
 
