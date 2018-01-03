@@ -448,8 +448,13 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 	funcs[`var`] = func(name string, vI ...interface{}) interface{} {
 		var value interface{}
 
-		if len(vI) > 0 {
+		switch len(vI) {
+		case 0:
+			break
+		case 1:
 			value = vI[0]
+		default:
+			value = vI
 		}
 
 		maputil.DeepSet(data, []string{`vars`, name}, value)

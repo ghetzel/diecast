@@ -254,7 +254,7 @@ A type-relaxed version of **len**.
 
 <a name="csv"></a>
 ```go
-csv(values ...any) (string, error)
+csv(values any, any) (string, error)
 ```
 Render the given *values* as a line suitable for inclusion in a common-separated values file.
 
@@ -830,7 +830,7 @@ Return a copy of *s* with all leading and trailing whitespace characters removed
 
 <a name="tsv"></a>
 ```go
-tsv(values ...any) (string, error)
+tsv(values any, any) (string, error)
 ```
 Render the given *values* as a line suitable for inclusion in a tab-separated values file.
 
