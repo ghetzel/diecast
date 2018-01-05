@@ -338,8 +338,6 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 		tmpl.SetHeaderOffset(headerOffset)
 		tmpl.SetPostProcessors(finalHeader.Postprocessors)
 
-		log.Debugf("pp: %v", typeutil.Dump(finalHeader))
-
 		if err := tmpl.Parse(finalTemplate.String()); err == nil {
 			log.Debugf("Rendering %q as %v template (header offset by %d lines)", requestPath, tmpl.Engine(), headerOffset)
 
@@ -560,10 +558,17 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			repeatExpr := fmt.Sprintf("{{ range $index, $item := (%v) }}\n", binding.Repeat)
 			repeatExpr += fmt.Sprintf("%v\n", binding.Resource)
 			repeatExpr += "{{ end }}"
+			repeatExprOut := rxEmptyLine.ReplaceAllString(
+				strings.TrimSpace(
+					EvalInline(repeatExpr, data, funcs),
+				),
+				``,
+			)
 
-			log.Debugf("Repeater: \n%v", repeatExpr)
+			log.Debugf("Repeater: \n%v\nOutput:\n%v", repeatExpr, repeatExprOut)
+			repeatIters := strings.Split(repeatExprOut, "\n")
 
-			for i, resource := range strings.Split(strings.TrimSpace(EvalInline(repeatExpr, data, funcs)), "\n") {
+			for i, resource := range repeatIters {
 				binding.Resource = strings.TrimSpace(resource)
 				binding.Repeat = ``
 				bindings[binding.Name] = binding.Fallback
