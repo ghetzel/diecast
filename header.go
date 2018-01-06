@@ -30,8 +30,6 @@ func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error
 		return self, nil
 	}
 
-	log.Debugf("self: %+v, other: %+v", self.Postprocessors, other.Postprocessors)
-
 	newHeader := &TemplateHeader{
 		Bindings:       append(self.Bindings, other.Bindings...),             // ours first, then other's
 		Layout:         sliceutil.OrString(other.Layout, self.Layout),        // prefer other, fallback to ours
