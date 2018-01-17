@@ -483,13 +483,21 @@ func GetStandardFunctions() FuncMap {
 	}
 
 	// fn uuid: Generate a new Version 4 UUID.
-	rv[`uuid`] = func() string {
-		return uuid.NewV4().String()
+	rv[`uuid`] = func() (string, error) {
+		if u, err := uuid.NewV4(); err == nil {
+			return u.String(), nil
+		} else {
+			return ``, err
+		}
 	}
 
 	// fn uuidRaw: Generate the raw bytes of a new Version 4 UUID.
-	rv[`uuidRaw`] = func() []byte {
-		return uuid.NewV4().Bytes()
+	rv[`uuidRaw`] = func() ([]byte, error) {
+		if u, err := uuid.NewV4(); err == nil {
+			return u.Bytes(), nil
+		} else {
+			return nil, err
+		}
 	}
 
 	// fn base32: Encode the *input* bytes with the Base32 encoding scheme.

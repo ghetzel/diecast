@@ -870,7 +870,7 @@ Return a copy of *s* with all letters capitalized.
 
 <a name="uuid"></a>
 ```go
-uuid() string
+uuid() (string, error)
 ```
 Generate a new Version 4 UUID.
 
@@ -878,7 +878,7 @@ Generate a new Version 4 UUID.
 
 <a name="uuidRaw"></a>
 ```go
-uuidRaw()
+uuidRaw() (, error)
 ```
 Generate the raw bytes of a new Version 4 UUID.
 
