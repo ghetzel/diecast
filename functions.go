@@ -27,7 +27,6 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/montanaflynn/stats"
 	"github.com/russross/blackfriday"
-	"github.com/satori/go.uuid"
 	"github.com/spaolacci/murmur3"
 )
 
@@ -483,21 +482,13 @@ func GetStandardFunctions() FuncMap {
 	}
 
 	// fn uuid: Generate a new Version 4 UUID.
-	rv[`uuid`] = func() (string, error) {
-		if u, err := uuid.NewV4(); err == nil {
-			return u.String(), nil
-		} else {
-			return ``, err
-		}
+	rv[`uuid`] = func() string {
+		return stringutil.UUID().String()
 	}
 
 	// fn uuidRaw: Generate the raw bytes of a new Version 4 UUID.
-	rv[`uuidRaw`] = func() ([]byte, error) {
-		if u, err := uuid.NewV4(); err == nil {
-			return u.Bytes(), nil
-		} else {
-			return nil, err
-		}
+	rv[`uuidRaw`] = func() []byte {
+		return stringutil.UUID().Bytes()
 	}
 
 	// fn base32: Encode the *input* bytes with the Base32 encoding scheme.
