@@ -9,7 +9,7 @@ deps:
 	@go list github.com/mjibson/esc           || go get github.com/mjibson/esc/...
 	@go list golang.org/x/tools/cmd/goimports || go get golang.org/x/tools/cmd/goimports
 	go generate -x
-	go get ./...
+	dep ensure
 
 clean:
 	-rm -rf bin
@@ -19,11 +19,11 @@ fmt:
 	go vet $(PKGS)
 
 test:
-	go test $(PKGS)
+	go test -i $(PKGS)
 
 build: deps fmt
-	test -d diecast && go build -o bin/`basename ${PWD}` diecast/main.go
-	test -d diecast/funcdoc && go build -o bin/funcdoc diecast/funcdoc/main.go
+	test -d diecast && go build -i -o bin/`basename ${PWD}` diecast/main.go
+	test -d diecast/funcdoc && go build -i -o bin/funcdoc diecast/funcdoc/main.go
 	./bin/funcdoc > FUNCTIONS.md
 
 package:
