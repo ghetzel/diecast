@@ -83,9 +83,9 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	method := strings.ToUpper(self.Method)
 
 	// bindings may specify that a request should be made to the currently server address by
-	// prefixing the URL path with a colon (":").
+	// prefixing the URL path with a colon (":") or slash ("/").
 	//
-	if strings.HasPrefix(self.Resource, `:`) {
+	if strings.HasPrefix(self.Resource, `:`) || strings.HasPrefix(self.Resource, `/`) {
 		var prefix string
 
 		if self.server.BindingPrefix != `` {
@@ -94,10 +94,12 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 			prefix = fmt.Sprintf("http://%s", req.Host)
 		}
 
-		self.Resource = fmt.Sprintf("%s/%s",
-			strings.TrimSuffix(prefix, `/`),
-			strings.TrimPrefix(strings.TrimPrefix(self.Resource, `:`), `/`),
-		)
+		prefix = strings.TrimSuffix(prefix, `/`)
+		resource := self.Resource
+		resource = strings.TrimPrefix(resource, `:`)
+		resource = strings.TrimPrefix(resource, `/`)
+
+		self.Resource = fmt.Sprintf("%s/%s", prefix, resource)
 	}
 
 	if !self.NoTemplate {
