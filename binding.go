@@ -27,6 +27,7 @@ const (
 	ActionPrint                        = `print`
 	ActionContinue                     = `continue`
 	ActionBreak                        = `break`
+	ActionIgnore                       = `ignore`
 )
 
 var BindingClient = http.DefaultClient
@@ -232,26 +233,32 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 				if data, err := ioutil.ReadAll(reader); err == nil {
 					if res.StatusCode < 400 {
-						switch self.Parser {
-						case `json`, ``:
-							var rv interface{}
+						if res.ContentLength > 0 {
+							switch self.Parser {
+							case `json`, ``:
+								var rv interface{}
 
-							if err := json.Unmarshal(data, &rv); err == nil {
-								return rv, nil
-							} else {
-								return nil, err
+								if err := json.Unmarshal(data, &rv); err == nil {
+									return rv, nil
+								} else {
+									return nil, err
+								}
+
+							case `raw`:
+								return template.HTML(string(data)), nil
+
+							default:
+								return nil, fmt.Errorf("Unknown response parser %q", self.Parser)
 							}
-
-						case `raw`:
-							return template.HTML(string(data)), nil
-
-						default:
-							return nil, fmt.Errorf("Unknown response parser %q", self.Parser)
+						} else {
+							return nil, nil
 						}
 					} else {
 						switch self.OnError {
 						case ActionPrint:
 							return nil, fmt.Errorf("%v", string(data[:]))
+						case ActionIgnore:
+							return nil, nil
 						default:
 							return nil, fmt.Errorf("Request %s %v failed: %s",
 								bindingReq.Method,
