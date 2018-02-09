@@ -235,7 +235,8 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 				if data, err := ioutil.ReadAll(reader); err == nil {
 					if res.StatusCode < 400 {
-						if res.ContentLength > 0 {
+						// streaming responses will have ContentLength=-1, so we just check that it's not exactly zero
+						if res.ContentLength != 0 {
 							switch self.Parser {
 							case `json`, ``:
 								var rv interface{}
