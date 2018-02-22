@@ -234,11 +234,32 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				}
 
 				if data, err := ioutil.ReadAll(reader); err == nil {
-					if res.StatusCode < 400 {
-						// streaming responses will have ContentLength=-1, so we just check that it's not exactly zero
-						if res.ContentLength != 0 {
-							switch self.Parser {
-							case `json`, ``:
+					if res.StatusCode >= 400 {
+						switch self.OnError {
+						case ActionPrint:
+							return nil, fmt.Errorf("%v", string(data[:]))
+						case ActionIgnore:
+							break
+						default:
+							return nil, fmt.Errorf("Request %s %v failed: %s",
+								bindingReq.Method,
+								bindingReq.URL,
+								res.Status)
+						}
+					}
+
+					// only do response body processing if there is data to process
+					if len(data) > 0 {
+						switch self.Parser {
+						case `json`, ``:
+							// if the parser is unset, and the response type is NOT application/json, then
+							// just read the response as plain text and return it.
+							//
+							// If you're certain the response actually is JSON, then explicitly set Parser==`json`
+							//
+							if self.Parser == `` && res.Header.Get(`Content-Type`) != `application/json` {
+								return string(data), nil
+							} else {
 								var rv interface{}
 
 								if err := json.Unmarshal(data, &rv); err == nil {
@@ -246,28 +267,19 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 								} else {
 									return nil, err
 								}
-
-							case `raw`:
-								return template.HTML(string(data)), nil
-
-							default:
-								return nil, fmt.Errorf("Unknown response parser %q", self.Parser)
 							}
-						} else {
-							return nil, nil
+
+						case `text`:
+							return string(data), nil
+
+						case `raw`:
+							return template.HTML(string(data)), nil
+
+						default:
+							return nil, fmt.Errorf("Unknown response parser %q", self.Parser)
 						}
 					} else {
-						switch self.OnError {
-						case ActionPrint:
-							return nil, fmt.Errorf("%v", string(data[:]))
-						case ActionIgnore:
-							return nil, nil
-						default:
-							return nil, fmt.Errorf("Request %s %v failed: %s",
-								bindingReq.Method,
-								bindingReq.URL,
-								res.Status)
-						}
+						return nil, nil
 					}
 				} else {
 					return nil, fmt.Errorf("Failed to read response body: %v", err)
