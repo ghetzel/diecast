@@ -42,6 +42,7 @@ use them.
 - [hasPrefix](#hasPrefix)
 - [hasSuffix](#hasSuffix)
 - [headers](#headers)
+- [hquery](#hquery)
 - [indexOf](#indexOf)
 - [ireverse](#ireverse)
 - [isArray](#isArray)
@@ -393,6 +394,14 @@ Return whether string *s* has the given *suffix*.
 headers(header string) string
 ```
 Return the value of the *header* HTTP request header from the request used to generate the current view.
+
+---
+
+<a name="hquery"></a>
+```go
+hquery(document any, string) (, error)
+```
+Queries a given HTML **document** (as returned by a Binding) and returns a list of Elements matching the given **selector**
 
 ---
 

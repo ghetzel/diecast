@@ -25,7 +25,7 @@ func doTestServerRequest(s *Server, method string, path string, tester func(*htt
 
 func TestStaticServer(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/hello`)
+	server := NewServer(`./tests/hello`)
 	mounts := getTestMounts(assert)
 
 	server.SetMounts(mounts)
@@ -77,7 +77,7 @@ func TestStaticServer(t *testing.T) {
 
 func TestStaticServerWithRoutePrefix(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/hello`)
+	server := NewServer(`./tests/hello`)
 	server.RoutePrefix = `/ui`
 	mounts := getTestMounts(assert)
 	server.SetMounts(mounts)
@@ -151,7 +151,7 @@ func TestStaticServerWithRoutePrefix(t *testing.T) {
 
 func TestStaticServerTemplateSomethingInMount(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/hello`, `*.txt`)
+	server := NewServer(`./tests/hello`, `*.txt`)
 	server.SetMounts(getTestMounts(assert))
 
 	assert.Nil(server.Initialize())
@@ -173,7 +173,7 @@ func TestStaticServerTemplateSomethingInMount(t *testing.T) {
 
 func TestStaticServerTemplateSomethingInMountWithRoutePrefix(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/hello`, `*.txt`)
+	server := NewServer(`./tests/hello`, `*.txt`)
 	server.RoutePrefix = `/ui`
 	server.SetMounts(getTestMounts(assert))
 
@@ -206,7 +206,7 @@ func TestStaticServerTemplateSomethingInMountWithRoutePrefix(t *testing.T) {
 
 func TestFilesInRootSubdirectories(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/test_root1`, `*.html`)
+	server := NewServer(`./tests/test_root1`, `*.html`)
 	assert.Nil(server.Initialize())
 
 	doTestServerRequest(server, `GET`, `/subdir1/`,
@@ -224,7 +224,7 @@ func TestFilesInRootSubdirectories(t *testing.T) {
 
 func TestFilesInMountSubdirectories(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/hello`, `*.html`, `*.txt`)
+	server := NewServer(`./tests/hello`, `*.html`, `*.txt`)
 	server.SetMounts(getTestMounts(assert))
 
 	assert.Nil(server.Initialize())
@@ -282,7 +282,7 @@ func TestFilesInMountSubdirectories(t *testing.T) {
 
 func TestLayoutsDisabled(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/layouts`, `*.html`)
+	server := NewServer(`./tests/layouts`, `*.html`)
 	server.EnableLayouts = false
 	mounts := getTestMounts(assert)
 	server.SetMounts(mounts[3:4])
@@ -302,7 +302,7 @@ func TestLayoutsDisabled(t *testing.T) {
 
 func TestLayoutsDefault(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/layouts`, `*.html`)
+	server := NewServer(`./tests/layouts`, `*.html`)
 	mounts := getTestMounts(assert)
 	server.SetMounts(mounts[3:4])
 
@@ -345,7 +345,7 @@ func TestLayoutsDefault(t *testing.T) {
 
 func TestIncludes(t *testing.T) {
 	assert := require.New(t)
-	server := NewServer(`./examples/layouts`, `*.html`)
+	server := NewServer(`./tests/layouts`, `*.html`)
 
 	assert.Nil(server.Initialize())
 

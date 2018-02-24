@@ -25,19 +25,19 @@ func (self TestFileSystem) Open(name string) (http.File, error) {
 func getTestMounts(tt *require.Assertions) []Mount {
 	mounts := []Mount{
 		&FileMount{
-			Path:       `./examples/external_path/js`,
+			Path:       `./tests/external_path/js`,
 			MountPoint: `/js`,
 		},
 		&FileMount{
-			Path:       `./examples/external_path/css`,
+			Path:       `./tests/external_path/css`,
 			MountPoint: `/css`,
 		},
 		&FileMount{
-			Path:       `./examples/external_path/testfiles`,
+			Path:       `./tests/external_path/testfiles`,
 			MountPoint: `/test`,
 		},
 		&FileMount{
-			Path:       `./examples/external_path/mounted-layouts`,
+			Path:       `./tests/external_path/mounted-layouts`,
 			MountPoint: `/layout-test`,
 		},
 		&FileMount{

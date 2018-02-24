@@ -1,0 +1,44 @@
+html, body {
+    margin:          0;
+    padding:         0;
+    height:          100vh;
+    width:           100vw;
+    background:      linear-gradient(to bottom, #f6e6b4 0%,#ed9017 100%);
+    background-attachment: fixed;
+    font-family:     'Helvetica', 'Arial', sans-serif;
+    overflow-x:      hidden;
+}
+
+.links {
+    background:      rgba(143, 77, 0, 0.45);
+    display:         flex;
+    flex-flow:       row wrap;
+    width:           100vw;
+    list-style-type: none;
+    margin:          0;
+    padding:         0;
+}
+
+.links > li {
+    margin:          1.5vw;
+    box-sizing:      border-box;
+}
+
+.links > li a {
+    background:      rgba(255, 255, 255, 0.25);
+    display:         flex;
+    justify-content: center;
+    align-items:     center;
+    width:           47vw;
+    height:          20vh;
+    font-size:       4vh;
+    border-radius:   2vmin;
+    text-decoration: none;
+    color:           black;
+    text-align:      center;
+    overflow:        hidden;
+}
+
+.links > li a:hover {
+    background:      rgba(255, 255, 255, 0.5);
+}

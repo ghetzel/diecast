@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -268,6 +269,9 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 									return nil, err
 								}
 							}
+
+						case `html`:
+							return goquery.NewDocumentFromReader(bytes.NewBuffer(data))
 
 						case `text`:
 							return string(data), nil

@@ -2,6 +2,18 @@
 
 
 [[projects]]
+  name = "github.com/PuerkitoBio/goquery"
+  packages = ["."]
+  revision = "09540e565986583836b5fc792fe951ec5fd201dd"
+  version = "v1.3.0"
+
+[[projects]]
+  name = "github.com/andybalholm/cascadia"
+  packages = ["."]
+  revision = "901648c87902174f774fac311d7f176f8647bdaa"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -28,8 +40,8 @@
 [[projects]]
   name = "github.com/ghetzel/go-stockutil"
   packages = ["httputil","maputil","pathutil","rxutil","sliceutil","stringutil","typeutil"]
-  revision = "b6b642bf70eba083e787a4db8d7c5cc9e8683538"
-  version = "1.1.1"
+  revision = "4254e0855011caf7a5a100b8aa17a299660650db"
+  version = "1.1.4"
 
 [[projects]]
   name = "github.com/ghetzel/uuid"
@@ -118,6 +130,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d7ccc49a68f54990895638c7306656e8df8f6f5b892bf1661bb3935b6c6fc3e0"
+  inputs-digest = "f69b142d3f8f4e5e5b1e81c2bfe79eb20b00bce681322c7a776cfeca3ae347a2"
   solver-name = "gps-cdcl"
   solver-version = 1

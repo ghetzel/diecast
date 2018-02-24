@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -153,9 +154,17 @@ func main() {
 	}
 
 	var docs functionDocSet
+	var standardFuncs = diecast.GetStandardFunctions()
 
-	if d, err := GenerateFunctionDocs(diecast.GetStandardFunctions(), `functions.go`); err == nil {
-		docs = append(docs, d...)
+	if funcFiles, err := filepath.Glob(`functions_defs_*.go`); err == nil {
+		for _, funcdefs := range funcFiles {
+			if d, err := GenerateFunctionDocs(standardFuncs, funcdefs); err == nil {
+				docs = append(docs, d...)
+			} else {
+				fmt.Printf("err: %v\n", err)
+				os.Exit(1)
+			}
+		}
 	} else {
 		fmt.Printf("err: %v\n", err)
 		os.Exit(1)
