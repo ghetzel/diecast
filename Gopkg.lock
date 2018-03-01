@@ -40,8 +40,8 @@
 [[projects]]
   name = "github.com/ghetzel/go-stockutil"
   packages = ["httputil","maputil","pathutil","rxutil","sliceutil","stringutil","typeutil"]
-  revision = "4254e0855011caf7a5a100b8aa17a299660650db"
-  version = "1.1.4"
+  revision = "a1fe9353bab8a77a939e3e47030e753409777bf8"
+  version = "1.2.0"
 
 [[projects]]
   name = "github.com/ghetzel/uuid"
@@ -117,6 +117,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/yosssi/gohtml"
+  packages = ["."]
+  revision = "97fbf36f4aa81f723d0530f5495a820ba267ae5f"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/net"
   packages = ["html","html/atom"]
   revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
@@ -130,6 +136,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f69b142d3f8f4e5e5b1e81c2bfe79eb20b00bce681322c7a776cfeca3ae347a2"
+  inputs-digest = "644c9d4a6d4abd133ced812da346db96562634e6da72967ecb27bab7b946cf06"
   solver-name = "gps-cdcl"
   solver-version = 1
