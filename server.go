@@ -336,7 +336,10 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 
 		tmpl.Funcs(funcs)
 		tmpl.SetHeaderOffset(headerOffset)
-		tmpl.SetPostProcessors(finalHeader.Postprocessors)
+
+		if err := tmpl.AddPostProcessors(finalHeader.Postprocessors...); err != nil {
+			return err
+		}
 
 		if err := tmpl.Parse(finalTemplate.String()); err == nil {
 			log.Debugf("Rendering %q as %v template (header offset by %d lines)", requestPath, tmpl.Engine(), headerOffset)

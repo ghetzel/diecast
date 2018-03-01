@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"path"
-	"regexp"
 	"strings"
 	text "text/template"
 
@@ -16,8 +15,6 @@ import (
 )
 
 type Engine int
-
-var rxEmptyLine = regexp.MustCompile(`(?m)^\s*$[\r\n]*|[\r\n]+\s+\z`)
 
 const (
 	TextEngine Engine = iota
@@ -50,7 +47,7 @@ type Template struct {
 	funcs          FuncMap
 	headerOffset   int64
 	contentOffset  int64
-	postprocessors []string
+	postprocessors []PostprocessorFunc
 }
 
 func GetEngineForFile(filename string) Engine {
@@ -73,8 +70,16 @@ func (self *Template) SetHeaderOffset(offset int) {
 	self.headerOffset = int64(offset)
 }
 
-func (self *Template) SetPostProcessors(postprocessors []string) {
-	self.postprocessors = postprocessors
+func (self *Template) AddPostProcessors(postprocessors ...string) error {
+	for _, name := range postprocessors {
+		if postprocessor, ok := registeredPostprocessors[name]; ok {
+			self.postprocessors = append(self.postprocessors, postprocessor)
+		} else {
+			return fmt.Errorf("No such postprocessor '%v'", name)
+		}
+	}
+
+	return nil
 }
 
 func (self *Template) SetEngine(engine Engine) {
@@ -222,10 +227,13 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 	if err == nil {
 		outstr := output.String()
 
-		for _, postprocessor := range self.postprocessors {
-			switch postprocessor {
-			case `trim-empty-lines`:
-				outstr = rxEmptyLine.ReplaceAllString(outstr, ``) + "\n"
+		for n, postprocessor := range self.postprocessors {
+			if out, err := postprocessor(outstr); err == nil {
+				outstr = out
+			} else {
+				return self.prepareError(
+					fmt.Errorf("Postprocessor %d: %v", n, err),
+				)
 			}
 		}
 
