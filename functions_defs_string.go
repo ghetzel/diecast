@@ -2,11 +2,14 @@ package diecast
 
 import (
 	"fmt"
+	htmlmain "html"
 	"regexp"
 	"strings"
 
+	"github.com/ghetzel/go-stockutil/rxutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
+	strip "github.com/grokify/html-strip-tags-go"
 )
 
 func loadStandardFunctionsString(rv FuncMap) {
@@ -141,5 +144,35 @@ func loadStandardFunctionsString(rv FuncMap) {
 		}
 
 		return stringutil.Thousandify(value, separator, decimal)
+	}
+
+	rv[`splitWords`] = func(in interface{}) []string {
+		return stringutil.SplitWords(fmt.Sprintf("%v", in))
+	}
+
+	rv[`elideWords`] = func(in interface{}, wordcount int) string {
+		return stringutil.ElideWords(fmt.Sprintf("%v", in), uint(wordcount))
+	}
+
+	// fn elide: Truncates the given *text* in a word-aware manner to the given number of characters.
+	rv[`elide`] = func(in interface{}, charcount int) string {
+		inS := fmt.Sprintf("%v", in)
+
+		if len(inS) > charcount {
+			inS = inS[0:charcount]
+		}
+
+		if match := rxutil.Match(`(\W*\s+[\w\.\(\)\[\]\{\}]{0,16})$`, inS); match != nil {
+			inS = match.ReplaceGroup(1, ``)
+		}
+
+		return inS
+	}
+
+	// fn stripHtml: strips HTML tags from the given *input* text, leaving the text content behind.
+	rv[`stripHtml`] = func(in interface{}) string {
+		stripped := strip.StripTags(fmt.Sprintf("%v", in))
+		stripped = htmlmain.UnescapeString(stripped)
+		return stripped
 	}
 }

@@ -218,4 +218,53 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 	rv[`stringify`] = func(slice interface{}) []string {
 		return sliceutil.Stringify(slice)
 	}
+
+	// fn groupBy: Return the given *input* array-of-objects as an object, keyed on the value of the
+	//             specified group *field*.  The field argument can be a template.
+	rv[`groupBy`] = func(sliceOfMaps interface{}, key string, valueTpls ...string) (map[string][]interface{}, error) {
+		if !typeutil.IsArray(sliceOfMaps) {
+			return nil, fmt.Errorf("groupBy only works on arrays of objects, got %T", sliceOfMaps)
+		}
+
+		output := make(map[string][]interface{})
+
+		if items := sliceutil.Sliceify(sliceOfMaps); len(items) > 0 {
+			if !typeutil.IsMap(items[0]) {
+				return nil, fmt.Errorf("groupBy only works on arrays of objects, got %T", items[0])
+			}
+
+			for _, item := range items {
+				value := maputil.DeepGet(item, strings.Split(key, `.`))
+
+				if len(valueTpls) > 0 && valueTpls[0] != `` {
+					if stringutil.IsSurroundedBy(valueTpls[0], `{{`, `}}`) {
+						tmpl := NewTemplate(`inline`, TextEngine)
+						tmpl.Funcs(rv)
+
+						if err := tmpl.Parse(valueTpls[0]); err == nil {
+							output := bytes.NewBuffer(nil)
+
+							if err := tmpl.Render(output, value, ``); err == nil {
+								value = stringutil.Autotype(output.String())
+							} else {
+								return nil, fmt.Errorf("Key Template failed: %v", err)
+							}
+						} else {
+							return nil, fmt.Errorf("Failed to parse Key template: %v", err)
+						}
+					}
+				}
+
+				valueS := fmt.Sprintf("%v", value)
+
+				if v, ok := output[valueS]; ok {
+					output[valueS] = append(v, item)
+				} else {
+					output[valueS] = []interface{}{item}
+				}
+			}
+		}
+
+		return output, nil
+	}
 }

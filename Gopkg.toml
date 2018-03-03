@@ -35,7 +35,7 @@
 
 [[constraint]]
   name = "github.com/ghetzel/go-stockutil"
-  branch = "master"
+  version = ">=1.2.2"
 
 [[constraint]]
   name = "github.com/ghodss/yaml"

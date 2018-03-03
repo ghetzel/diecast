@@ -40,8 +40,8 @@
 [[projects]]
   name = "github.com/ghetzel/go-stockutil"
   packages = ["httputil","maputil","pathutil","rxutil","sliceutil","stringutil","typeutil"]
-  revision = "a1fe9353bab8a77a939e3e47030e753409777bf8"
-  version = "1.2.0"
+  revision = "a903e8930afd6b8cb337ff6bfa5d769719639620"
+  version = "1.2.2"
 
 [[projects]]
   name = "github.com/ghetzel/uuid"
@@ -56,10 +56,22 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/grokify/html-strip-tags-go"
+  packages = ["."]
+  revision = "fda376fed04166f97c4d8a367ad6f44f4136787e"
+
+[[projects]]
   name = "github.com/jbenet/go-base58"
   packages = ["."]
   revision = "6237cf65f3a6f7111cd8a42be3590df99a66bc7d"
   version = "1.0.0"
+
+[[projects]]
+  name = "github.com/jdkato/prose"
+  packages = ["internal/util","tokenize"]
+  revision = "20d3663d4bc9dd10d75abcde9d92e04b4861c674"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/julienschmidt/httprouter"
@@ -128,6 +140,12 @@
   revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
 
 [[projects]]
+  name = "gopkg.in/neurosnap/sentences.v1"
+  packages = [".","data"]
+  revision = "a7f18ead1433a139742a8b42ce7a059cfb484d60"
+  version = "v1.0.6"
+
+[[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -136,6 +154,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "644c9d4a6d4abd133ced812da346db96562634e6da72967ecb27bab7b946cf06"
+  inputs-digest = "097a65bef379a53e50d576cecba1120224282ece6084fd1e7a24a051603901c2"
   solver-name = "gps-cdcl"
   solver-version = 1

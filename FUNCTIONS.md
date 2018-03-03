@@ -29,6 +29,7 @@ use them.
 - [dirname](#dirname)
 - [divide](#divide)
 - [duration](#duration)
+- [elide](#elide)
 - [eqx](#eqx)
 - [extname](#extname)
 - [filter](#filter)
@@ -38,6 +39,7 @@ use them.
 - [firstByKey](#firstByKey)
 - [flatten](#flatten)
 - [get](#get)
+- [groupBy](#groupBy)
 - [has](#has)
 - [hasPrefix](#hasPrefix)
 - [hasSuffix](#hasSuffix)
@@ -91,6 +93,7 @@ use them.
 - [split](#split)
 - [strcount](#strcount)
 - [stringify](#stringify)
+- [stripHtml](#stripHtml)
 - [subtract](#subtract)
 - [surroundedBy](#surroundedBy)
 - [thousandify](#thousandify)
@@ -293,6 +296,14 @@ Convert the given *value* from a duration of *unit* into the given time *format*
 
 ---
 
+<a name="elide"></a>
+```go
+elide(text any, int) string
+```
+Truncates the given *text* in a word-aware manner to the given number of characters.
+
+---
+
 <a name="eqx"></a>
 ```go
 eqx(eq any, any) (bool, error)
@@ -362,6 +373,14 @@ Return an array of values with all nested subarrays merged into a single level.
 get(any, string, ...any)
 ```
 Get a key from a map.
+
+---
+
+<a name="groupBy"></a>
+```go
+groupBy(input any, string, ...any) (, error)
+```
+Return the given *input* array-of-objects as an object, keyed on the value of the specified group *field*.  The field argument can be a template.
 
 ---
 
@@ -786,6 +805,14 @@ Count *s* for the number of non-overlapping instances of *substr*.
 stringify(input any)
 ```
 Return the given *input* array with all values converted to strings.
+
+---
+
+<a name="stripHtml"></a>
+```go
+stripHtml(input any) string
+```
+strips HTML tags from the given *input* text, leaving the text content behind.
 
 ---
 
