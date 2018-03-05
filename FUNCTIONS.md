@@ -21,10 +21,14 @@ use them.
 - [base64](#base64)
 - [basename](#basename)
 - [camelize](#camelize)
+- [colorToHSL](#colorToHSL)
+- [colorToHex](#colorToHex)
+- [colorToRGB](#colorToRGB)
 - [compact](#compact)
 - [contains](#contains)
 - [count](#count)
 - [csv](#csv)
+- [darken](#darken)
 - [dir](#dir)
 - [dirname](#dirname)
 - [divide](#divide)
@@ -59,6 +63,7 @@ use them.
 - [jsonify](#jsonify)
 - [last](#last)
 - [leastcommon](#leastcommon)
+- [lighten](#lighten)
 - [lower](#lower)
 - [ltrim](#ltrim)
 - [markdown](#markdown)
@@ -83,6 +88,7 @@ use them.
 - [querystrings](#querystrings)
 - [random](#random)
 - [replace](#replace)
+- [reverse](#reverse)
 - [reverse](#reverse)
 - [rtrim](#rtrim)
 - [rxreplace](#rxreplace)
@@ -232,6 +238,30 @@ Return a copy of *s* transformed into CamelCase.
 
 ---
 
+<a name="colorToHSL"></a>
+```go
+colorToHSL(any) (string, error)
+```
+Convert the given color to an "hsl()" or "hsla()" color specification.
+
+---
+
+<a name="colorToHex"></a>
+```go
+colorToHex(any) (string, error)
+```
+Convert the given color to a "#RRGGBB" or "#RRGGBBAA" color specification.
+
+---
+
+<a name="colorToRGB"></a>
+```go
+colorToRGB(any) (string, error)
+```
+Convert the given color to an "rgb()" or "rgba()" color specification.
+
+---
+
 <a name="compact"></a>
 ```go
 compact(input any)
@@ -261,6 +291,14 @@ A type-relaxed version of **len**.
 csv(values any, any) (string, error)
 ```
 Render the given *values* as a line suitable for inclusion in a common-separated values file.
+
+---
+
+<a name="darken"></a>
+```go
+darken(any, float64) (string, error)
+```
+Darken the given color by a percent.
 
 ---
 
@@ -536,6 +574,14 @@ Return element in the *input* array that appears the least frequently.
 
 ---
 
+<a name="lighten"></a>
+```go
+lighten(any, float64) (string, error)
+```
+Lighten the given color by a percent.
+
+---
+
 <a name="lower"></a>
 ```go
 lower(s string) string
@@ -725,6 +771,14 @@ Return a random array of *n* bytes. The random source used is suitable for crypt
 replace(s string, old string, new string, n int) string
 ```
 Return a copy of *s* with occurrences of *old* replaced with *new*, up to *n* times.
+
+---
+
+<a name="reverse"></a>
+```go
+reverse(array any, ...any)
+```
+Return the given *array* in reverse order.
 
 ---
 

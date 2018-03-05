@@ -1,0 +1,107 @@
+---
+page:
+    base_color: '{{ qs `base` `#FF0000` }}'
+    steps:      6
+    colors:
+    - '#FF0000'
+    - '#FFA500'
+    - '#FFFF00'
+    - '#00FF00'
+    - '#0000FF'
+    - '#4B0082'
+    - '#EE82EE'
+---
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Color Utilities</title>
+    <style type="text/css">
+        html, body, ul {
+            margin:   0;
+            padding:  0;
+            width:    100vw;
+            height:   100vh;
+            font-family: monospace;
+            font-size:   110%;
+        }
+
+        ul {
+            list-style-type: none;
+            display:         flex;
+            flex-flow:       column nowrap;
+            align-items:     stretch;
+            justify-content: center;
+        }
+
+        ul > li {
+            display:         flex;
+            flex-direction:  row;
+            flex:            1;
+            align-items:     center;
+            justify-content: center;
+            padding:         1vh 2vw;
+        }
+
+        ul > li > * {
+            color:           white;
+            flex:            1;
+            display:         block;
+        }
+
+        ul > li > *:last-child {
+            text-align:      right;
+        }
+
+        .color-selector {
+            align-items:     stretch;
+            justify-content: center;
+            padding:         0;
+        }
+
+        .color-selector a {
+            flex:            1;
+            text-align:      center !important;
+            text-decoration: none;
+            cursor:          pointer;
+        }
+    </style>
+</head>
+<body>
+    <ul>
+        <li class="color-selector">
+            <a
+                style="background-color: {{ colorToHex $.page.base_color }};"
+                 href="/?base={{ colorToHex $.page.base_color }}"
+            >(current)</a>
+
+            {{ range $i, $color := $.page.colors }}
+            <a
+                style="background-color: {{ colorToHex $color }};"
+                 href="/?base={{ colorToHex $color }}"
+            >{{ colorToHex $color }}</a>
+            {{ end }}
+        </li>
+
+        {{ range $i, $p := (reverse (sequence $.page.steps)) }}
+        {{   $percent := multiply 5 (add $p 1) }}
+        <li style="background-color: {{ darken $.page.base_color $percent }};">
+            <div>{{ darken $.page.base_color $percent }}</div>
+            <div>Darker: {{ $percent }}%</div>
+        </li>
+        {{ end }}
+
+        <li style="background-color: {{ colorToHex $.page.base_color }};">
+            <div>{{ colorToHex $.page.base_color }}</div>
+            <div>Base: 0%</div>
+        </li>
+
+        {{ range $i, $p := sequence $.page.steps }}
+        {{   $percent := multiply 5 (add $p 1) }}
+        <li style="background-color: {{ lighten $.page.base_color $percent }};">
+            <div>{{ lighten $.page.base_color $percent }}</div>
+            <div>Lighter: {{ $percent }}%</div>
+        </li>
+        {{ end }}
+    </ul>
+</body>
+</html>

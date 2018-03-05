@@ -12,6 +12,18 @@ import (
 )
 
 func loadStandardFunctionsCollections(rv FuncMap) {
+	// fn reverse: Return the given *array* in reverse order.
+	rv[`reverse`] = func(input interface{}) []interface{} {
+		array := sliceutil.Sliceify(input)
+		output := make([]interface{}, len(array))
+
+		for i := 0; i < len(array); i++ {
+			output[len(array)-1-i] = array[i]
+		}
+
+		return output
+	}
+
 	// fn filter: Return the given *input* array with only elements where *expression* evaluates to
 	//            a truthy value.
 	rv[`filter`] = func(input interface{}, expr string) ([]interface{}, error) {

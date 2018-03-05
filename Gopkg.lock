@@ -39,9 +39,9 @@
 
 [[projects]]
   name = "github.com/ghetzel/go-stockutil"
-  packages = ["httputil","maputil","pathutil","rxutil","sliceutil","stringutil","typeutil"]
-  revision = "a903e8930afd6b8cb337ff6bfa5d769719639620"
-  version = "1.2.2"
+  packages = ["colorutil","httputil","maputil","mathutil","pathutil","rxutil","sliceutil","stringutil","typeutil"]
+  revision = "05231c249040bdb49af5506692121472dd9db6e3"
+  version = "1.2.3"
 
 [[projects]]
   name = "github.com/ghetzel/uuid"
@@ -154,6 +154,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "097a65bef379a53e50d576cecba1120224282ece6084fd1e7a24a051603901c2"
+  inputs-digest = "5d3ba85c99f63f5875c615100046f9cbd47720bc86afe2c290fca91317f9a320"
   solver-name = "gps-cdcl"
   solver-version = 1

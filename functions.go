@@ -72,6 +72,9 @@ func GetStandardFunctions() FuncMap {
 	// Web Scraping
 	loadStandardFunctionsWebScraping(rv)
 
+	// Colors
+	loadStandardFunctionsColor(rv)
+
 	// Miscellaneous
 	loadStandardFunctionsMisc(rv)
 
