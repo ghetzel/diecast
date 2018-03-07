@@ -451,7 +451,7 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 
 		switch len(vI) {
 		case 0:
-			break
+			value = nil
 		case 1:
 			value = vI[0]
 		default:
@@ -459,6 +459,24 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 		}
 
 		maputil.DeepSet(data, []string{`vars`, name}, value)
+		return ``
+	}
+
+	// fn set: Treat the runtime variable *name* as a map, setting *key* to *value*.
+	funcs[`set`] = func(name string, key string, vI ...interface{}) interface{} {
+		var value interface{}
+		path := []string{`vars`, name}
+
+		switch len(vI) {
+		case 0:
+			value = make(map[string]interface{})
+		case 1:
+			value = vI[0]
+		default:
+			value = vI
+		}
+
+		maputil.DeepSet(data, append(path, strings.Split(key, `.`)...), value)
 		return ``
 	}
 

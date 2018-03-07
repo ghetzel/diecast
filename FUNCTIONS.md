@@ -61,6 +61,7 @@ use them.
 - [isort](#isort)
 - [join](#join)
 - [jsonify](#jsonify)
+- [keys](#keys)
 - [last](#last)
 - [leastcommon](#leastcommon)
 - [lighten](#lighten)
@@ -94,6 +95,7 @@ use them.
 - [rxreplace](#rxreplace)
 - [sanitize](#sanitize)
 - [sequence](#sequence)
+- [set](#set)
 - [since](#since)
 - [sort](#sort)
 - [split](#split)
@@ -113,6 +115,7 @@ use them.
 - [upper](#upper)
 - [uuid](#uuid)
 - [uuidRaw](#uuidRaw)
+- [values](#values)
 - [var](#var)
 ## Function Usage
 
@@ -558,6 +561,14 @@ Encode the given *value* as a JSON string, optionally using *indent* to pretty f
 
 ---
 
+<a name="keys"></a>
+```go
+keys(input any)
+```
+Given an *input* map, return all of the keys.
+
+---
+
 <a name="last"></a>
 ```go
 last(input any) (, error)
@@ -822,6 +833,14 @@ Return an array of integers representing a sequence from [0, *n*).
 
 ---
 
+<a name="set"></a>
+```go
+set(name string, key string, value ...any)
+```
+Treat the runtime variable *name* as a map, setting *key* to *value*.
+
+---
+
 <a name="since"></a>
 ```go
 since(time any, ...any) (Duration, error)
@@ -971,6 +990,14 @@ Generate a new Version 4 UUID.
 uuidRaw()
 ```
 Generate the raw bytes of a new Version 4 UUID.
+
+---
+
+<a name="values"></a>
+```go
+values(input any)
+```
+Given an *input* map, return all of the values.
 
 ---
 

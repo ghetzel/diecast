@@ -82,6 +82,16 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 		return maputil.Pluck(input, strings.Split(key, `.`))
 	}
 
+	// fn keys: Given an *input* map, return all of the keys.
+	rv[`keys`] = func(input interface{}) []interface{} {
+		return maputil.Keys(input)
+	}
+
+	// fn values: Given an *input* map, return all of the values.
+	rv[`values`] = func(input interface{}) []interface{} {
+		return maputil.MapValues(input)
+	}
+
 	// fn get: Get a key from a map.
 	rv[`get`] = func(input interface{}, key string, fallback ...interface{}) interface{} {
 		var fb interface{}
