@@ -188,7 +188,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 						return nil
 					}); err == nil {
-						log.Debugf("  binding %q: bodyparam %#+v", self.Name, bodyParams)
+						log.Debugf("  binding %q: bodyparam %#v", self.Name, bodyParams)
 					} else {
 						return nil, err
 					}
@@ -202,6 +202,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						}
 
 						bindingReq.Body = ioutil.NopCloser(&body)
+						bindingReq.Header.Set(`Content-Type`, `application/json`)
 
 					default:
 						return nil, fmt.Errorf("Unknown request formatter %q", self.Formatter)
