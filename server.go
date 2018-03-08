@@ -533,7 +533,7 @@ func (self *Server) ToTemplateName(requestPath string) string {
 func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}, error) {
 	data := requestToEvalData(req, header)
 
-	data[`vars`] = map[string]interface{}{}
+	data[`vars`] = make(map[string]interface{})
 
 	data[`diecast`] = map[string]interface{}{
 		`binding_prefix`:    self.BindingPrefix,
@@ -544,11 +544,41 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		`verify_file`:       self.VerifyFile,
 	}
 
-	bindings := make(map[string]interface{})
-	bindingsToEval := make([]Binding, 0)
-
 	// these are the functions that will be available to every part of the rendering process
 	funcs := self.GetTemplateFunctions(data)
+
+	// Evaluate "page" data: this data is templatized, but does not have access
+	//                       to the output of bindings
+	// ---------------------------------------------------------------------------------------------
+	if header != nil {
+		pageData := make(map[string]interface{})
+
+		maputil.Walk(header.Page, func(value interface{}, path []string, isLeaf bool) error {
+
+			if isLeaf {
+				switch value.(type) {
+				case string:
+					value = EvalInline(value.(string), data, funcs)
+					value = stringutil.Autotype(value)
+				}
+
+				maputil.DeepSet(pageData, path, value)
+			}
+
+			return nil
+		})
+
+		data[`page`] = pageData
+	} else {
+		data[`page`] = make(map[string]interface{})
+	}
+
+	// Evaluate "bindings": Bindings have access to $.page, and each subsequent binding has access
+	//                      to all binding output that preceded it.  This allows bindings to be
+	//                      pipelined, using the output of one request as the input of the next.
+	// ---------------------------------------------------------------------------------------------
+	bindings := make(map[string]interface{})
+	bindingsToEval := make([]Binding, 0)
 
 	bindingsToEval = append(bindingsToEval, self.Bindings...)
 
@@ -617,6 +647,8 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 
 	data[`bindings`] = bindings
 
+	// Evaluate "flags" data: this data is templatized, and has access to $.page and $.bindings
+	// ---------------------------------------------------------------------------------------------
 	if header != nil {
 		flags := make(map[string]bool)
 
@@ -639,25 +671,6 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		}
 
 		data[`flags`] = flags
-
-		pageData := make(map[string]interface{})
-
-		maputil.Walk(header.Page, func(value interface{}, path []string, isLeaf bool) error {
-
-			if isLeaf {
-				switch value.(type) {
-				case string:
-					value = EvalInline(value.(string), data, funcs)
-					value = stringutil.Autotype(value)
-				}
-
-				maputil.DeepSet(pageData, path, value)
-			}
-
-			return nil
-		})
-
-		data[`page`] = pageData
 	}
 
 	return funcs, data, nil
