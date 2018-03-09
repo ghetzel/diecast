@@ -713,6 +713,7 @@ PathLoop:
 		//
 		rPath = strings.TrimPrefix(rPath, self.RoutePrefix)
 		var file http.File
+		var statusCode int
 		var mimeType string
 		var message string
 		var redirectTo string
@@ -733,6 +734,7 @@ PathLoop:
 			} else if mnt, response, err := self.tryMounts(rPath, req); err == nil {
 				file = response.GetFile()
 				mimeType = response.ContentType
+				statusCode = response.StatusCode
 				headers = response.Metadata
 				redirectTo = response.RedirectTo
 				redirectCode = response.RedirectCode
@@ -745,6 +747,7 @@ PathLoop:
 			if mnt, response, err := self.tryMounts(rPath, req); err == nil && response != nil {
 				file = response.GetFile()
 				mimeType = response.ContentType
+				statusCode = response.StatusCode
 				headers = response.Metadata
 				redirectTo = response.RedirectTo
 				redirectCode = response.RedirectCode
@@ -776,7 +779,7 @@ PathLoop:
 				urlParams[`id`] = strings.Trim(path.Base(req.URL.Path), `/`)
 			}
 
-			if handled := self.respondToFile(rPath, mimeType, file, headers, urlParams, w, req); handled {
+			if handled := self.respondToFile(rPath, mimeType, file, statusCode, headers, urlParams, w, req); handled {
 				log.Debug(message)
 				return
 			}
@@ -849,7 +852,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 	return nil, nil, fmt.Errorf("%q not found", requestPath)
 }
 
-func (self *Server) respondToFile(requestPath string, mimeType string, file http.File, headers map[string]interface{}, urlParams map[string]interface{}, w http.ResponseWriter, req *http.Request) bool {
+func (self *Server) respondToFile(requestPath string, mimeType string, file http.File, statusCode int, headers map[string]interface{}, urlParams map[string]interface{}, w http.ResponseWriter, req *http.Request) bool {
 	// add in any metadata as response headers
 	for k, v := range headers {
 		w.Header().Set(k, fmt.Sprintf("%v", v))
@@ -857,6 +860,11 @@ func (self *Server) respondToFile(requestPath string, mimeType string, file http
 
 	if mimeType == `` {
 		mimeType = `application/octet-stream`
+	}
+
+	// write out the HTTP status if we were given one
+	if statusCode > 0 {
+		w.WriteHeader(statusCode)
 	}
 
 	// we got a real actual file here, figure out if we're templating it or not

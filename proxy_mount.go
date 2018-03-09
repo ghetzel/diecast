@@ -143,6 +143,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 				if data, err := ioutil.ReadAll(response.Body); err == nil {
 					payload := bytes.NewReader(data)
 					mountResponse := NewMountResponse(name, payload.Size(), payload)
+					mountResponse.StatusCode = response.StatusCode
 					mountResponse.ContentType = response.Header.Get(`Content-Type`)
 
 					for k, v := range response.Header {
