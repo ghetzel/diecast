@@ -270,6 +270,58 @@ func filterByKey(funcs FuncMap, input interface{}, key string, exprs ...interfac
 	return out, nil
 }
 
+func uniqByKey(funcs FuncMap, input interface{}, key string, saveLast bool, exprs ...interface{}) ([]interface{}, error) {
+	out := make([]interface{}, 0)
+	expr := sliceutil.First(exprs)
+	exprStr := fmt.Sprintf("%v", expr)
+	valuesEncountered := make(map[string]int)
+
+	for i, submap := range sliceutil.Sliceify(input) {
+		if typeutil.IsMap(submap) {
+			if item := maputil.DeepGet(submap, strings.Split(key, `.`)); item != nil {
+				var valkey string
+
+				if stringutil.IsSurroundedBy(exprStr, `{{`, `}}`) {
+					tmpl := NewTemplate(`inline`, TextEngine)
+					tmpl.Funcs(funcs)
+
+					if err := tmpl.Parse(exprStr); err == nil {
+						output := bytes.NewBuffer(nil)
+
+						if err := tmpl.Render(output, item, ``); err == nil {
+							valkey = output.String()
+						} else {
+							return nil, fmt.Errorf("item %d: %v", i, err)
+						}
+					} else {
+						return nil, fmt.Errorf("failed to parse template: %v", err)
+					}
+				} else {
+					valkey = fmt.Sprintf("%v", item)
+				}
+
+				// if we're saving the last value, then always overwrite; otherwise, only
+				// mark this item for inclusion in the output if nothing else has been in this
+				// spot before
+				if _, ok := valuesEncountered[valkey]; saveLast || !ok {
+					valuesEncountered[valkey] = i
+				}
+			}
+		}
+	}
+
+	// put only the unique values into the output
+	for i, submap := range sliceutil.Sliceify(input) {
+		for _, vi := range valuesEncountered {
+			if i == vi {
+				out = append(out, submap)
+			}
+		}
+	}
+
+	return out, nil
+}
+
 func sorter(input interface{}, reverse bool, keys ...string) []interface{} {
 	out := sliceutil.Sliceify(input)
 

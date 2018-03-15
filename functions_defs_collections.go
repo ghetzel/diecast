@@ -77,6 +77,20 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 		}
 	}
 
+	// fn uniqByKey: Return a subset of the elements in the *input* array whose map values
+	//               are unique for all values of *key*, preserving the first duplicate value.
+	//               Values are optionally preprocessed using *expression*.
+	rv[`uniqByKey`] = func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
+		return uniqByKey(rv, input, key, false, exprs...)
+	}
+
+	// fn uniqByKeyLast: Return a subset of the elements in the *input* array whose map values
+	//                   are unique for all values of *key*, preserving the last duplicate value.
+	//                   Values are optionally preprocessed using *expression*.
+	rv[`uniqByKeyLast`] = func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
+		return uniqByKey(rv, input, key, true, exprs...)
+	}
+
 	// fn pluck: Given an *input* array of maps, retrieve the values of *key* from all elements.
 	rv[`pluck`] = func(input interface{}, key string) []interface{} {
 		return maputil.Pluck(input, strings.Split(key, `.`))

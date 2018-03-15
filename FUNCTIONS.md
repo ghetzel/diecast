@@ -111,6 +111,8 @@ use them.
 - [tsv](#tsv)
 - [underscore](#underscore)
 - [uniq](#uniq)
+- [uniqByKey](#uniqByKey)
+- [uniqByKeyLast](#uniqByKeyLast)
 - [unsafe](#unsafe)
 - [upper](#upper)
 - [uuid](#uuid)
@@ -787,17 +789,17 @@ Return a copy of *s* with occurrences of *old* replaced with *new*, up to *n* ti
 
 <a name="reverse"></a>
 ```go
-reverse(array any, ...any)
+reverse(input any, ...any)
 ```
-Return the given *array* in reverse order.
+Return the *input* array sorted in lexical descending order.
 
 ---
 
 <a name="reverse"></a>
 ```go
-reverse(input any, ...any)
+reverse(array any, ...any)
 ```
-Return the *input* array sorted in lexical descending order.
+Return the given *array* in reverse order.
 
 ---
 
@@ -958,6 +960,22 @@ Return a copy of *s* transformed into snake_case.
 uniq(input any)
 ```
 Return an array of unique values from the given *input* array.
+
+---
+
+<a name="uniqByKey"></a>
+```go
+uniqByKey(input any, string, ...any) (, error)
+```
+Return a subset of the elements in the *input* array whose map values are unique for all values of *key*, preserving the first duplicate value. Values are optionally preprocessed using *expression*.
+
+---
+
+<a name="uniqByKeyLast"></a>
+```go
+uniqByKeyLast(input any, string, ...any) (, error)
+```
+Return a subset of the elements in the *input* array whose map values are unique for all values of *key*, preserving the last duplicate value. Values are optionally preprocessed using *expression*.
 
 ---
 
