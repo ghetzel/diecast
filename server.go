@@ -40,6 +40,12 @@ var DefaultIndexFile = `index.html`
 var DefaultVerifyFile = `/` + DefaultIndexFile
 var DefaultTemplatePatterns = []string{`*.html`}
 
+type RedirectTo string
+
+func (self RedirectTo) Error() string {
+	return string(self)
+}
+
 type Server struct {
 	Address             string           `json:"address"`
 	Bindings            []Binding        `json:"bindings"`
@@ -381,6 +387,10 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 		} else {
 			return err
 		}
+	} else if redir, ok := err.(RedirectTo); ok {
+		log.Infof("Performing 307 Temporary Redirect to %v due to binding response handler.", redir)
+		http.Redirect(w, req, redir.Error(), http.StatusTemporaryRedirect)
+		return nil
 	} else {
 		return err
 	}
@@ -596,6 +606,8 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			if v, err := binding.Evaluate(req, header, data, funcs); err == nil && v != nil {
 				bindings[binding.Name] = v
 				data[`bindings`] = bindings
+			} else if redir, ok := err.(RedirectTo); ok {
+				return funcs, nil, redir
 			} else {
 				log.Warningf("Binding %q failed: %v", binding.Name, err)
 
@@ -628,6 +640,8 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 					results = append(results, v)
 					bindings[binding.Name] = results
 					data[`bindings`] = bindings
+				} else if redir, ok := err.(RedirectTo); ok {
+					return funcs, nil, redir
 				} else {
 					log.Warningf("Binding %q (iteration %d) failed: %v", binding.Name, i, err)
 

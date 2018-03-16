@@ -36,25 +36,26 @@ var BindingClient = http.DefaultClient
 var DefaultParamJoiner = `;`
 
 type Binding struct {
-	Name               string                 `json:"name"`
-	Restrict           []string               `json:"restrict"`
-	OnlyIfExpr         string                 `json:"only_if"`
-	NotIfExpr          string                 `json:"not_if"`
-	Method             string                 `json:"method"`
-	Resource           string                 `json:"resource"`
-	ParamJoiner        string                 `json:"param_joiner"`
-	Params             map[string]interface{} `json:"params"`
-	Headers            map[string]string      `json:"headers"`
-	BodyParams         map[string]interface{} `json:"body"`
-	RawBody            string                 `json:"rawbody"`
-	Formatter          string                 `json:"formatter"`
-	Parser             string                 `json:"parser"`
-	NoTemplate         bool                   `json:"no_template"`
-	Optional           bool                   `json:"optional"`
-	Fallback           interface{}            `json:"fallback"`
-	OnError            BindingErrorAction     `json:"on_error"`
-	Repeat             string                 `json:"repeat"`
-	SkipInheritHeaders bool                   `json:"skip_inherit_headers"`
+	Name               string                     `json:"name"`
+	Restrict           []string                   `json:"restrict"`
+	OnlyIfExpr         string                     `json:"only_if"`
+	NotIfExpr          string                     `json:"not_if"`
+	Method             string                     `json:"method"`
+	Resource           string                     `json:"resource"`
+	ParamJoiner        string                     `json:"param_joiner"`
+	Params             map[string]interface{}     `json:"params"`
+	Headers            map[string]string          `json:"headers"`
+	BodyParams         map[string]interface{}     `json:"body"`
+	RawBody            string                     `json:"rawbody"`
+	Formatter          string                     `json:"formatter"`
+	Parser             string                     `json:"parser"`
+	NoTemplate         bool                       `json:"no_template"`
+	Optional           bool                       `json:"optional"`
+	Fallback           interface{}                `json:"fallback"`
+	OnError            BindingErrorAction         `json:"on_error"`
+	IfStatus           map[int]BindingErrorAction `json:"if_status"`
+	Repeat             string                     `json:"repeat"`
+	SkipInheritHeaders bool                       `json:"skip_inherit_headers"`
 	server             *Server
 }
 
@@ -123,9 +124,12 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 	if reqUrl, err := url.Parse(self.Resource); err == nil {
 		if bindingReq, err := http.NewRequest(method, reqUrl.String(), nil); err == nil {
+
+			// build request querystring
+			// -------------------------------------------------------------------------------------
+
 			// eval and add query string parameters to request
 			qs := bindingReq.URL.Query()
-
 			for k, v := range self.Params {
 				var vS string
 
@@ -151,6 +155,80 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 			bindingReq.URL.RawQuery = qs.Encode()
 
+			// build request body
+			// -------------------------------------------------------------------------------------
+			// binding body content can be specified either as key-value pairs encoded using a
+			// set of pre-defined encoders, or as a raw string (Content-Type can be explicitly set
+			// via Headers).
+			//
+			var body bytes.Buffer
+
+			if self.BodyParams != nil {
+				bodyParams := make(map[string]interface{})
+
+				if len(self.BodyParams) > 0 {
+					// evaluate each body param value as a template (unless explicitly told not to)
+					if err := maputil.Walk(self.BodyParams, func(value interface{}, path []string, isLeaf bool) error {
+						if isLeaf {
+							if !self.NoTemplate {
+								value = EvalInline(fmt.Sprintf("%v", value), data, funcs)
+							}
+
+							maputil.DeepSet(bodyParams, path, stringutil.Autotype(value))
+						}
+
+						return nil
+					}); err == nil {
+						log.Debugf("  binding %q: bodyparam %#v", self.Name, bodyParams)
+					} else {
+						return nil, err
+					}
+				}
+
+				// perform encoding of body data
+				if len(bodyParams) > 0 {
+					switch self.Formatter {
+					case `json`, ``:
+						// JSON-encode params into the body buffer
+						if err := json.NewEncoder(&body).Encode(&bodyParams); err != nil {
+							return nil, err
+						}
+
+						// set body and content type
+						bindingReq.Body = ioutil.NopCloser(&body)
+						bindingReq.Header.Set(`Content-Type`, `application/json`)
+
+					case `form`:
+						form := url.Values{}
+
+						// add params to form values
+						for k, v := range bodyParams {
+							form.Add(k, fmt.Sprintf("%v", v))
+						}
+
+						// write encoded form values to body buffer
+						if _, err := body.WriteString(form.Encode()); err != nil {
+							return nil, err
+						}
+
+						// set body and content type
+						bindingReq.Body = ioutil.NopCloser(&body)
+						bindingReq.Header.Set(`Content-Type`, `application/x-www-form-urlencoded`)
+
+					default:
+						return nil, fmt.Errorf("Unknown request formatter %q", self.Formatter)
+					}
+				}
+			} else if self.RawBody != `` {
+				payload := EvalInline(self.RawBody, data, funcs)
+				log.Debugf("  binding %q: rawbody %s", self.Name, payload)
+
+				bindingReq.Body = ioutil.NopCloser(bytes.NewBufferString(payload))
+			}
+
+			// build request headers
+			// -------------------------------------------------------------------------------------
+
 			// if specified, have the binding request inherit the headers from the initiating request
 			if !self.SkipInheritHeaders {
 				for k, _ := range req.Header {
@@ -170,59 +248,40 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				bindingReq.Header.Set(k, v)
 			}
 
-			// add body to request
-			var body bytes.Buffer
-
-			if self.BodyParams != nil {
-				bodyParams := make(map[string]interface{})
-
-				if len(self.BodyParams) > 0 {
-					if err := maputil.Walk(self.BodyParams, func(value interface{}, path []string, isLeaf bool) error {
-						if isLeaf {
-							if !self.NoTemplate {
-								value = EvalInline(fmt.Sprintf("%v", value), data, funcs)
-							}
-
-							maputil.DeepSet(bodyParams, path, stringutil.Autotype(value))
-						}
-
-						return nil
-					}); err == nil {
-						log.Debugf("  binding %q: bodyparam %#v", self.Name, bodyParams)
-					} else {
-						return nil, err
-					}
-				}
-
-				if len(bodyParams) > 0 {
-					switch self.Formatter {
-					case `json`, ``:
-						if err := json.NewEncoder(&body).Encode(&bodyParams); err != nil {
-							return nil, err
-						}
-
-						bindingReq.Body = ioutil.NopCloser(&body)
-						bindingReq.Header.Set(`Content-Type`, `application/json`)
-
-					default:
-						return nil, fmt.Errorf("Unknown request formatter %q", self.Formatter)
-					}
-				}
-			} else if self.RawBody != `` {
-				payload := EvalInline(self.RawBody, data, funcs)
-				log.Debugf("  binding %q: rawbody %s", self.Name, payload)
-
-				bindingReq.Body = ioutil.NopCloser(bytes.NewBufferString(payload))
-			}
-
 			bindingReq.Header.Set(`X-Diecast-Binding`, self.Name)
 
 			log.Infof("Binding: > %s %+v ? %s", strings.ToUpper(sliceutil.OrString(method, `get`)), reqUrl.String(), reqUrl.RawQuery)
 
+			// perform binding request
+			// -------------------------------------------------------------------------------------
 			if res, err := BindingClient.Do(bindingReq); err == nil {
 				log.Infof("Binding: < HTTP %d (body: %d bytes)", res.StatusCode, res.ContentLength)
+
+				// debug log response headers
 				for k, v := range res.Header {
 					log.Debugf("  %v=%v", k, strings.Join(v, ` `))
+				}
+
+				onError := self.OnError
+
+				// handle per-http-status response handlers
+				if len(self.IfStatus) > 0 {
+					// get the action for this code
+					if statusAction, ok := self.IfStatus[res.StatusCode]; ok {
+						switch statusAction {
+						case ActionIgnore:
+							onError = ActionIgnore
+						default:
+							redirect := string(statusAction)
+
+							// if a url or path was specified, redirect the parent request to it
+							if strings.HasPrefix(redirect, `http`) || strings.HasPrefix(redirect, `/`) {
+								return nil, RedirectTo(redirect)
+							} else {
+								return nil, fmt.Errorf("Invalid status action '%v'", redirect)
+							}
+						}
+					}
 				}
 
 				var reader io.ReadCloser
@@ -237,16 +296,25 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 				if data, err := ioutil.ReadAll(reader); err == nil {
 					if res.StatusCode >= 400 {
-						switch self.OnError {
+						switch onError {
 						case ActionPrint:
 							return nil, fmt.Errorf("%v", string(data[:]))
 						case ActionIgnore:
 							break
 						default:
-							return nil, fmt.Errorf("Request %s %v failed: %s",
-								bindingReq.Method,
-								bindingReq.URL,
-								res.Status)
+							redirect := string(onError)
+
+							// if a url or path was specified, redirect the parent request to it
+							if strings.HasPrefix(redirect, `http`) || strings.HasPrefix(redirect, `/`) {
+								return nil, RedirectTo(redirect)
+							} else {
+								return nil, fmt.Errorf(
+									"Request %s %v failed: %s",
+									bindingReq.Method,
+									bindingReq.URL,
+									res.Status,
+								)
+							}
 						}
 					}
 
