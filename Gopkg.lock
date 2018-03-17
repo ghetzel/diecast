@@ -39,7 +39,17 @@
 
 [[projects]]
   name = "github.com/ghetzel/go-stockutil"
-  packages = ["colorutil","httputil","maputil","mathutil","pathutil","rxutil","sliceutil","stringutil","typeutil"]
+  packages = [
+    "colorutil",
+    "httputil",
+    "maputil",
+    "mathutil",
+    "pathutil",
+    "rxutil",
+    "sliceutil",
+    "stringutil",
+    "typeutil"
+  ]
   revision = "04f2ad5593395d9ac98262f1820af9156b33ba32"
   version = "1.2.5"
 
@@ -69,7 +79,10 @@
 
 [[projects]]
   name = "github.com/jdkato/prose"
-  packages = ["internal/util","tokenize"]
+  packages = [
+    "internal/util",
+    "tokenize"
+  ]
   revision = "20d3663d4bc9dd10d75abcde9d92e04b4861c674"
   version = "v1.1.0"
 
@@ -78,6 +91,12 @@
   packages = ["."]
   revision = "8c199fb6259ffc1af525cc3ad52ee60ba8359669"
   version = "v1.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/kelvins/sunrisesunset"
+  packages = ["."]
+  revision = "14f1915ad4b4fc68cdf3c144e39293993e21c67c"
 
 [[projects]]
   branch = "master"
@@ -117,7 +136,10 @@
 
 [[projects]]
   name = "github.com/stretchr/testify"
-  packages = ["assert","require"]
+  packages = [
+    "assert",
+    "require"
+  ]
   revision = "b91bfb9ebec76498946beb6af7c0230c7cc7ba6c"
   version = "v1.2.0"
 
@@ -136,12 +158,18 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["html","html/atom"]
+  packages = [
+    "html",
+    "html/atom"
+  ]
   revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
 
 [[projects]]
   name = "gopkg.in/neurosnap/sentences.v1"
-  packages = [".","data"]
+  packages = [
+    ".",
+    "data"
+  ]
   revision = "a7f18ead1433a139742a8b42ce7a059cfb484d60"
   version = "v1.0.6"
 
@@ -154,6 +182,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "33570c01f503448ef5af1d01c8a84762cd37200d7c12e2a201f3f48e423d1926"
+  inputs-digest = "e505e486d8a9987aec963defab3dcabb92dfbf1e47b8c3ea5158da09c772f728"
   solver-name = "gps-cdcl"
   solver-version = 1

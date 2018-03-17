@@ -16,6 +16,7 @@ import (
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/kelvins/sunrisesunset"
 	"github.com/montanaflynn/stats"
 	"golang.org/x/net/html"
 )
@@ -74,6 +75,9 @@ func GetStandardFunctions() FuncMap {
 
 	// Colors
 	loadStandardFunctionsColor(rv)
+
+	// Location-based functions
+	loadStandardFunctionsLocation(rv)
 
 	// Miscellaneous
 	loadStandardFunctionsMisc(rv)
@@ -434,4 +438,36 @@ func htmlNodeToMap(node *html.Node) map[string]interface{} {
 	}
 
 	return output
+}
+
+func getSunriseSunset(latitude float64, longitude float64, atTime ...interface{}) (time.Time, time.Time, error) {
+	var at time.Time
+
+	if len(atTime) > 0 {
+		if tm, err := stringutil.ConvertToTime(atTime[0]); err == nil {
+			at = tm
+		} else {
+			return time.Time{}, time.Time{}, err
+		}
+	} else {
+		at = time.Now()
+	}
+
+	_, offset := at.Zone()
+
+	p := sunrisesunset.Parameters{
+		Latitude:  latitude,
+		Longitude: longitude,
+		UtcOffset: (float64(offset) / 60.0 / 60.0),
+		Date:      at,
+	}
+
+	if sunrise, sunset, err := p.GetSunriseSunset(); err == nil {
+		sunrise = time.Date(at.Year(), at.Month(), at.Day(), sunrise.Hour(), sunrise.Minute(), sunrise.Second(), 0, at.Location())
+		sunset = time.Date(at.Year(), at.Month(), at.Day(), sunset.Hour(), sunset.Minute(), sunset.Second(), 0, at.Location())
+
+		return sunrise, sunset, nil
+	} else {
+		return time.Time{}, time.Time{}, err
+	}
 }

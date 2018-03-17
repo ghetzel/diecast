@@ -103,6 +103,8 @@ use them.
 - [stringify](#stringify)
 - [stripHtml](#stripHtml)
 - [subtract](#subtract)
+- [sunrise](#sunrise)
+- [sunset](#sunset)
 - [surroundedBy](#surroundedBy)
 - [thousandify](#thousandify)
 - [time](#time)
@@ -789,17 +791,17 @@ Return a copy of *s* with occurrences of *old* replaced with *new*, up to *n* ti
 
 <a name="reverse"></a>
 ```go
-reverse(input any, ...any)
+reverse(array any, ...any)
 ```
-Return the *input* array sorted in lexical descending order.
+Return the given *array* in reverse order.
 
 ---
 
 <a name="reverse"></a>
 ```go
-reverse(array any, ...any)
+reverse(input any, ...any)
 ```
-Return the given *array* in reverse order.
+Return the *input* array sorted in lexical descending order.
 
 ---
 
@@ -896,6 +898,22 @@ strips HTML tags from the given *input* text, leaving the text content behind.
 subtract(values ...any) float64
 ```
 Sequentially subtract all of the given *values*.
+
+---
+
+<a name="sunrise"></a>
+```go
+sunrise(float64, float64, ...any) (Time, error)
+```
+Return the time of apparent sunrise at the given coordinates, optionally for a given time.
+
+---
+
+<a name="sunset"></a>
+```go
+sunset(float64, float64, ...any) (Time, error)
+```
+Return the time of apparent sunset at the given coordinates, optionally for a given time.
 
 ---
 
