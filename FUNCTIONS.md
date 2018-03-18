@@ -7,6 +7,7 @@ use them.
 ## Function List
 
 - [add](#add)
+- [addTime](#addTime)
 - [ago](#ago)
 - [any](#any)
 - [asBool](#asBool)
@@ -51,7 +52,9 @@ use them.
 - [hquery](#hquery)
 - [indexOf](#indexOf)
 - [ireverse](#ireverse)
+- [isAfter](#isAfter)
 - [isArray](#isArray)
+- [isBefore](#isBefore)
 - [isBool](#isBool)
 - [isEmpty](#isEmpty)
 - [isFloat](#isFloat)
@@ -130,6 +133,14 @@ use them.
 add(values ...any) float64
 ```
 Return the sum of all of the given *values*.
+
+---
+
+<a name="addTime"></a>
+```go
+addTime(duration string, at ...any) (Time, error)
+```
+Return a time with with given *duration* added to it.  Can specify time *at* to apply the change to.
 
 ---
 
@@ -485,11 +496,27 @@ Return the *input* array sorted in lexical descending order (case insensitive).
 
 ---
 
+<a name="isAfter"></a>
+```go
+isAfter(first any, second ...any) (bool, error)
+```
+Return whether the *first* time is after the *second* one.
+
+---
+
 <a name="isArray"></a>
 ```go
 isArray(value any) bool
 ```
 Return whether the given *value* is an iterable array or slice.
+
+---
+
+<a name="isBefore"></a>
+```go
+isBefore(first any, second ...any) (bool, error)
+```
+Return whether the *first* time is before the *second* one.
 
 ---
 
@@ -607,7 +634,7 @@ Return a copy of string *s* with all Unicode letters mapped to their lower case.
 
 <a name="ltrim"></a>
 ```go
-ltrim(s string, prefix string) string
+ltrim(s any, prefix string) string
 ```
 Return a copy of string *s* with the leading *prefix* removed.
 
@@ -807,7 +834,7 @@ Return the *input* array sorted in lexical descending order.
 
 <a name="rtrim"></a>
 ```go
-rtrim(s string, suffix string) string
+rtrim(s any, suffix string) string
 ```
 Return a copy of string *s* with the trailing *suffix* removed.
 

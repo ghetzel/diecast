@@ -19,6 +19,26 @@ func loadStandardFunctionsTime(rv FuncMap) {
 		return tmFmt(time.Now(), format...)
 	}
 
+	// fn addTime: Return a time with with given *duration* added to it.  Can specify time *at* to
+	//             apply the change to.
+	rv[`addTime`] = func(durationString string, atI ...interface{}) (time.Time, error) {
+		at := time.Now()
+
+		if len(atI) > 0 {
+			if tm, err := stringutil.ConvertToTime(atI[0]); err == nil {
+				at = tm
+			} else {
+				return time.Time{}, err
+			}
+		}
+
+		if duration, err := time.ParseDuration(durationString); err == nil {
+			return at.Add(duration), nil
+		} else {
+			return time.Time{}, err
+		}
+	}
+
 	// fn ago: Return a Time subtracted by the given *duration*.
 	rv[`ago`] = func(durationString string, fromTime ...time.Time) (time.Time, error) {
 		from := time.Now()
@@ -95,5 +115,15 @@ func loadStandardFunctionsTime(rv FuncMap) {
 		} else {
 			return ``, err
 		}
+	}
+
+	// fn isBefore: Return whether the *first* time is before the *second* one.
+	rv[`isBefore`] = func(first interface{}, secondI ...interface{}) (bool, error) {
+		return timeCmp(true, first, secondI...)
+	}
+
+	// fn isAfter: Return whether the *first* time is after the *second* one.
+	rv[`isAfter`] = func(first interface{}, secondI ...interface{}) (bool, error) {
+		return timeCmp(false, first, secondI...)
 	}
 }

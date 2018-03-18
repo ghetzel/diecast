@@ -471,3 +471,29 @@ func getSunriseSunset(latitude float64, longitude float64, atTime ...interface{}
 		return time.Time{}, time.Time{}, err
 	}
 }
+
+func timeCmp(before bool, first interface{}, secondI ...interface{}) (bool, error) {
+	var second interface{}
+
+	if len(secondI) == 0 {
+		second = first
+		first = time.Now()
+	} else {
+		second = secondI[0]
+	}
+
+	if firstT, err := stringutil.ConvertToTime(first); err == nil {
+		if secondT, err := stringutil.ConvertToTime(second); err == nil {
+			if before {
+				return firstT.Before(secondT), nil
+			} else {
+				return firstT.After(secondT), nil
+			}
+		} else {
+			return false, err
+		}
+
+	} else {
+		return false, err
+	}
+}

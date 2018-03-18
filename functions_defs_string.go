@@ -20,7 +20,9 @@ func loadStandardFunctionsString(rv FuncMap) {
 	rv[`lower`] = strings.ToLower
 
 	// fn ltrim: Return a copy of string *s* with the leading *prefix* removed.
-	rv[`ltrim`] = strings.TrimPrefix
+	rv[`ltrim`] = func(in interface{}, str string) string {
+		return strings.TrimPrefix(fmt.Sprintf("%v", in), str)
+	}
 
 	// fn replace: Return a copy of *s* with occurrences of *old* replaced with *new*, up to *n* times.
 	rv[`replace`] = strings.Replace
@@ -49,7 +51,9 @@ func loadStandardFunctionsString(rv FuncMap) {
 	}
 
 	// fn rtrim: Return a copy of string *s* with the trailing *suffix* removed.
-	rv[`rtrim`] = strings.TrimSuffix
+	rv[`rtrim`] = func(in interface{}, str string) string {
+		return strings.TrimSuffix(fmt.Sprintf("%v", in), str)
+	}
 
 	// fn split: Return a string array of elements resulting from *s* being split by *delimiter*,
 	//           up to *n* times (if specified).
