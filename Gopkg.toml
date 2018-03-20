@@ -12,7 +12,7 @@
 
 [[constraint]]
   name = "github.com/ghetzel/go-stockutil"
-  version = ">=1.2.5"
+  version = ">=1.2.8"
 
 [[constraint]]
   name = "github.com/ghodss/yaml"

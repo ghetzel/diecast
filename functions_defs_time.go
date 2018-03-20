@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/timeutil"
 )
 
 func loadStandardFunctionsTime(rv FuncMap) {
@@ -32,7 +33,7 @@ func loadStandardFunctionsTime(rv FuncMap) {
 			}
 		}
 
-		if duration, err := time.ParseDuration(durationString); err == nil {
+		if duration, err := timeutil.ParseDuration(durationString); err == nil {
 			return at.Add(duration), nil
 		} else {
 			return time.Time{}, err
@@ -47,7 +48,7 @@ func loadStandardFunctionsTime(rv FuncMap) {
 			from = fromTime[0]
 		}
 
-		if duration, err := time.ParseDuration(durationString); err == nil {
+		if duration, err := timeutil.ParseDuration(durationString); err == nil {
 			return from.Add(-1 * duration), nil
 		} else {
 			return time.Time{}, err

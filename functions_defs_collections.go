@@ -3,6 +3,7 @@ package diecast
 import (
 	"bytes"
 	"fmt"
+	"math/rand"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/maputil"
@@ -302,5 +303,51 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 		}
 
 		return output, nil
+	}
+
+	// fn head: Return from the *input* array the first *n* items.
+	rv[`head`] = func(input interface{}, n int) []interface{} {
+		if typeutil.IsZero(input) {
+			return make([]interface{}, 0)
+		}
+
+		items := sliceutil.Sliceify(input)
+
+		if len(items) < n {
+			return items
+		} else {
+			return items[0:n]
+		}
+	}
+
+	// fn tail: Return from the *input* array the last *n* items.
+	rv[`tail`] = func(input interface{}, n int) []interface{} {
+		if typeutil.IsZero(input) {
+			return make([]interface{}, 0)
+		}
+
+		items := sliceutil.Sliceify(input)
+
+		if len(items) < n {
+			return items
+		} else {
+			return items[len(items)-n:]
+		}
+	}
+
+	// fn shuffle: Return the *input* array with the elements rearranged in random order.
+	rv[`shuffle`] = func(input interface{}) []interface{} {
+		if typeutil.IsZero(input) {
+			return make([]interface{}, 0)
+		}
+
+		inputS := sliceutil.Sliceify(input)
+
+		for i := range inputS {
+			j := rand.Intn(i + 1)
+			inputS[i], inputS[j] = inputS[j], inputS[i]
+		}
+
+		return inputS
 	}
 }

@@ -50,8 +50,8 @@
     "stringutil",
     "typeutil"
   ]
-  revision = "04f2ad5593395d9ac98262f1820af9156b33ba32"
-  version = "1.2.5"
+  revision = "19b9c8bdd1f4b1d736e54384f5c7c3c4a26cf87a"
+  version = "1.2.8"
 
 [[projects]]
   name = "github.com/ghetzel/uuid"
@@ -182,6 +182,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e505e486d8a9987aec963defab3dcabb92dfbf1e47b8c3ea5158da09c772f728"
+  inputs-digest = "6991af8b1895d6f8a20d522338c303961acfb2c8b27ed81cefefb99cda232c76"
   solver-name = "gps-cdcl"
   solver-version = 1

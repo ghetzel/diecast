@@ -106,14 +106,16 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 	if !self.NoTemplate {
 		if self.OnlyIfExpr != `` {
-			if v := EvalInline(self.OnlyIfExpr, data, funcs); typeutil.IsEmpty(v) {
-				return nil, fmt.Errorf("Binding not being evaluated because only_if expression was false")
+			if v := EvalInline(self.OnlyIfExpr, data, funcs); typeutil.IsEmpty(v) || stringutil.IsBooleanFalse(v) {
+				self.Optional = true
+				return nil, fmt.Errorf("Binding %q not being evaluated because only_if expression was false", self.Name)
 			}
 		}
 
 		if self.NotIfExpr != `` {
-			if v := EvalInline(self.NotIfExpr, data, funcs); !typeutil.IsEmpty(v) {
-				return nil, fmt.Errorf("Binding not being evaluated because not_if expression was truthy")
+			if v := EvalInline(self.NotIfExpr, data, funcs); !typeutil.IsEmpty(v) && !stringutil.IsBooleanFalse(v) {
+				self.Optional = true
+				return nil, fmt.Errorf("Binding %q not being evaluated because not_if expression was truthy", self.Name)
 			}
 		}
 

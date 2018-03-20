@@ -48,6 +48,7 @@ use them.
 - [has](#has)
 - [hasPrefix](#hasPrefix)
 - [hasSuffix](#hasSuffix)
+- [head](#head)
 - [headers](#headers)
 - [hquery](#hquery)
 - [indexOf](#indexOf)
@@ -99,6 +100,7 @@ use them.
 - [sanitize](#sanitize)
 - [sequence](#sequence)
 - [set](#set)
+- [shuffle](#shuffle)
 - [since](#since)
 - [sort](#sort)
 - [split](#split)
@@ -109,6 +111,7 @@ use them.
 - [sunrise](#sunrise)
 - [sunset](#sunset)
 - [surroundedBy](#surroundedBy)
+- [tail](#tail)
 - [thousandify](#thousandify)
 - [time](#time)
 - [titleize](#titleize)
@@ -461,6 +464,14 @@ Return whether string *s* has the given *prefix*.
 hasSuffix(s string, suffix string) bool
 ```
 Return whether string *s* has the given *suffix*.
+
+---
+
+<a name="head"></a>
+```go
+head(input any, n int)
+```
+Return from the *input* array the first *n* items.
 
 ---
 
@@ -872,6 +883,14 @@ Treat the runtime variable *name* as a map, setting *key* to *value*.
 
 ---
 
+<a name="shuffle"></a>
+```go
+shuffle(input any)
+```
+Return the *input* array with the elements rearranged in random order.
+
+---
+
 <a name="since"></a>
 ```go
 since(time any, ...any) (Duration, error)
@@ -949,6 +968,14 @@ Return the time of apparent sunset at the given coordinates, optionally for a gi
 surroundedBy(s any, prefix string, suffix string) bool
 ```
 Return whether string *s* starts with *prefix* and ends with *suffix*.
+
+---
+
+<a name="tail"></a>
+```go
+tail(input any, n int)
+```
+Return from the *input* array the last *n* items.
 
 ---
 
