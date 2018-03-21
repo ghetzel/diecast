@@ -255,6 +255,9 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 		return err
 	}
 
+	// get a reference to a set of standard functions that won't have a scope yet
+	earlyFuncs := self.GetTemplateFunctions(requestToEvalData(req, header))
+
 	// only process layouts if we're supposed to
 	if self.EnableLayouts && !forceSkipLayout {
 		// files starting with "_" are partials and should not have layouts applied
@@ -268,6 +271,8 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 
 			if len(layouts) > 0 {
 				for _, layoutName := range layouts {
+					layoutName = EvalInline(layoutName, nil, earlyFuncs)
+
 					if layoutFile, err := self.LoadLayout(layoutName); err == nil {
 						if layoutHeader, layoutData, err := self.SplitTemplateHeaderContent(layoutFile); err == nil {
 							if layoutHeader != nil {

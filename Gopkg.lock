@@ -48,6 +48,7 @@
     "rxutil",
     "sliceutil",
     "stringutil",
+    "timeutil",
     "typeutil"
   ]
   revision = "19b9c8bdd1f4b1d736e54384f5c7c3c4a26cf87a"
@@ -182,6 +183,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6991af8b1895d6f8a20d522338c303961acfb2c8b27ed81cefefb99cda232c76"
+  inputs-digest = "8de6276c9869d5201a160d9e0232bdaf0a0ec2abc4d0be8fd753ade62aedc050"
   solver-name = "gps-cdcl"
   solver-version = 1
