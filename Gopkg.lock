@@ -33,6 +33,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/ghetzel/argonaut"
+  packages = ["."]
+  revision = "1fc8289ff00360aa4d808dfc1c5914293f61c6fe"
+
+[[projects]]
+  branch = "master"
   name = "github.com/ghetzel/cli"
   packages = ["."]
   revision = "4733699ce30faa633c4db36ebfbe427963593d7d"
@@ -61,16 +67,56 @@
   version = "v0.3"
 
 [[projects]]
+  branch = "golang-port"
+  name = "github.com/ghetzel/webfriend"
+  packages = [
+    ".",
+    "browser",
+    "commands",
+    "commands/core",
+    "scripting",
+    "utils"
+  ]
+  revision = "686db03808652b7e273bf9d7566c06a0cc78bbcb"
+
+[[projects]]
   name = "github.com/ghodss/yaml"
   packages = ["."]
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/gobwas/glob"
+  packages = [
+    ".",
+    "compiler",
+    "match",
+    "syntax",
+    "syntax/ast",
+    "syntax/lexer",
+    "util/runes",
+    "util/strings"
+  ]
+  revision = "5ccd90ef52e1e632236f7326478d4faa74f99438"
+  version = "v0.2.3"
+
+[[projects]]
+  name = "github.com/gorilla/websocket"
+  packages = ["."]
+  revision = "ea4d1f681babbce9545c9c5f3d5194a789c89f5b"
+  version = "v1.2.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/grokify/html-strip-tags-go"
   packages = ["."]
   revision = "fda376fed04166f97c4d8a367ad6f44f4136787e"
+
+[[projects]]
+  name = "github.com/husobee/vestigo"
+  packages = ["."]
+  revision = "f8f5b5dc2bd74408887fd4b462055e324c4cbd63"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/jbenet/go-base58"
@@ -100,6 +146,64 @@
   revision = "14f1915ad4b4fc68cdf3c144e39293993e21c67c"
 
 [[projects]]
+  name = "github.com/mafredri/cdp"
+  packages = [
+    ".",
+    "devtool",
+    "internal/errors",
+    "protocol",
+    "protocol/accessibility",
+    "protocol/animation",
+    "protocol/applicationcache",
+    "protocol/audits",
+    "protocol/browser",
+    "protocol/cachestorage",
+    "protocol/console",
+    "protocol/css",
+    "protocol/database",
+    "protocol/debugger",
+    "protocol/deviceorientation",
+    "protocol/dom",
+    "protocol/domdebugger",
+    "protocol/domsnapshot",
+    "protocol/domstorage",
+    "protocol/emulation",
+    "protocol/headlessexperimental",
+    "protocol/heapprofiler",
+    "protocol/indexeddb",
+    "protocol/input",
+    "protocol/inspector",
+    "protocol/internal",
+    "protocol/io",
+    "protocol/layertree",
+    "protocol/log",
+    "protocol/memory",
+    "protocol/network",
+    "protocol/overlay",
+    "protocol/page",
+    "protocol/performance",
+    "protocol/profiler",
+    "protocol/runtime",
+    "protocol/schema",
+    "protocol/security",
+    "protocol/serviceworker",
+    "protocol/storage",
+    "protocol/systeminfo",
+    "protocol/target",
+    "protocol/tethering",
+    "protocol/tracing",
+    "rpcc"
+  ]
+  revision = "bd1a1bc064e0439d7ee9c735420dccab65137f5a"
+  version = "v0.17.2"
+
+[[projects]]
+  name = "github.com/mcuadros/go-defaults"
+  packages = ["."]
+  revision = "ac8540f0fc7e0fb5f1eb9e25c6fd0b8db8f97eed"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/microcosm-cc/bluemonday"
   packages = ["."]
@@ -116,6 +220,12 @@
   name = "github.com/op/go-logging"
   packages = ["."]
   revision = "970db520ece77730c7e4724c61121037378659d9"
+
+[[projects]]
+  name = "github.com/phayes/freeport"
+  packages = ["."]
+  revision = "b8543db493a5ed890c5499e935e2cad7504f3a04"
+  version = "1.0.2"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -183,6 +293,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8de6276c9869d5201a160d9e0232bdaf0a0ec2abc4d0be8fd753ade62aedc050"
+  inputs-digest = "e71556e8a18071e48b5936aa2cd4afb4af0799fadac813efc882b66200735a8e"
   solver-name = "gps-cdcl"
   solver-version = 1

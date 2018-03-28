@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"mime"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -23,6 +24,8 @@ import (
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/ghetzel/webfriend"
+	"github.com/ghetzel/webfriend/browser"
 	"github.com/ghodss/yaml"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
@@ -350,6 +353,56 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 
 		if err := tmpl.AddPostProcessors(finalHeader.Postprocessors...); err != nil {
 			return err
+		}
+
+		if finalHeader != nil {
+			finalHeader.Renderer = EvalInline(finalHeader.Renderer, data, funcs)
+
+			log.Debugf("%#v", finalHeader.Renderer)
+
+			if !httputil.QBool(req, `__subrender`) {
+				switch finalHeader.Renderer {
+				case `pdf`:
+					if www, err := browser.Start(); err == nil {
+						defer www.Stop()
+						var buffer bytes.Buffer
+
+						subaddr := self.Address
+
+						if strings.HasPrefix(subaddr, `:`) {
+							subaddr = `127.0.0.1` + subaddr
+						}
+
+						env := webfriend.NewEnvironment(www)
+						suburl, _ := url.Parse(req.URL.String())
+						suburl.Scheme = `http`
+						suburl.Host = subaddr
+						subqs := suburl.Query()
+						subqs.Set(`__subrender`, `true`)
+						suburl.RawQuery = subqs.Encode()
+
+						log.Debugf("Rendering %v as PDF", suburl)
+
+						if _, err := env.Core.Go(suburl.String(), nil); err != nil {
+							return err
+						}
+
+						if err := env.Page.Pdf(&buffer, nil); err == nil {
+							if rw, ok := w.(http.ResponseWriter); ok {
+								rw.Header().Set(`Content-Type`, `application/pdf`)
+							}
+
+							_, err := io.Copy(w, &buffer)
+							return err
+						} else {
+							return err
+						}
+					} else {
+						log.Fatalf("could not generate PDF: %v", err)
+						return err
+					}
+				}
+			}
 		}
 
 		if err := tmpl.Parse(finalTemplate.String()); err == nil {
