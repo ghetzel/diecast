@@ -72,7 +72,7 @@
     "scripting",
     "utils"
   ]
-  revision = "27ba26fe385e64af81331d1b75e8647d199fd176"
+  revision = "9773d27a98869398b397a68d0e667b9223c80fa1"
 
 [[projects]]
   name = "github.com/ghetzel/uuid"
