@@ -45,33 +45,14 @@
 
 [[projects]]
   name = "github.com/ghetzel/go-stockutil"
-  packages = [
-    "colorutil",
-    "httputil",
-    "maputil",
-    "mathutil",
-    "pathutil",
-    "rxutil",
-    "sliceutil",
-    "stringutil",
-    "timeutil",
-    "typeutil"
-  ]
+  packages = ["colorutil","httputil","maputil","mathutil","pathutil","rxutil","sliceutil","stringutil","timeutil","typeutil"]
   revision = "c4361ba25113e4e23b64bb363a883c41461f20aa"
   version = "1.3.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/ghetzel/go-webfriend"
-  packages = [
-    ".",
-    "browser",
-    "commands",
-    "commands/core",
-    "commands/page",
-    "scripting",
-    "utils"
-  ]
+  packages = [".","browser","commands","commands/core","commands/page","scripting","utils"]
   revision = "9773d27a98869398b397a68d0e667b9223c80fa1"
 
 [[projects]]
@@ -88,16 +69,7 @@
 
 [[projects]]
   name = "github.com/gobwas/glob"
-  packages = [
-    ".",
-    "compiler",
-    "match",
-    "syntax",
-    "syntax/ast",
-    "syntax/lexer",
-    "util/runes",
-    "util/strings"
-  ]
+  packages = [".","compiler","match","syntax","syntax/ast","syntax/lexer","util/runes","util/strings"]
   revision = "5ccd90ef52e1e632236f7326478d4faa74f99438"
   version = "v0.2.3"
 
@@ -127,10 +99,7 @@
 
 [[projects]]
   name = "github.com/jdkato/prose"
-  packages = [
-    "internal/util",
-    "tokenize"
-  ]
+  packages = ["internal/util","tokenize"]
   revision = "20d3663d4bc9dd10d75abcde9d92e04b4861c674"
   version = "v1.1.0"
 
@@ -148,53 +117,7 @@
 
 [[projects]]
   name = "github.com/mafredri/cdp"
-  packages = [
-    ".",
-    "devtool",
-    "internal/errors",
-    "protocol",
-    "protocol/accessibility",
-    "protocol/animation",
-    "protocol/applicationcache",
-    "protocol/audits",
-    "protocol/browser",
-    "protocol/cachestorage",
-    "protocol/console",
-    "protocol/css",
-    "protocol/database",
-    "protocol/debugger",
-    "protocol/deviceorientation",
-    "protocol/dom",
-    "protocol/domdebugger",
-    "protocol/domsnapshot",
-    "protocol/domstorage",
-    "protocol/emulation",
-    "protocol/headlessexperimental",
-    "protocol/heapprofiler",
-    "protocol/indexeddb",
-    "protocol/input",
-    "protocol/inspector",
-    "protocol/internal",
-    "protocol/io",
-    "protocol/layertree",
-    "protocol/log",
-    "protocol/memory",
-    "protocol/network",
-    "protocol/overlay",
-    "protocol/page",
-    "protocol/performance",
-    "protocol/profiler",
-    "protocol/runtime",
-    "protocol/schema",
-    "protocol/security",
-    "protocol/serviceworker",
-    "protocol/storage",
-    "protocol/systeminfo",
-    "protocol/target",
-    "protocol/tethering",
-    "protocol/tracing",
-    "rpcc"
-  ]
+  packages = [".","devtool","internal/errors","protocol","protocol/accessibility","protocol/animation","protocol/applicationcache","protocol/audits","protocol/browser","protocol/cachestorage","protocol/console","protocol/css","protocol/database","protocol/debugger","protocol/deviceorientation","protocol/dom","protocol/domdebugger","protocol/domsnapshot","protocol/domstorage","protocol/emulation","protocol/headlessexperimental","protocol/heapprofiler","protocol/indexeddb","protocol/input","protocol/inspector","protocol/internal","protocol/io","protocol/layertree","protocol/log","protocol/memory","protocol/network","protocol/overlay","protocol/page","protocol/performance","protocol/profiler","protocol/runtime","protocol/schema","protocol/security","protocol/serviceworker","protocol/storage","protocol/systeminfo","protocol/target","protocol/tethering","protocol/tracing","rpcc"]
   revision = "bd1a1bc064e0439d7ee9c735420dccab65137f5a"
   version = "v0.17.2"
 
@@ -217,10 +140,10 @@
   version = "0.2.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/op/go-logging"
   packages = ["."]
-  revision = "970db520ece77730c7e4724c61121037378659d9"
+  revision = "b2cb9fa56473e98db8caba80237377e83fe44db5"
+  version = "v1"
 
 [[projects]]
   name = "github.com/phayes/freeport"
@@ -248,10 +171,7 @@
 
 [[projects]]
   name = "github.com/stretchr/testify"
-  packages = [
-    "assert",
-    "require"
-  ]
+  packages = ["assert","require"]
   revision = "b91bfb9ebec76498946beb6af7c0230c7cc7ba6c"
   version = "v1.2.0"
 
@@ -270,18 +190,12 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = [
-    "html",
-    "html/atom"
-  ]
+  packages = ["html","html/atom"]
   revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
 
 [[projects]]
   name = "gopkg.in/neurosnap/sentences.v1"
-  packages = [
-    ".",
-    "data"
-  ]
+  packages = [".","data"]
   revision = "a7f18ead1433a139742a8b42ce7a059cfb484d60"
   version = "v1.0.6"
 
@@ -294,6 +208,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "eb733b16cb914eb1350fc64a0074156629002f544545ea74b92b7164a11adb0d"
+  inputs-digest = "250c3e1a015286e02d6bab8b26f79444c1e3ed325716a3041b5e301765e25f29"
   solver-name = "gps-cdcl"
   solver-version = 1

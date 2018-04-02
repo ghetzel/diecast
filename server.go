@@ -916,7 +916,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 			} else if IsHardStop(err) {
 				return nil, nil, err
 			} else {
-				log.Warning(err)
+				log.Warningf("%v", err)
 			}
 		}
 	}

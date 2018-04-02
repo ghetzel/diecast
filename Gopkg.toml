@@ -36,7 +36,7 @@
 
 [[constraint]]
   name = "github.com/op/go-logging"
-  branch = "master"
+  version = ">=1.0.0"
 
 [[constraint]]
   name = "github.com/russross/blackfriday"
