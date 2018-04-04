@@ -257,6 +257,8 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 			// perform binding request
 			// -------------------------------------------------------------------------------------
 			if res, err := BindingClient.Do(bindingReq); err == nil {
+				defer res.Body.Close()
+
 				log.Infof("Binding: < HTTP %d (body: %d bytes)", res.StatusCode, res.ContentLength)
 
 				// debug log response headers
