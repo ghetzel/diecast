@@ -291,10 +291,12 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				switch res.Header.Get(`Content-Encoding`) {
 				case `gzip`:
 					reader, err = gzip.NewReader(res.Body)
-					defer reader.Close()
+
 				default:
 					reader = res.Body
 				}
+
+				defer reader.Close()
 
 				if data, err := ioutil.ReadAll(reader); err == nil {
 					if res.StatusCode >= 400 {

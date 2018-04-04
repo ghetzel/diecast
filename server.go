@@ -749,6 +749,8 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 }
 
 func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
+
 	log.Infof("%v %v", req.Method, req.URL)
 
 	// normalize filename from request path
@@ -1089,6 +1091,8 @@ func (self *Server) setupServer() error {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc(fmt.Sprintf("%s/_diecast", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
+		defer req.Body.Close()
+
 		if data, err := json.Marshal(self); err == nil {
 			w.Header().Set(`Content-Type`, `application/json`)
 
@@ -1101,6 +1105,8 @@ func (self *Server) setupServer() error {
 	})
 
 	mux.HandleFunc(fmt.Sprintf("%s/_bindings", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
+		defer req.Body.Close()
+
 		if data, err := json.Marshal(self.Bindings); err == nil {
 			w.Header().Set(`Content-Type`, `application/json`)
 
