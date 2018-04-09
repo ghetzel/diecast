@@ -14,6 +14,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/c-bata/go-prompt"
+  packages = ["."]
+  revision = "e99fbc797b795e0a7a94affc8d44f6a0350d85f0"
+  version = "v0.2.1"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -24,6 +30,12 @@
   name = "github.com/dustin/go-humanize"
   packages = ["."]
   revision = "bb3d318650d48840a39aa21a027c6630e198e626"
+
+[[projects]]
+  name = "github.com/fatih/color"
+  packages = ["."]
+  revision = "507f6050b8568533fb3f5504de8e5205fa62a114"
+  version = "v1.6.0"
 
 [[projects]]
   name = "github.com/fatih/structs"
@@ -48,6 +60,7 @@
   packages = [
     "colorutil",
     "httputil",
+    "log",
     "maputil",
     "mathutil",
     "pathutil",
@@ -73,7 +86,7 @@
     "scripting",
     "utils"
   ]
-  revision = "9773d27a98869398b397a68d0e667b9223c80fa1"
+  revision = "5efa87e3e137ec60b13e1308555ca1cac331b054"
 
 [[projects]]
   name = "github.com/ghetzel/uuid"
@@ -200,6 +213,24 @@
   version = "v0.17.2"
 
 [[projects]]
+  name = "github.com/mattn/go-colorable"
+  packages = ["."]
+  revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
+  version = "v0.0.9"
+
+[[projects]]
+  name = "github.com/mattn/go-isatty"
+  packages = ["."]
+  revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
+  version = "v0.0.3"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/mattn/go-tty"
+  packages = ["."]
+  revision = "931426f7535ac39720c8909d70ece5a41a2502a6"
+
+[[projects]]
   name = "github.com/mcuadros/go-defaults"
   packages = ["."]
   revision = "ac8540f0fc7e0fb5f1eb9e25c6fd0b8db8f97eed"
@@ -210,6 +241,12 @@
   name = "github.com/microcosm-cc/bluemonday"
   packages = ["."]
   revision = "542fd4642604d0d0c26112396ce5b1a9d01eee0b"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/mitchellh/go-ps"
+  packages = ["."]
+  revision = "4fdf99ab29366514c69ccccddab5dc58b8d84062"
 
 [[projects]]
   name = "github.com/montanaflynn/stats"
@@ -228,6 +265,12 @@
   packages = ["."]
   revision = "b8543db493a5ed890c5499e935e2cad7504f3a04"
   version = "1.0.2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/pkg/term"
+  packages = ["termios"]
+  revision = "b1f72af2d63057363398bec5873d16a98b453312"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -276,6 +319,12 @@
     "html/atom"
   ]
   revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["unix"]
+  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
 
 [[projects]]
   name = "gopkg.in/neurosnap/sentences.v1"
