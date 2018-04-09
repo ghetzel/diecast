@@ -55,10 +55,11 @@
     "sliceutil",
     "stringutil",
     "timeutil",
-    "typeutil"
+    "typeutil",
+    "utils"
   ]
-  revision = "c4361ba25113e4e23b64bb363a883c41461f20aa"
-  version = "1.3.0"
+  revision = "e05a70817d9d10b5483c75738acbcab40baf38a7"
+  version = "1.5.4"
 
 [[projects]]
   branch = "master"
@@ -294,6 +295,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a4e9afad332b7b0715259b1faf4e5638188bea00cc7cc5c29ba728ca54d4a9f8"
+  inputs-digest = "86b4422e822fa3c5bae64fc9d8eb1e8832c7ed5b3bc81ccbe6cc5b15db045a5b"
   solver-name = "gps-cdcl"
   solver-version = 1

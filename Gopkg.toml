@@ -12,7 +12,11 @@
 
 [[constraint]]
   name = "github.com/ghetzel/go-stockutil"
-  version = ">=1.3.0"
+  version = ">=1.5.4"
+
+[[constraint]]
+  name = "github.com/ghetzel/go-webfriend"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/ghodss/yaml"
