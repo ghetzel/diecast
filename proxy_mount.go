@@ -131,8 +131,6 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			} else {
 				return nil, err
 			}
-
-			newReq.Body = ioutil.NopCloser(requestBody)
 		}
 
 		log.Infof("  proxying '%v %v' to '%v %v'", req.Method, req.URL, newReq.Method, proxyURI)
