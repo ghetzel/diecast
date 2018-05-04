@@ -1,7 +1,7 @@
 .PHONY: test deps
 
-PKGS=`go list ./... | grep -v /vendor/`
-LOCALS=`find . -type f -name '*.go' -not -path "./vendor/*"`
+PKGS := . ./util/ ./diecast/...
+LOCALS = `find . -type f -name '*.go' -not -path "./vendor/*"`
 
 all: fmt deps test build
 
@@ -19,7 +19,7 @@ fmt:
 	go vet $(PKGS)
 
 test:
-	go test -i $(PKGS)
+	go test $(PKGS)
 
 build:
 	test -d diecast && go build -i -o bin/`basename ${PWD}` diecast/main.go

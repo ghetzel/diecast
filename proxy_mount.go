@@ -11,10 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ghetzel/diecast/util"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 )
 
 var DefaultProxyMountTimeout = time.Duration(10) * time.Second
+var MaxBufferedBodySize = 16535
 
 type ProxyMount struct {
 	MountPoint          string            `json:"-"`
@@ -111,14 +113,29 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			newReq.Header.Set(name, value)
 		}
 
+		log.Debugf("  Handled by %v", self)
+
 		if requestBody != nil && self.PassthroughRequests {
+			var buf bytes.Buffer
+
+			if n, err := io.CopyN(&buf, requestBody, int64(MaxBufferedBodySize)); err == nil {
+				log.Debugf("  using streaming request body (body exceeds %d bytes)", n)
+
+				// make the upstream request body the aggregate of the already-read portion of the body
+				// and the unread remainder of the incoming request body
+				newReq.Body = util.NewChainableReader(&buf, requestBody)
+
+			} else if err == io.EOF {
+				log.Debugf("  fixed-length request body (%d bytes)", buf.Len())
+				newReq.Body = ioutil.NopCloser(&buf)
+			} else {
+				return nil, err
+			}
+
 			newReq.Body = ioutil.NopCloser(requestBody)
 		}
 
-		log.Debugf("  Handled by %v", self)
-
 		log.Infof("  proxying '%v %v' to '%v %v'", req.Method, req.URL, newReq.Method, proxyURI)
-
 		log.Debugf("  %v %v", newReq.Method, newReq.URL)
 
 		for k, v := range newReq.Header {
