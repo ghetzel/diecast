@@ -128,6 +128,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			} else if err == io.EOF {
 				log.Debugf("  fixed-length request body (%d bytes)", buf.Len())
 				newReq.Body = ioutil.NopCloser(&buf)
+				newReq.Header.Set(`Content-Length`, fmt.Sprintf("%d", buf.Len()))
 			} else {
 				return nil, err
 			}
