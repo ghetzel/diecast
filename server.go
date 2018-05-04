@@ -894,7 +894,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 	// buffer the request body because we need to repeatedly pass it to multiple mounts
 	if data, err := ioutil.ReadAll(req.Body); err == nil {
 		if len(data) > 0 {
-			log.Debugf("  read %d bytes from request body\n%v", len(data), string(data))
+			log.Debugf("  read %d bytes from request body\n", len(data))
 		}
 
 		body = bytes.NewReader(data)

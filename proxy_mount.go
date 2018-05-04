@@ -115,24 +115,25 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			newReq.Body = ioutil.NopCloser(requestBody)
 		}
 
+		log.Debugf("  Handled by %v", self)
+
 		log.Infof("  proxying '%v %v' to '%v %v'", req.Method, req.URL, newReq.Method, proxyURI)
 
-		log.Debugf("  %v: %v %v", self, newReq.Method, newReq.URL)
+		log.Debugf("  %v %v", newReq.Method, newReq.URL)
 
 		for k, v := range newReq.Header {
-			log.Debugf("  %v: [H] %v=%v", self, k, strings.Join(v, ` `))
+			log.Debugf("  [H] %v=%v", k, strings.Join(v, ` `))
 		}
 
 		if response, err := self.Client.Do(newReq); err == nil {
-			log.Debugf("  %v: [R] %v", self, response.Status)
+			log.Debugf("  [R] %v", response.Status)
 
 			for k, v := range response.Header {
-				log.Debugf("  %v: [R]   %v: %v", self, k, strings.Join(v, ` `))
+				log.Debugf("  [R]   %v: %v", k, strings.Join(v, ` `))
 			}
 
 			log.Infof(
-				"%v: %v %v responded with: %v (Content-Length: %v)",
-				self,
+				"%v %v responded with: %v (Content-Length: %v)",
 				newReq.Method,
 				proxyURI,
 				response.Status,
@@ -155,7 +156,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 					return nil, err
 				}
 			} else {
-				log.Debugf("  %v: %s %s: %s", self, method, proxyURI, response.Status)
+				log.Debugf("  %s %s: %s", method, proxyURI, response.Status)
 				return nil, MountHaltErr
 			}
 		} else {
