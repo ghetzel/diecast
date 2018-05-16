@@ -278,6 +278,10 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						default:
 							redirect := string(statusAction)
 
+							if !self.NoTemplate {
+								redirect = EvalInline(redirect, data, funcs)
+							}
+
 							// if a url or path was specified, redirect the parent request to it
 							if strings.HasPrefix(redirect, `http`) || strings.HasPrefix(redirect, `/`) {
 								return nil, RedirectTo(redirect)
