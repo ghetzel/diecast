@@ -13,6 +13,9 @@ import (
 func doTestServerRequest(s *Server, method string, path string, tester func(*httptest.ResponseRecorder)) {
 	req := httptest.NewRequest(method,
 		fmt.Sprintf("http://%s%s", DefaultAddress, path), nil)
+
+	req.Header.Set(`X-Diecast-Binding`, `test`)
+
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, req)
 

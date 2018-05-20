@@ -4,6 +4,7 @@ package diecast
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -27,6 +28,7 @@ import (
 	webfriend "github.com/ghetzel/go-webfriend"
 	"github.com/ghetzel/go-webfriend/browser"
 	"github.com/ghodss/yaml"
+	"github.com/jbenet/go-base58"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
 	"github.com/urfave/negroni"
@@ -1081,11 +1083,28 @@ func (self *Server) InjectIncludes(w io.Writer, header *TemplateHeader) error {
 	return nil
 }
 
+func reqid(req *http.Request) string {
+	if id := req.Context().Value(`diecast-request-id`); id != nil {
+		return fmt.Sprintf("%v", id)
+	} else {
+		return ``
+	}
+}
+
 func (self *Server) setupServer() error {
 	self.server = negroni.New()
 
 	// setup panic recovery handler
 	self.server.Use(negroni.NewRecovery())
+
+	// setup request ID generation
+	self.server.UseHandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		requestId := base58.Encode(stringutil.UUID().Bytes())
+
+		parent := req.Context()
+		identified := context.WithValue(parent, `diecast-request-id`, requestId)
+		*req = *req.WithContext(identified)
+	})
 
 	// setup internal/metadata routes
 	mux := http.NewServeMux()
@@ -1093,28 +1112,36 @@ func (self *Server) setupServer() error {
 	mux.HandleFunc(fmt.Sprintf("%s/_diecast", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
 		defer req.Body.Close()
 
-		if data, err := json.Marshal(self); err == nil {
-			w.Header().Set(`Content-Type`, `application/json`)
+		if req.Header.Get(`X-Diecast-Binding`) != `` {
+			if data, err := json.Marshal(self); err == nil {
+				w.Header().Set(`Content-Type`, `application/json`)
 
-			if _, err := w.Write(data); err != nil {
+				if _, err := w.Write(data); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+				}
+			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("File %q was not found.", req.URL.Path), http.StatusNotFound)
 		}
 	})
 
 	mux.HandleFunc(fmt.Sprintf("%s/_bindings", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
 		defer req.Body.Close()
 
-		if data, err := json.Marshal(self.Bindings); err == nil {
-			w.Header().Set(`Content-Type`, `application/json`)
+		if req.Header.Get(`X-Diecast-Binding`) != `` {
+			if data, err := json.Marshal(self.Bindings); err == nil {
+				w.Header().Set(`Content-Type`, `application/json`)
 
-			if _, err := w.Write(data); err != nil {
+				if _, err := w.Write(data); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+				}
+			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("File %q was not found.", req.URL.Path), http.StatusNotFound)
 		}
 	})
 
