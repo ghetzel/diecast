@@ -84,10 +84,12 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 	method := strings.ToUpper(self.Method)
 
+	resource := EvalInline(self.Resource, data, funcs)
+
 	// bindings may specify that a request should be made to the currently server address by
 	// prefixing the URL path with a colon (":") or slash ("/").
 	//
-	if strings.HasPrefix(self.Resource, `:`) || strings.HasPrefix(self.Resource, `/`) {
+	if strings.HasPrefix(resource, `:`) || strings.HasPrefix(resource, `/`) {
 		var prefix string
 
 		if self.server.BindingPrefix != `` {
@@ -97,11 +99,10 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		}
 
 		prefix = strings.TrimSuffix(prefix, `/`)
-		resource := self.Resource
 		resource = strings.TrimPrefix(resource, `:`)
 		resource = strings.TrimPrefix(resource, `/`)
 
-		self.Resource = fmt.Sprintf("%s/%s", prefix, resource)
+		resource = fmt.Sprintf("%s/%s", prefix, resource)
 	}
 
 	if !self.NoTemplate {
@@ -118,13 +119,11 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				return nil, fmt.Errorf("Binding %q not being evaluated because not_if expression was truthy", self.Name)
 			}
 		}
-
-		self.Resource = EvalInline(self.Resource, data, funcs)
 	}
 
-	log.Debugf("  binding %q: resource=%v", self.Name, self.Resource)
+	log.Debugf("  binding %q: resource=%v", self.Name, resource)
 
-	if reqUrl, err := url.Parse(self.Resource); err == nil {
+	if reqUrl, err := url.Parse(resource); err == nil {
 		if bindingReq, err := http.NewRequest(method, reqUrl.String(), nil); err == nil {
 
 			// build request querystring
