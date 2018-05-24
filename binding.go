@@ -2,7 +2,7 @@ package diecast
 
 import (
 	"bytes"
-	"compress/gzip"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -42,6 +43,7 @@ type Binding struct {
 	NotIfExpr          string                     `json:"not_if"`
 	Method             string                     `json:"method"`
 	Resource           string                     `json:"resource"`
+	Insecure           bool                       `json:"insecure"`
 	ParamJoiner        string                     `json:"param_joiner"`
 	Params             map[string]interface{}     `json:"params"`
 	Headers            map[string]string          `json:"headers"`
@@ -253,6 +255,18 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 			log.Infof("Binding: > %s %+v ? %s", strings.ToUpper(sliceutil.OrString(method, `get`)), reqUrl.String(), reqUrl.RawQuery)
 
+			//
+			BindingClient.Transport = &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: self.Insecure,
+				},
+			}
+
+			if bindingReq.URL.Scheme == `https` && self.Insecure {
+				log.Noticef("SSL/TLS certificate validation is disabled for this request.")
+				log.Noticef("This is insecure as the response can be tampered with.")
+			}
+
 			// perform binding request
 			// -------------------------------------------------------------------------------------
 			if res, err := BindingClient.Do(bindingReq); err == nil {
@@ -291,17 +305,16 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					}
 				}
 
-				var reader io.ReadCloser
+				var reader io.Reader
+				defer res.Body.Close()
 
-				switch res.Header.Get(`Content-Encoding`) {
-				case `gzip`:
-					reader, err = gzip.NewReader(res.Body)
-
-				default:
-					reader = res.Body
+				if body, err := httputil.DecodeResponse(res); err == nil {
+					if closer, ok := body.(io.ReadCloser); ok {
+						reader = closer
+					} else {
+						reader = ioutil.NopCloser(body)
+					}
 				}
-
-				defer reader.Close()
 
 				if data, err := ioutil.ReadAll(reader); err == nil {
 					if res.StatusCode >= 400 {

@@ -27,15 +27,25 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/dsnet/compress"
+  packages = [
+    "brotli",
+    "internal",
+    "internal/errors"
+  ]
+  revision = "cc9eb1d7ad760af14e8f918698f745e80377af4f"
+
+[[projects]]
+  branch = "master"
   name = "github.com/dustin/go-humanize"
   packages = ["."]
-  revision = "bb3d318650d48840a39aa21a027c6630e198e626"
+  revision = "02af3965c54e8cacf948b97fef38925c4120652c"
 
 [[projects]]
   name = "github.com/fatih/color"
   packages = ["."]
-  revision = "507f6050b8568533fb3f5504de8e5205fa62a114"
-  version = "v1.6.0"
+  revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
+  version = "v1.7.0"
 
 [[projects]]
   name = "github.com/fatih/structs"
@@ -47,7 +57,7 @@
   branch = "master"
   name = "github.com/ghetzel/argonaut"
   packages = ["."]
-  revision = "1fc8289ff00360aa4d808dfc1c5914293f61c6fe"
+  revision = "51604c68ce3090673b707db1e5ce8c7a22001478"
 
 [[projects]]
   branch = "master"
@@ -71,8 +81,8 @@
     "typeutil",
     "utils"
   ]
-  revision = "e05a70817d9d10b5483c75738acbcab40baf38a7"
-  version = "1.5.4"
+  revision = "c9374e9eddc6674396ec4f97cabe47404d70e370"
+  version = "1.5.13"
 
 [[projects]]
   branch = "master"
@@ -125,7 +135,19 @@
   branch = "master"
   name = "github.com/grokify/html-strip-tags-go"
   packages = ["."]
-  revision = "fda376fed04166f97c4d8a367ad6f44f4136787e"
+  revision = "2e24dd3c29e5fe86a6ac41c713f2e2840b3062e6"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/errwrap"
+  packages = ["."]
+  revision = "7554cd9344cec97297fa6649b055a8c98c2a1e55"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/go-multierror"
+  packages = ["."]
+  revision = "b7773ae218740a7be65057fc60b366a49b538a44"
 
 [[projects]]
   name = "github.com/husobee/vestigo"
@@ -209,8 +231,8 @@
     "protocol/tracing",
     "rpcc"
   ]
-  revision = "bd1a1bc064e0439d7ee9c735420dccab65137f5a"
-  version = "v0.17.2"
+  revision = "52b8ab24b49848d8f54145760f7a5eb122130e70"
+  version = "v0.18.2"
 
 [[projects]]
   name = "github.com/mattn/go-colorable"
@@ -240,7 +262,7 @@
   branch = "master"
   name = "github.com/microcosm-cc/bluemonday"
   packages = ["."]
-  revision = "542fd4642604d0d0c26112396ce5b1a9d01eee0b"
+  revision = "995366fdf961d03629cd17361bddd32745718e2c"
 
 [[projects]]
   branch = "master"
@@ -270,7 +292,7 @@
   branch = "master"
   name = "github.com/pkg/term"
   packages = ["termios"]
-  revision = "b1f72af2d63057363398bec5873d16a98b453312"
+  revision = "cda20d4ac917ad418d86e151eff439648b06185b"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -281,8 +303,8 @@
 [[projects]]
   name = "github.com/russross/blackfriday"
   packages = ["."]
-  revision = "4048872b16cc0fc2c5fd9eacf0ed2c2fedaa0c8c"
-  version = "v1.5"
+  revision = "55d61fa8aa702f59229e6cff85793c22e580eaf5"
+  version = "v1.5.1"
 
 [[projects]]
   name = "github.com/spaolacci/murmur3"
@@ -296,8 +318,8 @@
     "assert",
     "require"
   ]
-  revision = "b91bfb9ebec76498946beb6af7c0230c7cc7ba6c"
-  version = "v1.2.0"
+  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
+  version = "v1.2.1"
 
 [[projects]]
   name = "github.com/urfave/negroni"
@@ -318,13 +340,13 @@
     "html",
     "html/atom"
   ]
-  revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
+  revision = "dfa909b99c79129e1100513e5cd36307665e5723"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
+  revision = "b269ba27edabbc65a34a9ccdcaca3744d43ac3c8"
 
 [[projects]]
   name = "gopkg.in/neurosnap/sentences.v1"
@@ -336,14 +358,14 @@
   version = "v1.0.6"
 
 [[projects]]
-  branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "d670f9405373e636a5a2765eea47fac0c9bc91a4"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "86b4422e822fa3c5bae64fc9d8eb1e8832c7ed5b3bc81ccbe6cc5b15db045a5b"
+  inputs-digest = "958601c29c615d72eb010dd5ca5d1c58ccb0a204e3b737e0d873c29c7ef01f0b"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -12,7 +12,7 @@
 
 [[constraint]]
   name = "github.com/ghetzel/go-stockutil"
-  version = ">=1.5.4"
+  version = "=1.5.13"
 
 [[constraint]]
   name = "github.com/ghetzel/go-webfriend"

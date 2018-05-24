@@ -3,7 +3,7 @@
 PKGS := . ./util/ ./diecast/...
 LOCALS = `find . -type f -name '*.go' -not -path "./vendor/*"`
 
-all: fmt deps test build
+all: deps fmt test build
 
 deps:
 	@go list github.com/mjibson/esc           || go get github.com/mjibson/esc/...

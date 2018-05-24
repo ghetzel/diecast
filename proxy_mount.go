@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ghetzel/diecast/util"
+	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 )
 
@@ -26,7 +27,10 @@ type ProxyMount struct {
 	Timeout             time.Duration     `json:"timeout,omitempty"`
 	PassthroughRequests bool              `json:"passthrough_requests"`
 	PassthroughErrors   bool              `json:"passthrough_errors"`
+	Insecure            bool              `json:"insecure"`
 	Client              *http.Client
+	urlRewriteFrom      string
+	urlRewriteTo        string
 }
 
 func (self *ProxyMount) GetMountPoint() string {
@@ -48,10 +52,21 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		self.Client = &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: false,
+					InsecureSkipVerify: self.Insecure,
 				},
 			},
 			Timeout: self.Timeout,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				if self.urlRewriteTo == `` {
+					if len(via) > 0 {
+						self.urlRewriteFrom = via[len(via)-1].URL.String()
+						self.urlRewriteFrom = strings.TrimSuffix(self.urlRewriteFrom, `/`)
+						self.urlRewriteTo = req.URL.String()
+					}
+				}
+
+				return nil
+			},
 		}
 	}
 
@@ -60,7 +75,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 	}
 
 	if req != nil && self.PassthroughRequests {
-		if newURL, err := url.Parse(self.URL); err == nil {
+		if newURL, err := url.Parse(self.url()); err == nil {
 			req.URL.Scheme = newURL.Scheme
 			req.URL.Host = newURL.Host
 
@@ -89,7 +104,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		}
 	} else {
 		proxyURI = strings.Join([]string{
-			strings.TrimSuffix(self.URL, `/`),
+			strings.TrimSuffix(self.url(), `/`),
 			strings.TrimPrefix(name, `/`),
 		}, `/`)
 	}
@@ -158,7 +173,17 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			)
 
 			if response.StatusCode < 400 || self.PassthroughErrors {
-				if data, err := ioutil.ReadAll(response.Body); err == nil {
+				var responseBody io.Reader
+				defer response.Body.Close()
+
+				if body, err := httputil.DecodeResponse(response); err == nil {
+					responseBody = body
+					response.Header.Set(`Content-Encoding`, `identity`)
+				} else {
+					return nil, err
+				}
+
+				if data, err := ioutil.ReadAll(responseBody); err == nil {
 					payload := bytes.NewReader(data)
 					mountResponse := NewMountResponse(name, payload.Size(), payload)
 					mountResponse.StatusCode = response.StatusCode
@@ -184,12 +209,26 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 	}
 }
 
+func (self *ProxyMount) url() string {
+	url := self.URL
+
+	if from := self.urlRewriteFrom; from != `` {
+		if to := self.urlRewriteTo; to != `` {
+			url = strings.Replace(url, from, to, 1)
+
+			log.Debugf("Rewriting %v to %v due to earlier redirect", self.urlRewriteFrom, self.urlRewriteTo)
+		}
+	}
+
+	return url
+}
+
 func (self *ProxyMount) String() string {
 	return fmt.Sprintf(
 		"%v -> %v %v (passthrough requests=%v errors=%v)",
 		self.MountPoint,
 		strings.ToUpper(sliceutil.OrString(self.Method, `get`)),
-		self.URL,
+		self.url(),
 		self.PassthroughRequests,
 		self.PassthroughErrors,
 	)
