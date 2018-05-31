@@ -33,6 +33,7 @@ const (
 )
 
 var BindingClient = http.DefaultClient
+var AllowInsecureLoopbackBindings bool
 
 var DefaultParamJoiner = `;`
 
@@ -105,6 +106,12 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		resource = strings.TrimPrefix(resource, `/`)
 
 		resource = fmt.Sprintf("%s/%s", prefix, resource)
+
+		// allows bindings referencing the local server to avoid TLS cert verification
+		// because the prefix is often `localhost:port`, which probably won't verify anyway.
+		if AllowInsecureLoopbackBindings {
+			self.Insecure = true
+		}
 	}
 
 	if !self.NoTemplate {
