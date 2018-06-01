@@ -79,6 +79,7 @@ func (self *Binding) ShouldEvaluate(req *http.Request) bool {
 }
 
 func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data map[string]interface{}, funcs FuncMap) (interface{}, error) {
+
 	log.Debugf("Evaluating binding %q", self.Name)
 
 	if req.Header.Get(`X-Diecast-Binding`) == self.Name {
@@ -273,6 +274,9 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				log.Noticef("SSL/TLS certificate validation is disabled for this request.")
 				log.Noticef("This is insecure as the response can be tampered with.")
 			}
+
+			// tell the server we want to close the connection when done
+			bindingReq.Close = true
 
 			// perform binding request
 			// -------------------------------------------------------------------------------------

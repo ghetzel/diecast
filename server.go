@@ -180,7 +180,9 @@ func (self *Server) Initialize() error {
 	self.fileServer = http.FileServer(self.fs)
 
 	if self.VerifyFile != `` {
-		if _, err := self.fs.Open(self.VerifyFile); err != nil {
+		if verify, err := self.fs.Open(self.VerifyFile); err == nil {
+			verify.Close()
+		} else {
 			return fmt.Errorf("Failed to open verification file %q: %v.", self.VerifyFile, err)
 		}
 	}
@@ -782,6 +784,7 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 	var triedLocal bool
 
 PathLoop:
+	// search for the file in all of the generated request paths
 	for _, rPath := range requestPaths {
 		// remove the Route Prefix, as that's a structural part of the path but does not
 		// represent where the files are (used for embedding diecast in other services
@@ -802,6 +805,7 @@ PathLoop:
 		if self.TryLocalFirst && !triedLocal {
 			triedLocal = true
 
+			// attempt loading the file from the local filesystem before searching the mounts
 			if f, m, err := self.tryLocalFile(rPath, req); err == nil {
 				file = f
 				mimeType = m
@@ -820,6 +824,7 @@ PathLoop:
 				break PathLoop
 			}
 		} else {
+			// search the mounts before attempting to load the file from the local filesystem
 			if mnt, response, err := self.tryMounts(rPath, req); err == nil && response != nil {
 				file = response.GetFile()
 				mimeType = response.ContentType
@@ -850,12 +855,14 @@ PathLoop:
 		}
 
 		if file != nil {
+			defer file.Close()
+
 			if strings.Contains(rPath, `__id.`) {
 				urlParams[`1`] = strings.Trim(path.Base(req.URL.Path), `/`)
 				urlParams[`id`] = strings.Trim(path.Base(req.URL.Path), `/`)
 			}
 
-			if handled := self.respondToFile(rPath, mimeType, file, statusCode, headers, urlParams, w, req); handled {
+			if handled := self.tryToHandleFoundFile(rPath, mimeType, file, statusCode, headers, urlParams, w, req); handled {
 				log.Debug(message)
 				return
 			}
@@ -890,6 +897,8 @@ func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.Fi
 	}
 }
 
+// Try to load the given path from each of the mounts, and return the matching mount and its response
+// if found.
 func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *MountResponse, error) {
 	var body *bytes.Reader
 
@@ -928,7 +937,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 	return nil, nil, fmt.Errorf("%q not found", requestPath)
 }
 
-func (self *Server) respondToFile(requestPath string, mimeType string, file http.File, statusCode int, headers map[string]interface{}, urlParams map[string]interface{}, w http.ResponseWriter, req *http.Request) bool {
+func (self *Server) tryToHandleFoundFile(requestPath string, mimeType string, file http.File, statusCode int, headers map[string]interface{}, urlParams map[string]interface{}, w http.ResponseWriter, req *http.Request) bool {
 	// add in any metadata as response headers
 	for k, v := range headers {
 		w.Header().Set(k, fmt.Sprintf("%v", v))
@@ -969,6 +978,7 @@ func (self *Server) respondToFile(requestPath string, mimeType string, file http
 			self.respondError(w, err, http.StatusInternalServerError)
 		}
 	} else {
+		// if not templated, then the file is returned outright
 		w.Header().Set(`Content-Type`, mimeType)
 		io.Copy(w, file)
 	}
@@ -1053,9 +1063,11 @@ func (self *Server) InjectIncludes(w io.Writer, header *TemplateHeader) error {
 
 	if len(includes) > 0 {
 		for name, includePath := range includes {
-			if file, err := self.fs.Open(includePath); err == nil {
-				if _, includeData, err := self.SplitTemplateHeaderContent(file); err == nil {
-					if stat, err := file.Stat(); err == nil {
+			if includeFile, err := self.fs.Open(includePath); err == nil {
+				defer includeFile.Close()
+
+				if _, includeData, err := self.SplitTemplateHeaderContent(includeFile); err == nil {
+					if stat, err := includeFile.Stat(); err == nil {
 						log.Debugf("Injecting included template %q from file %s", name, stat.Name())
 
 						define := "{{/* BEGIN INCLUDE '" + includePath + "' */}}\n"
