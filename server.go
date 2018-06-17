@@ -27,6 +27,8 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 	webfriend "github.com/ghetzel/go-webfriend"
 	"github.com/ghetzel/go-webfriend/browser"
+	"github.com/ghetzel/go-webfriend/commands/core"
+	"github.com/ghetzel/go-webfriend/commands/page"
 	"github.com/ghodss/yaml"
 	"github.com/jbenet/go-base58"
 	"github.com/julienschmidt/httprouter"
@@ -387,20 +389,37 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 
 						log.Debugf("Rendering %v as PDF", suburl)
 
-						if _, err := env.Core.Go(suburl.String(), nil); err != nil {
-							return err
-						}
-
-						if err := env.Page.Pdf(&buffer, nil); err == nil {
-							if rw, ok := w.(http.ResponseWriter); ok {
-								rw.Header().Set(`Content-Type`, `application/pdf`)
+						if m, ok := env.Module(`core`); ok {
+							if core, ok := m.(*core.Commands); ok {
+								if _, err := core.Go(suburl.String(), nil); err != nil {
+									return err
+								}
+							} else {
+								return fmt.Errorf("Unable to retrieve Webfriend Core module")
 							}
-
-							_, err := io.Copy(w, &buffer)
-							return err
 						} else {
-							return err
+							return fmt.Errorf("Unable to retrieve Webfriend Core module")
 						}
+
+						if m, ok := env.Module(`page`); ok {
+							if page, ok := m.(*page.Commands); ok {
+								if err := page.Pdf(&buffer, nil); err == nil {
+									if rw, ok := w.(http.ResponseWriter); ok {
+										rw.Header().Set(`Content-Type`, `application/pdf`)
+									}
+
+									_, err := io.Copy(w, &buffer)
+									return err
+								} else {
+									return err
+								}
+							} else {
+								return fmt.Errorf("Unable to retrieve Webfriend Page module")
+							}
+						} else {
+							return fmt.Errorf("Unable to retrieve Webfriend Page module")
+						}
+
 					} else {
 						log.Fatalf("could not generate PDF: %v", err)
 						return err

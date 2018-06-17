@@ -66,6 +66,21 @@
   revision = "4733699ce30faa633c4db36ebfbe427963593d7d"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/ghetzel/friendscript"
+  packages = [
+    ".",
+    "commands/core",
+    "commands/file",
+    "commands/fmt",
+    "commands/utils",
+    "commands/vars",
+    "scripting",
+    "utils"
+  ]
+  revision = "1111fdbe64940c47ed1bd202d5e2ffc47ce07ee6"
+
+[[projects]]
   name = "github.com/ghetzel/go-stockutil"
   packages = [
     "colorutil",
@@ -90,13 +105,13 @@
   packages = [
     ".",
     "browser",
-    "commands",
+    "commands/assert",
+    "commands/cookies",
     "commands/core",
     "commands/page",
-    "scripting",
     "utils"
   ]
-  revision = "5930bd3fea37c2612a8ee296f2ecacc7fb8bf0e8"
+  revision = "3ddcec16327994829e7724620b8f9449e61589ab"
 
 [[projects]]
   name = "github.com/ghetzel/uuid"
@@ -253,10 +268,10 @@
   revision = "931426f7535ac39720c8909d70ece5a41a2502a6"
 
 [[projects]]
+  branch = "master"
   name = "github.com/mcuadros/go-defaults"
   packages = ["."]
-  revision = "ac8540f0fc7e0fb5f1eb9e25c6fd0b8db8f97eed"
-  version = "v1.1.0"
+  revision = "e1c978be3307be96ef03a0bd25d719ab50d277e4"
 
 [[projects]]
   branch = "master"
@@ -366,6 +381,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8bbe0301d415a7c2f3b398aac1d9eabecdaa5103318a92b3ce7a8a6a8da6703d"
+  inputs-digest = "22db74deb44328bfe03bcad868378d1822875382ea79c6f564e5a249e132eaf6"
   solver-name = "gps-cdcl"
   solver-version = 1
