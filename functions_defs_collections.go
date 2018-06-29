@@ -336,7 +336,7 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 	}
 
 	// fn shuffle: Return the *input* array with the elements rearranged in random order.
-	rv[`shuffle`] = func(input interface{}) []interface{} {
+	rv[`shuffle`] = func(input ...interface{}) []interface{} {
 		if typeutil.IsZero(input) {
 			return make([]interface{}, 0)
 		}

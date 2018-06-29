@@ -885,7 +885,7 @@ Treat the runtime variable *name* as a map, setting *key* to *value*.
 
 <a name="shuffle"></a>
 ```go
-shuffle(input any)
+shuffle(input ...any)
 ```
 Return the *input* array with the elements rearranged in random order.
 
