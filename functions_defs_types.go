@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/timeutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
@@ -54,4 +55,14 @@ func loadStandardFunctionsTypes(rv FuncMap) {
 
 	// fn asTime: Attempt to parse the given *value* as a date/time value.
 	rv[`asTime`] = stringutil.ConvertToTime
+
+	// fn asDuration: Attempt to parse the given *value* as a time duration.
+	rv[`asDuration`] = timeutil.ParseDuration
+
+	rv[`s`] = rv[`asStr`]
+	rv[`i`] = rv[`asInt`]
+	rv[`f`] = rv[`asFloat`]
+	rv[`b`] = rv[`asBool`]
+	rv[`t`] = rv[`asTime`]
+	rv[`d`] = rv[`asDuration`]
 }

@@ -11,6 +11,7 @@ use them.
 - [ago](#ago)
 - [any](#any)
 - [asBool](#asBool)
+- [asDuration](#asDuration)
 - [asFloat](#asFloat)
 - [asInt](#asInt)
 - [asStr](#asStr)
@@ -168,6 +169,14 @@ Return whether *input* array contains any of the the elements *wanted*.
 asBool(value any) (bool, error)
 ```
 Attempt to convert the given *value* to a boolean value.
+
+---
+
+<a name="asDuration"></a>
+```go
+asDuration(value string) (Duration, error)
+```
+Attempt to parse the given *value* as a time duration.
 
 ---
 
@@ -829,17 +838,17 @@ Return a copy of *s* with occurrences of *old* replaced with *new*, up to *n* ti
 
 <a name="reverse"></a>
 ```go
-reverse(array any, ...any)
+reverse(input any, ...any)
 ```
-Return the given *array* in reverse order.
+Return the *input* array sorted in lexical descending order.
 
 ---
 
 <a name="reverse"></a>
 ```go
-reverse(input any, ...any)
+reverse(array any, ...any)
 ```
-Return the *input* array sorted in lexical descending order.
+Return the given *array* in reverse order.
 
 ---
 
