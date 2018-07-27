@@ -202,6 +202,11 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 		return
 	}
 
+	// fn rest: Return all but the first value from the given *input* array.
+	rv[`rest`] = func(slice interface{}) ([]interface{}, error) {
+		return sliceutil.Rest(slice), nil
+	}
+
 	// fn last: Return the last value from the given *input* array.
 	rv[`last`] = func(slice interface{}) (out interface{}, err error) {
 		err = sliceutil.Each(slice, func(i int, value interface{}) error {

@@ -94,6 +94,7 @@ use them.
 - [querystrings](#querystrings)
 - [random](#random)
 - [replace](#replace)
+- [rest](#rest)
 - [reverse](#reverse)
 - [reverse](#reverse)
 - [rtrim](#rtrim)
@@ -836,11 +837,11 @@ Return a copy of *s* with occurrences of *old* replaced with *new*, up to *n* ti
 
 ---
 
-<a name="reverse"></a>
+<a name="rest"></a>
 ```go
-reverse(input any, ...any)
+rest(input any) (, error)
 ```
-Return the *input* array sorted in lexical descending order.
+Return all but the first value from the given *input* array.
 
 ---
 
@@ -849,6 +850,14 @@ Return the *input* array sorted in lexical descending order.
 reverse(array any, ...any)
 ```
 Return the given *array* in reverse order.
+
+---
+
+<a name="reverse"></a>
+```go
+reverse(input any, ...any)
+```
+Return the *input* array sorted in lexical descending order.
 
 ---
 
