@@ -79,6 +79,9 @@ func GetStandardFunctions() FuncMap {
 	// Location-based functions
 	loadStandardFunctionsLocation(rv)
 
+	// Unit Conversions
+	loadStandardFunctionsConvert(rv)
+
 	// Miscellaneous
 	loadStandardFunctionsMisc(rv)
 
