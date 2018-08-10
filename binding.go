@@ -16,10 +16,12 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/ghetzel/go-stockutil/httputil"
+	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/gregjones/httpcache"
 )
 
 type BindingErrorAction string
@@ -34,7 +36,6 @@ const (
 
 var BindingClient = http.DefaultClient
 var AllowInsecureLoopbackBindings bool
-
 var DefaultParamJoiner = `;`
 
 type Binding struct {
@@ -59,6 +60,7 @@ type Binding struct {
 	IfStatus           map[int]BindingErrorAction `json:"if_status"`
 	Repeat             string                     `json:"repeat"`
 	SkipInheritHeaders bool                       `json:"skip_inherit_headers"`
+	DisableCache       bool                       `json:"disable_cache"`
 	server             *Server
 }
 
@@ -263,11 +265,22 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 			log.Infof("Binding: > %s %+v ? %s", strings.ToUpper(sliceutil.OrString(method, `get`)), reqUrl.String(), reqUrl.RawQuery)
 
-			//
-			BindingClient.Transport = &http.Transport{
+			// configure a transport with the requested SSL settings
+			transport := &http.Transport{
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: self.Insecure,
 				},
+			}
+
+			// setup caching transport (if desired)
+			if self.DisableCache {
+				BindingClient.Transport = transport
+			} else {
+				BindingClient.Transport = &httpcache.Transport{
+					Transport:           transport,
+					Cache:               self.server.cache,
+					MarkCachedResponses: true,
+				}
 			}
 
 			if bindingReq.URL.Scheme == `https` && self.Insecure {
@@ -287,7 +300,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 				// debug log response headers
 				for k, v := range res.Header {
-					log.Debugf("  %v=%v", k, strings.Join(v, ` `))
+					log.Debugf("  [H] %v: %v", k, strings.Join(v, ` `))
 				}
 
 				onError := self.OnError

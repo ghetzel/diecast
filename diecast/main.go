@@ -13,18 +13,15 @@ import (
 
 	"github.com/ghetzel/cli"
 	"github.com/ghetzel/diecast"
-	"github.com/ghetzel/diecast/util"
+	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/op/go-logging"
 )
-
-var log = logging.MustGetLogger(`main`)
 
 func main() {
 	app := cli.NewApp()
-	app.Name = util.ApplicationName
-	app.Usage = util.ApplicationSummary
-	app.Version = util.ApplicationVersion
+	app.Name = diecast.ApplicationName
+	app.Usage = diecast.ApplicationSummary
+	app.Version = diecast.ApplicationVersion
 	app.EnableBashCompletion = false
 
 	app.Flags = []cli.Flag{
@@ -94,15 +91,7 @@ func main() {
 	}
 
 	app.Before = func(c *cli.Context) error {
-		level := logging.DEBUG
-
-		if lvl, err := logging.LogLevel(c.String(`log-level`)); err == nil {
-			level = lvl
-		}
-
-		logging.SetFormatter(logging.MustStringFormatter(`%{color}%{level:.4s}%{color:reset}[%{id:04d}] %{module}: %{message}`))
-		logging.SetLevel(level, ``)
-
+		log.SetLevelString(c.String(`log-level`))
 		return nil
 	}
 

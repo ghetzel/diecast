@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"github.com/ghetzel/go-stockutil/mathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/montanaflynn/stats"
@@ -54,6 +55,25 @@ func loadStandardFunctionsMath(rv FuncMap) {
 			return seq
 		} else {
 			return nil
+		}
+	}
+
+	// fn round: Round a number to the nearest n places.
+	rv[`round`] = func(in interface{}, places ...int) (float64, error) {
+		if inF, err := stringutil.ConvertToFloat(in); err == nil {
+			n := 0
+
+			if len(places) > 0 {
+				n = places[0]
+			}
+
+			if n > 0 {
+				return mathutil.RoundPlaces(inF, n), nil
+			} else {
+				return mathutil.Round(inF), nil
+			}
+		} else {
+			return 0, err
 		}
 	}
 

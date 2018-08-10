@@ -10,6 +10,7 @@ import (
 	"strings"
 	text "text/template"
 
+	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/rxutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 )

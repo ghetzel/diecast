@@ -127,4 +127,33 @@ func loadStandardFunctionsTime(rv FuncMap) {
 	rv[`isAfter`] = func(first interface{}, secondI ...interface{}) (bool, error) {
 		return timeCmp(false, first, secondI...)
 	}
+
+	// fn: isBetween: Return whether the current time is between two times [first, second).
+	rv[`isBetweenTimes`] = func(firstI interface{}, secondI interface{}, tm ...interface{}) (bool, error) {
+		now := time.Now()
+
+		if len(tm) > 0 && tm[0] != nil {
+			if t, err := stringutil.ConvertToTime(tm[0]); err == nil {
+				now = t
+			} else {
+				return false, err
+			}
+		}
+
+		if firstT, err := stringutil.ConvertToTime(firstI); err == nil {
+			if secondT, err := stringutil.ConvertToTime(secondI); err == nil {
+				if now.Equal(firstT) || now.After(firstT) {
+					if now.Before(secondT) {
+						return true, nil
+					}
+				}
+			} else {
+				return false, err
+			}
+		} else {
+			return false, err
+		}
+
+		return false, nil
+	}
 }

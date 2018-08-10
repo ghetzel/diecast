@@ -13,6 +13,7 @@ import (
 
 	"github.com/ghetzel/diecast/util"
 	"github.com/ghetzel/go-stockutil/httputil"
+	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 )
 
@@ -198,7 +199,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 					return nil, err
 				}
 			} else {
-				log.Debugf("  %s %s: %s", method, proxyURI, response.Status)
+				// log.Debugf("  %s %s: %s", method, proxyURI, response.Status)
 				return nil, MountHaltErr
 			}
 		} else {

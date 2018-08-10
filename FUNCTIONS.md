@@ -52,6 +52,7 @@ use them.
 - [head](#head)
 - [headers](#headers)
 - [hquery](#hquery)
+- [hyphenate](#hyphenate)
 - [indexOf](#indexOf)
 - [ireverse](#ireverse)
 - [isAfter](#isAfter)
@@ -97,6 +98,7 @@ use them.
 - [rest](#rest)
 - [reverse](#reverse)
 - [reverse](#reverse)
+- [round](#round)
 - [rtrim](#rtrim)
 - [rxreplace](#rxreplace)
 - [sanitize](#sanitize)
@@ -501,6 +503,14 @@ Queries a given HTML **document** (as returned by a Binding) and returns a list 
 
 ---
 
+<a name="hyphenate"></a>
+```go
+hyphenate(s any) string
+```
+Return a copy of *s* transformed into hyphen-case.
+
+---
+
 <a name="indexOf"></a>
 ```go
 indexOf(input any, value any) int
@@ -858,6 +868,14 @@ Return the given *array* in reverse order.
 reverse(input any, ...any)
 ```
 Return the *input* array sorted in lexical descending order.
+
+---
+
+<a name="round"></a>
+```go
+round(any, ...any) (float64, error)
+```
+Round a number to the nearest n places.
 
 ---
 

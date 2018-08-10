@@ -20,6 +20,7 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/ghetzel/go-stockutil/httputil"
+	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/pathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
@@ -30,13 +31,12 @@ import (
 	"github.com/ghetzel/go-webfriend/commands/core"
 	"github.com/ghetzel/go-webfriend/commands/page"
 	"github.com/ghodss/yaml"
+	"github.com/gregjones/httpcache"
+	"github.com/gregjones/httpcache/diskcache"
 	"github.com/jbenet/go-base58"
 	"github.com/julienschmidt/httprouter"
-	"github.com/op/go-logging"
 	"github.com/urfave/negroni"
 )
-
-var log = logging.MustGetLogger(`diecast`)
 
 const DefaultAddress = `127.0.0.1:28419`
 const DefaultRoutePrefix = `/`
@@ -70,6 +70,8 @@ type Server struct {
 	Mounts              []Mount          `json:"-"`
 	MountConfigs        []MountConfig    `json:"mounts"`
 	BaseHeader          *TemplateHeader  `json:"header"`
+	CacheDirectory      string           `json:"cachedir"`
+	cache               httpcache.Cache
 	router              *httprouter.Router
 	server              *negroni.Negroni
 	fs                  http.FileSystem
@@ -199,6 +201,15 @@ func (self *Server) Initialize() error {
 
 	if err := self.setupServer(); err != nil {
 		return err
+	}
+
+	// configure cache handler
+	if self.CacheDirectory == `` {
+		self.cache = httpcache.NewMemoryCache()
+	} else if expanded, err := pathutil.ExpandUser(self.CacheDirectory); err == nil {
+		self.cache = diskcache.New(expanded)
+	} else {
+		return fmt.Errorf("error configuring cache: %v", err)
 	}
 
 	return nil
@@ -813,13 +824,10 @@ PathLoop:
 		var file http.File
 		var statusCode int
 		var mimeType string
-		var message string
 		var redirectTo string
 		var redirectCode int
 		var headers = make(map[string]interface{})
 		var urlParams = make(map[string]interface{})
-
-		log.Debugf("> trying path: %v", rPath)
 
 		if self.TryLocalFirst && !triedLocal {
 			triedLocal = true
@@ -828,30 +836,27 @@ PathLoop:
 			if f, m, err := self.tryLocalFile(rPath, req); err == nil {
 				file = f
 				mimeType = m
-				message = fmt.Sprintf("< handled by filesystem")
 
-			} else if mnt, response, err := self.tryMounts(rPath, req); err == nil {
+			} else if _, response, err := self.tryMounts(rPath, req); err == nil {
 				file = response.GetFile()
 				mimeType = response.ContentType
 				statusCode = response.StatusCode
 				headers = response.Metadata
 				redirectTo = response.RedirectTo
 				redirectCode = response.RedirectCode
-				message = fmt.Sprintf("< handled by %v after trying local first", mnt)
 
 			} else if IsHardStop(err) {
 				break PathLoop
 			}
 		} else {
 			// search the mounts before attempting to load the file from the local filesystem
-			if mnt, response, err := self.tryMounts(rPath, req); err == nil && response != nil {
+			if _, response, err := self.tryMounts(rPath, req); err == nil && response != nil {
 				file = response.GetFile()
 				mimeType = response.ContentType
 				statusCode = response.StatusCode
 				headers = response.Metadata
 				redirectTo = response.RedirectTo
 				redirectCode = response.RedirectCode
-				message = fmt.Sprintf("< handled by %v", mnt)
 
 			} else if IsHardStop(err) {
 				break PathLoop
@@ -859,7 +864,6 @@ PathLoop:
 			} else if f, m, err := self.tryLocalFile(rPath, req); err == nil {
 				file = f
 				mimeType = m
-				message = fmt.Sprintf("< handled by filesystem")
 			}
 		}
 
@@ -882,7 +886,6 @@ PathLoop:
 			}
 
 			if handled := self.tryToHandleFoundFile(rPath, mimeType, file, statusCode, headers, urlParams, w, req); handled {
-				log.Debug(message)
 				return
 			}
 		} else {
@@ -891,7 +894,7 @@ PathLoop:
 	}
 
 	// if we got *here*, then File Not Found
-	log.Debugf("< not found")
+	// log.Debugf("< not found")
 
 	self.respondError(w, fmt.Errorf("File %q was not found.", requestPath), http.StatusNotFound)
 }
@@ -933,9 +936,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 	}
 
 	// find a mount that has this file
-	for i, mount := range self.Mounts {
-		log.Debugf("  trying mount %d %v", i, mount)
-
+	for _, mount := range self.Mounts {
 		// seek the body buffer back to the beginning
 		if _, err := body.Seek(0, 0); err != nil {
 			return nil, nil, err
@@ -1023,8 +1024,6 @@ func (self *Server) respondError(w http.ResponseWriter, resErr error, code int) 
 		fmt.Sprintf("%s/%dxx.html", self.ErrorsPath, int(code/100.0)),
 		fmt.Sprintf("%s/default.html", self.ErrorsPath),
 	} {
-		log.Debugf("> error path: %v", filename)
-
 		if f, err := self.fs.Open(filename); err == nil {
 			if err := tmpl.ParseFrom(f); err == nil {
 				w.Header().Set(`Content-Type`, `text/html`)

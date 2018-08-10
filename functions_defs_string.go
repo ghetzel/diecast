@@ -83,6 +83,9 @@ func loadStandardFunctionsString(rv FuncMap) {
 	// fn underscore: Return a copy of *s* transformed into snake_case.
 	rv[`underscore`] = stringutil.Underscore
 
+	// fn hyphenate: Return a copy of *s* transformed into hyphen-case.
+	rv[`hyphenate`] = stringutil.Hyphenate
+
 	// fn trim: Return a copy of *s* with all leading and trailing whitespace characters removed.
 	rv[`trim`] = strings.TrimSpace
 
