@@ -23,6 +23,7 @@ use them.
 - [base64](#base64)
 - [basename](#basename)
 - [camelize](#camelize)
+- [colorFromValue](#colorFromValue)
 - [colorToHSL](#colorToHSL)
 - [colorToHex](#colorToHex)
 - [colorToRGB](#colorToRGB)
@@ -268,6 +269,14 @@ Return the filename component of the given *path*.
 camelize(s any) string
 ```
 Return a copy of *s* transformed into CamelCase.
+
+---
+
+<a name="colorFromValue"></a>
+```go
+colorFromValue(any) string
+```
+Consistently generate a color from a given value.
 
 ---
 

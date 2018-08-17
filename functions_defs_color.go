@@ -1,6 +1,12 @@
 package diecast
 
-import "github.com/ghetzel/go-stockutil/colorutil"
+import (
+	"encoding/hex"
+
+	"github.com/ghetzel/go-stockutil/colorutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/spaolacci/murmur3"
+)
 
 func loadStandardFunctionsColor(rv FuncMap) {
 	// fn lighten: Lighten the given color by a percent.
@@ -45,6 +51,17 @@ func loadStandardFunctionsColor(rv FuncMap) {
 			return c.StringHSLA(), nil
 		} else {
 			return ``, err
+		}
+	}
+
+	// fn colorFromValue: Consistently generate a color from a given value.
+	rv[`colorFromValue`] = func(value interface{}) string {
+		mmh3 := murmur3.New64().Sum([]byte(typeutil.V(value).String()))
+
+		if len(mmh3) >= 3 {
+			return `#` + hex.EncodeToString(mmh3[0:3])
+		} else {
+			return `#000000`
 		}
 	}
 }
