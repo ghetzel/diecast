@@ -1243,5 +1243,15 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 
 	rv[`request`] = request
 
+	// environment variables
+	env := make(map[string]interface{})
+
+	for _, pair := range os.Environ() {
+		key, value := stringutil.SplitPair(pair, `=`)
+		env[key] = stringutil.Autotype(value)
+	}
+
+	rv[`env`] = env
+
 	return rv
 }
