@@ -261,6 +261,11 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 		return sliceutil.Stringify(slice)
 	}
 
+	// fn intersect: Return the intersection of the *first* and *second* slices.
+	rv[`intersect`] = func(first interface{}, second interface{}) []interface{} {
+		return sliceutil.Intersect(first, second)
+	}
+
 	// fn groupBy: Return the given *input* array-of-objects as an object, keyed on the value of the
 	//             specified group *field*.  The field argument can be a template.
 	rv[`groupBy`] = func(sliceOfMaps interface{}, key string, valueTpls ...string) (map[string][]interface{}, error) {

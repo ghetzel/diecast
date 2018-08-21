@@ -55,6 +55,7 @@ use them.
 - [hquery](#hquery)
 - [hyphenate](#hyphenate)
 - [indexOf](#indexOf)
+- [intersect](#intersect)
 - [ireverse](#ireverse)
 - [isAfter](#isAfter)
 - [isArray](#isArray)
@@ -525,6 +526,14 @@ Return a copy of *s* transformed into hyphen-case.
 indexOf(input any, value any) int
 ```
 Iterate through the *input* array and return the index of *value*, or -1 if not present.
+
+---
+
+<a name="intersect"></a>
+```go
+intersect(first any, second any)
+```
+Return the intersection of the *first* and *second* slices.
 
 ---
 
