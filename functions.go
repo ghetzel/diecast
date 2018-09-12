@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path"
 	"sort"
 	"strings"
 	"time"
@@ -24,11 +25,13 @@ import (
 var Base32Alphabet = base32.NewEncoding(`abcdefghijklmnopqrstuvwxyz234567`)
 
 type fileInfo struct {
+	Parent    string
+	Directory bool
 	os.FileInfo
 }
 
 func (self *fileInfo) String() string {
-	return self.Name()
+	return path.Join(self.Parent, self.Name())
 }
 
 type statsUnary func(stats.Float64Data) (float64, error)
@@ -81,6 +84,9 @@ func GetStandardFunctions() FuncMap {
 
 	// Unit Conversions
 	loadStandardFunctionsConvert(rv)
+
+	// Template Introspection functions
+	loadStandardFunctionsIntrospection(rv)
 
 	// Miscellaneous
 	loadStandardFunctionsMisc(rv)

@@ -2,10 +2,10 @@ package diecast
 
 import (
 	"fmt"
-	"io/ioutil"
 	"mime"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -59,11 +59,21 @@ func loadStandardFunctionsPath(rv FuncMap) {
 			return nil, err
 		}
 
-		if e, err := ioutil.ReadDir(dir); err == nil {
-			for _, info := range e {
-				entries = append(entries, &fileInfo{
-					FileInfo: info,
-				})
+		dir = path.Clean(dir)
+
+		if pathutil.DirExists(dir) {
+			dir = path.Join(dir, `*`)
+		}
+
+		if e, err := filepath.Glob(dir); err == nil {
+			for _, entry := range e {
+				if info, err := os.Stat(entry); err == nil {
+					entries = append(entries, &fileInfo{
+						Parent:    path.Dir(entry),
+						Directory: info.IsDir(),
+						FileInfo:  info,
+					})
+				}
 			}
 
 			sort.Slice(entries, func(i, j int) bool {

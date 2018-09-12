@@ -60,6 +60,7 @@ type Server struct {
 	RootPath            string                 `json:"root"`
 	LayoutPath          string                 `json:"layouts"`
 	ErrorsPath          string                 `json:"errors"`
+	EnableDebugging     bool                   `json:"debug"`
 	EnableLayouts       bool                   `json:"enableLayouts"`
 	RoutePrefix         string                 `json:"routePrefix"`
 	TemplatePatterns    []string               `json:"patterns"`
@@ -99,6 +100,16 @@ func NewServer(root string, patterns ...string) *Server {
 		VerifyFile:         DefaultVerifyFile,
 		Mounts:             make([]Mount, 0),
 	}
+}
+
+func (self *Server) ShouldReturnSource(req *http.Request) bool {
+	if self.EnableDebugging {
+		if httputil.QBool(req, `__viewsource`) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (self *Server) LoadConfig(filename string) error {
@@ -298,7 +309,7 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 					layoutName = EvalInline(layoutName, nil, earlyFuncs)
 
 					if layoutFile, err := self.LoadLayout(layoutName); err == nil {
-						if layoutHeader, layoutData, err := self.SplitTemplateHeaderContent(layoutFile); err == nil {
+						if layoutHeader, layoutData, err := SplitTemplateHeaderContent(layoutFile); err == nil {
 							if layoutHeader != nil {
 								headers = append([]*TemplateHeader{layoutHeader}, headers...)
 
@@ -309,10 +320,10 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 							}
 
 							finalTemplate.WriteString("{{/* BEGIN LAYOUT '" + layoutName + "' */}}\n")
-							finalTemplate.WriteString("\n{{ define \"layout\" }}\n")
+							finalTemplate.WriteString("{{ define \"layout\" }}\n")
 							finalTemplate.Write(layoutData)
 							finalTemplate.WriteString("\n{{ end }}\n")
-							finalTemplate.WriteString("{{/* BEGIN LAYOUT '" + layoutName + "' */}}\n")
+							finalTemplate.WriteString("{{/* END LAYOUT '" + layoutName + "' */}}\n\n")
 						} else {
 							return err
 						}
@@ -453,7 +464,7 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 				}
 			}
 
-			if httputil.QBool(req, `__viewsource`) {
+			if self.ShouldReturnSource(req) {
 				w.Header().Set(`Content-Type`, `text/plain`)
 				w.Write(finalTemplate.Bytes())
 				return nil
@@ -466,7 +477,7 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 					return tmpl.Render(w, data, ``)
 				}
 			}
-		} else if httputil.QBool(req, `__viewsource`) {
+		} else if self.ShouldReturnSource(req) {
 			var tplstr string
 			lines := strings.Split(finalTemplate.String(), "\n")
 			lineNoSpaces := fmt.Sprintf("%d", len(fmt.Sprintf("%d", len(lines)))+1)
@@ -989,7 +1000,7 @@ func (self *Server) tryToHandleFoundFile(requestPath string, mimeType string, fi
 	// we got a real actual file here, figure out if we're templating it or not
 	if self.shouldApplyTemplate(requestPath) {
 		// tease the template header out of the file
-		if header, templateData, err := self.SplitTemplateHeaderContent(file); err == nil {
+		if header, templateData, err := SplitTemplateHeaderContent(file); err == nil {
 			if header != nil {
 				if redirect := header.Redirect; redirect != nil {
 					w.Header().Set(`Location`, redirect.URL)
@@ -1058,7 +1069,7 @@ func (self *Server) respondError(w http.ResponseWriter, resErr error, code int) 
 	http.Error(w, resErr.Error(), code)
 }
 
-func (self *Server) SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, error) {
+func SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, error) {
 	if data, err := ioutil.ReadAll(reader); err == nil {
 		if bytes.HasPrefix(data, HeaderSeparator) {
 			parts := bytes.SplitN(data, HeaderSeparator, 3)
@@ -1098,14 +1109,14 @@ func (self *Server) InjectIncludes(w io.Writer, header *TemplateHeader) error {
 			if includeFile, err := self.fs.Open(includePath); err == nil {
 				defer includeFile.Close()
 
-				if _, includeData, err := self.SplitTemplateHeaderContent(includeFile); err == nil {
+				if _, includeData, err := SplitTemplateHeaderContent(includeFile); err == nil {
 					if stat, err := includeFile.Stat(); err == nil {
 						log.Debugf("Injecting included template %q from file %s", name, stat.Name())
 
 						define := "{{/* BEGIN INCLUDE '" + includePath + "' */}}\n"
 						define += "{{ define \"" + name + "\" }}\n"
 						end := "\n{{ end }}\n"
-						end += "{{/* END INCLUDE '" + includePath + "' */}}\n"
+						end += "{{/* END INCLUDE '" + includePath + "' */}}\n\n"
 
 						w.Write([]byte(define))
 						w.Write(includeData)

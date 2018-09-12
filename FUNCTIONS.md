@@ -39,6 +39,7 @@ use them.
 - [elide](#elide)
 - [eqx](#eqx)
 - [extname](#extname)
+- [extractTime](#extractTime)
 - [filter](#filter)
 - [filterByKey](#filterByKey)
 - [findkey](#findkey)
@@ -118,6 +119,7 @@ use them.
 - [sunset](#sunset)
 - [surroundedBy](#surroundedBy)
 - [tail](#tail)
+- [templateKey](#templateKey)
 - [thousandify](#thousandify)
 - [time](#time)
 - [titleize](#titleize)
@@ -398,6 +400,14 @@ A relaxed-type version of the **eq** builtin function.
 extname(path any) string
 ```
 Return the extension component of the given *path* (always prefixed with a dot [.]).
+
+---
+
+<a name="extractTime"></a>
+```go
+extractTime(any) (Time, error)
+```
+Attempt to extract a date from the given string
 
 ---
 
@@ -875,17 +885,17 @@ Return all but the first value from the given *input* array.
 
 <a name="reverse"></a>
 ```go
-reverse(array any, ...any)
+reverse(input any, ...any)
 ```
-Return the given *array* in reverse order.
+Return the *input* array sorted in lexical descending order.
 
 ---
 
 <a name="reverse"></a>
 ```go
-reverse(input any, ...any)
+reverse(array any, ...any)
 ```
-Return the *input* array sorted in lexical descending order.
+Return the given *array* in reverse order.
 
 ---
 
@@ -1030,6 +1040,14 @@ Return whether string *s* starts with *prefix* and ends with *suffix*.
 tail(input any, n int)
 ```
 Return from the *input* array the last *n* items.
+
+---
+
+<a name="templateKey"></a>
+```go
+templateKey(file any, key any, ...any) (, error)
+```
+Open the given *file* and retrieve the *key* from the page object in its header.
 
 ---
 

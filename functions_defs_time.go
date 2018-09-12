@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/timeutil"
@@ -155,5 +156,65 @@ func loadStandardFunctionsTime(rv FuncMap) {
 		}
 
 		return false, nil
+	}
+
+	// fn extractTime: Attempt to extract a date from the given string
+	rv[`extractTime`] = func(baseI interface{}) (time.Time, error) {
+		if base, err := stringutil.ToString(baseI); err == nil {
+			if tm, err := stringutil.ConvertToTime(base); err == nil {
+				return tm, nil
+			}
+
+			parts := strings.FieldsFunc(base, func(c rune) bool {
+				switch c {
+				case '/':
+					return true
+				default:
+					return false
+				}
+			})
+
+			for i := (len(parts) - 1); i >= 0; i-- {
+				part := parts[i]
+
+				split := strings.FieldsFunc(part, func(c rune) bool {
+					return !unicode.IsLetter(c) && !unicode.IsNumber(c)
+				})
+
+				// try working backward...
+				for j := len(split); j >= 0; j-- {
+					try := strings.Join(split[0:j], `-`)
+
+					if tm, err := stringutil.ConvertToTime(try); err == nil {
+						return tm, nil
+					}
+
+					try = strings.Join(split[j:], `-`)
+
+					if tm, err := stringutil.ConvertToTime(try); err == nil {
+						return tm, nil
+					}
+				}
+
+				// ...then forward
+				for j := 0; j < len(split); j++ {
+					try := strings.Join(split[0:j], `-`)
+
+					if tm, err := stringutil.ConvertToTime(try); err == nil {
+						return tm, nil
+					}
+
+					try = strings.Join(split[j:], `-`)
+
+					if tm, err := stringutil.ConvertToTime(try); err == nil {
+						return tm, nil
+					}
+				}
+			}
+
+			return time.Time{}, nil
+		} else {
+			return time.Time{}, err
+		}
 	}
 }
