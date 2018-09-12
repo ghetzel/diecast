@@ -54,23 +54,25 @@ func (self RedirectTo) Error() string {
 }
 
 type Server struct {
-	Address             string           `json:"address"`
-	Bindings            []Binding        `json:"bindings"`
-	BindingPrefix       string           `json:"bindingPrefix"`
-	RootPath            string           `json:"root"`
-	LayoutPath          string           `json:"layouts"`
-	ErrorsPath          string           `json:"errors"`
-	EnableLayouts       bool             `json:"enableLayouts"`
-	RoutePrefix         string           `json:"routePrefix"`
-	TemplatePatterns    []string         `json:"patterns"`
-	AdditionalFunctions template.FuncMap `json:"-"`
-	TryLocalFirst       bool             `json:"localFirst"`
-	IndexFile           string           `json:"indexFile"`
-	VerifyFile          string           `json:"verifyFile"`
-	Mounts              []Mount          `json:"-"`
-	MountConfigs        []MountConfig    `json:"mounts"`
-	BaseHeader          *TemplateHeader  `json:"header"`
-	CacheDirectory      string           `json:"cachedir"`
+	Address             string                 `json:"address"`
+	Bindings            []Binding              `json:"bindings"`
+	BindingPrefix       string                 `json:"bindingPrefix"`
+	RootPath            string                 `json:"root"`
+	LayoutPath          string                 `json:"layouts"`
+	ErrorsPath          string                 `json:"errors"`
+	EnableLayouts       bool                   `json:"enableLayouts"`
+	RoutePrefix         string                 `json:"routePrefix"`
+	TemplatePatterns    []string               `json:"patterns"`
+	AdditionalFunctions template.FuncMap       `json:"-"`
+	TryLocalFirst       bool                   `json:"localFirst"`
+	IndexFile           string                 `json:"indexFile"`
+	VerifyFile          string                 `json:"verifyFile"`
+	Mounts              []Mount                `json:"-"`
+	MountConfigs        []MountConfig          `json:"mounts"`
+	BaseHeader          *TemplateHeader        `json:"header"`
+	DefaultPageObject   map[string]interface{} `json:"-"`
+	OverridePageObject  map[string]interface{} `json:"-"`
+	CacheDirectory      string                 `json:"cachedir"`
 	cache               httpcache.Cache
 	router              *httprouter.Router
 	server              *negroni.Negroni
@@ -85,15 +87,17 @@ func NewServer(root string, patterns ...string) *Server {
 	}
 
 	return &Server{
-		Address:          DefaultAddress,
-		RoutePrefix:      DefaultRoutePrefix,
-		RootPath:         root,
-		EnableLayouts:    true,
-		Bindings:         make([]Binding, 0),
-		TemplatePatterns: patterns,
-		IndexFile:        DefaultIndexFile,
-		VerifyFile:       DefaultVerifyFile,
-		Mounts:           make([]Mount, 0),
+		Address:            DefaultAddress,
+		RoutePrefix:        DefaultRoutePrefix,
+		DefaultPageObject:  make(map[string]interface{}),
+		OverridePageObject: make(map[string]interface{}),
+		RootPath:           root,
+		EnableLayouts:      true,
+		Bindings:           make([]Binding, 0),
+		TemplatePatterns:   patterns,
+		IndexFile:          DefaultIndexFile,
+		VerifyFile:         DefaultVerifyFile,
+		Mounts:             make([]Mount, 0),
 	}
 }
 
@@ -655,7 +659,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	if header != nil {
 		pageData := make(map[string]interface{})
 
-		maputil.Walk(header.Page, func(value interface{}, path []string, isLeaf bool) error {
+		applyPageFn := func(value interface{}, path []string, isLeaf bool) error {
 
 			if isLeaf {
 				switch value.(type) {
@@ -668,7 +672,17 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			}
 
 			return nil
-		})
+		}
+
+		// add default page object values
+		maputil.Walk(self.DefaultPageObject, applyPageFn)
+
+		// then pepper in whatever values came from the aggregated headers from
+		// the layout, includes, and target template
+		maputil.Walk(header.Page, applyPageFn)
+
+		// if there were override items specified (e.g.: via the command line), add them now
+		maputil.Walk(self.OverridePageObject, applyPageFn)
 
 		data[`page`] = pageData
 	} else {

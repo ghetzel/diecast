@@ -14,7 +14,9 @@ import (
 	"github.com/ghetzel/cli"
 	"github.com/ghetzel/diecast"
 	"github.com/ghetzel/go-stockutil/log"
+	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
+	"github.com/ghetzel/go-stockutil/stringutil"
 )
 
 func main() {
@@ -22,7 +24,6 @@ func main() {
 	app.Name = diecast.ApplicationName
 	app.Usage = diecast.ApplicationSummary
 	app.Version = diecast.ApplicationVersion
-	app.EnableBashCompletion = false
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
@@ -53,6 +54,14 @@ func main() {
 		cli.StringSliceFlag{
 			Name:  `template-pattern, P`,
 			Usage: `A shell glob pattern matching a set of files that should be templated`,
+		},
+		cli.StringSliceFlag{
+			Name:  `page, p`,
+			Usage: `A key=value pair that will be inserted into the global page object.`,
+		},
+		cli.StringSliceFlag{
+			Name:  `override, o`,
+			Usage: `A key=value pair that will be inserted into the global page object, overriding any prior values.`,
 		},
 		cli.StringSliceFlag{
 			Name:  `mount, m`,
@@ -106,11 +115,20 @@ func main() {
 		server.VerifyFile = c.String(`verify-file`)
 		server.IndexFile = c.String(`index-file`)
 
+		populateFlags(server.DefaultPageObject, c.StringSlice(`page`))
+		populateFlags(server.OverridePageObject, c.StringSlice(`override`))
+
 		if err := server.LoadConfig(c.String(`config`)); err != nil {
 			log.Fatalf("config error: %v", err)
 		}
 
-		server.TemplatePatterns = append(server.TemplatePatterns, c.StringSlice(`template-pattern`)...)
+		if patterns := c.StringSlice(`template-pattern`); len(patterns) > 0 {
+			if sliceutil.ContainsString(patterns, `none`) {
+				server.TemplatePatterns = nil
+			} else {
+				server.TemplatePatterns = c.StringSlice(`template-pattern`)
+			}
+		}
 
 		mounts := make([]diecast.Mount, 0)
 
@@ -226,4 +244,11 @@ func main() {
 	}
 
 	app.Run(os.Args)
+}
+
+func populateFlags(into map[string]interface{}, from []string) {
+	for _, pair := range from {
+		key, value := stringutil.SplitPair(pair, `=`)
+		maputil.DeepSet(into, strings.Split(key, `.`), stringutil.Autotype(value))
+	}
 }
