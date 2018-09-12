@@ -11,7 +11,6 @@ import (
 )
 
 func loadStandardFunctionsIntrospection(rv FuncMap) {
-
 	// fn templateKey: Open the given *file* and retrieve the *key* from the page object in its header.
 	rv[`templateKey`] = func(filenameI interface{}, keyI interface{}, fallbacks ...interface{}) (interface{}, error) {
 		if filename, err := stringutil.ToString(filenameI); err == nil {
