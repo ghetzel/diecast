@@ -62,8 +62,8 @@ type StartCommand struct {
 	Command          string                 `json:"command"`
 	Directory        string                 `json:"directory"`
 	Environment      map[string]interface{} `json:"env"`
-	WaitBefore       string                 `json:"waitBefore"`
-	Wait             string                 `json:"wait"`
+	WaitBefore       string                 `json:"delay"`
+	Wait             string                 `json:"timeout"`
 	ExitOnCompletion bool                   `json:"exitOnCompletion"`
 	cmd              *exec.Cmd
 }
@@ -245,12 +245,12 @@ func (self *Server) Initialize() error {
 		return fmt.Errorf("error configuring cache: %v", err)
 	}
 
-	return self.RunStartCommand(&self.PrestartCommand)
+	return self.RunStartCommand(&self.PrestartCommand, false)
 }
 
 func (self *Server) Serve() error {
 	go func() {
-		if err := self.RunStartCommand(&self.StartCommand); err != nil {
+		if err := self.RunStartCommand(&self.StartCommand, true); err != nil {
 			log.Errorf("start command failed: %v", err)
 
 			if self.StartCommand.ExitOnCompletion {
@@ -1313,7 +1313,7 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 	return rv
 }
 
-func (self *Server) RunStartCommand(scmd *StartCommand) error {
+func (self *Server) RunStartCommand(scmd *StartCommand, waitForCommand bool) error {
 	if cmdline := scmd.Command; cmdline != `` {
 		if tokens, err := shellwords.Parse(cmdline); err == nil {
 			scmd.cmd = exec.Command(tokens[0], tokens[1:]...)
@@ -1337,31 +1337,36 @@ func (self *Server) RunStartCommand(scmd *StartCommand) error {
 			}
 
 			if dir := scmd.Directory; dir != `` {
-				scmd.cmd.Dir = dir
+				if xdir, err := pathutil.ExpandUser(dir); err == nil {
+					if absdir, err := filepath.Abs(xdir); err == nil {
+						scmd.cmd.Dir = absdir
+					} else {
+						return err
+					}
+				} else {
+					return err
+				}
 			}
 
-			if prewait, err := timeutil.ParseDuration(scmd.WaitBefore); err == nil {
+			if prewait, err := timeutil.ParseDuration(scmd.WaitBefore); err == nil && prewait > 0 {
 				log.Infof("Waiting %v before running command", prewait)
 				time.Sleep(prewait)
 			}
 
-			waitchan := make(chan error)
-
-			go func() {
-				log.Infof("Executing command: %v", strings.Join(scmd.cmd.Args, ` `))
-				waitchan <- scmd.cmd.Run()
-			}()
-
 			if wait, err := timeutil.ParseDuration(scmd.Wait); err == nil {
-				select {
-				case err := <-waitchan:
-					if err != nil {
-						return fmt.Errorf("command failed: %v", err)
-					} else if wait > 0 {
-						return fmt.Errorf("command exited too quickly")
-					}
-				case <-time.After(wait):
-					break
+				waitchan := make(chan error)
+
+				go func() {
+					log.Infof("Executing command: %v", strings.Join(scmd.cmd.Args, ` `))
+					waitchan <- scmd.cmd.Run()
+				}()
+
+				time.Sleep(wait)
+
+				if waitForCommand {
+					return <-waitchan
+				} else {
+					return nil
 				}
 			} else {
 				return err
@@ -1369,9 +1374,9 @@ func (self *Server) RunStartCommand(scmd *StartCommand) error {
 		} else {
 			return fmt.Errorf("invalid command: %v", err)
 		}
+	} else {
+		return nil
 	}
-
-	return nil
 }
 
 func (self *Server) cleanupCommands() {
