@@ -14,9 +14,12 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/fatih/structs"
 	"github.com/ghetzel/go-stockutil/httputil"
@@ -25,6 +28,7 @@ import (
 	"github.com/ghetzel/go-stockutil/pathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/timeutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	webfriend "github.com/ghetzel/go-webfriend"
 	"github.com/ghetzel/go-webfriend/browser"
@@ -35,6 +39,7 @@ import (
 	"github.com/gregjones/httpcache/diskcache"
 	"github.com/jbenet/go-base58"
 	"github.com/julienschmidt/httprouter"
+	"github.com/mattn/go-shellwords"
 	"github.com/urfave/negroni"
 )
 
@@ -51,6 +56,16 @@ type RedirectTo string
 
 func (self RedirectTo) Error() string {
 	return string(self)
+}
+
+type StartCommand struct {
+	Command          string                 `json:"command"`
+	Directory        string                 `json:"directory"`
+	Environment      map[string]interface{} `json:"env"`
+	WaitBefore       string                 `json:"waitBefore"`
+	Wait             string                 `json:"wait"`
+	ExitOnCompletion bool                   `json:"exitOnCompletion"`
+	cmd              *exec.Cmd
 }
 
 type Server struct {
@@ -74,12 +89,15 @@ type Server struct {
 	DefaultPageObject   map[string]interface{} `json:"-"`
 	OverridePageObject  map[string]interface{} `json:"-"`
 	CacheDirectory      string                 `json:"cachedir"`
+	PrestartCommand     StartCommand           `json:"prestart"`
+	StartCommand        StartCommand           `json:"start"`
 	cache               httpcache.Cache
 	router              *httprouter.Router
 	server              *negroni.Negroni
 	fs                  http.FileSystem
 	fsIsSet             bool
 	fileServer          http.Handler
+	precmd              *exec.Cmd
 }
 
 func NewServer(root string, patterns ...string) *Server {
@@ -227,10 +245,24 @@ func (self *Server) Initialize() error {
 		return fmt.Errorf("error configuring cache: %v", err)
 	}
 
-	return nil
+	return self.RunStartCommand(&self.PrestartCommand)
 }
 
 func (self *Server) Serve() error {
+	go func() {
+		if err := self.RunStartCommand(&self.StartCommand); err != nil {
+			log.Errorf("start command failed: %v", err)
+
+			if self.StartCommand.ExitOnCompletion {
+				self.cleanupCommands()
+				os.Exit(1)
+			}
+		} else if self.StartCommand.ExitOnCompletion {
+			self.cleanupCommands()
+			os.Exit(0)
+		}
+	}()
+
 	return http.ListenAndServe(self.Address, self.server)
 }
 
@@ -1279,4 +1311,79 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 	rv[`env`] = env
 
 	return rv
+}
+
+func (self *Server) RunStartCommand(scmd *StartCommand) error {
+	if cmdline := scmd.Command; cmdline != `` {
+		if tokens, err := shellwords.Parse(cmdline); err == nil {
+			scmd.cmd = exec.Command(tokens[0], tokens[1:]...)
+			scmd.cmd.SysProcAttr = &syscall.SysProcAttr{
+				Setpgid: true,
+			}
+
+			env := make(map[string]interface{})
+
+			for _, pair := range os.Environ() {
+				key, value := stringutil.SplitPair(pair, `=`)
+				env[key] = value
+			}
+
+			for key, value := range scmd.Environment {
+				env[key] = value
+			}
+
+			for key, value := range env {
+				scmd.cmd.Env = append(scmd.cmd.Env, fmt.Sprintf("%v=%v", key, value))
+			}
+
+			if dir := scmd.Directory; dir != `` {
+				scmd.cmd.Dir = dir
+			}
+
+			if prewait, err := timeutil.ParseDuration(scmd.WaitBefore); err == nil {
+				log.Infof("Waiting %v before running command", prewait)
+				time.Sleep(prewait)
+			}
+
+			waitchan := make(chan error)
+
+			go func() {
+				log.Infof("Executing command: %v", strings.Join(scmd.cmd.Args, ` `))
+				waitchan <- scmd.cmd.Run()
+			}()
+
+			if wait, err := timeutil.ParseDuration(scmd.Wait); err == nil {
+				select {
+				case err := <-waitchan:
+					if err != nil {
+						return fmt.Errorf("command failed: %v", err)
+					} else if wait > 0 {
+						return fmt.Errorf("command exited too quickly")
+					}
+				case <-time.After(wait):
+					break
+				}
+			} else {
+				return err
+			}
+		} else {
+			return fmt.Errorf("invalid command: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (self *Server) cleanupCommands() {
+	if self.PrestartCommand.cmd != nil {
+		if proc := self.PrestartCommand.cmd.Process; proc != nil {
+			proc.Kill()
+		}
+	}
+
+	if self.StartCommand.cmd != nil {
+		if proc := self.StartCommand.cmd.Process; proc != nil {
+			proc.Kill()
+		}
+	}
 }

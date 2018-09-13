@@ -97,6 +97,30 @@ func main() {
 			Usage: `The destination directory to put files in when rendering a static site.`,
 			Value: `./_site`,
 		},
+		cli.StringFlag{
+			Name:  `prestart-command`,
+			Usage: `Execute a command before starting the built-in web server.`,
+		},
+		cli.StringFlag{
+			Name:  `prestart-command-dir`,
+			Usage: `The directory to change to when starting the prestart-command.`,
+		},
+		cli.DurationFlag{
+			Name:  `prestart-command-wait`,
+			Usage: `Wait this amount of time after starting the command before proceeding.`,
+		},
+		cli.StringFlag{
+			Name:  `start-command`,
+			Usage: `Execute a command before immediately after starting the built-in web server.`,
+		},
+		cli.DurationFlag{
+			Name:  `start-command-delay`,
+			Usage: `Wait this amount of time nefore starting the command.`,
+		},
+		cli.StringFlag{
+			Name:  `start-command-dir`,
+			Usage: `The directory to change to when starting the start-command.`,
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
@@ -114,6 +138,17 @@ func main() {
 		server.TryLocalFirst = c.Bool(`local-first`)
 		server.VerifyFile = c.String(`verify-file`)
 		server.IndexFile = c.String(`index-file`)
+
+		if cmdline := c.String(`prestart-command`); cmdline != `` {
+			server.PrestartCommand.Command = cmdline
+			server.PrestartCommand.Directory = c.String(`prestart-command-dir`)
+		}
+
+		if cmdline := c.String(`start-command`); cmdline != `` {
+			server.StartCommand.Command = cmdline
+			server.StartCommand.Directory = c.String(`start-command-dir`)
+			server.StartCommand.WaitBefore = c.Duration(`start-command-delay`).String()
+		}
 
 		populateFlags(server.DefaultPageObject, c.StringSlice(`page`))
 		populateFlags(server.OverridePageObject, c.StringSlice(`override`))
