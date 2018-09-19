@@ -607,14 +607,14 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 			value = vI
 		}
 
-		maputil.DeepSet(data, []string{`vars`, name}, value)
+		maputil.DeepSet(data, makeVarKey(name), value)
 		return ``
 	}
 
 	// fn set: Treat the runtime variable *name* as a map, setting *key* to *value*.
 	funcs[`set`] = func(name string, key string, vI ...interface{}) interface{} {
 		var value interface{}
-		path := []string{`vars`, name}
+		path := makeVarKey(name)
 
 		switch len(vI) {
 		case 0:
@@ -632,13 +632,14 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 	// fn push: Append to variable *name* to *value*.
 	funcs[`push`] = func(name string, vI ...interface{}) interface{} {
 		var values []interface{}
+		key := makeVarKey(name)
 
-		if existing := maputil.DeepGet(data, []string{`vars`, name}); existing != nil {
+		if existing := maputil.DeepGet(data, key); existing != nil {
 			values = append(values, sliceutil.Sliceify(existing)...)
 		}
 
 		values = append(values, vI...)
-		maputil.DeepSet(data, []string{`vars`, name}, values)
+		maputil.DeepSet(data, key, values)
 
 		return ``
 	}
@@ -646,8 +647,9 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 	// fn pop: Remove the last item from *name* and return it.
 	funcs[`pop`] = func(name string) interface{} {
 		var out interface{}
+		key := makeVarKey(name)
 
-		if existing := maputil.DeepGet(data, []string{`vars`, name}); existing != nil {
+		if existing := maputil.DeepGet(data, key); existing != nil {
 			values := sliceutil.Sliceify(existing)
 
 			switch len(values) {
@@ -655,18 +657,67 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 				return nil
 			case 1:
 				out = values[0]
-				maputil.DeepSet(data, []string{`vars`, name}, nil)
+				maputil.DeepSet(data, key, nil)
 			default:
 				out = values[len(values)-1]
 				values = values[0 : len(values)-1]
-				maputil.DeepSet(data, []string{`vars`, name}, values)
+				maputil.DeepSet(data, key, values)
 			}
 		}
 
 		return out
 	}
 
+	// fn increment: Increment a named variable by an amount.
+	funcs[`increment`] = func(name string, incr ...int) interface{} {
+		key := makeVarKey(name)
+		count := 0
+
+		if existing := maputil.DeepGet(data, key); existing != nil {
+			count = int(typeutil.V(existing).Int())
+		}
+
+		if len(incr) > 0 {
+			count += incr[0]
+		} else {
+			count += 1
+		}
+
+		maputil.DeepSet(data, key, count)
+
+		return ``
+	}
+
+	// fn incrementByValue: Add a number to a counter tracking the number of occurrences of a specific value.
+	funcs[`incrementByValue`] = func(name string, value interface{}, incr ...int) interface{} {
+		key := makeVarKey(name, fmt.Sprintf("%v", value))
+		count := 0
+
+		if existing := maputil.DeepGet(data, key); existing != nil {
+			count = int(typeutil.V(existing).Int())
+		}
+
+		if len(incr) > 0 {
+			count += incr[0]
+		} else {
+			count += 1
+		}
+
+		maputil.DeepSet(data, key, count)
+
+		return ``
+	}
+
 	return funcs
+}
+
+func makeVarKey(key string, post ...string) []string {
+	output := []string{`vars`}
+
+	output = append(output, strings.Split(key, `.`)...)
+	output = append(output, post...)
+
+	return output
 }
 
 func (self *Server) LoadLayout(name string) (io.Reader, error) {

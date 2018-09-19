@@ -4,6 +4,7 @@ import (
 	"github.com/ghetzel/go-stockutil/mathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/montanaflynn/stats"
 )
 
@@ -75,6 +76,11 @@ func loadStandardFunctionsMath(rv FuncMap) {
 		} else {
 			return 0, err
 		}
+	}
+
+	// fn negate: Return the given number multiplied by -1
+	rv[`negate`] = func(value interface{}) float64 {
+		return -1 * typeutil.V(value).Float()
 	}
 
 	// Numeric Aggregation Functions

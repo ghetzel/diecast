@@ -55,6 +55,8 @@ use them.
 - [headers](#headers)
 - [hquery](#hquery)
 - [hyphenate](#hyphenate)
+- [increment](#increment)
+- [incrementByValue](#incrementByValue)
 - [indexOf](#indexOf)
 - [intersect](#intersect)
 - [ireverse](#ireverse)
@@ -76,6 +78,7 @@ use them.
 - [lighten](#lighten)
 - [lower](#lower)
 - [ltrim](#ltrim)
+- [mapify](#mapify)
 - [markdown](#markdown)
 - [mimeparams](#mimeparams)
 - [mimetype](#mimetype)
@@ -83,6 +86,7 @@ use them.
 - [mostcommon](#mostcommon)
 - [multiply](#multiply)
 - [murmur3](#murmur3)
+- [negate](#negate)
 - [nex](#nex)
 - [now](#now)
 - [param](#param)
@@ -531,6 +535,22 @@ Return a copy of *s* transformed into hyphen-case.
 
 ---
 
+<a name="increment"></a>
+```go
+increment(string, ...any)
+```
+Increment a named variable by an amount.
+
+---
+
+<a name="incrementByValue"></a>
+```go
+incrementByValue(string, any, ...any)
+```
+Add a number to a counter tracking the number of occurrences of a specific value.
+
+---
+
 <a name="indexOf"></a>
 ```go
 indexOf(input any, value any) int
@@ -699,6 +719,14 @@ Return a copy of string *s* with the leading *prefix* removed.
 
 ---
 
+<a name="mapify"></a>
+```go
+mapify(any)
+```
+Convert the input value into a map.
+
+---
+
 <a name="markdown"></a>
 ```go
 markdown(value any) (HTML, error)
@@ -752,6 +780,14 @@ Return the product of all of the given *values*.
 murmur3(input any) (uint64, error)
 ```
 hash the *input* data using the Murmur 3 algorithm.
+
+---
+
+<a name="negate"></a>
+```go
+negate(any) float64
+```
+Return the given number multiplied by -1
 
 ---
 

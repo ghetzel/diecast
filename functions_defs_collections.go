@@ -266,6 +266,11 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 		return sliceutil.Intersect(first, second)
 	}
 
+	// fn mapify: Convert the input value into a map.
+	rv[`mapify`] = func(input interface{}) map[string]interface{} {
+		return maputil.DeepCopy(input)
+	}
+
 	// fn groupBy: Return the given *input* array-of-objects as an object, keyed on the value of the
 	//             specified group *field*.  The field argument can be a template.
 	rv[`groupBy`] = func(sliceOfMaps interface{}, key string, valueTpls ...string) (map[string][]interface{}, error) {
