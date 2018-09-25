@@ -91,6 +91,7 @@ type Server struct {
 	CacheDirectory      string                 `json:"cachedir"`
 	PrestartCommand     StartCommand           `json:"prestart"`
 	StartCommand        StartCommand           `json:"start"`
+	Authenticators      AuthenticatorConfigs   `json:"authenticators"`
 	cache               httpcache.Cache
 	router              *httprouter.Router
 	server              *negroni.Negroni
@@ -110,6 +111,7 @@ func NewServer(root string, patterns ...string) *Server {
 		RoutePrefix:        DefaultRoutePrefix,
 		DefaultPageObject:  make(map[string]interface{}),
 		OverridePageObject: make(map[string]interface{}),
+		Authenticators:     make([]AuthenticatorConfig, 0),
 		RootPath:           root,
 		EnableLayouts:      true,
 		Bindings:           make([]Binding, 0),
@@ -894,6 +896,16 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 	defer req.Body.Close()
 
 	log.Infof("%v %v", req.Method, req.URL)
+
+	if auth, err := self.Authenticators.Authenticator(req); err == nil {
+		if auth != nil {
+			if !auth.Authenticate(w, req) {
+				return
+			}
+		}
+	} else {
+		self.respondError(w, err, http.StatusInternalServerError)
+	}
 
 	// normalize filename from request path
 	requestPath := req.URL.Path

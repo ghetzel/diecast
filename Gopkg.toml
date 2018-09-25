@@ -65,3 +65,7 @@
 [[constraint]]
   name = "github.com/PuerkitoBio/goquery"
   branch = "master"
+
+[[constraint]]
+  name = "github.com/tg123/go-htpasswd"
+  branch = "master"

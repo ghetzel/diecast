@@ -9,7 +9,7 @@ deps:
 	@go list github.com/mjibson/esc           || go get github.com/mjibson/esc/...
 	@go list golang.org/x/tools/cmd/goimports || go get golang.org/x/tools/cmd/goimports
 	go generate -x
-	#dep ensure
+	dep ensure
 
 clean:
 	-rm -rf bin

@@ -84,6 +84,7 @@
   name = "github.com/ghetzel/go-stockutil"
   packages = [
     "colorutil",
+    "convutil",
     "httputil",
     "log",
     "maputil",
@@ -96,8 +97,8 @@
     "typeutil",
     "utils"
   ]
-  revision = "c9374e9eddc6674396ec4f97cabe47404d70e370"
-  version = "1.5.13"
+  revision = "cefdce65ed1636cd76046303bd73098ca4f712d6"
+  version = "v1.5.45"
 
 [[projects]]
   branch = "master"
@@ -141,10 +142,25 @@
   version = "v0.2.3"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/google/btree"
+  packages = ["."]
+  revision = "4030bb1f1f0c35b30ca7009e9ebd06849dd45306"
+
+[[projects]]
   name = "github.com/gorilla/websocket"
   packages = ["."]
   revision = "ea4d1f681babbce9545c9c5f3d5194a789c89f5b"
   version = "v1.2.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/gregjones/httpcache"
+  packages = [
+    ".",
+    "diskcache"
+  ]
+  revision = "9cad4c3443a7200dd6400aef47183728de563a38"
 
 [[projects]]
   branch = "master"
@@ -184,6 +200,12 @@
   ]
   revision = "20d3663d4bc9dd10d75abcde9d92e04b4861c674"
   version = "v1.1.0"
+
+[[projects]]
+  name = "github.com/juliangruber/go-intersect"
+  packages = ["."]
+  revision = "b60b3a5b35ade098834e63cf9e094108650641a2"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/julienschmidt/httprouter"
@@ -250,6 +272,12 @@
   version = "v0.18.2"
 
 [[projects]]
+  name = "github.com/martinlindhe/unit"
+  packages = ["."]
+  revision = "158876cf1be6a0802ae125afaf03fc759efcc445"
+  version = "0.2.2"
+
+[[projects]]
   name = "github.com/mattn/go-colorable"
   packages = ["."]
   revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
@@ -260,6 +288,12 @@
   packages = ["."]
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
+
+[[projects]]
+  name = "github.com/mattn/go-shellwords"
+  packages = ["."]
+  revision = "02e3cf038dcea8290e44424da473dd12be796a8a"
+  version = "v1.0.3"
 
 [[projects]]
   branch = "master"
@@ -286,6 +320,12 @@
   revision = "4fdf99ab29366514c69ccccddab5dc58b8d84062"
 
 [[projects]]
+  name = "github.com/mitchellh/mapstructure"
+  packages = ["."]
+  revision = "fa473d140ef3c6adf42d6b391fe76707f1f243c8"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/montanaflynn/stats"
   packages = ["."]
   revision = "eeaced052adbcfeea372c749c281099ed7fdaa38"
@@ -296,6 +336,18 @@
   name = "github.com/op/go-logging"
   packages = ["."]
   revision = "970db520ece77730c7e4724c61121037378659d9"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/petar/GoLLRB"
+  packages = ["llrb"]
+  revision = "53be0d36a84c2a886ca057d34b6aa4468df9ccb4"
+
+[[projects]]
+  name = "github.com/peterbourgon/diskv"
+  packages = ["."]
+  revision = "5f041e8faa004a95c88a202771f4cc3e991971e6"
+  version = "v2.0.1"
 
 [[projects]]
   name = "github.com/phayes/freeport"
@@ -335,6 +387,12 @@
   ]
   revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
   version = "v1.2.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/tg123/go-htpasswd"
+  packages = ["."]
+  revision = "49fe3fd1681ba27b7a766372bfcdf74b8a10548c"
 
 [[projects]]
   name = "github.com/urfave/negroni"
@@ -381,6 +439,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cec6a0cff92d2775408ce8b45807fa4b9cc27cdfa0708341870326fbb8ccac12"
+  inputs-digest = "7647a306db0aa0757be42684ea3c0681396e10f57fb74f292e66a2a0c072cee7"
   solver-name = "gps-cdcl"
   solver-version = 1
