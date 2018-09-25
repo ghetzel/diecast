@@ -211,17 +211,17 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 }
 
 func (self *ProxyMount) url() string {
-	url := self.URL
+	uri := self.URL
 
 	if from := self.urlRewriteFrom; from != `` {
 		if to := self.urlRewriteTo; to != `` {
-			url = strings.Replace(url, from, to, 1)
+			uri = strings.Replace(uri, from, to, 1)
 
 			log.Debugf("Rewriting %v to %v due to earlier redirect", self.urlRewriteFrom, self.urlRewriteTo)
 		}
 	}
 
-	return url
+	return uri
 }
 
 func (self *ProxyMount) String() string {

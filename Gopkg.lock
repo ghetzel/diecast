@@ -170,6 +170,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/h2non/filetype"
+  packages = ["."]
+  revision = "6f0781f86f6a4e35e75c28646ebb19cc941330f4"
+
+[[projects]]
+  branch = "master"
   name = "github.com/hashicorp/errwrap"
   packages = ["."]
   revision = "7554cd9344cec97297fa6649b055a8c98c2a1e55"
@@ -422,6 +428,15 @@
   revision = "b269ba27edabbc65a34a9ccdcaca3744d43ac3c8"
 
 [[projects]]
+  name = "gopkg.in/h2non/filetype.v1"
+  packages = [
+    "matchers",
+    "types"
+  ]
+  revision = "cc14fdc9ca0e4c2bafad7458f6ff79fd3947cfbb"
+  version = "v1.0.5"
+
+[[projects]]
   name = "gopkg.in/neurosnap/sentences.v1"
   packages = [
     ".",
@@ -439,6 +454,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7647a306db0aa0757be42684ea3c0681396e10f57fb74f292e66a2a0c072cee7"
+  inputs-digest = "14f38fc2bd0cac5551a7c4072242486972405f9fb8fdea23eaf266636790c347"
   solver-name = "gps-cdcl"
   solver-version = 1

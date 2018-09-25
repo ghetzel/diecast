@@ -69,3 +69,7 @@
 [[constraint]]
   name = "github.com/tg123/go-htpasswd"
   branch = "master"
+
+[[constraint]]
+  name = "github.com/h2non/filetype"
+  branch = "master"

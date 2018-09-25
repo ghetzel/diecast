@@ -10,7 +10,6 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
-	"mime"
 	"net/http"
 	"net/url"
 	"os"
@@ -1026,8 +1025,11 @@ func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.Fi
 	if file, err := self.fs.Open(requestPath); err == nil {
 		if stat, err := file.Stat(); err == nil {
 			if !stat.IsDir() {
-				mimeType := mime.TypeByExtension(path.Ext(stat.Name()))
-				return file, mimeType, nil
+				if mimetype, err := figureOutMimeType(stat.Name(), file); err == nil {
+					return file, mimetype, nil
+				} else {
+					return file, ``, err
+				}
 			} else {
 				return nil, ``, fmt.Errorf("is a directory")
 			}

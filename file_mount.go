@@ -8,6 +8,8 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/h2non/filetype"
 )
 
 type FileMount struct {
@@ -49,7 +51,12 @@ func (self *FileMount) OpenWithType(name string, req *http.Request, requestBody 
 		return nil, fmt.Errorf("Invalid file object for '%v'", name)
 	} else if stat, err := file.Stat(); err == nil {
 		response := NewMountResponse(stat.Name(), stat.Size(), file)
-		response.ContentType = mime.TypeByExtension(path.Ext(newPath))
+
+		if mimetype, err := figureOutMimeType(newPath, file); err == nil {
+			response.ContentType = mimetype
+		} else {
+			return nil, err
+		}
 
 		if stat.IsDir() {
 			if strings.HasSuffix(req.URL.Path, `/`) {
@@ -72,4 +79,21 @@ func (self *FileMount) String() string {
 
 func (self *FileMount) Open(name string) (http.File, error) {
 	return openAsHttpFile(self, name)
+}
+
+func figureOutMimeType(filename string, file io.ReadSeeker) (string, error) {
+	if mimetype := mime.TypeByExtension(path.Ext(filename)); mimetype != `` {
+		return mimetype, nil
+	} else if ftype, err := filetype.MatchReader(file); err == nil {
+		// if we couldn't determine MIME type from the filename, try to figure it out
+		// by actually reading the file
+
+		if _, err := file.Seek(0, io.SeekStart); err != nil {
+			return ``, err
+		}
+
+		return ftype.MIME.Value, nil
+	} else {
+		return ``, nil
+	}
 }
