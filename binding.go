@@ -39,28 +39,28 @@ var AllowInsecureLoopbackBindings bool
 var DefaultParamJoiner = `;`
 
 type Binding struct {
-	Name               string                     `json:"name"`
-	Restrict           []string                   `json:"restrict"`
-	OnlyIfExpr         string                     `json:"only_if"`
-	NotIfExpr          string                     `json:"not_if"`
-	Method             string                     `json:"method"`
-	Resource           string                     `json:"resource"`
-	Insecure           bool                       `json:"insecure"`
-	ParamJoiner        string                     `json:"param_joiner"`
-	Params             map[string]interface{}     `json:"params"`
-	Headers            map[string]string          `json:"headers"`
-	BodyParams         map[string]interface{}     `json:"body"`
-	RawBody            string                     `json:"rawbody"`
-	Formatter          string                     `json:"formatter"`
-	Parser             string                     `json:"parser"`
-	NoTemplate         bool                       `json:"no_template"`
-	Optional           bool                       `json:"optional"`
-	Fallback           interface{}                `json:"fallback"`
-	OnError            BindingErrorAction         `json:"on_error"`
-	IfStatus           map[int]BindingErrorAction `json:"if_status"`
-	Repeat             string                     `json:"repeat"`
-	SkipInheritHeaders bool                       `json:"skip_inherit_headers"`
-	DisableCache       bool                       `json:"disable_cache"`
+	Name               string                     `json:"name,omitempty"`
+	Restrict           []string                   `json:"restrict,omitempty"`
+	OnlyIfExpr         string                     `json:"only_if,omitempty"`
+	NotIfExpr          string                     `json:"not_if,omitempty"`
+	Method             string                     `json:"method,omitempty"`
+	Resource           string                     `json:"resource,omitempty"`
+	Insecure           bool                       `json:"insecure,omitempty"`
+	ParamJoiner        string                     `json:"param_joiner,omitempty"`
+	Params             map[string]interface{}     `json:"params,omitempty"`
+	Headers            map[string]string          `json:"headers,omitempty"`
+	BodyParams         map[string]interface{}     `json:"body,omitempty"`
+	RawBody            string                     `json:"rawbody,omitempty"`
+	Formatter          string                     `json:"formatter,omitempty"`
+	Parser             string                     `json:"parser,omitempty"`
+	NoTemplate         bool                       `json:"no_template,omitempty"`
+	Optional           bool                       `json:"optional,omitempty"`
+	Fallback           interface{}                `json:"fallback,omitempty"`
+	OnError            BindingErrorAction         `json:"on_error,omitempty"`
+	IfStatus           map[int]BindingErrorAction `json:"if_status,omitempty"`
+	Repeat             string                     `json:"repeat,omitempty"`
+	SkipInheritHeaders bool                       `json:"skip_inherit_headers,omitempty"`
+	DisableCache       bool                       `json:"disable_cache,omitempty"`
 	server             *Server
 }
 

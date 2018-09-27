@@ -353,9 +353,7 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 							}
 
 							finalTemplate.WriteString("{{/* BEGIN LAYOUT '" + layoutName + "' */}}\n")
-							finalTemplate.WriteString("{{ define \"layout\" }}\n")
-							finalTemplate.Write(layoutData)
-							finalTemplate.WriteString("\n{{ end }}\n")
+							appendTemplate(finalTemplate, bytes.NewBuffer(layoutData), `layout`, true)
 							finalTemplate.WriteString("{{/* END LAYOUT '" + layoutName + "' */}}\n\n")
 						} else {
 							return err
@@ -371,18 +369,6 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 				}
 			}
 		}
-	}
-
-	if hasLayout {
-		finalTemplate.WriteString("\n{{ define \"content\" }}\n")
-	}
-
-	if _, err := io.Copy(finalTemplate, reader); err != nil {
-		return err
-	}
-
-	if hasLayout {
-		finalTemplate.WriteString("\n{{ end }}\n")
 	}
 
 	var baseHeader TemplateHeader
@@ -407,6 +393,57 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 	}
 
 	if funcs, data, err := self.GetTemplateData(req, finalHeader); err == nil {
+		// switches allow the template processing to be hijacked/redirected mid-evaluation
+		// based on data already evaluated
+		if len(finalHeader.Switch) > 0 {
+			for i, swcase := range finalHeader.Switch {
+				if swcase == nil {
+					continue
+				}
+
+				if swcase.UsePath != `` {
+					// if a condition is specified, it must evalutate to a truthy value to proceed
+					if swcase.Condition != `` {
+						if !typeutil.V(EvalInline(swcase.Condition, data, funcs)).Bool() {
+							continue
+						}
+					}
+
+					if swTemplate, err := self.fs.Open(swcase.UsePath); err == nil {
+						if swHeader, swData, err := SplitTemplateHeaderContent(swTemplate); err == nil {
+							finalHeader.Switch[i] = nil
+
+							if fh, err := finalHeader.Merge(swHeader); err == nil {
+								log.Debugf("Switch case %d matched, switching to template %v", i, swcase.UsePath)
+								// log.Dump(fh)
+
+								return self.applyTemplate(
+									w,
+									req,
+									requestPath,
+									bytes.NewBuffer(swData),
+									fh,
+									urlParams,
+									mimeType,
+								)
+							} else {
+								return err
+							}
+						} else {
+							return err
+						}
+					} else {
+						return err
+					}
+				}
+			}
+		}
+
+		// append the template
+		if err := appendTemplate(finalTemplate, reader, `content`, hasLayout); err != nil {
+			return err
+		}
+
 		// create the template and make it aware of our custom functions
 		tmpl := NewTemplate(
 			self.ToTemplateName(requestPath),
@@ -499,6 +536,15 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 
 			if self.ShouldReturnSource(req) {
 				w.Header().Set(`Content-Type`, `text/plain`)
+
+				if hdr, err := yaml.Marshal(finalHeader); err == nil {
+					w.Write([]byte("{{/* BEGIN COMBINED HEADER --\n"))
+					w.Write(hdr)
+					w.Write([]byte("\n-- END COMBINED HEADER */}}\n"))
+				} else {
+					w.Write([]byte(fmt.Sprintf("{{/* COMBINED HEADER: error: %v */}}\n", err)))
+				}
+
 				w.Write(finalTemplate.Bytes())
 				return nil
 			} else {
@@ -871,18 +917,9 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			switch def.(type) {
 			case bool:
 				flags[name] = def.(bool)
-				continue
-
 			default:
-				if v, err := stringutil.ConvertToBool(
-					EvalInline(fmt.Sprintf("%v", def), data, funcs),
-				); err == nil {
-					flags[name] = v
-					continue
-				}
+				flags[name] = typeutil.V(EvalInline(fmt.Sprintf("%v", def), data, funcs)).Bool()
 			}
-
-			flags[name] = false
 		}
 
 		data[`flags`] = flags
@@ -1206,18 +1243,22 @@ func (self *Server) InjectIncludes(w io.Writer, header *TemplateHeader) error {
 			if includeFile, err := self.fs.Open(includePath); err == nil {
 				defer includeFile.Close()
 
-				if _, includeData, err := SplitTemplateHeaderContent(includeFile); err == nil {
+				if includeHeader, includeData, err := SplitTemplateHeaderContent(includeFile); err == nil {
 					if stat, err := includeFile.Stat(); err == nil {
 						log.Debugf("Injecting included template %q from file %s", name, stat.Name())
 
-						define := "{{/* BEGIN INCLUDE '" + includePath + "' */}}\n"
-						define += "{{ define \"" + name + "\" }}\n"
-						end := "\n{{ end }}\n"
-						end += "{{/* END INCLUDE '" + includePath + "' */}}\n\n"
+						// merge in included header
+						if includeHeader != nil {
+							if newHeader, err := header.Merge(includeHeader); err == nil {
+								*header = *newHeader
+							} else {
+								return fmt.Errorf("include %v: %v", name, err)
+							}
+						}
 
-						w.Write([]byte(define))
-						w.Write(includeData)
-						w.Write([]byte(end))
+						w.Write([]byte("{{/* BEGIN INCLUDE '" + includePath + "' */}}\n"))
+						appendTemplate(w, bytes.NewBuffer(includeData), name, true)
+						w.Write([]byte("{{/* END INCLUDE '" + includePath + "' */}}\n\n"))
 					} else {
 						return err
 					}
@@ -1456,4 +1497,20 @@ func (self *Server) cleanupCommands() {
 			proc.Kill()
 		}
 	}
+}
+
+func appendTemplate(dest io.Writer, src io.Reader, name string, hasLayout bool) error {
+	if hasLayout {
+		dest.Write([]byte("\n{{ define \"" + name + "\" }}\n"))
+	}
+
+	if _, err := io.Copy(dest, src); err != nil {
+		return err
+	}
+
+	if hasLayout {
+		dest.Write([]byte("\n{{ end }}\n"))
+	}
+
+	return nil
 }

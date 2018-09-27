@@ -5,6 +5,7 @@ import (
 	htmlmain "html"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/ghetzel/go-stockutil/rxutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
@@ -77,8 +78,19 @@ func loadStandardFunctionsString(rv FuncMap) {
 	// fn titleize: Return a copy of *s* with all Unicode letters that begin words mapped to their title case.
 	rv[`titleize`] = strings.Title
 
-	// fn camelize: Return a copy of *s* transformed into CamelCase.
-	rv[`camelize`] = stringutil.Camelize
+	// fn camelize: Return a copy of *s* transformed into camelCase.
+	rv[`camelize`] = func(s interface{}) string {
+		str := stringutil.Camelize(s)
+
+		for i, v := range str {
+			return string(unicode.ToLower(v)) + str[i+1:]
+		}
+
+		return str
+	}
+
+	// fn camelize: Return a copy of *s* transformed into PascalCase.
+	rv[`pascalize`] = stringutil.Camelize
 
 	// fn underscore: Return a copy of *s* transformed into snake_case.
 	rv[`underscore`] = stringutil.Underscore

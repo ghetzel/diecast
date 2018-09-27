@@ -24,6 +24,7 @@ use them.
 - [base64](#base64)
 - [basename](#basename)
 - [camelize](#camelize)
+- [camelize](#camelize)
 - [colorFromValue](#colorFromValue)
 - [colorToHSL](#colorToHSL)
 - [colorToHex](#colorToHex)
@@ -284,7 +285,15 @@ Return the filename component of the given *path*.
 ```
 camelize s any -> string
 ```
-Return a copy of *s* transformed into CamelCase.
+Return a copy of *s* transformed into camelCase.
+
+---
+
+<a name="camelize"></a>
+```
+camelize s any -> string
+```
+Return a copy of *s* transformed into PascalCase.
 
 ---
 

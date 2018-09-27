@@ -10,19 +10,25 @@ type Redirect struct {
 	Code int    `json:"code"`
 }
 
+type SwitchCase struct {
+	Condition string `json:"condition,omitempty"`
+	UsePath   string `json:"use,omitempty"`
+}
+
 type TemplateHeader struct {
 	Page           map[string]interface{} `json:"page,omitempty"`
 	Bindings       []Binding              `json:"bindings,omitempty"`
-	Defaults       map[string]string      `json:"defaults"`
-	DefaultHeaders map[string]string      `json:"default_headers"`
+	Defaults       map[string]string      `json:"defaults,omitempty"`
+	DefaultHeaders map[string]string      `json:"default_headers,omitempty"`
 	Redirect       *Redirect              `json:"redirect,omitempty"`
+	Switch         []*SwitchCase          `json:"switch,omitempty"`
 	Layout         string                 `json:"layout,omitempty"`
 	Includes       map[string]string      `json:"includes,omitempty"`
-	Headers        map[string]interface{} `json:"headers"`
-	UrlParams      map[string]interface{} `json:"params"`
-	FlagDefs       map[string]interface{} `json:"flags"`
-	Postprocessors []string               `json:"postprocessors"`
-	Renderer       string                 `json:"renderer"`
+	Headers        map[string]interface{} `json:"headers,omitempty"`
+	UrlParams      map[string]interface{} `json:"params,omitempty"`
+	FlagDefs       map[string]interface{} `json:"flags,omitempty"`
+	Postprocessors []string               `json:"postprocessors,omitempty"`
+	Renderer       string                 `json:"renderer,omitempty"`
 	lines          int
 }
 
@@ -36,6 +42,7 @@ func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error
 		Layout:         sliceutil.OrString(other.Layout, self.Layout),        // prefer other, fallback to ours
 		Renderer:       sliceutil.OrString(other.Renderer, self.Renderer),    // prefer other, fallback to ours
 		Postprocessors: append(self.Postprocessors, other.Postprocessors...), // ours first, then other's
+		Switch:         append(self.Switch, other.Switch...),                 // ours first, then other's
 	}
 
 	// Redirect: prefer other, fallback to ours
