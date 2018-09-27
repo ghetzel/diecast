@@ -97,8 +97,8 @@
     "typeutil",
     "utils"
   ]
-  revision = "cefdce65ed1636cd76046303bd73098ca4f712d6"
-  version = "v1.5.45"
+  revision = "1176408476280164d1b612aad2e4b8064a515b1e"
+  version = "v1.5.46"
 
 [[projects]]
   branch = "master"
@@ -454,6 +454,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "14f38fc2bd0cac5551a7c4072242486972405f9fb8fdea23eaf266636790c347"
+  inputs-digest = "94e0a156ad58b414ed89e24f814b020d443b91f2d61f882149b4afe493eb0edf"
   solver-name = "gps-cdcl"
   solver-version = 1
