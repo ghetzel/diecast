@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/rand"
+	"reflect"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/maputil"
@@ -11,6 +12,8 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
+
+var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
 
 func loadStandardFunctionsCollections(rv FuncMap) {
 	// fn reverse: Return the given *array* in reverse order.
@@ -68,7 +71,7 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 		return filterByKey(rv, input, key, exprs...)
 	}
 
-	// fn firstByKey: Return the first elements in the *input* array whose map values
+	// fn firstByKey: Return the first element in the *input* array whose map values
 	//                 contain the *key*, optionally matching *expression*.
 	rv[`firstByKey`] = func(input interface{}, key string, exprs ...interface{}) (interface{}, error) {
 		if v, err := filterByKey(rv, input, key, exprs...); err == nil {
@@ -93,8 +96,14 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 	}
 
 	// fn pluck: Given an *input* array of maps, retrieve the values of *key* from all elements.
-	rv[`pluck`] = func(input interface{}, key string) []interface{} {
-		return maputil.Pluck(input, strings.Split(key, `.`))
+	rv[`pluck`] = func(input interface{}, key string, additionalKeys ...string) []interface{} {
+		out := maputil.Pluck(input, strings.Split(key, `.`))
+
+		for _, ak := range additionalKeys {
+			out = append(out, maputil.Pluck(input, strings.Split(ak, `.`))...)
+		}
+
+		return out
 	}
 
 	// fn keys: Given an *input* map, return all of the keys.
@@ -364,5 +373,71 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 		}
 
 		return inputS
+	}
+
+	// fn apply: Apply a function to each of the elements in the given *input* array. Note that functions must accept one any-type argument.
+	rv[`apply`] = func(input interface{}, fns ...string) ([]interface{}, error) {
+		out := make([]interface{}, sliceutil.Len(input))
+
+		if err := sliceutil.Each(input, func(i int, value interface{}) error {
+			for _, fnName := range fns {
+				switch fnName {
+				case `apply`:
+					return fmt.Errorf("nested %q is unsupported", "apply")
+				}
+
+				if fn, ok := rv[fnName]; ok {
+					if fnV := reflect.ValueOf(fn); fnV.Kind() == reflect.Func {
+						var returns []reflect.Value
+
+						switch nin := fnV.Type().NumIn(); nin {
+						case 0:
+							returns = fnV.Call([]reflect.Value{})
+						case 1:
+							returns = fnV.Call([]reflect.Value{
+								reflect.ValueOf(value),
+							})
+						default:
+							return fmt.Errorf("expected 0- or 1-argument function, %q takes %d arguments", fnName, nin)
+						}
+
+						switch len(returns) {
+						case 2:
+							// two-return functions must have a signature of (<something>, error)
+							if lastT := returns[1].Type(); lastT.Implements(errorInterface) {
+								value = returns[0].Interface()
+
+								if v2 := returns[1].Interface(); v2 != nil {
+									return fmt.Errorf("failed on %q: %v", fnName, v2.(error))
+								}
+							} else {
+								return fmt.Errorf("last return value must be an error, got %v", lastT)
+							}
+
+						case 1:
+							if lastT := returns[0].Type(); lastT.Implements(errorInterface) {
+								if v1 := returns[0].Interface(); v1 != nil {
+									return fmt.Errorf("failed on %q: %v", fnName, v1.(error))
+								}
+							} else {
+								value = returns[0].Interface()
+							}
+						}
+					} else {
+						return fmt.Errorf("invalid function %q", fnName)
+					}
+				} else {
+					return fmt.Errorf("unrecognized function %q", fnName)
+				}
+			}
+
+			out[i] = value
+
+			return nil
+		}); err == nil {
+			return out, nil
+		} else {
+			return nil, err
+		}
 	}
 }

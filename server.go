@@ -306,7 +306,7 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 		headers = append(headers, header)
 
 		if header.lines > 0 {
-			headerOffset = header.lines - 1
+			headerOffset = header.lines
 		}
 
 		if header.Layout != `` {

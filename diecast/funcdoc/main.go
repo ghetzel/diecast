@@ -113,7 +113,7 @@ func getFnSignature(fn interface{}, inArgNames []string) (string, string, error)
 			}
 
 			if fnT.IsVariadic() && (in+1) == fnT.NumIn() {
-				typename = `...` + typename
+				typename = `[` + typename + ` ..]`
 			}
 
 			if in < len(inArgNames) {
@@ -136,8 +136,8 @@ func getFnSignature(fn interface{}, inArgNames []string) (string, string, error)
 			outs = append(outs, typename)
 		}
 
-		inArgs := strings.Join(args, `, `)
-		outArgs := strings.Join(outs, `, `)
+		inArgs := strings.Join(args, ` `)
+		outArgs := strings.Join(outs, ` `)
 
 		return inArgs, outArgs, nil
 	} else {
@@ -191,17 +191,23 @@ func main() {
 		returnSignature := doc.Returns
 
 		if returnSignature != `` {
-			if len(strings.Split(returnSignature, `,`)) > 1 {
-				returnSignature = ` (` + returnSignature + `)`
-			} else {
-				returnSignature = ` ` + returnSignature
+			outSig := strings.Split(returnSignature, `,`)
+
+			if outSig[len(outSig)-1] == `error` {
+				outSig = outSig[:len(outSig)-1]
+			}
+
+			returnSignature = strings.Join(outSig, ` `)
+
+			if len(outSig) > 1 {
+				returnSignature = `(` + returnSignature + `)`
 			}
 		}
 
 		fmt.Printf("---\n\n")
 		fmt.Printf("<a name=\"%s\"></a>\n", doc.Name)
-		fmt.Printf("```go\n")
-		fmt.Printf("%s(%s)%s\n", doc.Name, doc.Signature, returnSignature)
+		fmt.Printf("```\n")
+		fmt.Printf("%s %s -> %s\n", doc.Name, doc.Signature, returnSignature)
 		fmt.Printf("```\n")
 
 		fmt.Printf("%s\n\n", doc.DocString)
