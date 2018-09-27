@@ -32,6 +32,16 @@ func loadStandardFunctionsTypes(rv FuncMap) {
 		return typeutil.IsKind(value, reflect.Map)
 	}
 
+	// fn isTime: Return whether the given *value* is parsable as a date/time value.
+	rv[`isTime`] = func(value interface{}) bool {
+		return !typeutil.V(value).Time().IsZero()
+	}
+
+	// fn isDuration: Return whether the given *value* is parsable as a duration.
+	rv[`isDuration`] = func(value interface{}) bool {
+		return (typeutil.V(value).Duration() != 0)
+	}
+
 	// fn autotype: Attempt to automatically determine the type if *value* and return the converted output.
 	rv[`autotype`] = stringutil.Autotype
 

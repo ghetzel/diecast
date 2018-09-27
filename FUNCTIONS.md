@@ -66,10 +66,12 @@ use them.
 - [isArray](#isArray)
 - [isBefore](#isBefore)
 - [isBool](#isBool)
+- [isDuration](#isDuration)
 - [isEmpty](#isEmpty)
 - [isFloat](#isFloat)
 - [isInt](#isInt)
 - [isMap](#isMap)
+- [isTime](#isTime)
 - [isZero](#isZero)
 - [isort](#isort)
 - [join](#join)
@@ -285,7 +287,7 @@ Return the filename component of the given *path*.
 ```
 camelize s any -> string
 ```
-Return a copy of *s* transformed into camelCase.
+Return a copy of *s* transformed into PascalCase.
 
 ---
 
@@ -293,7 +295,7 @@ Return a copy of *s* transformed into camelCase.
 ```
 camelize s any -> string
 ```
-Return a copy of *s* transformed into PascalCase.
+Return a copy of *s* transformed into camelCase.
 
 ---
 
@@ -625,6 +627,14 @@ Return whether the given *value* is a boolean type.
 
 ---
 
+<a name="isDuration"></a>
+```
+isDuration value any -> bool
+```
+Return whether the given *value* is parsable as a duration.
+
+---
+
 <a name="isEmpty"></a>
 ```
 isEmpty value any -> bool
@@ -654,6 +664,14 @@ Return whether the given *value* is an integer type.
 isMap value any -> bool
 ```
 Return whether the given *value* is a key-value map type.
+
+---
+
+<a name="isTime"></a>
+```
+isTime value any -> bool
+```
+Return whether the given *value* is parsable as a date/time value.
 
 ---
 
