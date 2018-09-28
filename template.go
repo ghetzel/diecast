@@ -143,6 +143,11 @@ func (self *Template) Parse(input string) error {
 		return fmt.Errorf("Unknown template engine")
 	}
 
+	return self.preprocessTemplate()
+}
+
+func (self *Template) preprocessTemplate() error {
+
 	return nil
 }
 
