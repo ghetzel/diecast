@@ -377,7 +377,7 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 
 	// fn apply: Apply a function to each of the elements in the given *input* array. Note that functions must accept one any-type argument.
 	rv[`apply`] = func(input interface{}, fns ...string) ([]interface{}, error) {
-		out := make([]interface{}, sliceutil.Len(input))
+		out := make([]interface{}, 0)
 
 		if err := sliceutil.Each(input, func(i int, value interface{}) error {
 			for _, fnName := range fns {
@@ -431,7 +431,7 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 				}
 			}
 
-			out[i] = value
+			out = append(out, value)
 
 			return nil
 		}); err == nil {
