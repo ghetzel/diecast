@@ -1,28 +1,23 @@
 .PHONY: test deps
+.EXPORT_ALL_VARIABLES:
 
-PKGS := . ./util/ ./diecast/...
-LOCALS = `find . -type f -name '*.go' -not -path "./vendor/*"`
+GO111MODULE ?= on
+LOCALS      := $(shell find . -type f -name '*.go')
 
-all: deps fmt test build
+all: deps test build
 
 deps:
-	@go list github.com/mjibson/esc           || go get github.com/mjibson/esc/...
-	@go list golang.org/x/tools/cmd/goimports || go get golang.org/x/tools/cmd/goimports
-	go generate -x
-	dep ensure
-
-clean:
-	-rm -rf bin
-
-fmt:
-	goimports -w $(LOCALS)
+	@go list github.com/mjibson/esc || go get github.com/mjibson/esc/...
+	go generate -x ./...
+	gofmt -w $(LOCALS)
 	go vet $(PKGS)
+	go get ./...
 
 test:
-	go test $(PKGS)
+	go test ./...
 
 build:
-	test -d diecast && go build -i -o bin/`basename ${PWD}` diecast/main.go
+	test -d diecast && go build -i -o bin/diecast diecast/main.go
 	test -d diecast/funcdoc && go build -i -o bin/funcdoc diecast/funcdoc/main.go
 	./bin/funcdoc > FUNCTIONS.md
 
