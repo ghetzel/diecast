@@ -31,6 +31,7 @@ require (
 	github.com/julienschmidt/httprouter v0.0.0-20150421170007-8c199fb6259f
 	github.com/kelvins/sunrisesunset v0.0.0-20170601204625-14f1915ad4b4
 	github.com/mafredri/cdp v0.18.5
+	github.com/magiconair/properties v1.8.0
 	github.com/martinlindhe/unit v0.0.0-20180817222220-284ab7627fae
 	github.com/mattn/go-colorable v0.0.9
 	github.com/mattn/go-isatty v0.0.4

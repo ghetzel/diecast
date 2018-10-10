@@ -93,6 +93,7 @@ use them.
 - [negate](#negate)
 - [nex](#nex)
 - [now](#now)
+- [page](#page)
 - [param](#param)
 - [pathjoin](#pathjoin)
 - [payload](#payload)
@@ -843,6 +844,14 @@ Return the current time formatted using *format*.  See [Time Formats](#time-form
 
 ---
 
+<a name="page"></a>
+```
+page any any -> int
+```
+Returns a record offset given a page number and number of results per page
+
+---
+
 <a name="param"></a>
 ```
 param any -> 
@@ -957,17 +966,17 @@ Return all but the first value from the given *input* array.
 
 <a name="reverse"></a>
 ```
-reverse input any [any ..] -> 
+reverse array any [any ..] -> 
 ```
-Return the *input* array sorted in lexical descending order.
+Return the given *array* in reverse order.
 
 ---
 
 <a name="reverse"></a>
 ```
-reverse array any [any ..] -> 
+reverse input any [any ..] -> 
 ```
-Return the given *array* in reverse order.
+Return the *input* array sorted in lexical descending order.
 
 ---
 

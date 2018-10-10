@@ -16,6 +16,20 @@ import (
 var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
 
 func loadStandardFunctionsCollections(rv FuncMap) {
+	// fn page: Returns a record offset given a page number and number of results per page
+	rv[`page`] = func(pagenum interface{}, perpage interface{}) int {
+		factor := typeutil.V(pagenum).Int() - 1
+		per := typeutil.V(perpage).Int()
+
+		if factor >= 0 {
+			if per > 0 {
+				return int(factor * per)
+			}
+		}
+
+		return 0
+	}
+
 	// fn reverse: Return the given *array* in reverse order.
 	rv[`reverse`] = func(input interface{}) []interface{} {
 		array := sliceutil.Sliceify(input)
