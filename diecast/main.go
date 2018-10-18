@@ -5,11 +5,10 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
-
-	"path/filepath"
 
 	"github.com/ghetzel/cli"
 	"github.com/ghetzel/diecast"
@@ -24,6 +23,7 @@ func main() {
 	app.Name = diecast.ApplicationName
 	app.Usage = diecast.ApplicationSummary
 	app.Version = diecast.ApplicationVersion
+	app.EnableBashCompletion = true
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
