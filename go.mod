@@ -12,7 +12,7 @@ require (
 	github.com/ghetzel/argonaut v0.0.0-20180428155514-51604c68ce30
 	github.com/ghetzel/cli v1.16.0
 	github.com/ghetzel/friendscript v0.5.0
-	github.com/ghetzel/go-stockutil v1.5.51
+	github.com/ghetzel/go-stockutil v1.5.52
 	github.com/ghetzel/go-webfriend v0.9.23
 	github.com/ghetzel/uuid v0.0.0-20171129191014-dec09d789f3d
 	github.com/ghodss/yaml v1.0.0
