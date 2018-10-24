@@ -11,7 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/url"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path"
@@ -29,10 +29,6 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/timeutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
-	webfriend "github.com/ghetzel/go-webfriend"
-	"github.com/ghetzel/go-webfriend/browser"
-	"github.com/ghetzel/go-webfriend/commands/core"
-	"github.com/ghetzel/go-webfriend/commands/page"
 	"github.com/ghodss/yaml"
 	"github.com/gregjones/httpcache"
 	"github.com/gregjones/httpcache/diskcache"
@@ -444,132 +440,48 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 			return err
 		}
 
-		// create the template and make it aware of our custom functions
-		tmpl := NewTemplate(
-			self.ToTemplateName(requestPath),
-			GetEngineForFile(requestPath),
-		)
-
-		tmpl.Funcs(funcs)
-		tmpl.SetHeaderOffset(headerOffset)
-
-		if err := tmpl.AddPostProcessors(finalHeader.Postprocessors...); err != nil {
-			return err
+		var postTemplateRenderer Renderer
+		var renderOpts = RenderOptions{
+			FunctionSet:   funcs,
+			HasLayout:     hasLayout,
+			Header:        finalHeader,
+			HeaderOffset:  headerOffset,
+			Input:         ioutil.NopCloser(finalTemplate),
+			MimeType:      mimeType,
+			RequestedPath: requestPath,
 		}
 
 		if finalHeader != nil {
 			finalHeader.Renderer = EvalInline(finalHeader.Renderer, data, funcs)
 
-			log.Debugf("%#v", finalHeader.Renderer)
-
-			if !httputil.QBool(req, `__subrender`) {
-				switch finalHeader.Renderer {
-				case `pdf`:
-					if www, err := browser.Start(); err == nil {
-						defer www.Stop()
-						var buffer bytes.Buffer
-
-						subaddr := self.Address
-
-						if strings.HasPrefix(subaddr, `:`) {
-							subaddr = `127.0.0.1` + subaddr
-						}
-
-						env := webfriend.NewEnvironment(www)
-						suburl, _ := url.Parse(req.URL.String())
-						suburl.Scheme = `http`
-						suburl.Host = subaddr
-						subqs := suburl.Query()
-						subqs.Set(`__subrender`, `true`)
-						suburl.RawQuery = subqs.Encode()
-
-						log.Debugf("Rendering %v as PDF", suburl)
-
-						if m, ok := env.Module(`core`); ok {
-							if core, ok := m.(*core.Commands); ok {
-								if _, err := core.Go(suburl.String(), nil); err != nil {
-									return err
-								}
-							} else {
-								return fmt.Errorf("Unable to retrieve Webfriend Core module")
-							}
-						} else {
-							return fmt.Errorf("Unable to retrieve Webfriend Core module")
-						}
-
-						if m, ok := env.Module(`page`); ok {
-							if page, ok := m.(*page.Commands); ok {
-								if err := page.Pdf(&buffer, nil); err == nil {
-									if rw, ok := w.(http.ResponseWriter); ok {
-										rw.Header().Set(`Content-Type`, `application/pdf`)
-									}
-
-									_, err := io.Copy(w, &buffer)
-									return err
-								} else {
-									return err
-								}
-							} else {
-								return fmt.Errorf("Unable to retrieve Webfriend Page module")
-							}
-						} else {
-							return fmt.Errorf("Unable to retrieve Webfriend Page module")
-						}
-
-					} else {
-						log.Fatalf("could not generate PDF: %v", err)
-						return err
-					}
+			if finalHeader.Renderer != `` {
+				if r, err := GetRenderer(finalHeader.Renderer, self); err == nil {
+					postTemplateRenderer = r
+				} else {
+					return err
 				}
 			}
 		}
 
-		if err := tmpl.Parse(finalTemplate.String()); err == nil {
-			log.Debugf("Rendering %q as %v template (header offset by %d lines)", requestPath, tmpl.Engine(), headerOffset)
+		// evaluate and render the template first
+		if baseRenderer, err := GetRenderer(``, self); err == nil {
+			// if a user-specified renderer was provided, take the rendered output and
+			// pass it into that renderer.  return the result
+			if postTemplateRenderer != nil {
+				intercept := httptest.NewRecorder()
 
-			if finalHeader != nil {
-				// include any configured response headers now
-				for name, value := range finalHeader.Headers {
-					w.Header().Set(name, fmt.Sprintf("%v", value))
-				}
-			}
+				if err := baseRenderer.Render(intercept, req, renderOpts); err == nil {
+					res := intercept.Result()
+					renderOpts.MimeType = res.Header.Get(`Content-Type`)
+					renderOpts.Input = res.Body
 
-			if self.ShouldReturnSource(req) {
-				w.Header().Set(`Content-Type`, `text/plain`)
-
-				if hdr, err := yaml.Marshal(finalHeader); err == nil {
-					w.Write([]byte("{{/* BEGIN COMBINED HEADER --\n"))
-					w.Write(hdr)
-					w.Write([]byte("\n-- END COMBINED HEADER */}}\n"))
+					return postTemplateRenderer.Render(w, req, renderOpts)
 				} else {
-					w.Write([]byte(fmt.Sprintf("{{/* COMBINED HEADER: error: %v */}}\n", err)))
+					return err
 				}
-
-				w.Write(finalTemplate.Bytes())
-				return nil
 			} else {
-				w.Header().Set(`Content-Type`, mimeType)
-
-				if hasLayout {
-					return tmpl.Render(w, data, `layout`)
-				} else {
-					return tmpl.Render(w, data, ``)
-				}
+				return baseRenderer.Render(w, req, renderOpts)
 			}
-		} else if self.ShouldReturnSource(req) {
-			var tplstr string
-			lines := strings.Split(finalTemplate.String(), "\n")
-			lineNoSpaces := fmt.Sprintf("%d", len(fmt.Sprintf("%d", len(lines)))+1)
-
-			for i, line := range lines {
-				tplstr += fmt.Sprintf("% "+lineNoSpaces+"d | %s\n", i+1, line)
-			}
-
-			tplstr = fmt.Sprintf("ERROR: %v\n\n", err) + tplstr
-
-			w.Header().Set(`Content-Type`, `text/plain`)
-			w.Write([]byte(tplstr))
-			return nil
 		} else {
 			return err
 		}

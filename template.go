@@ -259,11 +259,11 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 }
 
 func (self *Template) prepareParseTree(tree *parse.Tree) error {
-	log.Debug("ROOT:")
+	// log.Debug("ROOT:")
 
-	for _, node := range tree.Root.Nodes {
-		self.prepareNode(node, 1)
-	}
+	// for _, node := range tree.Root.Nodes {
+	// 	self.prepareNode(node, 1)
+	// }
 
 	return nil
 }
