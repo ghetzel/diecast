@@ -64,4 +64,4 @@ all templated files will be wrapped in that layout by default with no additional
 
 A _partial_ is a file whose name starts with an underscore (e.g: `_list.html`).  Partials do *not* get layouts
 applied to them automatically, and are designed for making composable and dynamic pages by allowing them to be
-included via AJAX calls or the `{{ template }}` statement.
+included via AJAX calls or the _&lbrace;&lbrace; template &rbrace;&rbrace;_ statement.

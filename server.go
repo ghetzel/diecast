@@ -45,7 +45,11 @@ const DefaultConfigFile = `diecast.yml`
 var HeaderSeparator = []byte{'-', '-', '-'}
 var DefaultIndexFile = `index.html`
 var DefaultVerifyFile = `/` + DefaultIndexFile
-var DefaultTemplatePatterns = []string{`*.html`}
+var DefaultTemplatePatterns = []string{`*.html`, `*.md`}
+var DefaultTryExtensions = []string{`html`, `md`}
+var DefaultRendererMappings = map[string]string{
+	`md`: `markdown`,
+}
 
 type RedirectTo string
 
@@ -87,6 +91,8 @@ type Server struct {
 	PrestartCommand     StartCommand           `json:"prestart"`
 	StartCommand        StartCommand           `json:"start"`
 	Authenticators      AuthenticatorConfigs   `json:"authenticators"`
+	TryExtensions       []string               `json:"try_extensions"`   // try these file extensions when looking for default (i.e.: "index") files
+	RendererMappings    map[string]string      `json:"renderer_mapping"` // map file extensions to preferred renderers
 	cache               httpcache.Cache
 	router              *httprouter.Router
 	server              *negroni.Negroni
@@ -114,6 +120,8 @@ func NewServer(root string, patterns ...string) *Server {
 		IndexFile:          DefaultIndexFile,
 		VerifyFile:         DefaultVerifyFile,
 		Mounts:             make([]Mount, 0),
+		TryExtensions:      DefaultTryExtensions,
+		RendererMappings:   DefaultRendererMappings,
 	}
 }
 
@@ -435,22 +443,27 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 			}
 		}
 
-		// append the template
+		// append the template to the final output (which at this point may or may not
+		// include the layout and explicitly-included subtemplates/snippets)
 		if err := appendTemplate(finalTemplate, reader, `content`, hasLayout); err != nil {
 			return err
 		}
 
 		var postTemplateRenderer Renderer
 		var renderOpts = RenderOptions{
-			FunctionSet:   funcs,
-			HasLayout:     hasLayout,
-			Header:        finalHeader,
-			HeaderOffset:  headerOffset,
-			Input:         ioutil.NopCloser(finalTemplate),
+			FunctionSet:  funcs,
+			HasLayout:    hasLayout,
+			Header:       finalHeader,
+			HeaderOffset: headerOffset,
+			Input: ioutil.NopCloser(
+				bytes.NewReader(finalTemplate.Bytes()),
+			),
+			Data:          data,
 			MimeType:      mimeType,
 			RequestedPath: requestPath,
 		}
 
+		// if specified, get the FINAL renderer that the template output will be passed to
 		if finalHeader != nil {
 			finalHeader.Renderer = EvalInline(finalHeader.Renderer, data, funcs)
 
@@ -460,6 +473,8 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 				} else {
 					return err
 				}
+			} else if r, ok := GetRendererForFilename(requestPath, self); ok {
+				postTemplateRenderer = r
 			}
 		}
 
@@ -468,6 +483,8 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 			// if a user-specified renderer was provided, take the rendered output and
 			// pass it into that renderer.  return the result
 			if postTemplateRenderer != nil {
+				// we use an httptest.ResponseRecorder to intercept the default template's output
+				// and pass it as input to the final renderer.
 				intercept := httptest.NewRecorder()
 
 				if err := baseRenderer.Render(intercept, req, renderOpts); err == nil {
@@ -475,11 +492,14 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 					renderOpts.MimeType = res.Header.Get(`Content-Type`)
 					renderOpts.Input = res.Body
 
+					// run the final template render and return
+					log.Debugf("Rendering template output using %T", postTemplateRenderer)
 					return postTemplateRenderer.Render(w, req, renderOpts)
 				} else {
 					return err
 				}
 			} else {
+				// just render the base template directly to the response and return
 				return baseRenderer.Render(w, req, renderOpts)
 			}
 		} else {
@@ -494,6 +514,8 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 	}
 }
 
+// Retrieves the set of standard template functions, as well as functions for working
+// with data in the current request.
 func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 	funcs := make(FuncMap)
 
@@ -865,18 +887,33 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 	// if we're looking at a directory, throw in the index file if the path as given doesn't respond
 	if strings.HasSuffix(requestPath, `/`) {
 		requestPaths = append(requestPaths, path.Join(requestPath, self.IndexFile))
+
+		for _, ext := range self.TryExtensions {
+			base := filepath.Base(self.IndexFile)
+			base = strings.TrimSuffix(base, filepath.Ext(self.IndexFile))
+
+			requestPaths = append(requestPaths, path.Join(requestPath, fmt.Sprintf("%s.%s", base, ext)))
+		}
+
 	} else if path.Ext(requestPath) == `` {
 		// if we're requesting a path without a file extension, try an index file in a directory with that name,
 		// then try just <filename>.html
-
 		requestPaths = append(requestPaths, fmt.Sprintf("%s/%s", requestPath, self.IndexFile))
-		requestPaths = append(requestPaths, fmt.Sprintf("%s.html", requestPath))
+
+		for _, ext := range self.TryExtensions {
+			requestPaths = append(requestPaths, fmt.Sprintf("%s.%s", requestPath, ext))
+		}
 	}
 
 	// finally, add handlers for implementing a junky form of url routing
 	if parent := path.Dir(requestPath); parent != `.` {
-		requestPaths = append(requestPaths, fmt.Sprintf("%s/index__id.html", parent))
-		requestPaths = append(requestPaths, fmt.Sprintf("%s__id.html", parent))
+		for _, ext := range self.TryExtensions {
+			requestPaths = append(requestPaths, fmt.Sprintf("%s/index__id.%s", strings.TrimSuffix(parent, `/`), ext))
+
+			if base := strings.TrimSuffix(parent, `/`); base != `` {
+				requestPaths = append(requestPaths, fmt.Sprintf("%s__id.%s", base, ext))
+			}
+		}
 	}
 
 	var triedLocal bool
@@ -956,8 +993,6 @@ PathLoop:
 			if handled := self.tryToHandleFoundFile(rPath, mimeType, file, statusCode, headers, urlParams, w, req); handled {
 				return
 			}
-		} else {
-			log.Debugf("No mounts or filesystems handled path: %v", rPath)
 		}
 	}
 

@@ -52,15 +52,18 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 					w.Write([]byte(fmt.Sprintf("{{/* COMBINED HEADER: error: %v */}}\n", err)))
 				}
 
-				w.Write(data)
+				if _, err := w.Write(data); err != nil {
+					return err
+				}
+
 				return nil
 			} else {
 				w.Header().Set(`Content-Type`, options.MimeType)
 
 				if options.HasLayout {
-					return tmpl.Render(w, data, `layout`)
+					return tmpl.Render(w, options.Data, `layout`)
 				} else {
-					return tmpl.Render(w, data, ``)
+					return tmpl.Render(w, options.Data, ``)
 				}
 			}
 		} else if self.server.ShouldReturnSource(req) {
@@ -74,8 +77,9 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 
 			tplstr = fmt.Sprintf("ERROR: %v\n\n", err) + tplstr
 
-			w.Header().Set(`Content-Type`, `text/plain`)
+			w.Header().Set(`Content-Type`, `text/plain; charset=utf-8`)
 			w.Write([]byte(tplstr))
+
 			return nil
 		} else {
 			return err

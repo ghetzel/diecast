@@ -19,7 +19,7 @@ func (self *MarkdownRenderer) Render(w http.ResponseWriter, req *http.Request, o
 		output := blackfriday.MarkdownCommon(input)
 		output = bluemonday.UGCPolicy().SanitizeBytes(output)
 
-		w.Header().Set(`Content-Type`, `text/html`)
+		w.Header().Set(`Content-Type`, `text/html; charset=utf-8`)
 		_, err := w.Write(output)
 		return err
 	} else {

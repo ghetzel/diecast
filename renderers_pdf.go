@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ghetzel/go-stockutil/log"
 	webfriend "github.com/ghetzel/go-webfriend"
@@ -24,7 +25,7 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 	defer options.Input.Close()
 
 	// create a tmp file to write the input to
-	if tmp, err := ioutil.TempFile(`diecast`, ``); err == nil {
+	if tmp, err := ioutil.TempFile(``, `diecast-`); err == nil {
 		defer func() {
 			tmp.Close()
 			os.Remove(tmp.Name())
@@ -51,6 +52,7 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 				if m, ok := env.Module(`core`); ok {
 					if core, ok := m.(*wfcore.Commands); ok {
 						if _, err := core.Go(tmpfile, &wfcore.GoArgs{
+							LoadEventName:             `Page.domContentEventFired`,
 							RequireOriginatingRequest: false,
 						}); err != nil {
 							return err
@@ -66,6 +68,14 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 					if page, ok := m.(*page.Commands); ok {
 						if err := page.Pdf(&buffer, nil); err == nil {
 							w.Header().Set(`Content-Type`, `application/pdf`)
+
+							rewrittenFilename := strings.TrimSuffix(
+								filepath.Base(options.RequestedPath),
+								filepath.Ext(options.RequestedPath),
+							) + `.pdf`
+
+							w.Header().Set(`Content-Disposition`, fmt.Sprintf("inline; filename=%q", rewrittenFilename))
+
 							_, err := io.Copy(w, &buffer)
 
 							return err

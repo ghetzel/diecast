@@ -207,14 +207,10 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 	switch self.engine {
 	case TextEngine:
 		if t, ok := self.tmpl.(*text.Template); ok {
-			if err := self.prepareParseTree(t.Tree); err == nil {
-				if subtemplate == `` {
-					err = t.Execute(output, data)
-				} else {
-					err = t.ExecuteTemplate(output, subtemplate, data)
-				}
+			if subtemplate == `` {
+				err = t.Execute(output, data)
 			} else {
-				err = fmt.Errorf("parse error: %v", err)
+				err = t.ExecuteTemplate(output, subtemplate, data)
 			}
 		} else {
 			err = fmt.Errorf("invalid internal type for TextEngine")
@@ -222,14 +218,10 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 
 	case HtmlEngine:
 		if t, ok := self.tmpl.(*html.Template); ok {
-			if err := self.prepareParseTree(t.Tree); err == nil {
-				if subtemplate == `` {
-					err = t.Execute(output, data)
-				} else {
-					err = t.ExecuteTemplate(output, subtemplate, data)
-				}
+			if subtemplate == `` {
+				err = t.Execute(output, data)
 			} else {
-				err = fmt.Errorf("parse error: %v", err)
+				err = t.ExecuteTemplate(output, subtemplate, data)
 			}
 		} else {
 			err = fmt.Errorf("invalid internal type for HtmlEngine")
@@ -252,7 +244,8 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 			}
 		}
 
-		_, err = w.Write([]byte(outstr))
+		_, werr := w.Write([]byte(outstr))
+		err = werr
 	}
 
 	return self.prepareError(err)
@@ -293,9 +286,9 @@ func (self *Template) prepareNode(tree *parse.Tree, node parse.Node, depth int) 
 			log.Debugf("%v%d: %v", strings.Repeat(`  `, depth+1), i, ident)
 		}
 
-		if len(idents) > 1 {
-			replace := parse.NewIdentifier(`get`).SetPos(node.Position()).SetTree(tree)
-		}
+		// if len(idents) > 1 {
+		// 	replace := parse.NewIdentifier(`get`).SetPos(node.Position()).SetTree(tree)
+		// }
 
 	case *parse.CommandNode:
 		repr = node.(*parse.CommandNode).String()
