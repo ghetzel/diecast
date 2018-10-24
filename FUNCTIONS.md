@@ -118,6 +118,7 @@ use them.
 - [set](#set)
 - [shuffle](#shuffle)
 - [since](#since)
+- [sliceify](#sliceify)
 - [sort](#sort)
 - [split](#split)
 - [strcount](#strcount)
@@ -288,7 +289,7 @@ Return the filename component of the given *path*.
 ```
 camelize s any -> string
 ```
-Return a copy of *s* transformed into PascalCase.
+Return a copy of *s* transformed into camelCase.
 
 ---
 
@@ -296,7 +297,7 @@ Return a copy of *s* transformed into PascalCase.
 ```
 camelize s any -> string
 ```
-Return a copy of *s* transformed into camelCase.
+Return a copy of *s* transformed into PascalCase.
 
 ---
 
@@ -1041,6 +1042,14 @@ Return the *input* array with the elements rearranged in random order.
 since time any [any ..] -> Duration error
 ```
 Return the amount of time that has elapsed since *time*, optionally rounded to the nearest *interval*.
+
+---
+
+<a name="sliceify"></a>
+```
+sliceify input any -> 
+```
+Return the given *input* as an array.
 
 ---
 

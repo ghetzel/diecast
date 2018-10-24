@@ -279,6 +279,11 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 		return commonses(slice, `least`)
 	}
 
+	// fn sliceify: Return the given *input* as an array.
+	rv[`sliceify`] = func(slice interface{}) []interface{} {
+		return sliceutil.Sliceify(slice)
+	}
+
 	// fn stringify: Return the given *input* array with all values converted to strings.
 	rv[`stringify`] = func(slice interface{}) []string {
 		return sliceutil.Stringify(slice)

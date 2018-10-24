@@ -9,6 +9,7 @@ import (
 	"path"
 	"strings"
 	text "text/template"
+	"text/template/parse"
 
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/rxutil"
@@ -206,10 +207,14 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 	switch self.engine {
 	case TextEngine:
 		if t, ok := self.tmpl.(*text.Template); ok {
-			if subtemplate == `` {
-				err = t.Execute(output, data)
+			if err := self.prepareParseTree(t.Tree); err == nil {
+				if subtemplate == `` {
+					err = t.Execute(output, data)
+				} else {
+					err = t.ExecuteTemplate(output, subtemplate, data)
+				}
 			} else {
-				err = t.ExecuteTemplate(output, subtemplate, data)
+				err = fmt.Errorf("parse error: %v", err)
 			}
 		} else {
 			err = fmt.Errorf("invalid internal type for TextEngine")
@@ -217,10 +222,14 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 
 	case HtmlEngine:
 		if t, ok := self.tmpl.(*html.Template); ok {
-			if subtemplate == `` {
-				err = t.Execute(output, data)
+			if err := self.prepareParseTree(t.Tree); err == nil {
+				if subtemplate == `` {
+					err = t.Execute(output, data)
+				} else {
+					err = t.ExecuteTemplate(output, subtemplate, data)
+				}
 			} else {
-				err = t.ExecuteTemplate(output, subtemplate, data)
+				err = fmt.Errorf("parse error: %v", err)
 			}
 		} else {
 			err = fmt.Errorf("invalid internal type for HtmlEngine")
@@ -247,4 +256,50 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 	}
 
 	return self.prepareError(err)
+}
+
+func (self *Template) prepareParseTree(tree *parse.Tree) error {
+	log.Debug("ROOT:")
+
+	for _, node := range tree.Root.Nodes {
+		self.prepareNode(node, 1)
+	}
+
+	return nil
+}
+
+func (self *Template) prepareNode(node parse.Node, depth int) {
+	var repr string
+
+	log.Debugf("%v%T", strings.Repeat(`  `, depth), node)
+
+	switch node.(type) {
+	case *parse.RangeNode:
+		self.prepareNode(node.(*parse.RangeNode).Pipe, depth+1)
+	case *parse.PipeNode:
+		for _, decl := range node.(*parse.PipeNode).Decl {
+			self.prepareNode(decl, depth+1)
+		}
+
+		for _, cmd := range node.(*parse.PipeNode).Cmds {
+			self.prepareNode(cmd, depth+1)
+		}
+	case *parse.VariableNode:
+		repr = node.(*parse.VariableNode).String()
+
+		for i, ident := range node.(*parse.VariableNode).Ident {
+			log.Debugf("%v%d: %v", strings.Repeat(`  `, depth+1), i, ident)
+		}
+
+	case *parse.CommandNode:
+		repr = node.(*parse.CommandNode).String()
+
+		for _, arg := range node.(*parse.CommandNode).Args {
+			self.prepareNode(arg, depth+1)
+		}
+	}
+
+	if repr != `` {
+		log.Debugf("%v%s", strings.Repeat(`  `, depth), repr)
+	}
 }
