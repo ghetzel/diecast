@@ -268,35 +268,44 @@ func (self *Template) prepareParseTree(tree *parse.Tree) error {
 	return nil
 }
 
-func (self *Template) prepareNode(node parse.Node, depth int) {
+func (self *Template) prepareNode(tree *parse.Tree, node parse.Node, depth int) {
 	var repr string
 
 	log.Debugf("%v%T", strings.Repeat(`  `, depth), node)
 
 	switch node.(type) {
 	case *parse.RangeNode:
-		self.prepareNode(node.(*parse.RangeNode).Pipe, depth+1)
+		self.prepareNode(tree, node.(*parse.RangeNode).Pipe, depth+1)
 	case *parse.PipeNode:
 		for _, decl := range node.(*parse.PipeNode).Decl {
-			self.prepareNode(decl, depth+1)
+			self.prepareNode(tree, decl, depth+1)
 		}
 
 		for _, cmd := range node.(*parse.PipeNode).Cmds {
-			self.prepareNode(cmd, depth+1)
+			self.prepareNode(tree, cmd, depth+1)
 		}
 	case *parse.VariableNode:
+		varnode := node.(*parse.VariableNode)
 		repr = node.(*parse.VariableNode).String()
+		idents := varnode.Ident
 
-		for i, ident := range node.(*parse.VariableNode).Ident {
+		for i, ident := range idents {
 			log.Debugf("%v%d: %v", strings.Repeat(`  `, depth+1), i, ident)
+		}
+
+		if len(idents) > 1 {
+			replace := parse.NewIdentifier(`get`).SetPos(node.Position()).SetTree(tree)
 		}
 
 	case *parse.CommandNode:
 		repr = node.(*parse.CommandNode).String()
 
 		for _, arg := range node.(*parse.CommandNode).Args {
-			self.prepareNode(arg, depth+1)
+			self.prepareNode(tree, arg, depth+1)
 		}
+
+	case *parse.IdentifierNode:
+		log.Debugf("%v: %v", strings.Repeat(`  `, depth+1), node.(*parse.IdentifierNode).Ident)
 	}
 
 	if repr != `` {
