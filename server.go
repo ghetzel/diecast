@@ -467,14 +467,17 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 		if finalHeader != nil {
 			finalHeader.Renderer = EvalInline(finalHeader.Renderer, data, funcs)
 
-			if finalHeader.Renderer != `` {
+			switch finalHeader.Renderer {
+			case ``, `html`:
+				if r, ok := GetRendererForFilename(requestPath, self); ok {
+					postTemplateRenderer = r
+				}
+			default:
 				if r, err := GetRenderer(finalHeader.Renderer, self); err == nil {
 					postTemplateRenderer = r
 				} else {
 					return err
 				}
-			} else if r, ok := GetRendererForFilename(requestPath, self); ok {
-				postTemplateRenderer = r
 			}
 		}
 
