@@ -55,7 +55,7 @@ use them.
 - [hasSuffix](#hasSuffix)
 - [head](#head)
 - [headers](#headers)
-- [hquery](#hquery)
+- [htmlquery](#htmlquery)
 - [hyphenate](#hyphenate)
 - [increment](#increment)
 - [incrementByValue](#incrementByValue)
@@ -541,9 +541,9 @@ Return the value of the *header* HTTP request header from the request used to ge
 
 ---
 
-<a name="hquery"></a>
+<a name="htmlquery"></a>
 ```
-hquery document any string ->  error
+htmlquery document any string ->  error
 ```
 Queries a given HTML **document** (as returned by a Binding) and returns a list of Elements matching the given **selector**
 

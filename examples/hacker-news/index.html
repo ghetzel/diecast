@@ -5,7 +5,7 @@ bindings:
   parser:   html
 ---
 <ul class="links">
-{{ range (hquery .bindings.demo `.title > a:not([class='morelink'])`) }}
+{{ range (htmlquery $.bindings.demo `.title > a:not([class='morelink'])`) }}
 <li>
     <a href="{{ .attributes.href }}" target="_blank">{{ .text }}</a>
 </li>

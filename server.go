@@ -486,17 +486,22 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 			// if a user-specified renderer was provided, take the rendered output and
 			// pass it into that renderer.  return the result
 			if postTemplateRenderer != nil {
-				// we use an httptest.ResponseRecorder to intercept the default template's output
-				// and pass it as input to the final renderer.
-				intercept := httptest.NewRecorder()
+				var err error
 
-				if err := baseRenderer.Render(intercept, req, renderOpts); err == nil {
+				if postTemplateRenderer.ShouldPrerender() || httputil.QBool(req, `__subrender`) {
+					// we use an httptest.ResponseRecorder to intercept the default template's output
+					// and pass it as input to the final renderer.
+					intercept := httptest.NewRecorder()
+
+					err = baseRenderer.Render(intercept, req, renderOpts)
 					res := intercept.Result()
 					renderOpts.MimeType = res.Header.Get(`Content-Type`)
 					renderOpts.Input = res.Body
+				}
 
+				if err == nil {
 					// run the final template render and return
-					log.Debugf("Rendering template output using %T", postTemplateRenderer)
+					log.Debugf("Rendering using %T", postTemplateRenderer)
 					return postTemplateRenderer.Render(w, req, renderOpts)
 				} else {
 					return err

@@ -14,6 +14,10 @@ type TemplateRenderer struct {
 	server *Server
 }
 
+func (self *TemplateRenderer) ShouldPrerender() bool {
+	return false
+}
+
 func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
 	defer options.Input.Close()
 

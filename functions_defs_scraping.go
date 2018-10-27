@@ -7,9 +7,9 @@ import (
 )
 
 func loadStandardFunctionsWebScraping(rv FuncMap) {
-	// fn hquery: Queries a given HTML **document** (as returned by a Binding) and returns a list of
-	//            Elements matching the given **selector**
-	rv[`hquery`] = func(docI interface{}, selector string) ([]map[string]interface{}, error) {
+	// fn htmlquery: Queries a given HTML **document** (as returned by a Binding) and returns a list of
+	//               Elements matching the given **selector**
+	rv[`htmlquery`] = func(docI interface{}, selector string) ([]map[string]interface{}, error) {
 		elements := make([]map[string]interface{}, 0)
 
 		if doc, ok := docI.(*goquery.Document); ok {

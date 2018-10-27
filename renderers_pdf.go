@@ -4,98 +4,92 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
-	"os"
+	"net/url"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
-	webfriend "github.com/ghetzel/go-webfriend"
+	"github.com/ghetzel/go-webfriend"
 	"github.com/ghetzel/go-webfriend/browser"
 	wfcore "github.com/ghetzel/go-webfriend/commands/core"
-	"github.com/ghetzel/go-webfriend/commands/page"
+	wfpage "github.com/ghetzel/go-webfriend/commands/page"
 )
 
 type PdfRenderer struct {
 	server *Server
 }
 
+func (self *PdfRenderer) ShouldPrerender() bool {
+	return false
+}
+
 func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
 	defer options.Input.Close()
 
-	// create a tmp file to write the input to
-	if tmp, err := ioutil.TempFile(``, `diecast-`); err == nil {
-		defer func() {
-			tmp.Close()
-			os.Remove(tmp.Name())
-		}()
+	if httputil.QBool(req, `__subrender`) {
+		_, err := io.Copy(w, options.Input)
+		return err
 
-		if _, err := io.Copy(tmp, options.Input); err == nil {
-			if _, err := tmp.Seek(0, 0); err != nil {
-				return fmt.Errorf("failed to seek intermediate render file")
-			}
-		} else {
-			return fmt.Errorf("failed to write intermediate render file")
+	} else if www, err := browser.Start(); err == nil {
+		defer www.Stop()
+		var buffer bytes.Buffer
+
+		subaddr := self.server.Address
+
+		if strings.HasPrefix(subaddr, `:`) {
+			subaddr = `127.0.0.1` + subaddr
 		}
 
-		if www, err := browser.Start(); err == nil {
-			defer www.Stop()
-			var buffer bytes.Buffer
+		env := webfriend.NewEnvironment(www)
+		suburl, _ := url.Parse(req.URL.String())
+		suburl.Scheme = `http`
+		suburl.Host = subaddr
+		subqs := suburl.Query()
+		subqs.Set(`__subrender`, `true`)
+		suburl.RawQuery = subqs.Encode()
 
-			env := webfriend.NewEnvironment(www)
+		log.Debugf("Rendering %v as PDF", suburl)
 
-			if abs, err := filepath.Abs(tmp.Name()); err == nil {
-				tmpfile := fmt.Sprintf("file://%v", abs)
-				log.Debugf("Rendering %v as PDF", tmpfile)
+		core := env.MustModule(`core`).(*wfcore.Commands)
+		page := env.MustModule(`page`).(*wfpage.Commands)
 
-				if m, ok := env.Module(`core`); ok {
-					if core, ok := m.(*wfcore.Commands); ok {
-						if _, err := core.Go(tmpfile, &wfcore.GoArgs{
-							LoadEventName:             `Page.domContentEventFired`,
-							RequireOriginatingRequest: false,
-						}); err != nil {
-							return err
-						}
-					} else {
-						return fmt.Errorf("Unable to retrieve Webfriend Core module")
-					}
-				} else {
-					return fmt.Errorf("Unable to retrieve Webfriend Core module")
-				}
+		var timeout time.Duration
 
-				if m, ok := env.Module(`page`); ok {
-					if page, ok := m.(*page.Commands); ok {
-						if err := page.Pdf(&buffer, nil); err == nil {
-							w.Header().Set(`Content-Type`, `application/pdf`)
-
-							rewrittenFilename := strings.TrimSuffix(
-								filepath.Base(options.RequestedPath),
-								filepath.Ext(options.RequestedPath),
-							) + `.pdf`
-
-							w.Header().Set(`Content-Disposition`, fmt.Sprintf("inline; filename=%q", rewrittenFilename))
-
-							_, err := io.Copy(w, &buffer)
-
-							return err
-						} else {
-							return err
-						}
-					} else {
-						return fmt.Errorf("Unable to retrieve Webfriend Page module")
-					}
-				} else {
-					return fmt.Errorf("Unable to retrieve Webfriend Page module")
-				}
-			} else {
-				return fmt.Errorf("failed to get intermediate filename: %v", err)
-			}
+		if options.Timeout > 0 {
+			timeout = options.Timeout
 		} else {
-			log.Fatalf("could not generate PDF: %v", err)
+			timeout = 60 * time.Second
+		}
+
+		// visit the URL
+		if _, err := core.Go(suburl.String(), &wfcore.GoArgs{
+			Timeout: timeout,
+		}); err != nil {
+			return err
+		}
+
+		// render the loaded page as a PDF
+		if err := page.Pdf(&buffer, nil); err == nil {
+			w.Header().Set(`Content-Type`, `application/pdf`)
+
+			rewrittenFilename := strings.TrimSuffix(
+				filepath.Base(options.RequestedPath),
+				filepath.Ext(options.RequestedPath),
+			) + `.pdf`
+
+			w.Header().Set(`Content-Disposition`, fmt.Sprintf("inline; filename=%q", rewrittenFilename))
+
+			_, err := io.Copy(w, &buffer)
+
+			return err
+		} else {
 			return err
 		}
 	} else {
+		log.Fatalf("could not generate PDF: %v", err)
 		return err
 	}
 }

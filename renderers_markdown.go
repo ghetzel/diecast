@@ -12,6 +12,10 @@ type MarkdownRenderer struct {
 	server *Server
 }
 
+func (self *MarkdownRenderer) ShouldPrerender() bool {
+	return true
+}
+
 func (self *MarkdownRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
 	defer options.Input.Close()
 

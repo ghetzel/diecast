@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type RenderOptions struct {
@@ -17,10 +18,12 @@ type RenderOptions struct {
 	MimeType      string
 	RequestedPath string
 	HasLayout     bool
+	Timeout       time.Duration
 }
 
 type Renderer interface {
 	Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error
+	ShouldPrerender() bool
 }
 
 func GetRenderer(name string, server *Server) (Renderer, error) {

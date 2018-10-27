@@ -15,7 +15,7 @@ require (
 	github.com/ghetzel/cli v1.17.0
 	github.com/ghetzel/friendscript v0.5.2
 	github.com/ghetzel/go-stockutil v1.5.52
-	github.com/ghetzel/go-webfriend v0.9.32
+	github.com/ghetzel/go-webfriend v0.9.34
 	github.com/ghetzel/uuid v0.0.0-20171129191014-dec09d789f3d
 	github.com/ghetzel/warp v0.0.3 // indirect
 	github.com/ghodss/yaml v1.0.0
@@ -24,7 +24,7 @@ require (
 	github.com/gorilla/websocket v1.4.0
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7
 	github.com/grokify/html-strip-tags-go v0.0.0-20180530080503-3f8856873ce5
-	github.com/h2non/filetype v0.0.0-20180727100300-6f0781f86f6a
+	github.com/h2non/filetype v1.0.5
 	github.com/hashicorp/errwrap v1.0.0
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/husobee/vestigo v1.1.0
@@ -41,7 +41,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mattn/go-shellwords v1.0.3
 	github.com/mattn/go-tty v0.0.0-20180219170247-931426f7535a
-	github.com/mcuadros/go-defaults v0.0.0-20161116231230-e1c978be3307
+	github.com/mcuadros/go-defaults v1.1.0
 	github.com/microcosm-cc/bluemonday v1.0.0
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
 	github.com/mitchellh/mapstructure v1.0.0
