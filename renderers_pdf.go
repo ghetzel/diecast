@@ -66,7 +66,8 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 
 		// visit the URL
 		if _, err := core.Go(suburl.String(), &wfcore.GoArgs{
-			Timeout: timeout,
+			Timeout:                   timeout,
+			RequireOriginatingRequest: false,
 		}); err != nil {
 			return err
 		}

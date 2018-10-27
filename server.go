@@ -1017,7 +1017,9 @@ func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.Fi
 	if file, err := self.fs.Open(requestPath); err == nil {
 		if stat, err := file.Stat(); err == nil {
 			if !stat.IsDir() {
-				if mimetype, err := figureOutMimeType(stat.Name(), file); err == nil {
+				if mimetype := httputil.Q(req, `mimetype`); mimetype != `` {
+					return file, mimetype, nil
+				} else if mimetype, err := figureOutMimeType(stat.Name(), file); err == nil {
 					return file, mimetype, nil
 				} else {
 					return file, ``, err
@@ -1113,8 +1115,24 @@ func (self *Server) tryToHandleFoundFile(requestPath string, mimeType string, fi
 		}
 	} else {
 		// if not templated, then the file is returned outright
-		w.Header().Set(`Content-Type`, mimeType)
-		io.Copy(w, file)
+		if rendererName := httputil.Q(req, `renderer`); rendererName == `` {
+			w.Header().Set(`Content-Type`, mimeType)
+			io.Copy(w, file)
+		} else if renderer, err := GetRenderer(rendererName, self); err == nil {
+			if err := renderer.Render(w, req, RenderOptions{
+				Input: file,
+			}); err != nil {
+				self.respondError(w, err, http.StatusInternalServerError)
+			}
+		} else if renderer, ok := GetRendererForFilename(requestPath, self); ok {
+			if err := renderer.Render(w, req, RenderOptions{
+				Input: file,
+			}); err != nil {
+				self.respondError(w, err, http.StatusInternalServerError)
+			}
+		} else {
+			self.respondError(w, fmt.Errorf("Unknown renderer %q", rendererName), http.StatusBadRequest)
+		}
 	}
 
 	return true
