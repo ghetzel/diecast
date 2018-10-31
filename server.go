@@ -30,8 +30,6 @@ import (
 	"github.com/ghetzel/go-stockutil/timeutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/ghodss/yaml"
-	"github.com/gregjones/httpcache"
-	"github.com/gregjones/httpcache/diskcache"
 	"github.com/jbenet/go-base58"
 	"github.com/julienschmidt/httprouter"
 	"github.com/mattn/go-shellwords"
@@ -87,13 +85,11 @@ type Server struct {
 	BaseHeader          *TemplateHeader        `json:"header"`
 	DefaultPageObject   map[string]interface{} `json:"-"`
 	OverridePageObject  map[string]interface{} `json:"-"`
-	CacheDirectory      string                 `json:"cachedir"`
 	PrestartCommand     StartCommand           `json:"prestart"`
 	StartCommand        StartCommand           `json:"start"`
 	Authenticators      AuthenticatorConfigs   `json:"authenticators"`
 	TryExtensions       []string               `json:"try_extensions"`   // try these file extensions when looking for default (i.e.: "index") files
 	RendererMappings    map[string]string      `json:"renderer_mapping"` // map file extensions to preferred renderers
-	cache               httpcache.Cache
 	router              *httprouter.Router
 	server              *negroni.Negroni
 	fs                  http.FileSystem
@@ -239,15 +235,6 @@ func (self *Server) Initialize() error {
 
 	if err := self.setupServer(); err != nil {
 		return err
-	}
-
-	// configure cache handler
-	if self.CacheDirectory == `` {
-		self.cache = httpcache.NewMemoryCache()
-	} else if expanded, err := pathutil.ExpandUser(self.CacheDirectory); err == nil {
-		self.cache = diskcache.New(expanded)
-	} else {
-		return fmt.Errorf("error configuring cache: %v", err)
 	}
 
 	return self.RunStartCommand(&self.PrestartCommand, false)

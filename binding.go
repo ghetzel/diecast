@@ -278,7 +278,6 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 			} else {
 				BindingClient.Transport = &httpcache.Transport{
 					Transport:           transport,
-					Cache:               self.server.cache,
 					MarkCachedResponses: true,
 				}
 			}
