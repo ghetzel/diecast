@@ -21,7 +21,6 @@ import (
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
-	"github.com/gregjones/httpcache"
 )
 
 type BindingErrorAction string
@@ -273,14 +272,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 			}
 
 			// setup caching transport (if desired)
-			if self.DisableCache {
-				BindingClient.Transport = transport
-			} else {
-				BindingClient.Transport = &httpcache.Transport{
-					Transport:           transport,
-					MarkCachedResponses: true,
-				}
-			}
+			BindingClient.Transport = transport
 
 			if bindingReq.URL.Scheme == `https` && self.Insecure {
 				log.Noticef("SSL/TLS certificate validation is disabled for this request.")

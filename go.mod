@@ -22,7 +22,6 @@ require (
 	github.com/gobwas/glob v0.2.3
 	github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c
 	github.com/gorilla/websocket v1.4.0
-	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7
 	github.com/grokify/html-strip-tags-go v0.0.0-20180530080503-3f8856873ce5
 	github.com/h2non/filetype v1.0.5
 	github.com/hashicorp/errwrap v1.0.0
