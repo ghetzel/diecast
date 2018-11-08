@@ -250,32 +250,38 @@ func filterByKey(funcs FuncMap, input interface{}, key string, exprs ...interfac
 	expr := sliceutil.First(exprs)
 	exprStr := fmt.Sprintf("%v", expr)
 
-	for i, submap := range sliceutil.Sliceify(input) {
-		if typeutil.IsMap(submap) {
-			if item := maputil.DeepGet(submap, strings.Split(key, `.`)); item != nil {
+	for i, mapitem := range sliceutil.Sliceify(input) {
+		submap := maputil.M(mapitem)
 
-				if stringutil.IsSurroundedBy(exprStr, `{{`, `}}`) {
-					tmpl := NewTemplate(`inline`, TextEngine)
-					tmpl.Funcs(funcs)
+		if item := submap.Get(key); !item.IsNil() {
+			if stringutil.IsSurroundedBy(exprStr, `{{`, `}}`) {
+				tmpl := NewTemplate(`inline`, TextEngine)
+				tmpl.Funcs(funcs)
 
-					if err := tmpl.Parse(exprStr); err == nil {
-						output := bytes.NewBuffer(nil)
+				if err := tmpl.Parse(exprStr); err == nil {
+					output := bytes.NewBuffer(nil)
 
-						if err := tmpl.Render(output, item, ``); err == nil {
-							evalValue := stringutil.Autotype(output.String())
-
-							if !typeutil.IsZero(evalValue) {
-								out = append(out, submap)
-							}
-						} else {
-							return nil, fmt.Errorf("item %d: %v", i, err)
+					if err := tmpl.Render(output, item.Value, ``); err == nil {
+						if evalValue := stringutil.Autotype(output.String()); !typeutil.IsZero(evalValue) {
+							out = append(out, submap)
 						}
 					} else {
-						return nil, fmt.Errorf("failed to parse template: %v", err)
+						return nil, fmt.Errorf("item %d: %v", i, err)
 					}
-				} else if ok, err := stringutil.RelaxedEqual(item, expr); err == nil && ok {
-					out = append(out, submap)
+				} else {
+					return nil, fmt.Errorf("failed to parse template: %v", err)
 				}
+			} else if typeutil.IsArray(expr) {
+				// if we were given an array, then matching ANY item in the array yields true
+				for _, want := range sliceutil.Sliceify(expr) {
+					if ok, err := stringutil.RelaxedEqual(item, want); err == nil && ok {
+						out = append(out, submap)
+						break
+					}
+				}
+
+			} else if ok, err := stringutil.RelaxedEqual(item, expr); err == nil && ok {
+				out = append(out, submap)
 			}
 		}
 	}
