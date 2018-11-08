@@ -263,7 +263,7 @@ func filterByKey(funcs FuncMap, input interface{}, key string, exprs ...interfac
 
 					if err := tmpl.Render(output, item.Value, ``); err == nil {
 						if evalValue := stringutil.Autotype(output.String()); !typeutil.IsZero(evalValue) {
-							out = append(out, submap)
+							out = append(out, mapitem)
 						}
 					} else {
 						return nil, fmt.Errorf("item %d: %v", i, err)
@@ -275,13 +275,13 @@ func filterByKey(funcs FuncMap, input interface{}, key string, exprs ...interfac
 				// if we were given an array, then matching ANY item in the array yields true
 				for _, want := range sliceutil.Sliceify(expr) {
 					if ok, err := stringutil.RelaxedEqual(item, want); err == nil && ok {
-						out = append(out, submap)
+						out = append(out, mapitem)
 						break
 					}
 				}
 
 			} else if ok, err := stringutil.RelaxedEqual(item, expr); err == nil && ok {
-				out = append(out, submap)
+				out = append(out, mapitem)
 			}
 		}
 	}

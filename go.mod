@@ -14,7 +14,7 @@ require (
 	github.com/ghetzel/argonaut v0.0.0-20180428155514-51604c68ce30
 	github.com/ghetzel/cli v1.17.0
 	github.com/ghetzel/friendscript v0.5.2
-	github.com/ghetzel/go-stockutil v1.5.52
+	github.com/ghetzel/go-stockutil v1.6.6
 	github.com/ghetzel/go-webfriend v0.9.34
 	github.com/ghetzel/uuid v0.0.0-20171129191014-dec09d789f3d
 	github.com/ghetzel/warp v0.0.3 // indirect
