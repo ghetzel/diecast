@@ -24,3 +24,14 @@ func TestCollectionFunctions(t *testing.T) {
 	assert.Equal(75, page(4, 25))
 	assert.Equal(100, page(5, 25))
 }
+
+func TestMiscFunctions(t *testing.T) {
+	assert := require.New(t)
+	fns := GetStandardFunctions()
+
+	fn_switch := fns[`switch`].(func(input interface{}, fallback interface{}, pairs ...interface{}) interface{})
+
+	assert.Equal(`1`, fn_switch(`a`, `fallback`, `a`, `1`, `b`, `2`))
+	assert.Equal(`2`, fn_switch(`b`, `fallback`, `a`, `1`, `b`, `2`))
+	assert.Equal(`fallback`, fn_switch(`c`, `fallback`, `a`, `1`, `b`, `2`))
+}

@@ -128,6 +128,7 @@ use them.
 - [sunrise](#sunrise)
 - [sunset](#sunset)
 - [surroundedBy](#surroundedBy)
+- [switch](#switch)
 - [tail](#tail)
 - [templateKey](#templateKey)
 - [thousandify](#thousandify)
@@ -1122,6 +1123,14 @@ Return the time of apparent sunset at the given coordinates, optionally for a gi
 surroundedBy s any prefix string suffix string -> bool
 ```
 Return whether string *s* starts with *prefix* and ends with *suffix*.
+
+---
+
+<a name="switch"></a>
+```
+switch any any [any ..] -> 
+```
+Provide a simple inline switch-case style decision mechanism.
 
 ---
 
