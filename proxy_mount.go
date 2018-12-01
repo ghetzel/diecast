@@ -15,20 +15,23 @@ import (
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/sliceutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 var DefaultProxyMountTimeout = time.Duration(10) * time.Second
 var MaxBufferedBodySize = 16535
 
 type ProxyMount struct {
-	MountPoint          string            `json:"-"`
-	URL                 string            `json:"-"`
-	Method              string            `json:"method,omitempty"`
-	Headers             map[string]string `json:"headers,omitempty"`
-	Timeout             time.Duration     `json:"timeout,omitempty"`
-	PassthroughRequests bool              `json:"passthrough_requests"`
-	PassthroughErrors   bool              `json:"passthrough_errors"`
-	Insecure            bool              `json:"insecure"`
+	MountPoint          string                 `json:"-"`
+	URL                 string                 `json:"-"`
+	Method              string                 `json:"method,omitempty"`
+	Headers             map[string]interface{} `json:"headers,omitempty"`
+	Params              map[string]interface{} `json:"params,omitempty"`
+	Timeout             time.Duration          `json:"timeout,omitempty"`
+	PassthroughRequests bool                   `json:"passthrough_requests"`
+	PassthroughErrors   bool                   `json:"passthrough_errors"`
+	StripPathPrefix     string                 `json:"strip_path_prefix"`
+	Insecure            bool                   `json:"insecure"`
 	Client              *http.Client
 	urlRewriteFrom      string
 	urlRewriteTo        string
@@ -75,10 +78,11 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		self.Method = `get`
 	}
 
-	if req != nil && self.PassthroughRequests {
-		if newURL, err := url.Parse(self.url()); err == nil {
+	if newURL, err := url.Parse(self.url()); err == nil {
+		if req != nil && self.PassthroughRequests {
 			req.URL.Scheme = newURL.Scheme
 			req.URL.Host = newURL.Host
+			req.URL.Path = newURL.Path
 
 			if newURL.User != nil {
 				req.URL.User = newURL.User
@@ -101,13 +105,13 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 
 			proxyURI = req.URL.String()
 		} else {
-			return nil, fmt.Errorf("Failed to parse proxy URL: %v", err)
+			proxyURI = strings.Join([]string{
+				strings.TrimSuffix(newURL.String(), `/`),
+				strings.TrimPrefix(name, `/`),
+			}, `/`)
 		}
 	} else {
-		proxyURI = strings.Join([]string{
-			strings.TrimSuffix(self.url(), `/`),
-			strings.TrimPrefix(name, `/`),
-		}, `/`)
+		return nil, fmt.Errorf("Failed to parse proxy URL: %v", err)
 	}
 
 	method := strings.ToUpper(self.Method)
@@ -125,8 +129,17 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			}
 		}
 
+		// add explicit headers to new request
 		for name, value := range self.Headers {
-			newReq.Header.Set(name, value)
+			newReq.Header.Set(name, typeutil.String(value))
+		}
+
+		// inject params into new request
+		for name, value := range self.Params {
+			if newReq.URL.Query().Get(name) == `` {
+				log.Debugf("  [Q] %v=%v", name, value)
+				httputil.SetQ(newReq.URL, name, value)
+			}
 		}
 
 		log.Debugf("  Handled by %v", self)
