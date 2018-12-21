@@ -32,7 +32,7 @@ func loadStandardFunctionsPath(rv FuncMap) {
 
 	// fn pathjoin: Return the value of all *values* join on the system path separator.
 	rv[`pathjoin`] = func(values ...interface{}) string {
-		return path.Join(sliceutil.Stringify(values)...)
+		return path.Join(sliceutil.Stringify(sliceutil.Flatten(values))...)
 	}
 
 	// fn pwd: Return the present working directory

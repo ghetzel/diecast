@@ -5,7 +5,7 @@ require (
 	github.com/dustin/go-humanize v0.0.0-20180713052910-9f541cc9db5d
 	github.com/fatih/structs v1.0.0
 	github.com/ghetzel/cli v1.17.0
-	github.com/ghetzel/go-stockutil v1.6.17
+	github.com/ghetzel/go-stockutil v1.6.30
 	github.com/ghetzel/go-webfriend v0.9.40
 	github.com/ghodss/yaml v1.0.0
 	github.com/gobwas/glob v0.2.3

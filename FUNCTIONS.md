@@ -118,9 +118,11 @@ use them.
 - [set](#set)
 - [shuffle](#shuffle)
 - [since](#since)
+- [slice](#slice)
 - [sliceify](#sliceify)
 - [sort](#sort)
 - [split](#split)
+- [sslice](#sslice)
 - [strcount](#strcount)
 - [stringify](#stringify)
 - [stripHtml](#stripHtml)
@@ -968,17 +970,17 @@ Return all but the first value from the given *input* array.
 
 <a name="reverse"></a>
 ```
-reverse array any [any ..] -> 
+reverse input any [any ..] -> 
 ```
-Return the given *array* in reverse order.
+Return the *input* array sorted in lexical descending order.
 
 ---
 
 <a name="reverse"></a>
 ```
-reverse input any [any ..] -> 
+reverse array any [any ..] -> 
 ```
-Return the *input* array sorted in lexical descending order.
+Return the given *array* in reverse order.
 
 ---
 
@@ -1046,6 +1048,14 @@ Return the amount of time that has elapsed since *time*, optionally rounded to t
 
 ---
 
+<a name="slice"></a>
+```
+slice any int int -> 
+```
+Return the array of values that are the subset of the given slice parameters.
+
+---
+
 <a name="sliceify"></a>
 ```
 sliceify input any -> 
@@ -1067,6 +1077,14 @@ Return the *input* array sorted in lexical ascending order.
 split s string delimiter string [any ..] -> 
 ```
 Return a string array of elements resulting from *s* being split by *delimiter*, up to *n* times (if specified).
+
+---
+
+<a name="sslice"></a>
+```
+sslice any int int -> 
+```
+The same as `slice`, but returns strings.
 
 ---
 
