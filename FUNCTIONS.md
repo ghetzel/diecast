@@ -1050,7 +1050,7 @@ Return the amount of time that has elapsed since *time*, optionally rounded to t
 
 <a name="slice"></a>
 ```
-slice any int int -> 
+slice any any any -> 
 ```
 Return the array of values that are the subset of the given slice parameters.
 
@@ -1082,7 +1082,7 @@ Return a string array of elements resulting from *s* being split by *delimiter*,
 
 <a name="sslice"></a>
 ```
-sslice any int int -> 
+sslice any any any -> 
 ```
 The same as `slice`, but returns strings.
 

@@ -201,13 +201,13 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 	}
 
 	// fn slice: Return the array of values that are the subset of the given slice parameters.
-	rv[`slice`] = func(slice interface{}, from int, to int) []interface{} {
-		return sliceutil.Slice(slice, from, to)
+	rv[`slice`] = func(slice interface{}, from interface{}, to interface{}) []interface{} {
+		return sliceutil.Slice(slice, int(typeutil.Int(from)), int(typeutil.Int(to)))
 	}
 
 	// fn sslice: The same as `slice`, but returns strings.
-	rv[`sslice`] = func(slice interface{}, from int, to int) []string {
-		return sliceutil.StringSlice(slice, from, to)
+	rv[`sslice`] = func(slice interface{}, from interface{}, to interface{}) []string {
+		return sliceutil.StringSlice(slice, int(typeutil.Int(from)), int(typeutil.Int(to)))
 	}
 
 	// fn uniq: Return an array of unique values from the given *input* array.
