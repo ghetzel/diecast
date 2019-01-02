@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
+	"mime"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -357,6 +358,14 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 					// only do response body processing if there is data to process
 					if len(data) > 0 {
+						var contentType string
+
+						if mt, _, err := mime.ParseMediaType(res.Header.Get(`Content-Type`)); err == nil {
+							contentType = mt
+						} else {
+							contentType = res.Header.Get(`Content-Type`)
+						}
+
 						switch self.Parser {
 						case `json`, ``:
 							// if the parser is unset, and the response type is NOT application/json, then
@@ -364,7 +373,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 							//
 							// If you're certain the response actually is JSON, then explicitly set Parser==`json`
 							//
-							if self.Parser == `` && res.Header.Get(`Content-Type`) != `application/json` {
+							if self.Parser == `` && contentType != `application/json` {
 								return string(data), nil
 							} else {
 								var rv interface{}
