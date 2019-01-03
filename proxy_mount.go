@@ -78,11 +78,10 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		self.Method = `get`
 	}
 
-	if newURL, err := url.Parse(self.url()); err == nil {
-		if req != nil && self.PassthroughRequests {
+	if req != nil && self.PassthroughRequests {
+		if newURL, err := url.Parse(self.url()); err == nil {
 			req.URL.Scheme = newURL.Scheme
 			req.URL.Host = newURL.Host
-			req.URL.Path = newURL.Path
 
 			if newURL.User != nil {
 				req.URL.User = newURL.User
@@ -105,13 +104,13 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 
 			proxyURI = req.URL.String()
 		} else {
-			proxyURI = strings.Join([]string{
-				strings.TrimSuffix(newURL.String(), `/`),
-				strings.TrimPrefix(name, `/`),
-			}, `/`)
+			return nil, fmt.Errorf("Failed to parse proxy URL: %v", err)
 		}
 	} else {
-		return nil, fmt.Errorf("Failed to parse proxy URL: %v", err)
+		proxyURI = strings.Join([]string{
+			strings.TrimSuffix(self.url(), `/`),
+			strings.TrimPrefix(name, `/`),
+		}, `/`)
 	}
 
 	method := strings.ToUpper(self.Method)
@@ -121,6 +120,10 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 	}
 
 	if newReq, err := http.NewRequest(method, proxyURI, nil); err == nil {
+		if pp := self.StripPathPrefix; pp != `` {
+			newReq.URL.Path = strings.TrimPrefix(newReq.URL.Path, pp)
+		}
+
 		if req != nil && self.PassthroughRequests {
 			for name, values := range req.Header {
 				for _, value := range values {
@@ -164,7 +167,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			}
 		}
 
-		log.Infof("  proxying '%v %v' to '%v %v'", req.Method, req.URL, newReq.Method, proxyURI)
+		log.Infof("  proxying '%v %v' to '%v %v'", req.Method, req.URL, newReq.Method, newReq.URL)
 		log.Debugf("  %v %v", newReq.Method, newReq.URL)
 
 		for k, v := range newReq.Header {
@@ -181,7 +184,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			log.Infof(
 				"%v %v responded with: %v (Content-Length: %v)",
 				newReq.Method,
-				proxyURI,
+				newReq.URL,
 				response.Status,
 				response.ContentLength,
 			)
@@ -212,7 +215,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 					return nil, err
 				}
 			} else {
-				// log.Debugf("  %s %s: %s", method, proxyURI, response.Status)
+				// log.Debugf("  %s %s: %s", method, newReq.URL, response.Status)
 				return nil, MountHaltErr
 			}
 		} else {
