@@ -84,6 +84,7 @@ use them.
 - [ltrim](#ltrim)
 - [mapify](#mapify)
 - [markdown](#markdown)
+- [match](#match)
 - [mimeparams](#mimeparams)
 - [mimetype](#mimetype)
 - [mod](#mod)
@@ -776,6 +777,14 @@ Render the given Markdown string *value* as sanitized HTML.
 
 ---
 
+<a name="match"></a>
+```
+match string any -> bool error
+```
+Return whether the given value matches the given regular expression.
+
+---
+
 <a name="mimeparams"></a>
 ```
 mimeparams string -> 
@@ -970,17 +979,17 @@ Return all but the first value from the given *input* array.
 
 <a name="reverse"></a>
 ```
-reverse input any [any ..] -> 
+reverse array any [any ..] -> 
 ```
-Return the *input* array sorted in lexical descending order.
+Return the given *array* in reverse order.
 
 ---
 
 <a name="reverse"></a>
 ```
-reverse array any [any ..] -> 
+reverse input any [any ..] -> 
 ```
-Return the given *array* in reverse order.
+Return the *input* array sorted in lexical descending order.
 
 ---
 
