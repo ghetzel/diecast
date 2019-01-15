@@ -25,6 +25,7 @@ require (
 	github.com/stretchr/testify v1.2.2
 	github.com/tg123/go-htpasswd v0.0.0-20150618065153-49fe3fd1681b
 	github.com/urfave/negroni v1.0.0
+	github.com/wellington/go-libsass v0.9.2
 	github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8
 	golang.org/x/net v0.0.0-20180906233101-161cd47e91fd
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect

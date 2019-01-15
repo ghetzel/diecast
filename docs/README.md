@@ -242,7 +242,10 @@ The `name` and `resource` properties are required for a binding to run, but ther
 | `rawbody`              | String                        | -             | The *exact* string to send as the request body.
 | `skip_inherit_headers` | `true`, `false`               | `false`       | If true, no headers from the originating request to render the template will be included in this request, even if Header Passthrough is enabled.
 
-#### Handling the Response
+#### Handling Response Codes and Errors
+
+
+
 #### Conditional Evaluation
 #### Repeaters
 
@@ -251,9 +254,57 @@ The `name` and `resource` properties are required for a binding to run, but ther
 
 ### Dynamic Variables
 
+Sometimes it is useful to be able to dynamically manipulate data during template evaluation.  Diecast has a set of functions that allow for custom data to be set, retrieved, and removed at runtime.
+
+#### Runtime Variable Functions
+
+##### `var "VARNAME" [VALUE]`
+
+The `var` function declares a new variable with a given name, optionally setting it to an initial value.  If a value is not provided, the variable is set to a `nil` value.  This is also how you can clear out the value of an existing variable.
+
+The string defining the variable name is interpreted as a "dot.separated.path" that is used to set the value in a deeply-nested object.  For example, the following code:
+
+```
+var "user.auth.scheme" "basic"
+```
+
+...would produce the following struct:
+
+```
+{
+    "vars": {
+        "user": {
+            "auth": {
+                "scheme": "basic"
+            }
+        }
+    }
+}
+```
+
+...and would be accessible with the code `{{ $.vars.user.auth.scheme }}`
+
+##### `push "VARNAME" VALUE`
+
+The `push` function appends the given _VALUE_ to the variable at _"VARNAME"_.  If the current value is nil, the result will be an array containing just the element `[ VALUE ]`.  If the current value is not an array, it will first be converted to one.  Then _VALUE_ will be appended to the array.
+
+##### `pop "VARNAME"`
+
+The `pop` function remove the last element from the array at variable _"VARNAME"_.  This value will be returned, or if the array is non-existent or empty, will return `nil`.
+
 ### Postprocessors
-#### Pretty Print
-#### Trim Space
+
+Postprocessors are routines that are run after the template is rendered for a request, but before the response is returned to the client.  This allows for actions to be taken on the final output, processing it in various ways.
+
+#### Prettify HTML
+
+The `prettify-html` postprocessor will treat the incoming document as HTML, running it through an autoformatter and autoindent routine.  This is useful for ensuring that well-formed and visually pleasing HTML is emitted from Diecast.
+
+#### Trim Empty Lines
+
+The `trim-empty-lines` postprocessor removes all lines from the final document that are zero-length or only contain whitespace.  This is especially useful when producing responses encoded as Tab-Separated Values (TSV) or Comma-Separated Values (CSV).
+
+
 
 ### Renderers
 #### HTML

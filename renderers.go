@@ -32,6 +32,8 @@ func GetRenderer(name string, server *Server) (Renderer, error) {
 		return &PdfRenderer{server: server}, nil
 	case `markdown`:
 		return &MarkdownRenderer{server: server}, nil
+	case `sass`:
+		return &SassRenderer{server: server}, nil
 	case ``, `html`:
 		return &TemplateRenderer{server: server}, nil
 	default:

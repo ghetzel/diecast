@@ -43,10 +43,11 @@ const DefaultConfigFile = `diecast.yml`
 var HeaderSeparator = []byte{'-', '-', '-'}
 var DefaultIndexFile = `index.html`
 var DefaultVerifyFile = `/` + DefaultIndexFile
-var DefaultTemplatePatterns = []string{`*.html`, `*.md`}
+var DefaultTemplatePatterns = []string{`*.html`, `*.md`, `*.scss`}
 var DefaultTryExtensions = []string{`html`, `md`}
 var DefaultRendererMappings = map[string]string{
-	`md`: `markdown`,
+	`md`:   `markdown`,
+	`scss`: `sass`,
 }
 
 type RedirectTo string
