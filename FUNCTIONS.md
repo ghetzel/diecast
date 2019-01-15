@@ -6,9 +6,6 @@ use them.
 
 ## Function List
 
-- [](#)
-- [](#)
-- [](#)
 - [add](#add)
 - [addTime](#addTime)
 - [ago](#ago)
@@ -53,7 +50,9 @@ use them.
 - [firstByKey](#firstByKey)
 - [flatten](#flatten)
 - [get](#get)
+- [gex](#gex)
 - [groupBy](#groupBy)
+- [gtx](#gtx)
 - [has](#has)
 - [hasPrefix](#hasPrefix)
 - [hasSuffix](#hasSuffix)
@@ -83,9 +82,11 @@ use them.
 - [keys](#keys)
 - [last](#last)
 - [leastcommon](#leastcommon)
+- [lex](#lex)
 - [lighten](#lighten)
 - [lower](#lower)
 - [ltrim](#ltrim)
+- [ltx](#ltx)
 - [mapify](#mapify)
 - [markdown](#markdown)
 - [match](#match)
@@ -154,30 +155,6 @@ use them.
 - [values](#values)
 - [var](#var)
 ## Function Usage
-
----
-
-<a name=""></a>
-```
-  -> 
-```
-
-
----
-
-<a name=""></a>
-```
-  -> 
-```
-
-
----
-
-<a name=""></a>
-```
-  -> 
-```
-
 
 ---
 
@@ -533,11 +510,27 @@ Get a key from a map.
 
 ---
 
+<a name="gex"></a>
+```
+gex gex any any -> bool error
+```
+A relaxed-type replacement for the **gex** builtin function.
+
+---
+
 <a name="groupBy"></a>
 ```
 groupBy input any string [any ..] ->  error
 ```
 Return the given *input* array-of-objects as an object, keyed on the value of the specified group *field*.  The field argument can be a template.
+
+---
+
+<a name="gtx"></a>
+```
+gtx gtx any any -> bool error
+```
+A relaxed-type replacement for the **gtx** builtin function.
 
 ---
 
@@ -773,6 +766,14 @@ Return element in the *input* array that appears the least frequently.
 
 ---
 
+<a name="lex"></a>
+```
+lex lex any any -> bool error
+```
+A relaxed-type replacement for the **lex** builtin function.
+
+---
+
 <a name="lighten"></a>
 ```
 lighten any float64 -> string error
@@ -794,6 +795,14 @@ Return a copy of string *s* with all Unicode letters mapped to their lower case.
 ltrim s any prefix string -> string
 ```
 Return a copy of string *s* with the leading *prefix* removed.
+
+---
+
+<a name="ltx"></a>
+```
+ltx ltx any any -> bool error
+```
+A relaxed-type replacement for the **ltx** builtin function.
 
 ---
 

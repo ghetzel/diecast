@@ -18,17 +18,22 @@ func loadStandardFunctionsMisc(rv FuncMap) {
 		return !eq, err
 	}
 
-	// fn ge: A relaxed-type replacement for the **ge** builtin function.
+	// fn gtx: A relaxed-type replacement for the **gtx** builtin function.
+	rv[`gtx`] = func(first interface{}, second interface{}) (bool, error) {
+		return cmp(`ge`, first, second)
+	}
+
+	// fn gex: A relaxed-type replacement for the **gex** builtin function.
 	rv[`gex`] = func(first interface{}, second interface{}) (bool, error) {
 		return cmp(`ge`, first, second)
 	}
 
-	// fn lt: A relaxed-type replacement for the **lt** builtin function.
+	// fn ltx: A relaxed-type replacement for the **ltx** builtin function.
 	rv[`ltx`] = func(first interface{}, second interface{}) (bool, error) {
 		return cmp(`lt`, first, second)
 	}
 
-	// fn le: A relaxed-type replacement for the **le** builtin function.
+	// fn lex: A relaxed-type replacement for the **lex** builtin function.
 	rv[`lex`] = func(first interface{}, second interface{}) (bool, error) {
 		return cmp(`le`, first, second)
 	}
