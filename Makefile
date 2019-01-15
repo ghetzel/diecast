@@ -11,13 +11,15 @@ deps:
 	-go mod tidy
 	@go list github.com/mjibson/esc || go get github.com/mjibson/esc/...
 	go generate -x ./...
+
+fmt:
 	gofmt -w $(LOCALS)
-	go vet $(PKGS)
+	go vet ./...
 
 test:
 	go test ./...
 
-build:
+build: fmt
 	test -d diecast && go build -i -o bin/diecast diecast/main.go
 	test -d diecast/funcdoc && go build -i -o bin/funcdoc diecast/funcdoc/main.go
 	./bin/funcdoc > FUNCTIONS.md

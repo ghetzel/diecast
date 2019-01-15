@@ -512,3 +512,39 @@ func timeCmp(before bool, first interface{}, secondI ...interface{}) (bool, erro
 		return false, err
 	}
 }
+
+func cmp(op string, first interface{}, second interface{}) (bool, error) {
+	fStr, ok1 := first.(string)
+	sStr, ok2 := second.(string)
+
+	if ok1 && ok2 {
+		switch op {
+		case `gt`:
+			return fStr > sStr, nil
+		case `ge`:
+			return fStr >= sStr, nil
+		case `lt`:
+			return fStr < sStr, nil
+		case `le`:
+			return fStr <= sStr, nil
+		default:
+			return false, fmt.Errorf("Invalid operator %q", op)
+		}
+	} else {
+		fVal := typeutil.Float(first)
+		sVal := typeutil.Float(second)
+
+		switch op {
+		case `gt`:
+			return fVal > sVal, nil
+		case `ge`:
+			return fVal >= sVal, nil
+		case `lt`:
+			return fVal < sVal, nil
+		case `le`:
+			return fVal <= sVal, nil
+		default:
+			return false, fmt.Errorf("Invalid operator %q", op)
+		}
+	}
+}

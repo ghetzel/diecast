@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"fmt"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -15,6 +16,36 @@ func loadStandardFunctionsMisc(rv FuncMap) {
 	rv[`nex`] = func(first interface{}, second interface{}) (bool, error) {
 		eq, err := stringutil.RelaxedEqual(first, second)
 		return !eq, err
+	}
+
+	// fn ge: A relaxed-type replacement for the **ge** builtin function.
+	rv[`gex`] = func(first interface{}, second interface{}) (bool, error) {
+		return cmp(`ge`, first, second)
+	}
+
+	// fn lt: A relaxed-type replacement for the **lt** builtin function.
+	rv[`ltx`] = func(first interface{}, second interface{}) (bool, error) {
+		return cmp(`lt`, first, second)
+	}
+
+	// fn le: A relaxed-type replacement for the **le** builtin function.
+	rv[`lex`] = func(first interface{}, second interface{}) (bool, error) {
+		return cmp(`le`, first, second)
+	}
+
+	// fn compare: Ageneric comparison function. Accepts operators: "gt", "ge", "lt", "le", "eq", "ne"
+	rv[`compare`] = func(operator string, first interface{}, second interface{}) (bool, error) {
+		switch operator {
+		case `gt`, `ge`, `lt`, `le`:
+			return cmp(operator, first, second)
+		case `eq`:
+			return stringutil.RelaxedEqual(first, second)
+		case `ne`:
+			eq, err := stringutil.RelaxedEqual(first, second)
+			return !eq, err
+		default:
+			return false, fmt.Errorf("Invalid operator %q", operator)
+		}
 	}
 
 	// fn match: Return whether the given value matches the given regular expression.

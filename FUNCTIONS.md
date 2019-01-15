@@ -6,6 +6,9 @@ use them.
 
 ## Function List
 
+- [](#)
+- [](#)
+- [](#)
 - [add](#add)
 - [addTime](#addTime)
 - [ago](#ago)
@@ -30,6 +33,7 @@ use them.
 - [colorToHex](#colorToHex)
 - [colorToRGB](#colorToRGB)
 - [compact](#compact)
+- [compare](#compare)
 - [contains](#contains)
 - [count](#count)
 - [csv](#csv)
@@ -150,6 +154,30 @@ use them.
 - [values](#values)
 - [var](#var)
 ## Function Usage
+
+---
+
+<a name=""></a>
+```
+  -> 
+```
+
+
+---
+
+<a name=""></a>
+```
+  -> 
+```
+
+
+---
+
+<a name=""></a>
+```
+  -> 
+```
+
 
 ---
 
@@ -342,6 +370,14 @@ Convert the given color to an "rgb()" or "rgba()" color specification.
 compact input any -> 
 ```
 Return an copy of given *input* array with all zero-valued elements removed.
+
+---
+
+<a name="compare"></a>
+```
+compare string any any -> bool error
+```
+Ageneric comparison function. Accepts operators: "gt", "ge", "lt", "le", "eq", "ne"
 
 ---
 
