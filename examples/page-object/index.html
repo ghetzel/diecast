@@ -1,0 +1,10 @@
+---
+page:
+    title: Home
+---
+<h1>Hello World!</h1>
+<ul>
+    {{ range $color := $.page.colors }}
+    <li style="color: {{ $color }}">{{ $color }}</li>
+    {{ end }}
+</ul>
