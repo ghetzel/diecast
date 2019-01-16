@@ -1,0 +1,213 @@
+# This is a sample diecast.yml file that contains every supported option
+# and detailed decriptions of each one.  The values of each key represent
+# the default values if absent from the config.
+
+
+# Specify the local address and port to listen on.
+address: '127.0.0.1:28419'
+
+
+# An array of bindings that will be evaluated before every template.
+bindings:
+- name:     todos
+  method:   get
+  resource: https://jsonplaceholder.typicode.com/todos/
+  optional: true
+  fallback: []
+  params:
+    v:         '1.2.3'
+    timestamp: '{{ now "epoch-ns" }}'
+
+
+# For bindings that specify relative paths (e.g.: /my/data), the binding
+# prefix specifies the base URL those paths are relative to.  This value
+# defaults to the listen address of Diecast itself.
+bindingPrefix: 'http://localhost:28419'
+
+
+# The root of the working directory that templates and files will be served
+# from. If left blank, the directory `diecast` was started in will be used.
+root: '.'
+# root: '/usr/www'
+
+
+# The path where layouts will be loaded from. If left blank, this path will
+# be the ./_layouts directory inside of the root path.
+layouts: './_layouts'
+# layouts: /usr/www/my-diecast-layouts
+
+
+# The path where error pages will be loaded from. If left blank, this path will
+# be the ./_errors directory inside of the root path.
+errors: './_errors'
+# errors: /usr/www/my-diecast-errors
+
+
+# Enable an INSECURE debugging mode that is useful for building sites. If
+# this is true, any page can have the ?__viewsource=true query string
+# appended, which will return the final template and data in lieu of
+# actually rendering it.
+debug: false
+
+
+# Specify whether layouts are enabled at all.
+enableLayouts: true
+
+
+# Provide a prefix that will be expected for all request paths. For example,
+# if routePrefix is "/site/", then requesting "/site/about.html" would expect
+# a template at {root}/about.html instead of {root}/site/about.html.
+routePrefix: ''
+
+
+# Specify file glob patterns (relative to the root directory) that match
+# files that should be rendered as templates in lieu of being served as
+# static assets.  You can redefine this array to include additional paths
+# or remove default patterns. For example, by adding '/assets/css/*.css'
+# to the array below; all HTML, Markdown, and SCSS files PLUS any CSS under
+# {root}/assets/css/ would be rendered as a template.
+patterns:
+- '*.html'
+- '*.md'
+- '*.scss'
+
+
+# Specifies how to handle the scenario where a requested path matches files
+# from multiple locations (e.g.: /test.gif exists in the root directory AND
+# a mounted remote data source.).  If this is true, the file in the root
+# directory will always be given precedence.  If false, the file in mounted
+# data sources will be served.
+localFirst: false
+
+
+# Specify the name of the file to be used when a filename is not explicitly
+# specified in the request path.
+indexFile: 'index.html'
+
+
+# If non-empty, this file must be present and readable when Diecast starts,
+# otherwise the program will exit with an error.  Set this to an empty
+# string to disable this check.
+verifyFile: '/index.html'
+
+
+# For request paths that don't explicitly specify a filename (with
+# extension), a sequence of possible extensions are used to try to locate
+# a file to serve. For example, if the client requests '/my/file', among the
+# paths that will be tried is {root}/my/file.html and {root}/my/file.md.
+#
+# This setting specifies which extensions (and in what order) will be used
+# when locating these files.
+tryExtensions:
+- html
+- md
+
+
+# Diecast supports various options for rendering template output into the
+# actual data that is sent to the client.  The default renderer is "html",
+# which will sanitize the output as an HTML, CSS, or JavaScript document.
+# This setting allows you to specify which renderers are used for the given
+# file extensions.
+rendererMapping:
+  md:   markdown
+  scss: sass
+
+
+# When no layout is explicitly specified in a template's Front Matter, a
+# default layout is used (if present at {layout}/default.html).  This
+# setting specifies globs of the request paths this behavior will happen
+# for.
+autolayoutPatterns:
+- '*.html'
+- '*.md'
+
+
+# Mounts are a special concept in Diecast that allow you to overlay other
+# locations over top of the root directory tree.  This allows you to source
+# static and template content from places other than the root directory,
+# including remote HTTP(S) sources and other filesystem directories.
+#
+# If a file is not present and readable in a mount, the root directory is
+# consulted as a fallback (or, if localFirst is true, the root directory is
+# checked first, and the mounts become the fallback(s).)
+mounts:
+# Filesystem Mount: allow for a subset of request paths to be served from a
+# different directory on the same machine Diecast is running on.
+- mount: /usr/share/diecast-assets/img
+  to:    /assets/img/
+
+# HTTP Proxy Mount: proxy requests to a specific path prefix to another
+# server via HTTP(S).
+- mount: https://ajax.googleapis.com/ajax/libs/
+  to:    /assets/js/
+
+- mount: https://ajax.googleapis.com/ajax/libs/
+  to:    /assets/css/
+
+
+# Specify default values for the header (i.e. Front Matter) for all
+# templates and layouts.  This is useful for seeding site-wide variables
+# like page title and other metadata, as well as changing the default
+# behavior for things like Postprocessors and Renderers.
+header:
+  page:
+    my_global_data: 42
+
+
+# Authenticators are modules that run before specified requests that will
+# do the work of verifying a user's credentials and/or redirecting them to
+# an authentication process.  Through this mechanism, some or all content
+# on a Diecast site can be secured behind an authentication/authorization
+# scheme.
+authenticators:
+# Basic Authenticator: protect everything except for things in the /assets
+# directory.
+- type: basic
+  except:
+  - '/assets/**'
+  options:
+    # Specify the RFC 2617 Realm attribute for HTTP basic authentication
+    realm:    'My Realm'
+
+    # The htpasswd file containing users and password hashes permitted to
+    # access the protected resources.
+    htpasswd: '/etc/my-app/htpasswd'
+
+
+# It is possible to specify a command to run before Diecast begins serving
+# data, as well as after the server has started and is confirmed running.
+
+# Command to run before the API server is started.
+prestart:
+  command:          '/usr/bin/my-command prestart'
+  directory:        '/tmp'
+  delay:            '2s'
+  timeout:          '10s'
+  exitOnCompletion: false
+  env:
+    PATH:                    '/usr/local/bin:/usr/bin:/bin'
+    # These variables are automatically made available to the command being run.
+		# DIECAST:                true
+		# DIECAST_DEBUG:          false
+		# DIECAST_ADDRESS:        http://localhost:28419
+		# DIECAST_ROOT:           /my/root/path
+		# DIECAST_PATH_LAYOUTS:   /my/root/path/_layouts
+		# DIECAST_PATH_ERRORS:    /my/root/path/_errors
+		# DIECAST_BINDING_PREFIX: ''
+		# DIECAST_ROUTE_PREFIX:   ''
+
+# Command to run after the API server has started.
+start:
+  command:          'bash -c "/usr/bin/curl ${DIECAST_ADDRESS}/things"'
+  delay:            '5s'
+  exitOnCompletion: true
+  env:
+    # These variables are automatically made available to the command being run.
+		# DIECAST:                true
+		# DIECAST_DEBUG:          false
+		# DIECAST_ADDRESS:        http://localhost:28419
+		# DIECAST_ROOT:           /my/root/path
+		# DIECAST_PATH_LAYOUTS:   /my/root/path/_layouts
+		# DIECAST_PATH_ERRORS:    /my/root/path/_errors
+		# DIECAST_BINDING_PREFIX: ''
+		# DIECAST_ROUTE_PREFIX:   ''

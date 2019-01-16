@@ -45,6 +45,12 @@ var DefaultIndexFile = `index.html`
 var DefaultVerifyFile = `/` + DefaultIndexFile
 var DefaultTemplatePatterns = []string{`*.html`, `*.md`, `*.scss`}
 var DefaultTryExtensions = []string{`html`, `md`}
+
+var DefaultAutolayoutPatterns = []string{
+	`*.html`,
+	`*.md`,
+}
+
 var DefaultRendererMappings = map[string]string{
 	`md`:   `markdown`,
 	`scss`: `sass`,
@@ -89,8 +95,9 @@ type Server struct {
 	PrestartCommand     StartCommand           `json:"prestart"`
 	StartCommand        StartCommand           `json:"start"`
 	Authenticators      AuthenticatorConfigs   `json:"authenticators"`
-	TryExtensions       []string               `json:"try_extensions"`   // try these file extensions when looking for default (i.e.: "index") files
-	RendererMappings    map[string]string      `json:"renderer_mapping"` // map file extensions to preferred renderers
+	TryExtensions       []string               `json:"tryExtensions"`   // try these file extensions when looking for default (i.e.: "index") files
+	RendererMappings    map[string]string      `json:"rendererMapping"` // map file extensions to preferred renderers
+	AutolayoutPatterns  []string               `json:"autolayoutPatterns"`
 	router              *httprouter.Router
 	server              *negroni.Negroni
 	fs                  http.FileSystem
@@ -119,6 +126,7 @@ func NewServer(root string, patterns ...string) *Server {
 		Mounts:             make([]Mount, 0),
 		TryExtensions:      DefaultTryExtensions,
 		RendererMappings:   DefaultRendererMappings,
+		AutolayoutPatterns: DefaultAutolayoutPatterns,
 	}
 }
 
@@ -286,6 +294,24 @@ func (self *Server) shouldApplyTemplate(requestPath string) bool {
 	return false
 }
 
+func (self *Server) shouldApplyLayout(requestPath string) bool {
+	baseName := filepath.Base(requestPath)
+
+	for _, pattern := range self.AutolayoutPatterns {
+		if strings.HasPrefix(pattern, `/`) {
+			if match, err := filepath.Match(pattern, requestPath); err == nil && match {
+				return true
+			}
+		} else {
+			if match, err := filepath.Match(pattern, baseName); err == nil && match {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requestPath string, reader io.Reader, header *TemplateHeader, urlParams map[string]interface{}, mimeType string) error {
 	finalTemplate := bytes.NewBuffer(nil)
 	hasLayout := false
@@ -319,7 +345,7 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 	earlyFuncs := self.GetTemplateFunctions(requestToEvalData(req, header))
 
 	// only process layouts if we're supposed to
-	if self.EnableLayouts && !forceSkipLayout {
+	if self.EnableLayouts && !forceSkipLayout && self.shouldApplyLayout(requestPath) {
 		// files starting with "_" are partials and should not have layouts applied
 		if !strings.HasPrefix(path.Base(requestPath), `_`) {
 			// if no layouts were explicitly specified, and a layout named "default" exists, add it to the list
@@ -1398,6 +1424,15 @@ func (self *Server) RunStartCommand(scmd *StartCommand, waitForCommand bool) err
 			for key, value := range scmd.Environment {
 				env[key] = value
 			}
+
+			env[`DIECAST`] = true
+			env[`DIECAST_DEBUG`] = self.EnableDebugging
+			env[`DIECAST_ADDRESS`] = self.Address
+			env[`DIECAST_ROOT`] = self.RootPath
+			env[`DIECAST_PATH_LAYOUTS`] = self.LayoutPath
+			env[`DIECAST_PATH_ERRORS`] = self.ErrorsPath
+			env[`DIECAST_BINDING_PREFIX`] = self.BindingPrefix
+			env[`DIECAST_ROUTE_PREFIX`] = self.RoutePrefix
 
 			for key, value := range env {
 				scmd.cmd.Env = append(scmd.cmd.Env, fmt.Sprintf("%v=%v", key, value))

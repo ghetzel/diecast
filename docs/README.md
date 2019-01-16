@@ -33,6 +33,10 @@ Diecast does not have a concept of URL path routing, but rather strives to enfor
 
 The first matching file from the list above will be served.
 
+## Configuration
+
+Diecast is configured by placing a file called `diecast.yml` in the same directory that the `diecast` command is run, or by specifying a filename with the `--config` command line flag.  This file is used to adjust how Diecast renders templates and when, as well as setting up options for how files are accessed and from where.  For more details, see the [Example Config File](/examples/diecast.sample.yml).
+
 ## Templating
 
 Beyond merely acting as a simple file server, Diecast comes with a rich templating environment that allows for complex sites to be built in a composable way.  The default templating language used by Diecast is [Golang's built-in `text/template` package.](https://golang.org/pkg/text/template/).  Templates are plain text files that reside in the working directory, and consist of the template content, and optionally a header section called _front matter_.  These headers are used to specify template-specific data such as predefined data structures, paths of other templates to include, rendering options, and the inclusion of remote data via [bindings](#Bindings).  An example template looks like this:
@@ -307,16 +311,22 @@ The `trim-empty-lines` postprocessor removes all lines from the final document t
 
 
 ### Renderers
-#### HTML
-#### PDF
-#### [ Image / PNG / JPG / GIF ]
 
-## Configuration
-### Start Commands
-### Authenticators
-#### Basic Authentication
-#### [ Google / SAML / SASL ]
-#### [ Multifactor Authentication ]
+Diecast supports various methods of converting the output of the rendered templates and layouts into a finished product that can be delvered to the client.  Renderers receive the rendered template as input and are responsible for writing _something_ to the client.
+
+#### HTML
+
+The HTML renderer ensures that external template content, that is, template data sourced from a variable or function, is escaped properly within the context of the type of file being processed (HTML, CSS, or Javascript.)  This makes user-defined content safe to use in Diecast because it will always be sanitized before being returned to the client.  The `html` renderer is the default renderer if no other renderer is specified.
+
+#### PDF
+
+The `pdf` renderer is used in tandem with the HTML renderer to convert the HTML page into a PDF document that is then returned to the client.
+
+#### Sass
+
+The `sass` renderer takes file or template output and compiles it on the fly using the `libsass` library.  This is the default renderer for files matching the pattern `*.scss`.
+
+#### [ Image / PNG / JPG / GIF ]
 
 ### Mounts
 #### File
