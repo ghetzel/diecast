@@ -187,14 +187,14 @@ prestart:
   env:
     PATH:                    '/usr/local/bin:/usr/bin:/bin'
     # These variables are automatically made available to the command being run.
-		# DIECAST:                true
-		# DIECAST_DEBUG:          false
-		# DIECAST_ADDRESS:        http://localhost:28419
-		# DIECAST_ROOT:           /my/root/path
-		# DIECAST_PATH_LAYOUTS:   /my/root/path/_layouts
-		# DIECAST_PATH_ERRORS:    /my/root/path/_errors
-		# DIECAST_BINDING_PREFIX: ''
-		# DIECAST_ROUTE_PREFIX:   ''
+    # DIECAST:                true
+    # DIECAST_DEBUG:          false
+    # DIECAST_ADDRESS:        http://localhost:28419
+    # DIECAST_ROOT:           /my/root/path
+    # DIECAST_PATH_LAYOUTS:   /my/root/path/_layouts
+    # DIECAST_PATH_ERRORS:    /my/root/path/_errors
+    # DIECAST_BINDING_PREFIX: ''
+    # DIECAST_ROUTE_PREFIX:   ''
 
 # Command to run after the API server has started.
 start:
@@ -203,11 +203,11 @@ start:
   exitOnCompletion: true
   env:
     # These variables are automatically made available to the command being run.
-		# DIECAST:                true
-		# DIECAST_DEBUG:          false
-		# DIECAST_ADDRESS:        http://localhost:28419
-		# DIECAST_ROOT:           /my/root/path
-		# DIECAST_PATH_LAYOUTS:   /my/root/path/_layouts
-		# DIECAST_PATH_ERRORS:    /my/root/path/_errors
-		# DIECAST_BINDING_PREFIX: ''
-		# DIECAST_ROUTE_PREFIX:   ''
+    # DIECAST:                true
+    # DIECAST_DEBUG:          false
+    # DIECAST_ADDRESS:        http://localhost:28419
+    # DIECAST_ROOT:           /my/root/path
+    # DIECAST_PATH_LAYOUTS:   /my/root/path/_layouts
+    # DIECAST_PATH_ERRORS:    /my/root/path/_errors
+    # DIECAST_BINDING_PREFIX: ''
+    # DIECAST_ROUTE_PREFIX:   ''
