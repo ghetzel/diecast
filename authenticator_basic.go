@@ -4,30 +4,28 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/pathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	htpasswd "github.com/tg123/go-htpasswd"
 )
 
 type BasicAuthenticator struct {
+	config   *AuthenticatorConfig
 	htpasswd []*htpasswd.HtpasswdFile
 	realm    string
 }
 
-func NewBasicAuthenticator(options map[string]interface{}) (*BasicAuthenticator, error) {
+func NewBasicAuthenticator(config *AuthenticatorConfig) (*BasicAuthenticator, error) {
 	auth := &BasicAuthenticator{
-		realm: fmt.Sprintf("diecast/%v", ApplicationVersion),
+		config: config,
+		realm:  config.O(`realm`, fmt.Sprintf("diecast/%v", ApplicationVersion)).String(),
 	}
 
-	if realm, ok := options[`realm`]; ok {
-		auth.realm = typeutil.V(realm).String()
-	}
-
-	htpasswds := sliceutil.Stringify(sliceutil.Compact(options[`htpasswd`]))
+	htpasswds := sliceutil.Stringify(sliceutil.Compact(config.O(`htpasswd`).Value))
 
 	if len(htpasswds) == 0 {
 		return nil, fmt.Errorf("Must specify at least one user database via the 'htpasswd' option")
@@ -57,8 +55,12 @@ func (self *BasicAuthenticator) AddPasswdFile(filename string) error {
 	}
 }
 
-func (self *BasicAuthenticator) Callback(w http.ResponseWriter, req *http.Request) error {
-	return nil
+func (self *BasicAuthenticator) IsCallback(_ *url.URL) bool {
+	return false
+}
+
+func (self *BasicAuthenticator) Callback(w http.ResponseWriter, req *http.Request) {
+
 }
 
 func (self *BasicAuthenticator) Authenticate(w http.ResponseWriter, req *http.Request) bool {

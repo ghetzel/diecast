@@ -3,12 +3,14 @@ package diecast
 import (
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/ghetzel/go-stockutil/httputil"
+	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/amazon"
 	"golang.org/x/oauth2/facebook"
@@ -30,78 +32,88 @@ type oauthSession struct {
 	Token      *oauth2.Token
 	Scheme     string
 	Domain     string
+	Path       string
 }
 
 type OauthAuthenticator struct {
+	config          *AuthenticatorConfig
 	oauth2config    *oauth2.Config
 	cookieName      string
 	sessionDuration time.Duration
 }
 
-func NewOauthAuthenticator(options map[string]interface{}) (*OauthAuthenticator, error) {
+func NewOauthAuthenticator(config *AuthenticatorConfig) (*OauthAuthenticator, error) {
 	auth := &OauthAuthenticator{
-		cookieName: DefaultOauth2SessionCookieName,
+		config:          config,
+		cookieName:      config.O(`cookie_name`, DefaultOauth2SessionCookieName).String(),
+		sessionDuration: config.O(`lifetime`).Duration(),
+		oauth2config: &oauth2.Config{
+			ClientID:     config.O(`client_id`).String(),
+			ClientSecret: config.O(`secret`).String(),
+			RedirectURL:  config.CallbackPath,
+			Scopes:       config.O(`scopes`).Strings(),
+		},
 	}
 
-	if cn, ok := options[`cookie_name`]; ok && cn != nil {
-		auth.cookieName = typeutil.String(cn)
-	}
-
-	if lt, ok := options[`lifetime`]; ok && lt != nil {
-		if duration, err := time.ParseDuration(typeutil.String(lt)); err == nil {
-			auth.sessionDuration = duration
-		} else {
-			return nil, err
-		}
-	}
-
-	if cid, ok := options[`client_id`]; ok {
-		if csec, ok := options[`secret`]; ok {
-			if redirect, ok := options[`redirect`]; ok {
-				scopes := typeutil.Strings(options[`scopes`])
-
-				auth.oauth2config = &oauth2.Config{
-					ClientID:     typeutil.String(cid),
-					ClientSecret: typeutil.String(csec),
-					RedirectURL:  typeutil.String(redirect),
-					Scopes:       scopes,
-				}
-
-				switch endpoint := typeutil.String(options[`provider`]); endpoint {
-				case `amazon`:
-					auth.oauth2config.Endpoint = amazon.Endpoint
-				case `facebook`:
-					auth.oauth2config.Endpoint = facebook.Endpoint
-				case `github`:
-					auth.oauth2config.Endpoint = github.Endpoint
-				case `gitlab`:
-					auth.oauth2config.Endpoint = gitlab.Endpoint
-				case `microsoft-live`:
-					auth.oauth2config.Endpoint = microsoft.LiveConnectEndpoint
-				case `slack`:
-					auth.oauth2config.Endpoint = slack.Endpoint
-				case `spotify`:
-					auth.oauth2config.Endpoint = spotify.Endpoint
-				case `google`:
-					auth.oauth2config.Endpoint = google.Endpoint
-				default:
-					return nil, fmt.Errorf("Unrecognized OAuth2 endpoint %q", endpoint)
-				}
-			} else {
-				return nil, fmt.Errorf("The 'redirect' option is required for OauthAuthenticator")
-			}
-		} else {
-			return nil, fmt.Errorf("The 'secret' option is required for OauthAuthenticator")
-		}
-	} else {
+	if auth.oauth2config.ClientID == `` {
 		return nil, fmt.Errorf("The 'client_id' option is required for OauthAuthenticator")
+	}
+
+	if auth.oauth2config.ClientSecret == `` {
+		return nil, fmt.Errorf("The 'secret' option is required for OauthAuthenticator")
+	}
+
+	if auth.oauth2config.RedirectURL == `` {
+		return nil, fmt.Errorf("The 'callback' option is required for OauthAuthenticator")
+	}
+
+	switch endpoint := config.O(`provider`).String(); endpoint {
+	case `amazon`:
+		auth.oauth2config.Endpoint = amazon.Endpoint
+	case `facebook`:
+		auth.oauth2config.Endpoint = facebook.Endpoint
+	case `github`:
+		auth.oauth2config.Endpoint = github.Endpoint
+	case `gitlab`:
+		auth.oauth2config.Endpoint = gitlab.Endpoint
+	case `microsoft-live`:
+		auth.oauth2config.Endpoint = microsoft.LiveConnectEndpoint
+	case `slack`:
+		auth.oauth2config.Endpoint = slack.Endpoint
+	case `spotify`:
+		auth.oauth2config.Endpoint = spotify.Endpoint
+	case `google`:
+		auth.oauth2config.Endpoint = google.Endpoint
+	default:
+		auth.oauth2config.Endpoint = oauth2.Endpoint{
+			AuthURL:  config.O(`auth_url`).String(),
+			TokenURL: config.O(`token_url`).String(),
+		}
+
+		if auth.oauth2config.Endpoint.AuthURL == `` || auth.oauth2config.Endpoint.TokenURL == `` {
+			return nil, fmt.Errorf("Custom OAuth2 endpoint must specify the 'auth_url' and 'token_url' options.")
+		}
+
+		return nil, fmt.Errorf("Unrecognized OAuth2 endpoint %q", endpoint)
 	}
 
 	return auth, nil
 }
 
+func (self *OauthAuthenticator) IsCallback(u *url.URL) bool {
+	if self.config != nil {
+		if cb, err := url.Parse(self.config.CallbackPath); err == nil {
+			if strings.TrimSuffix(cb.Path, `/`) == strings.TrimSuffix(u.Path, `/`) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 // OAuth2: Leg 2: receive callback from consent page, validate session, and set session cookie
-func (self *OauthAuthenticator) Callback(w http.ResponseWriter, req *http.Request) error {
+func (self *OauthAuthenticator) Callback(w http.ResponseWriter, req *http.Request) {
 	sid := httputil.Q(req, `state`)
 	code := httputil.Q(req, `code`)
 
@@ -123,24 +135,25 @@ func (self *OauthAuthenticator) Callback(w http.ResponseWriter, req *http.Reques
 						SameSite: http.SameSiteStrictMode,
 					}
 
+					log.Noticef("oauth token %v", token)
+
 					if self.sessionDuration > 0 {
 						cookie.Expires = time.Now().Add(self.sessionDuration)
 					}
 
 					http.SetCookie(w, cookie)
-
-					return nil
+					http.Redirect(w, req, session.Path, http.StatusTemporaryRedirect)
 				} else {
-					return err
+					http.Error(w, err.Error(), http.StatusBadRequest)
 				}
 			} else {
-				return fmt.Errorf("Invalid OAuth2 session returned for callback")
+				http.Error(w, "Invalid OAuth2 session returned for callback", http.StatusBadRequest)
 			}
 		} else {
-			return fmt.Errorf("Invalid OAuth2 session object")
+			http.Error(w, "Invalid OAuth2 session object", http.StatusBadRequest)
 		}
 	} else {
-		return fmt.Errorf("OAuth2 session does not exist exists")
+		http.Error(w, "OAuth2 session does not exist exists", http.StatusBadRequest)
 	}
 }
 
@@ -165,6 +178,7 @@ func (self *OauthAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 			Properties: make(map[string]interface{}),
 			Domain:     req.URL.Host,
 			Scheme:     req.URL.Scheme,
+			Path:       req.URL.Path,
 		})
 
 		// ...then redirect them to the auth page
