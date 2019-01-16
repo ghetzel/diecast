@@ -3,6 +3,7 @@ package diecast
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/gobwas/glob"
 )
@@ -12,11 +13,11 @@ type Authenticator interface {
 }
 
 type AuthenticatorConfig struct {
-	Type    string                 `json:"type"`
-	Paths   []string               `json:"paths"`
-	Except   []string               `json:"except"`
-	Options map[string]interface{} `json:"options"`
-	globs   []glob.Glob
+	Type        string                 `json:"type"`
+	Paths       []string               `json:"paths"`
+	Except      []string               `json:"except"`
+	Options     map[string]interface{} `json:"options"`
+	globs       []glob.Glob
 	exceptGlobs []glob.Glob
 }
 
@@ -40,7 +41,7 @@ func (self AuthenticatorConfigs) Authenticator(req *http.Request) (Authenticator
 			}
 		}
 
-		if self.isUrlMatch(auth, req.URL) {
+		if self.isUrlMatch(&auth, req.URL) {
 			return returnAuthenticatorFor(&auth)
 		}
 	}
@@ -48,7 +49,7 @@ func (self AuthenticatorConfigs) Authenticator(req *http.Request) (Authenticator
 	return nil, nil
 }
 
-func (self AuthenticatorConfigs) isUrlMatch(auth Authenticator, u *url.URL) bool {
+func (self AuthenticatorConfigs) isUrlMatch(auth *AuthenticatorConfig, u *url.URL) bool {
 	var match bool
 
 	// determine if any of our paths match the request path
