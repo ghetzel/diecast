@@ -23,7 +23,7 @@ Building a site using Diecast begins (and, to some extent, ends) with putting fi
 
 ## URL Structure
 
-Diecast does not have a concept of URL path routing, but rather strives to enforce simple, linear hierachies by exposing the working directory directly as routable paths.  For example, if a user visits the path `/users/list`, Diecast will look for files to serve in the following order:
+Diecast does not have a concept of URL path routing, but rather strives to enforce simple, linear hierarchies by exposing the working directory directly as routable paths.  For example, if a user visits the path `/users/list`, Diecast will look for files to serve in the following order:
 
 * `./users/list/index.html`
 * `./users/list.html`
@@ -272,7 +272,7 @@ The string defining the variable name is interpreted as a "dot.separated.path" t
 var "user.auth.scheme" "basic"
 ```
 
-...would produce the following struct:
+...would produce the following object:
 
 ```
 {
@@ -312,7 +312,7 @@ The `trim-empty-lines` postprocessor removes all lines from the final document t
 
 ### Renderers
 
-Diecast supports various methods of converting the output of the rendered templates and layouts into a finished product that can be delvered to the client.  Renderers receive the rendered template as input and are responsible for writing _something_ to the client.
+Diecast supports various methods of converting the output of the rendered templates and layouts into a finished product that can be delivered to the client.  Renderers receive the rendered template as input and are responsible for writing _something_ to the client.
 
 #### HTML
 
@@ -329,5 +329,46 @@ The `sass` renderer takes file or template output and compiles it on the fly usi
 #### [ Image / PNG / JPG / GIF ]
 
 ### Mounts
+
+Another useful feature of Diecast is its ability to expose multiple, overlapping file trees in one logical namespace.  These alternative file trees (called _mounts_) can be located locally or remotely, and through careful configuration of the scope and order of mounts, fairly complex serving configurations can be achieved.
+
+For example, lets take a GET request to the path `/assets/js/my-lib.js`.  By default, Diecast will look for this path relative to the working directory, and if the file is not found, will return an error.  However, a mount can be configured to handle this path (or its parent folder(s)), serving the file from another directory outside of the working directory, or from another server entirely.
+
+Mounts can also be stacked, in which the URL path they handle refers to multiple possible locations.  When multiple mounts are eligible to handle a request, the requested file is passed to each mount in the order they are defined.  The first mount to successfully handle the file will do so.  This setup can be used to present multiple directories as a single logical one, as well as providing useful fallbacks and proxying capabilities granular to the individual file level.
+
 #### File
+
+The file mount type is used for mount sources that do not begin with a URL scheme.  This means paths like `/usr/share/www/` or `./some/other/path`.  Consider the following mount configuration:
+
+```yaml
+mounts:
+-   mount: /usr/share/www/
+    to:    /assets/
+```
+
+A request for the file `/assets/js/my-lib.js` would first attempt to find that file at the path `/usr/share/www/js/my-lib.js`.  Note that the `/assets/` part of the URL path was substituted for the value of the `mount` key.
+
 #### HTTP
+
+The HTTP (aka _proxy_) mount type is used for sources starting with `http://` or `https://`.  In this configuration, the behavior matches that of the File type, except the content is sourced by making an HTTP request to a URL.  Consider the following mount configuration:
+
+```yaml
+mounts:
+-   mount: https://assets.example.com/
+    to:    /assets/
+```
+
+A request for the file `/assets/js/my-lib.js` here would result in an HTTP GET request to `https://assets.example.com/assets/js/my-lib.js`.  If the response is a 2xx-series status code, the response body will be sent to the client as if the file resided on the server itself.  Note that in this case, the entire original URL path is sent along to the remote server.
+
+This is useful because it allows Diecast to act as a proxy server, while still layering on features like additional mounts and authenticators.  This means Diecast can be configured to proxy a website, but intercept and substitute requests for specific files on a case-by-case basis.  For example:
+
+```yaml
+mounts:
+-   mount: /usr/share/custom-google-logos/
+    to:    /logos/
+
+-   mount: https://google.com
+    to:    /
+```
+
+In this configuration, a request to `http://localhost:28419/` will load Google's homepage, but when the browser attempts to load the logo (typically located at `/logos/...`), _that_ request will be routed to the local `/usr/share/custom-google-logos/` directory.  So if the logo for that day is at `/logos/doodles/2018/something.png`, and the file `/usr/share/custom-google-logos/doodles/2018/something.png` exists, that file will be served in lieu of the version on Google's servers.
