@@ -10,6 +10,7 @@ import (
 
 type Authenticator interface {
 	Authenticate(http.ResponseWriter, *http.Request) bool
+	Callback(w http.ResponseWriter, req *http.Request) error
 }
 
 type AuthenticatorConfig struct {
@@ -53,11 +54,15 @@ func (self AuthenticatorConfigs) isUrlMatch(auth *AuthenticatorConfig, u *url.UR
 	var match bool
 
 	// determine if any of our paths match the request path
-	for _, px := range auth.globs {
-		if px.Match(u.Path) {
-			match = true
-			break
+	if len(auth.globs) > 0 {
+		for _, px := range auth.globs {
+			if px.Match(u.Path) {
+				match = true
+				break
+			}
 		}
+	} else {
+		match = true
 	}
 
 	// no matches? then except wouldn't do anything anyway. return false now
@@ -65,7 +70,7 @@ func (self AuthenticatorConfigs) isUrlMatch(auth *AuthenticatorConfig, u *url.UR
 		return false
 	}
 
-	// we have at least one match, make sure we don't run afould of any excepts
+	// we have at least one match, make sure we don't run afoul of any excepts
 	for _, xx := range auth.exceptGlobs {
 		if xx.Match(u.Path) {
 			return false
@@ -83,6 +88,8 @@ func returnAuthenticatorFor(auth *AuthenticatorConfig) (Authenticator, error) {
 	switch auth.Type {
 	case `basic`:
 		authenticator, err = NewBasicAuthenticator(auth.Options)
+	case `oauth2`:
+		authenticator, err = NewOauthAuthenticator(auth.Options)
 	default:
 		err = fmt.Errorf("unrecognized authenticator type %q", auth.Type)
 	}

@@ -27,6 +27,7 @@ require (
 	github.com/urfave/negroni v1.0.0
 	github.com/wellington/go-libsass v0.9.2
 	github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8
-	golang.org/x/net v0.0.0-20180906233101-161cd47e91fd
+	golang.org/x/net v0.0.0-20190108225652-1e06a53dbb7e
+	golang.org/x/oauth2 v0.0.0-20190115181402-5dab4167f31c
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )

@@ -57,6 +57,10 @@ func (self *BasicAuthenticator) AddPasswdFile(filename string) error {
 	}
 }
 
+func (self *BasicAuthenticator) Callback(w http.ResponseWriter, req *http.Request) error {
+	return nil
+}
+
 func (self *BasicAuthenticator) Authenticate(w http.ResponseWriter, req *http.Request) bool {
 	if _, uppair := stringutil.SplitPair(req.Header.Get("Authorization"), ` `); uppair != `` {
 		if decoded, err := base64.StdEncoding.DecodeString(uppair); err == nil {
