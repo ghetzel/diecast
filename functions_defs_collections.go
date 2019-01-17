@@ -95,6 +95,43 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 		}
 	}
 
+	// fn transformValues: Return all elements of the given *input* array of objects with the value
+	//                at *key* transformed by the given expression.
+	rv[`transformValues`] = func(input interface{}, key string, expr string) ([]interface{}, error) {
+		out := make([]interface{}, 0)
+
+		for i, obj := range sliceutil.Sliceify(input) {
+			tmpl := NewTemplate(`inline`, TextEngine)
+			tmpl.Funcs(rv)
+			m := maputil.M(obj)
+
+			if !strings.HasPrefix(expr, `{{`) {
+				expr = `{{` + expr
+			}
+
+			if !strings.HasSuffix(expr, `}}`) {
+				expr = expr + `}}`
+			}
+
+			if err := tmpl.Parse(expr); err == nil {
+				output := bytes.NewBuffer(nil)
+				value := m.Auto(key)
+
+				if err := tmpl.Render(output, value, ``); err == nil {
+					evalValue := stringutil.Autotype(output.String())
+					m.Set(key, evalValue)
+					out = append(out, m.MapNative())
+				} else {
+					return nil, fmt.Errorf("item %d: %v", i, err)
+				}
+			} else {
+				return nil, fmt.Errorf("failed to parse template: %v", err)
+			}
+		}
+
+		return out, nil
+	}
+
 	// fn uniqByKey: Return a subset of the elements in the *input* array whose map values
 	//               are unique for all values of *key*, preserving the first duplicate value.
 	//               Values are optionally preprocessed using *expression*.

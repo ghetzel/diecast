@@ -142,6 +142,7 @@ use them.
 - [thousandify](#thousandify)
 - [time](#time)
 - [titleize](#titleize)
+- [transformValues](#transformValues)
 - [trim](#trim)
 - [tsv](#tsv)
 - [underscore](#underscore)
@@ -1243,6 +1244,14 @@ Return the given Time formatted using *format*.  See [Time Formats](#time-format
 titleize s string -> string
 ```
 Return a copy of *s* with all Unicode letters that begin words mapped to their title case.
+
+---
+
+<a name="transformValues"></a>
+```
+transformValues input any string string ->  error
+```
+Return all elements of the given *input* array of objects with the value at *key* transformed by the given expression.
 
 ---
 
