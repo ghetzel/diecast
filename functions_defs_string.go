@@ -89,7 +89,7 @@ func loadStandardFunctionsString(rv FuncMap) {
 		return str
 	}
 
-	// fn camelize: Return a copy of *s* transformed into PascalCase.
+	// fn pascalize: Return a copy of *s* transformed into PascalCase.
 	rv[`pascalize`] = stringutil.Camelize
 
 	// fn underscore: Return a copy of *s* transformed into snake_case.
@@ -146,7 +146,6 @@ func loadStandardFunctionsString(rv FuncMap) {
 		}
 	}
 
-	// fn autobyte: Attempt to convert the given *bytesize* number to a string representation of the value in bytes.
 	rv[`autobyte`] = stringutil.ToByteString
 
 	// fn thousandify: Return a copy of *value* separated by *sep* (or comma by default) every three decimal places.

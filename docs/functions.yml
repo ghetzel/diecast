@@ -1,0 +1,476 @@
+---
+groups:
+- group: String Functions
+  description: >
+    Used to modify strings in various ways. Whitespace trimming, substring and concatenation, conversion, and find & replace functions can all be found here.
+
+  functions:
+  # ----------------------------------------------------------------------------
+  - name: autobyte
+    arguments:
+    - name: bytes
+      type: number
+      desc: A number representing the value to format, in bytes.
+
+    - name: format
+      type: string
+      desc: A printf-style format string used to represent the output number.
+
+    summary: >
+      Attempt to convert the given number to a string representation of the value interpreted as bytes. The unit will be automatically determined as the closest one that produces a value less than 1024 in that unit. The second argument is a printf-style format string that is used when the converted number is being stringified.  By specifying precision and leading digit values to the `%f` format token, you can control how many decimal places are in the resulting output.
+
+    returns: string
+    examples:
+    - code: autobyte 2490368 "%.2f"
+      retr: 2.38MB
+
+  # ----------------------------------------------------------------------------
+  - name: camelize
+    arguments:
+    - name: in
+      type: string
+      desc: The input string to reformat.
+    summary: >
+      Reformat the given string by changing it into camelCase capitalization.
+
+  # ----------------------------------------------------------------------------
+  - name: concat
+    summary: >
+      Return the string that results in stringifying and joining all of the given arguments.
+    arguments:
+    - name: strings
+      type: any
+      desc: One or more values to be stringified and joined together.
+      variadic: true
+
+    examples:
+    - code: concat "There are " 5 " apples, yes it's " true
+    - retr: There are 5 apples, yes it's true.
+
+  # ----------------------------------------------------------------------------
+  - name: contains
+    summary: >
+      Return true of the given string contains another string.
+    arguments:
+    - name: input
+      type: string
+      desc: The string to search within.
+
+    - name: substring
+      type: string
+      desc: The substring to find in the `input` string.
+
+    returns: boolean
+
+  # ----------------------------------------------------------------------------
+  - name: elide
+    summary: >
+      Takes an input string and ensures it is no longer than a given number of characters.
+
+    arguments:
+    - name: input
+      type: string
+      desc: The string to (possibly) truncate.
+
+    - name: charcount
+      type: integer
+      desc: The maximum number of character that can appear in a string before it is truncated.
+
+    returns: string
+    examples:
+    - code: elide "This is a sentence that contains fifty characters." 18
+      retr: This is a sentence
+
+    - code: elide "hello." 16
+      retr: hello.
+
+  # ----------------------------------------------------------------------------
+  - name: elideWords
+    summary: >
+      Takes an input string and counts the number of words in it. If that number exceeds a given count, the string will be truncated to be equal to that number of words.
+
+    arguments:
+    - name: input
+      type: string
+      desc: The string to (possibly) truncate.
+
+    - name: wordcount
+      type: integer
+      desc: The maximum number of words that can appear in the string before it is truncated.
+
+    returns: string
+    examples:
+    - code: elideWords "This is a sentence that contains eight words." 5
+      retr: This is a sentence that
+
+    - code: elideWords "Hello world" 10
+      retr: Hello world
+
+  # ----------------------------------------------------------------------------
+  - name: hasPrefix
+    summary: >
+      Return true if the given string begins with the given prefix.
+    arguments:
+    - name: in
+      type: string
+      desc: The input string to test.
+
+    - name: prefix
+      type: string
+      desc: The prefix to test for the presence of.
+
+    returns: boolean
+
+  # ----------------------------------------------------------------------------
+  - name: hasSuffix
+    summary: >
+      Return true if the given string ends with the given suffix.
+    arguments:
+    - name: in
+      type: string
+      desc: The input string to test.
+
+    - name: suffix
+      type: string
+      desc: The suffix to test for the presence of.
+
+    returns: boolean
+
+  # ----------------------------------------------------------------------------
+  - name: hyphenate
+    summary: >
+      Reformat the given string by changing it into hypen-case capitalization.
+    arguments:
+    - name: in
+      type: string
+      desc: The input string to reformat.
+
+  # ----------------------------------------------------------------------------
+  - name: join
+    summary: >
+      Stringify the given array of values and join them together into a string, separated by a given separator string.
+
+    arguments:
+    - name: input
+      type: array[any]
+      desc: An array of values to stringify and join.
+
+    - name: separator
+      type: string
+      desc: The string used to join all elements of the array together.
+
+    returns: string
+
+  # ----------------------------------------------------------------------------
+  - name: lower
+    arguments:
+    - name: in
+      type: string
+      desc: The input string to reformat.
+    summary: >
+      Reformat the given string by changing it into lower case capitalization.
+
+  # ----------------------------------------------------------------------------
+  - name: ltrim
+    summary: >
+      Return the given string with any leading whitespace removed.
+    arguments:
+    - name: in
+      type: string
+      desc: The string to trim.
+
+  # ----------------------------------------------------------------------------
+  - name: pascalize
+    arguments:
+    - name: in
+      type: string
+      desc: The input string to reformat.
+    summary: >
+      Reformat the given string by changing it into PascalCase capitalization.
+
+  # ----------------------------------------------------------------------------
+  - name: percent
+    summary: >
+      Takes an integer or decimal value and returns it formatted as a percentage.
+    arguments:
+    - name: value
+      type: number
+      desc: The value you wish to express as a percentage.
+
+    - name: whole
+      type: number
+      desc: The number that represents 100%.
+      optional: true
+      default:  100.0
+
+    - name: format
+      type: string
+      desc: The printf format string used for rounding and truncating the converted number.
+      optional: true
+      default:  '%.f'
+
+    returns: string
+    examples:
+    - code: percent 99
+      retr: 99
+
+    - code: percent 3.3 10
+      retr: 33
+
+    - code: percent 3.33 10 "%.3f"
+      retr: 33.300
+
+  # ----------------------------------------------------------------------------
+  - name: replace
+    summary: >
+      Replace occurrences of one substring with another string in a given input string.
+
+    arguments:
+    - name: wholestring
+      type: string
+      desc: The whole string being searched.
+
+    - name: old
+      type: string
+      desc: The old value being sought.
+
+    - name: new
+      type: string
+      desc: The new value that is replacing old.
+
+    - name: count
+      type: int
+      desc: The number of matches to replace before stopping. If this number is < 0, the all occurrences will be replaced.
+
+    returns: string
+
+  # ----------------------------------------------------------------------------
+  - name: rtrim
+    summary: >
+      Return the given string with any trailing whitespace removed.
+    arguments:
+    - name: in
+      type: string
+      desc: The string to trim.
+
+  # ----------------------------------------------------------------------------
+  - name: rxreplace
+    summary: >
+      Return the given string with all substrings matching the given regular expression replaced with another string.
+
+    arguments:
+    - name: wholestring
+      type: string
+      desc: The whole string being searched.
+
+    - name: pattern
+      type: string
+      desc: A Golang-compatible regular expression that matches what should be replaced.
+
+    - name: repl
+      type: string
+      desc: The string to replace matches with.
+
+    returns: string
+
+  # ----------------------------------------------------------------------------
+  - name: split
+    summary: >
+      Split a given string into an array of strings by a given separator.
+
+    arguments:
+    - name: in
+      type: string
+      desc: The string to split into pieces.
+
+    - name: separator
+      type: string
+      desc: The separator on which `in` will be split.
+
+    returns: 'array[string]'
+    examples:
+    - code: split "this is a sentence."
+      retr: '["this", "is", "a", "sentence."]'
+
+  # ----------------------------------------------------------------------------
+  - name: splitWords
+    summary: >
+      Detect word boundaries in a given string and split that string into an array where each element is a word.
+
+  # ----------------------------------------------------------------------------
+  - name: strcount
+    summary: >
+      Count counts the number of non-overlapping instances of a substring. If the given substring is empty, then this returns the length of the string plus one.
+
+    arguments:
+    - name: input
+      type: string
+      desc: The string to search within.
+
+    - name: substring
+      type: string
+      desc: The substring to count the number of instances of.
+
+    returns: integer
+    examples:
+    - code: strcount "cheese" "e"
+      retr: 3
+
+    - code: strcount "five" ""
+      retr: 5
+
+  # ----------------------------------------------------------------------------
+  - name: stripHtml
+    summary: >
+      Removes all HTML tags from a given input string, leaving behind only the textual content of the nodes.  Only text nodes are preserved; attribute names and values, and comments, will be omitted.
+
+    arguments:
+    - name: input
+      type: string
+      desc: The string to parse as HTML and extract text from.
+
+    returns: string
+    examples:
+    - code: stripHtml "<!-- A link --><a href='/test'><b>Hello <i>world!</i></b></a>"
+      retr: Hello world!
+
+  # ----------------------------------------------------------------------------
+  - name: surroundedBy
+    summary: >
+      Return whether the given string is begins with a specific prefix _and_ ends with a specific suffix.
+
+    arguments:
+    - name: in
+      type: string
+      desc: The string to test.
+
+    - name: prefix
+      type: The string the input must start with.
+
+    - name: suffix
+      type: The string the input must end with.
+
+    returns: boolean
+    examples:
+    - code: surroundedBy "<html>" "<" ">"
+      retr: true
+
+    - code: surroundedBy "<html>" "</" ">"
+      retr: false
+
+  # ----------------------------------------------------------------------------
+  - name: thousandify
+    arguments:
+    - name: value
+      type: number
+      desc: The number to reformat.
+
+    - name: separator
+      type: string
+      desc: The character used to separate groups of digits.
+
+    - name: decimal
+      type: string
+      desc: The character used as a decimal point.
+
+    summary: >
+      Take a number and reformat it to be more readable by adding a separator between every three successive places.
+
+    examples:
+    - code: thousandify 31536000 "," "."
+      retr: 31,536,000
+
+    - code: thousandify 525600.72 " " ","
+      retr: 525 600,72
+
+  - name: titleize
+    arguments:
+    - name: in
+      type: string
+      desc: The input string to reformat.
+    summary: >
+      Reformat the given string by changing it into Title Case capitalization.
+
+  # ----------------------------------------------------------------------------
+  - name: trim
+    summary: >
+      Return the given string with any leading and trailing whitespace removed.
+    arguments:
+    - name: in
+      type: string
+      desc: The string to trim.
+
+  # ----------------------------------------------------------------------------
+  - name: underscore
+    arguments:
+    - name: in
+      type: string
+      desc: The input string to reformat.
+    summary: >
+      Reformat the given string by changing it into underscore_case capitalization (also known as snake_case).
+
+  # ----------------------------------------------------------------------------
+  - name: upper
+    arguments:
+    - name: in
+      type: string
+      desc: The input string to reformat.
+    summary: >
+      Reformat the given string by changing it into UPPER CASE capitalization.
+
+
+- group: Arrays and Objects
+  description: >
+    For converting, modifying, and filtering arrays, objects, and arrays of objects. These functions are especially useful when working with data returned from Bindings.
+
+  functions:
+  - name:
+
+- group: Time Functions
+  description: >
+    Used for working with time and duration values.  Among this collection are functions for converting values to times, formatting time values, and performing time-oriented calculatons on those values.
+
+  functions:
+  - name:
+
+- group: Type Comparison and Manipulation
+  description: >
+    Used to detect and convert discrete values into different data types.
+
+  functions:
+  - name:
+
+- group: Encoding and Decoding
+  description: >
+    For encoding typed data and data structures into well-known formats like JSON, CSV, and TSV.
+
+  functions:
+  - name:
+
+- group: File Path Manipulation
+  description: >
+    Used to parse and extract data from strings representing paths in a filesystem or tree hierarchy.
+
+  functions:
+  - name:
+
+- group: Color Manipulation
+  description: >
+    Used to parse, manipulate, and adjust string representations of visible colors.
+
+  functions:
+  - name:
+
+- group: Math Functions
+  description: >
+    These functions implement basic math operations on numbers.
+
+  functions:
+  - name:
+
+- group: Hashing and Cryptography
+  description: >
+    These functions provide basic cryptographic and hashing functions, including cryptographically-secure random number generation.
+
+  functions:
+  - name:
