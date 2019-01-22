@@ -121,6 +121,10 @@ func main() {
 			Name:  `start-command-dir`,
 			Usage: `The directory to change to when starting the start-command.`,
 		},
+        cli.BoolFlag{
+                Name:  `debug, D`,
+                Usage: `Allow template debugging by appending the "?__viewsource=true" query string parameter.`,
+        },
 	}
 
 	app.Before = func(c *cli.Context) error {
@@ -133,6 +137,7 @@ func main() {
 		server := diecast.NewServer(servePath)
 
 		server.Address = c.String(`address`)
+		server.EnableDebugging = c.Bool(`debug`)
 		server.BindingPrefix = c.String(`binding-prefix`)
 		server.RoutePrefix = c.String(`route-prefix`)
 		server.TryLocalFirst = c.Bool(`local-first`)

@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/ghodss/yaml"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
@@ -366,6 +367,17 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 							contentType = res.Header.Get(`Content-Type`)
 						}
 
+						if self.Parser == `` {
+								switch contentType {
+								case `application/json`:
+										self.Parser = `json`
+								case `application/x-yaml`, `application/yaml`, `text/yaml`:
+										self.Parser = `yaml`
+								case `text/html`:
+										self.Parser = `html`
+								}
+						}
+
 						switch self.Parser {
 						case `json`, ``:
 							// if the parser is unset, and the response type is NOT application/json, then
@@ -384,6 +396,15 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 									return nil, err
 								}
 							}
+
+						case `yaml`:
+								var rv interface{}
+								if err := yaml.Unmarshal(data, &rv); err == nil {
+										return rv, nil
+								} else {
+										return nil, err
+								}
+
 
 						case `html`:
 							return goquery.NewDocumentFromReader(bytes.NewBuffer(data))

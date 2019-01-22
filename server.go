@@ -26,6 +26,7 @@ import (
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/pathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
+	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/timeutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -1094,7 +1095,7 @@ func (self *Server) tryToHandleFoundFile(requestPath string, mimeType string, fi
 	}
 
 	if mimeType == `` {
-		mimeType = `application/octet-stream`
+		mimeType = fileutil.GetMimeType(requestPath, `application/octet-stream`)
 	}
 
 	// write out the HTTP status if we were given one
