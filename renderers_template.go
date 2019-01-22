@@ -45,9 +45,9 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 				}
 			}
 
-            if options.MimeType == `` {
-                options.MimeType = `text/html; charset=utf-8`
-            }
+			if options.MimeType == `` {
+				options.MimeType = `text/html; charset=utf-8`
+			}
 
 			if self.server.ShouldReturnSource(req) {
 				w.Header().Set(`Content-Type`, `text/plain`)

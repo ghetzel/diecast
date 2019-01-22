@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"math/rand"
-	"sort"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/maputil"
@@ -147,15 +147,15 @@ func loadStandardFunctionsCollections(rv FuncMap) {
 		return uniqByKey(rv, input, key, true, exprs...)
 	}
 
-    rv[`sortByKey`] = func(input interface{}, key string) ([]interface{}, error) {
-            out := sliceutil.Sliceify(input)
-            sort.Slice(out, func(i int, j int) bool {
-                    mI := maputil.M(out[i])
-                    mJ := maputil.M(out[j])
-                    return mI.String(key) < mJ.String(key)
-            })
-            return out, nil
-    }
+	rv[`sortByKey`] = func(input interface{}, key string) ([]interface{}, error) {
+		out := sliceutil.Sliceify(input)
+		sort.Slice(out, func(i int, j int) bool {
+			mI := maputil.M(out[i])
+			mJ := maputil.M(out[j])
+			return mI.String(key) < mJ.String(key)
+		})
+		return out, nil
+	}
 
 	// fn pluck: Given an *input* array of maps, retrieve the values of *key* from all elements.
 	rv[`pluck`] = func(input interface{}, key string, additionalKeys ...string) []interface{} {

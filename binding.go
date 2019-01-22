@@ -16,13 +16,13 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/ghodss/yaml"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/ghodss/yaml"
 )
 
 type BindingErrorAction string
@@ -368,14 +368,14 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						}
 
 						if self.Parser == `` {
-								switch contentType {
-								case `application/json`:
-										self.Parser = `json`
-								case `application/x-yaml`, `application/yaml`, `text/yaml`:
-										self.Parser = `yaml`
-								case `text/html`:
-										self.Parser = `html`
-								}
+							switch contentType {
+							case `application/json`:
+								self.Parser = `json`
+							case `application/x-yaml`, `application/yaml`, `text/yaml`:
+								self.Parser = `yaml`
+							case `text/html`:
+								self.Parser = `html`
+							}
 						}
 
 						switch self.Parser {
@@ -398,13 +398,12 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 							}
 
 						case `yaml`:
-								var rv interface{}
-								if err := yaml.Unmarshal(data, &rv); err == nil {
-										return rv, nil
-								} else {
-										return nil, err
-								}
-
+							var rv interface{}
+							if err := yaml.Unmarshal(data, &rv); err == nil {
+								return rv, nil
+							} else {
+								return nil, err
+							}
 
 						case `html`:
 							return goquery.NewDocumentFromReader(bytes.NewBuffer(data))
