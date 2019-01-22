@@ -1,0 +1,24 @@
+$navbar: "#333333";
+$codebg: "#CCCCCC";
+
+.navbar-diecast {
+    background-color: $navbar !important;
+}
+
+.function {
+    margin:        0 2em;
+    margin-bottom: 2em;
+
+    h5 {
+        margin-top: 1em;
+    }
+
+    .examples {
+        margin-left: 1em;
+
+        dd {
+            border-radius:    2px;
+            background-color: $codebg !important;
+        }
+    }
+}
