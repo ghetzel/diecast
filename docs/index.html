@@ -1,1 +1,48 @@
-TEST
+---
+bindings:
+-   name:     docs
+    resource: /functions.yml
+
+postprocessors:
+- trim-empty-lines
+---
+
+{{ range $group := $.bindings.docs.groups }}
+<section class="group">
+    <header>
+        <h3>{{ $group.group }}</h3>
+        <p>{{ $group.description }}</p>
+    </header>
+
+    <h4>Functions</h4>
+
+{{   range $fn := sortByKey $group.functions "name" }}
+    <section class="function">
+        <h5><code>{{ $fn.name }}</code></h5>
+
+{{     if $fn.summary }}
+    {{   $fn.summary }}
+{{     else }}
+    <i>Undocumented</i>
+{{     end }}
+
+{{     if $fn.arguments }}
+        <h5>Arguments</h5>
+{{       range $arg := $fn.arguments }}
+
+{{       end }}
+{{     end }}
+
+{{     if $fn.examples }}
+        <h5>Examples</h5>
+        <dl>
+{{       range $x := $fn.examples }}
+            <dd><code>{{ $x.code }}</code></dd>
+            <dt><pre>{{ $x.retr }}</pre></dt>
+{{       end }}
+        </dl>
+{{     end }}
+    </section>
+{{   end }}
+</section>
+{{ end }}

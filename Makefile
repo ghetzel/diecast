@@ -21,8 +21,6 @@ test:
 
 build: fmt
 	test -d diecast && go build -i -o bin/diecast diecast/main.go
-	test -d diecast/funcdoc && go build -i -o bin/funcdoc diecast/funcdoc/main.go
-	./bin/funcdoc > FUNCTIONS.md
 	which diecast && cp -v bin/diecast `which diecast` || true
 
 package:
