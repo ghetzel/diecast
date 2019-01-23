@@ -1,0 +1,102 @@
+body {
+  overflow: hidden;
+}
+
+code {
+  color: #FF7F2B;
+}
+
+.nav-pills .nav-link {
+  border-radius: 0;
+  padding: 0.8rem;
+}
+
+.nav-pills .nav-link.active {
+  background-color: #162D4F;
+}
+
+#functions {
+  padding: 0;
+}
+
+#content {
+  height: calc(100vh - 56px);
+  position: relative;
+  overflow-y: auto;
+}
+
+.bg-diecast {
+  background-color: #333333 !important;
+}
+
+.bg-diecast-dark {
+  background-color: #1A1A1A !important;
+  color: #EEEEEE;
+}
+
+.bg-diecast-dark a {
+  color: #EEEEEE;
+}
+
+.unselectable {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.group > header > h3 {
+  background: #162D4F 99.5% 65% no-repeat url("assets/img/diecast-logo-dark-bg-36.png");
+  color: #EEEEEE;
+  padding: 0.5rem;
+}
+
+.group .function {
+  margin-bottom: 4em;
+  border-top: 3px solid #333333;
+}
+
+.group .function h5 {
+  margin-top: 1em;
+}
+
+.group .function h5 span {
+  font-family: monospace;
+  white-space: pre;
+  font-weight: bold;
+}
+
+.group .function .examples dd ~ dt {
+  margin-bottom: 1em;
+}
+
+.group .function .examples dd, .group .function .examples dt {
+  border-radius: 0.25em;
+  background-color: #333333;
+  color: #EEEEEE;
+  font-family: monospace;
+  white-space: pre-wrap;
+  padding: 0.25em 0.5em;
+  margin-bottom: 0;
+}
+
+.group .function .examples dd {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.group .function .examples dd::before {
+  content: '\{\{ ';
+  opacity: 0.5;
+}
+
+.group .function .examples dd::after {
+  content: ' \}\}';
+  opacity: 0.5;
+}
+
+.group .function .examples dt {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
