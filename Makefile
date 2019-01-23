@@ -1,10 +1,10 @@
-.PHONY: test deps
+.PHONY: test deps docs
 .EXPORT_ALL_VARIABLES:
 
 GO111MODULE ?= on
 LOCALS      := $(shell find . -type f -name '*.go')
 
-all: deps test build
+all: deps test build docs
 
 deps:
 	go get ./...
@@ -22,6 +22,9 @@ test:
 build: fmt
 	test -d diecast && go build -i -o bin/diecast diecast/main.go
 	which diecast && cp -v bin/diecast `which diecast` || true
+
+docs:
+	cd docs && make
 
 package:
 	-rm -rf pkg

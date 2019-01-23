@@ -1,0 +1,10 @@
+---
+includes:
+  functions: /_includes/functions.html
+---
+<a name="top"></a>
+{{ markdown (read "/README.md") }}
+
+<a name="funcref"></a>
+<h2>Function Reference</h2>
+{{ template "functions" . }}
