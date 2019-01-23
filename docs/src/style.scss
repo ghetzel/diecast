@@ -96,16 +96,6 @@ code {
             dd {
                 border-bottom-left-radius:  0;
                 border-bottom-right-radius: 0;
-
-                &::before {
-                    content: '\{\{ ';
-                    opacity: 0.5;
-                }
-
-                &::after {
-                    content: ' \}\}';
-                    opacity: 0.5;
-                }
             }
 
             dt {

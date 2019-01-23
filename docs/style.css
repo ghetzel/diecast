@@ -86,16 +86,6 @@ code {
   border-bottom-right-radius: 0;
 }
 
-.group .function .examples dd::before {
-  content: '\{\{ ';
-  opacity: 0.5;
-}
-
-.group .function .examples dd::after {
-  content: ' \}\}';
-  opacity: 0.5;
-}
-
 .group .function .examples dt {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
