@@ -1,24 +1,117 @@
-$navbar: "#333333";
-$codebg: "#CCCCCC";
+$primary:        #333333;
+$darkPrimary:    #1A1A1A;
+$darkForeground: #EEEEEE;
+$hilite:         #162D4F;
+$codebg:         #333333;
+$inlineFg:       #FF7F2B;
 
-.navbar-diecast {
-    background-color: $navbar !important;
+@mixin vendor-prefix($name, $value) {
+    @each $vendor in ('-webkit-', '-moz-', '-ms-', '-o-', '') {
+        #{$vendor}#{$name}: #{$value};
+    }
 }
 
-.function {
-    margin:        0 2em;
-    margin-bottom: 2em;
+body {
+    overflow: hidden;
+}
 
-    h5 {
-        margin-top: 1em;
+code {
+    color: $inlineFg;
+}
+
+.nav-pills {
+    .nav-link {
+        border-radius:    0;
+        padding:          0.8rem;
     }
 
-    .examples {
-        margin-left: 1em;
+    .nav-link.active {
+        background-color: $hilite;
+    }
+}
 
-        dd {
-            border-radius:    2px;
-            background-color: $codebg !important;
+#functions {
+    padding: 0;
+}
+
+#content {
+    height: calc(100vh - 56px);
+    position: relative;
+    overflow-y: auto;
+}
+
+.bg-diecast {
+    background-color: $primary !important;
+}
+
+.bg-diecast-dark {
+    background-color: $darkPrimary !important;
+    color: $darkForeground;
+}
+
+.bg-diecast-dark a {
+    color: $darkForeground;
+}
+
+.unselectable {
+    @include vendor-prefix('user-select', 'none');
+}
+
+.group {
+    > header > h3 {
+        background: #162D4F 99.5% 65% no-repeat url('/assets/img/diecast-logo-dark-bg-36.png');
+        color:            $darkForeground;
+        padding:          0.5rem;
+    }
+
+    .function {
+        margin-bottom: 4em;
+        border-top:    3px solid $primary;
+
+        h5 {
+            margin-top: 1em;
+
+            span {
+                font-family: monospace;
+                white-space: pre;
+                font-weight: bold;
+            }
+        }
+
+        .examples {
+            dd ~ dt {
+                margin-bottom: 1em;
+            }
+
+            dd, dt {
+                border-radius:              0.25em;
+                background-color:           $codebg;
+                color:                      $darkForeground;
+                font-family:                monospace;
+                white-space:                pre-wrap;
+                padding:                    0.25em 0.5em;
+                margin-bottom:              0;
+            }
+
+            dd {
+                border-bottom-left-radius:  0;
+                border-bottom-right-radius: 0;
+
+                &::before {
+                    content: '\{\{ ';
+                    opacity: 0.5;
+                }
+
+                &::after {
+                    content: ' \}\}';
+                    opacity: 0.5;
+                }
+            }
+
+            dt {
+                border-top-left-radius:     0;
+                border-top-right-radius:    0;
+            }
         }
     }
 }

@@ -6,7 +6,7 @@ import (
 	"html/template"
 
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday"
+	"github.com/russross/blackfriday/v2"
 )
 
 func loadStandardFunctionsCodecs(rv FuncMap) {
@@ -26,7 +26,10 @@ func loadStandardFunctionsCodecs(rv FuncMap) {
 	// fn markdown: Render the given Markdown string *value* as sanitized HTML.
 	rv[`markdown`] = func(value interface{}) (template.HTML, error) {
 		input := fmt.Sprintf("%v", value)
-		output := blackfriday.MarkdownCommon([]byte(input[:]))
+		output := blackfriday.Run(
+			[]byte(input),
+			blackfriday.WithExtensions(blackfriday.CommonExtensions),
+		)
 		output = bluemonday.UGCPolicy().SanitizeBytes(output)
 
 		return template.HTML(output[:]), nil

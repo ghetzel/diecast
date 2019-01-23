@@ -45,7 +45,7 @@ groups:
 
     examples:
     - code: concat "There are " 5 " apples, yes it's " true
-    - retr: There are 5 apples, yes it's true.
+      retr: There are 5 apples, yes it's true.
 
   # ----------------------------------------------------------------------------
   - name: contains
@@ -345,10 +345,12 @@ groups:
       desc: The string to test.
 
     - name: prefix
-      type: The string the input must start with.
+      type: string
+      desc: The string the input must start with.
 
     - name: suffix
-      type: The string the input must end with.
+      type: string
+      desc: The string the input must end with.
 
     returns: boolean
     examples:

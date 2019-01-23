@@ -20,7 +20,8 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.0
 	github.com/mjibson/esc v0.1.0 // indirect
 	github.com/montanaflynn/stats v0.0.0-20151014174947-eeaced052adb
-	github.com/russross/blackfriday v1.5.1
+	github.com/russross/blackfriday/v2 v2.0.1
+	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/spaolacci/murmur3 v0.0.0-20170819071325-9f5d223c6079
 	github.com/stretchr/testify v1.2.2
 	github.com/tg123/go-htpasswd v0.0.0-20150618065153-49fe3fd1681b

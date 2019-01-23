@@ -712,6 +712,21 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 		return ``
 	}
 
+	// read a file from the serving path
+	funcs[`read`] = func(filename string) (string, error) {
+		if file, err := self.fs.Open(filename); err == nil {
+			defer file.Close()
+
+			if data, err := ioutil.ReadAll(file); err == nil {
+				return string(data), nil
+			} else {
+				return ``, err
+			}
+		} else {
+			return ``, err
+		}
+	}
+
 	return funcs
 }
 
