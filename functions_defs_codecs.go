@@ -15,18 +15,18 @@ func loadStandardFunctionsCodecs() funcGroup {
 		Description: `For encoding typed data and data structures into well-known formats like JSON, CSV, and TSV.`,
 		Functions: []funcDef{
 			{
-				Name: `jsonify`,
+				Name:    `jsonify`,
 				Summary: `Encode the given argument as a JSON document.`,
 				Arguments: []funcArg{
 					{
-						Name: `data`,
-						Type: `any`,
+						Name:        `data`,
+						Type:        `any`,
 						Description: `The data to encode as JSON.`,
-					},{
-						Name: `indent`,
-						Type: `string`,
-						Optional: true,
-						Default: `  `,
+					}, {
+						Name:        `indent`,
+						Type:        `string`,
+						Optional:    true,
+						Default:     `  `,
 						Description: `The string to indent successive tiers in the document hierarchy with.`,
 					},
 				},
@@ -42,68 +42,68 @@ func loadStandardFunctionsCodecs() funcGroup {
 				},
 			}, {
 				// fn markdown: Render the given Markdown string *value* as sanitized HTML.
-				Name: `markdown`,
+				Name:    `markdown`,
 				Summary: `Parse the given string as a Markdown document and return it represented as HTML.`,
 				Arguments: []funcArg{
 					{
-						Name: `document`,
-						Type: `string`,
+						Name:        `document`,
+						Type:        `string`,
 						Description: `The full text of the Markdown to parse`,
 					}, {
-						Name: `extensions`,
-						Type: `string(s)`,
+						Name:        `extensions`,
+						Type:        `string(s)`,
 						Description: `A list of zero of more Markdown extensions to enable when rendering the HTML.`,
 						Valid: []funcArg{
 							{
-								Name: `no-intra-emphasis`,
+								Name:        `no-intra-emphasis`,
 								Description: ``,
 							}, {
-								Name: `tables`,
+								Name:        `tables`,
 								Description: ``,
 							}, {
-								Name: `fenced-code`,
+								Name:        `fenced-code`,
 								Description: ``,
 							}, {
-								Name: `autolink`,
+								Name:        `autolink`,
 								Description: ``,
 							}, {
-								Name: `strikethrough`,
+								Name:        `strikethrough`,
 								Description: ``,
 							}, {
-								Name: `lax-html-blocks`,
+								Name:        `lax-html-blocks`,
 								Description: ``,
 							}, {
-								Name: `space-headings`,
+								Name:        `space-headings`,
 								Description: ``,
 							}, {
-								Name: `hard-line-break`,
+								Name:        `hard-line-break`,
 								Description: ``,
 							}, {
-								Name: `tab-size-eight`,
+								Name:        `tab-size-eight`,
 								Description: ``,
 							}, {
-								Name: `footnotes`,
+								Name:        `footnotes`,
 								Description: ``,
 							}, {
-								Name: `no-empty-line-before-block`,
+								Name:        `no-empty-line-before-block`,
 								Description: ``,
 							}, {
-								Name: `heading-ids`,
+								Name:        `heading-ids`,
 								Description: ``,
 							}, {
-								Name: `titleblock`,
+								Name:        `titleblock`,
 								Description: ``,
 							}, {
-								Name: `auto-heading-ids`,
+								Name:        `auto-heading-ids`,
 								Description: ``,
 							}, {
-								Name: `backslash-line-break`,
+								Name:        `backslash-line-break`,
 								Description: ``,
 							}, {
-								Name: `definition-lists`,
+								Name:        `definition-lists`,
 								Description: ``,
 							}, {
-								Name: `common`,
+								Name:        `common`,
 								Description: ``,
 							},
 						},
@@ -121,16 +121,16 @@ func loadStandardFunctionsCodecs() funcGroup {
 					return template.HTML(output[:]), nil
 				},
 			}, {
-				Name: `csv`,
+				Name:    `csv`,
 				Summary: `Encode the given data as a comma-separated values document.`,
 				Arguments: []funcArg{
 					{
-						Name: `columns`,
-						Type: `array[string]`,
+						Name:        `columns`,
+						Type:        `array[string]`,
 						Description: `An array of values that represent the column names of the table being created.`,
-					},{
-						Name: `rows`,
-						Type: `array[array[string]], array[object]`,
+					}, {
+						Name:        `rows`,
+						Type:        `array[array[string]], array[object]`,
 						Description: `An array of values that represent the column names of the table being created.`,
 					},
 				},
@@ -138,16 +138,16 @@ func loadStandardFunctionsCodecs() funcGroup {
 					return delimited(',', columns, rows)
 				},
 			}, {
-				Name: `tsv`,
+				Name:    `tsv`,
 				Summary: `Encode the given data as a tab-separated values document.`,
 				Arguments: []funcArg{
 					{
-						Name: `columns`,
-						Type: `array[string]`,
+						Name:        `columns`,
+						Type:        `array[string]`,
 						Description: `An array of values that represent the column names of the table being created.`,
-					},{
-						Name: `rows`,
-						Type: `array[array[string]], array[object]`,
+					}, {
+						Name:        `rows`,
+						Type:        `array[array[string]], array[object]`,
 						Description: `An array of values that represent the column names of the table being created.`,
 					},
 				},
@@ -163,8 +163,8 @@ func loadStandardFunctionsCodecs() funcGroup {
 					`to acknowledge this by typing "unsafe".`,
 				Arguments: []funcArg{
 					{
-						Name: `document`,
-						Type: `string`,
+						Name:        `document`,
+						Type:        `string`,
 						Description: `The raw HTML snippet you sneakily want to sneak past the HTML sanitizer for reasons.`,
 					},
 				},
@@ -177,8 +177,8 @@ func loadStandardFunctionsCodecs() funcGroup {
 					`to evaluate scripts, but leaving the rest. Useful for preparing user-generated HTML for display.`,
 				Arguments: []funcArg{
 					{
-						Name: ``,
-						Type: ``,
+						Name:        ``,
+						Type:        ``,
 						Description: ``,
 					},
 				},

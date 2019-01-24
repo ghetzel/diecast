@@ -10,9 +10,9 @@ type funcArg struct {
 	Type        string
 	Description string
 	Variadic    bool
-	Optional bool
-	Default interface{}
-	Valid []funcArg
+	Optional    bool
+	Default     interface{}
+	Valid       []funcArg
 }
 
 type funcDef struct {
