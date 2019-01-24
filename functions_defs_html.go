@@ -5,7 +5,7 @@ import (
 	"html/template"
 )
 
-func loadStandardFunctionsHtmlProcessing(rv FuncMap) funcGroup {
+func loadStandardFunctionsHtmlProcessing() funcGroup {
 	return funcGroup{
 		Name:        `HTML Processing`,
 		Description: `Used to parse and modify HTML documents.`,
