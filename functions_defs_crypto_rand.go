@@ -10,6 +10,15 @@ import (
 )
 
 func loadStandardFunctionsCryptoRand() funcGroup {
+	// TODO:
+	// urlencode/urldecode
+	// rv[`md5`] =
+	// rv[`sha1`] =
+	// rv[`sha256`] =
+	// rv[`sha384`] =
+	// rv[`sha512`] =
+
+
 	return funcGroup{
 		Name: `Hashing and Cryptography`,
 		Description: `These functions provide basic cryptographic and non-cryptographic functions, ` +
