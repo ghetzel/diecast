@@ -89,6 +89,30 @@ func loadStandardFunctionsTypes() funcGroup {
 				Name:     `asDuration`,
 				Summary:  `Attempt to parse the given *value* as a time duration.`,
 				Function: timeutil.ParseDuration,
+			}, {
+				Name:     `s`,
+				Alias:    `asStr`,
+				Function: g.fn(`asStr`),
+			}, {
+				Name:     `i`,
+				Alias:    `asInt`,
+				Function: g.fn(`asInt`),
+			}, {
+				Name:     `f`,
+				Alias:    `asFloat`,
+				Function: g.fn(`asFloat`),
+			}, {
+				Name:     `b`,
+				Alias:    `asBool`,
+				Function: g.fn(`asBool`),
+			}, {
+				Name:     `t`,
+				Alias:    `asTime`,
+				Function: g.fn(`asTime`),
+			}, {
+				Name:     `d`,
+				Alias:    `asDuration`,
+				Function: g.fn(`asDuration`),
 			},
 		},
 	}
