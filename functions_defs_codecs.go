@@ -30,7 +30,7 @@ func loadStandardFunctionsCodecs() funcGroup {
 						Description: `The string to indent successive tiers in the document hierarchy with.`,
 					},
 				},
-				Functions: func(value interface{}, indent ...string) (string, error) {
+				Function: func(value interface{}, indent ...string) (string, error) {
 					indentString := `  `
 
 					if len(indent) > 0 {
@@ -110,7 +110,7 @@ func loadStandardFunctionsCodecs() funcGroup {
 						Variadic: true,
 					},
 				},
-				Functions: func(value interface{}, extensions ...string) (template.HTML, error) {
+				Function: func(value interface{}, extensions ...string) (template.HTML, error) {
 					input := fmt.Sprintf("%v", value)
 					output := blackfriday.Run(
 						[]byte(input),
@@ -134,7 +134,7 @@ func loadStandardFunctionsCodecs() funcGroup {
 						Description: `An array of values that represent the column names of the table being created.`,
 					},
 				},
-				Functions: func(columns []interface{}, rows []interface{}) (string, error) {
+				Function: func(columns []interface{}, rows []interface{}) (string, error) {
 					return delimited(',', columns, rows)
 				},
 			}, {
@@ -151,7 +151,7 @@ func loadStandardFunctionsCodecs() funcGroup {
 						Description: `An array of values that represent the column names of the table being created.`,
 					},
 				},
-				Functions: func(columns []interface{}, rows []interface{}) (string, error) {
+				Function: func(columns []interface{}, rows []interface{}) (string, error) {
 					return delimited('\t', columns, rows)
 				},
 			}, {
@@ -168,7 +168,7 @@ func loadStandardFunctionsCodecs() funcGroup {
 						Description: `The raw HTML snippet you sneakily want to sneak past the HTML sanitizer for reasons.`,
 					},
 				},
-				Functions: func(value string) template.HTML {
+				Function: func(value string) template.HTML {
 					return template.HTML(value)
 				},
 			}, {
@@ -182,7 +182,7 @@ func loadStandardFunctionsCodecs() funcGroup {
 						Description: ``,
 					},
 				},
-				Functions: func(value string) template.HTML {
+				Function: func(value string) template.HTML {
 					return template.HTML(bluemonday.UGCPolicy().Sanitize(value))
 				},
 			},

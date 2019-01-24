@@ -2,106 +2,122 @@ package diecast
 
 import (
 	"fmt"
-	"mime"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
 
+	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/pathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 )
 
-func loadStandardFunctionsPath(rv FuncMap) {
-	// fn basename: Return the filename component of the given *path*.
-	rv[`basename`] = func(value interface{}) string {
-		return path.Base(fmt.Sprintf("%v", value))
-	}
+func loadStandardFunctionsPath() {
+	return funcGroup{
+		Name:        `File Path Manipulation`,
+		Description: `Used to parse and extract data from strings representing paths in a filesystem or tree hierarchy.`,
+		Functions: []funcDef{
+			{
+				Name:    `basename`,
+				Summary: `Return the filename component of the given path.`,
+				Function: func(value interface{}) string {
+					return path.Base(fmt.Sprintf("%v", value))
+				},
+			}, {
+				Name:    `extname`,
+				Summary: `Return the extension component of the given path (always prefixed with a dot [.]).`,
+				Function: func(value interface{}) string {
+					return path.Ext(fmt.Sprintf("%v", value))
+				},
+			}, {
+				Name:    `dirname`,
+				Summary: `Return the directory path component of the given path.`,
+				Function: func(value interface{}) string {
+					return path.Dir(fmt.Sprintf("%v", value))
+				},
+			}, {
+				Name:    `pathjoin`,
+				Summary: `Return a string of all given path components joined together using the system path separator.`,
+				Function: func(values ...interface{}) string {
+					return path.Join(sliceutil.Stringify(sliceutil.Flatten(values))...)
+				},
+			}, {
+				Name:     `pwd`,
+				Summary:  `Return the present working directory.`,
+				Function: os.Getwd,
+			}, {
+				Name:    `dir`,
+				Summary: `Return a list of files and directories in *path*, or in the current directory if not specified.`,
+				Function: func(dirs ...string) ([]*fileInfo, error) {
+					var dir string
+					entries := make([]*fileInfo, 0)
 
-	// fn extname: Return the extension component of the given *path* (always prefixed with a dot [.]).
-	rv[`extname`] = func(value interface{}) string {
-		return path.Ext(fmt.Sprintf("%v", value))
-	}
+					if len(dirs) == 0 || dirs[0] == `` {
+						if wd, err := os.Getwd(); err == nil {
+							dir = wd
+						} else {
+							return nil, err
+						}
+					} else {
+						dir = dirs[0]
+					}
 
-	// fn dirname: Return the directory path component of the given *path*.
-	rv[`dirname`] = func(value interface{}) string {
-		return path.Dir(fmt.Sprintf("%v", value))
-	}
+					if d, err := pathutil.ExpandUser(dir); err == nil {
+						dir = d
+					} else {
+						return nil, err
+					}
 
-	// fn pathjoin: Return the value of all *values* join on the system path separator.
-	rv[`pathjoin`] = func(values ...interface{}) string {
-		return path.Join(sliceutil.Stringify(sliceutil.Flatten(values))...)
-	}
+					dir = path.Clean(dir)
 
-	// fn pwd: Return the present working directory
-	rv[`pwd`] = os.Getwd
+					if pathutil.DirExists(dir) {
+						dir = path.Join(dir, `*`)
+					}
 
-	// fn dir: Return a list of files and directories in *path*, or in the current directory if not specified.
-	rv[`dir`] = func(dirs ...string) ([]*fileInfo, error) {
-		var dir string
-		entries := make([]*fileInfo, 0)
+					if e, err := filepath.Glob(dir); err == nil {
+						for _, entry := range e {
+							if info, err := os.Stat(entry); err == nil {
+								entries = append(entries, &fileInfo{
+									Parent:    path.Dir(entry),
+									Directory: info.IsDir(),
+									FileInfo:  info,
+								})
+							}
+						}
 
-		if len(dirs) == 0 || dirs[0] == `` {
-			if wd, err := os.Getwd(); err == nil {
-				dir = wd
-			} else {
-				return nil, err
-			}
-		} else {
-			dir = dirs[0]
-		}
+						sort.Slice(entries, func(i, j int) bool {
+							return strings.ToLower(entries[i].Name()) < strings.ToLower(entries[j].Name())
+						})
 
-		if d, err := pathutil.ExpandUser(dir); err == nil {
-			dir = d
-		} else {
-			return nil, err
-		}
+						return entries, nil
+					} else {
+						return nil, err
+					}
+				},
+			}, {
+				Name:    `mimetype`,
+				Summary: `Returns a best guess at the MIME type for the given filename.`,
+				Function: func(filename string) string {
+					mime, _ := stringutil.SplitPair(fileutil.GetMimeType(path.Ext(filename)), `;`)
+					return strings.TrimSpace(mime)
+				},
+			}, {
+				Name:    `mimeparams`,
+				Summary: `Returns the parameters portion of the MIME type of the given filename.`,
+				Function: func(filename string) map[string]interface{} {
+					_, params := stringutil.SplitPair(fileutil.GetMimeType(path.Ext(filename)), `;`)
+					kv := make(map[string]interface{})
 
-		dir = path.Clean(dir)
+					for _, paramPair := range strings.Split(params, `;`) {
+						key, value := stringutil.SplitPair(paramPair, `=`)
+						kv[key] = stringutil.Autotype(value)
+					}
 
-		if pathutil.DirExists(dir) {
-			dir = path.Join(dir, `*`)
-		}
-
-		if e, err := filepath.Glob(dir); err == nil {
-			for _, entry := range e {
-				if info, err := os.Stat(entry); err == nil {
-					entries = append(entries, &fileInfo{
-						Parent:    path.Dir(entry),
-						Directory: info.IsDir(),
-						FileInfo:  info,
-					})
-				}
-			}
-
-			sort.Slice(entries, func(i, j int) bool {
-				return strings.ToLower(entries[i].Name()) < strings.ToLower(entries[j].Name())
-			})
-
-			return entries, nil
-		} else {
-			return nil, err
-		}
-	}
-
-	// fn mimetype: Returns a best guess MIME type for the given filename
-	rv[`mimetype`] = func(filename string) string {
-		mime, _ := stringutil.SplitPair(mime.TypeByExtension(path.Ext(filename)), `;`)
-		return strings.TrimSpace(mime)
-	}
-
-	// fn mimeparams: Returns the parameters portion of the MIME type of the given filename
-	rv[`mimeparams`] = func(filename string) map[string]interface{} {
-		_, params := stringutil.SplitPair(mime.TypeByExtension(path.Ext(filename)), `;`)
-		rv := make(map[string]interface{})
-
-		for _, paramPair := range strings.Split(params, `;`) {
-			key, value := stringutil.SplitPair(paramPair, `=`)
-			rv[key] = stringutil.Autotype(value)
-		}
-
-		return rv
+					return kv
+				},
+			},
+		},
 	}
 }

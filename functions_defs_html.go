@@ -2,6 +2,8 @@ package diecast
 
 import (
 	"github.com/PuerkitoBio/goquery"
+	strip "github.com/grokify/html-strip-tags-go"
+	htmlmain "html"
 	"html/template"
 )
 
@@ -11,6 +13,16 @@ func loadStandardFunctionsHtmlProcessing() funcGroup {
 		Description: `Used to parse and modify HTML documents.`,
 		Functions: []funcDef{
 			{
+				Name: `stripHtml`,
+				Summary: `Removes all HTML tags from a given input string, leaving behind only the ` +
+					`textual content of the nodes. Only text nodes are preserved; attribute names ` +
+					`and values, and comments, will be omitted.`,
+				Function: func(in interface{}) string {
+					stripped := strip.StripTags(fmt.Sprintf("%v", in))
+					stripped = htmlmain.UnescapeString(stripped)
+					return stripped
+				},
+			}, {
 				Name:    `htmlquery`,
 				Summary: `Parse a given HTML document and return details about all elements matching a CSS selector.`,
 				Arguments: []funcArg{
