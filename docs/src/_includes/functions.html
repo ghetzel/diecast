@@ -8,7 +8,7 @@ postprocessors:
 ---
 
 {{ range $group := $.bindings.docs.groups }}
-<section class="group">
+<section class="group" id="{{ hyphenate $group.group }}"  >
     <header>
         <h3>{{ $group.group }}</h3>
         <p>{{ markdown $group.description }}</p>

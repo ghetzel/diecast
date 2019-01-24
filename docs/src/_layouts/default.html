@@ -33,7 +33,11 @@ postprocessors:
                 class="navbar navbar-light bg-diecast-dark col-md-3 col-xl-2 align-items-start d-none d-sm-block"
             >
                 <nav class="nav nav-pills flex-column">
-                    <a class="nav-link" href="#top">Introduction</a>
+                    {{ $doc := markdown (read "/README.md") "common" "auto-heading-ids" }}
+
+                    {{ range $h2 := htmlquery $doc "h2" }}
+                    <a class="nav-link" href="#{{ $h2.attributes.id }}">{{ $h2.text }}</a>
+                    {{ end }}
 
                     <a class="nav-link" href="#funcref">Functions</a>
                     <nav class="nav nav-pills flex-column ml-4">
@@ -44,7 +48,7 @@ postprocessors:
                 </nav>
             </nav>
 
-            <div class="col" id="content" data-spy="scroll" data-target="#sidebar" data-offset="0">
+            <div class="col" id="content" data-spy="scroll" data-target="#sidebar" data-offset="50">
                 <div class="col-xl-8">
                     {{ template "content" . }}
                 </div>

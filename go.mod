@@ -1,7 +1,7 @@
 module github.com/ghetzel/diecast
 
 require (
-	github.com/PuerkitoBio/goquery v1.4.1
+	github.com/PuerkitoBio/goquery v1.5.0
 	github.com/dustin/go-humanize v0.0.0-20180713052910-9f541cc9db5d
 	github.com/fatih/structs v1.0.0
 	github.com/ghetzel/cli v1.17.0
@@ -28,6 +28,6 @@ require (
 	github.com/urfave/negroni v1.0.0
 	github.com/wellington/go-libsass v0.9.2
 	github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8
-	golang.org/x/net v0.0.0-20180906233101-161cd47e91fd
+	golang.org/x/net v0.0.0-20181114220301-adae6a3d119a
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )

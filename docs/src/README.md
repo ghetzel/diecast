@@ -4,18 +4,31 @@
 Diecast is a web server that allows you to render a directory tree of template files into HTML, CSS or anything other text-based media in real-time.  Data can be retrieved from remote sources during the template rendering process, creating dynamic web pages built by consuming APIs and remote files without the need to use client-side Javascript/AJAX calls or an intermediate server framework.
 
 ## Installation
-### Golang / via `go get`
 
-```
-go get github.com/ghetzel/diecast/diecast
-```
-
-### macOS / Homebrew
-### Windows
-### Linux
-### FreeBSD
-### Binaries
-### from Source
+<details>
+    <summary>Golang / via `go get`</summary>
+    ```
+    go get github.com/ghetzel/diecast/diecast
+    ```
+</details>
+<details>
+    <summary>macOS / Homebrew</summary>
+</details>
+<details>
+    <summary>Windows</summary>
+</details>
+<details>
+    <summary>Linux</summary>
+</details>
+<details>
+    <summary>FreeBSD</summary>
+</details>
+<details>
+    <summary>Binaries</summary>
+</details>
+<details>
+    <summary>From Source</summary>
+</details>
 
 ## Getting Started
 
@@ -195,11 +208,11 @@ page:
 </html>
 ```
 
-### Bindings
+## Bindings
 
 Bindings are one of the most important concepts in Diecast.  Bindings (short for _data bindings_) are directives added to the Front Matter of layouts and templates that specify remote URLs to retrieve (via an HTTP client built in to `diecast`), as well as how to handle parsing the response data and what to do about errors.  This concept is extremely powerful, in that it allows you to create complex data-driven sites easily and cleanly by treating remote data from RESTful APIs and other sources as first-class citizens in the templating language.
 
-#### Overview
+### Overview
 
 Bindings are specified in the `bindings` array in the Front Matter of layouts and template files.  Here is a basic example that will perform an HTTP GET against a URL, parse the output, and store the parsed results in a variable that can be used anywhere inside the template.
 
@@ -223,11 +236,11 @@ bindings:
 </ul>
 ```
 
-#### Controlling the Request
+### Controlling the Request
 
 The `name` and `resource` properties are required for a binding to run, but there are many other optional values supported that allow you to control how the request is performed, how the response if parsed (if at all), as well as what to do if an error occurs (e.g.: connection errors, timeouts, non-2xx HTTP statuses).  These properties are as follows:
 
-| Property Name          | Acceptable Values             | Default Value | Description
+| Property Name          | Acceptable Values             | Default       | Description
 | ---------------------- | ----------------------------- | ------------- | -----------
 | `body`                 | Object                        | -             |
 | `fallback`             | Anything                      | -             |
@@ -246,15 +259,10 @@ The `name` and `resource` properties are required for a binding to run, but ther
 | `rawbody`              | String                        | -             | The *exact* string to send as the request body.
 | `skip_inherit_headers` | `true`, `false`               | `false`       | If true, no headers from the originating request to render the template will be included in this request, even if Header Passthrough is enabled.
 
-#### Handling Response Codes and Errors
+### Handling Response Codes and Errors
 
-
-
-#### Conditional Evaluation
-#### Repeaters
-
-### Functions
-#### ... all the functions ...
+### Conditional Evaluation
+### Repeaters
 
 ### Dynamic Variables
 

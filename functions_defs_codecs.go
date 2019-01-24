@@ -24,11 +24,11 @@ func loadStandardFunctionsCodecs(rv FuncMap) {
 	}
 
 	// fn markdown: Render the given Markdown string *value* as sanitized HTML.
-	rv[`markdown`] = func(value interface{}) (template.HTML, error) {
+	rv[`markdown`] = func(value interface{}, extensions ...string) (template.HTML, error) {
 		input := fmt.Sprintf("%v", value)
 		output := blackfriday.Run(
 			[]byte(input),
-			blackfriday.WithExtensions(blackfriday.CommonExtensions),
+			blackfriday.WithExtensions(toMarkdownExt(extensions...)),
 		)
 		output = bluemonday.UGCPolicy().SanitizeBytes(output)
 
