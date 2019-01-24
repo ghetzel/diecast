@@ -127,7 +127,7 @@ func loadStandardFunctionsMath() funcGroup {
 		}
 
 		group.Functions = append(group.Functions, funcDef{
-			Name: fnName,
+			Name:    fnName,
 			Summary: fmt.Sprintf("Return the %s of the given array of numbers.", docName),
 			Function: func(statsFn statsUnary) statsTplFunc {
 				return func(in interface{}) (float64, error) {
