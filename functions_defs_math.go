@@ -10,8 +10,8 @@ import (
 
 func loadStandardFunctionsMath() funcGroup {
 	group := funcGroup{
-		Name:        `Encoding and Decoding`,
-		Description: `For encoding typed data and data structures into well-known formats like JSON, CSV, and TSV.`,
+		Name:        `Math and Statistics`,
+		Description: `These functions implement basic mathematical and statistical operations on numbers.`,
 		Functions: []funcDef{
 			{
 				{

@@ -91,8 +91,8 @@ func getAllFunctions() funcGroups {
 	// Template Introspection functions
 	groups = append(groups, loadStandardFunctionsIntrospection())
 
-	// Miscellaneous
-	groups = append(groups, loadStandardFunctionsMisc())
+	// Comparators
+	groups = append(groups, loadStandardFunctionsComparisons())
 
 	return groups
 }
