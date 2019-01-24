@@ -49,52 +49,56 @@ func MinNonZero(data stats.Float64Data) (float64, error) {
 	return stats.Min(data)
 }
 
-func GetStandardFunctions() FuncMap {
-	rv := make(FuncMap)
+func getAllFunctions() funcGroups {
+	groups := make(funcGroups, 0)
 
 	// String Processing
-	loadStandardFunctionsString(rv)
+	groups = append(groups, loadStandardFunctionsString())
 
 	// File Pathname Handling
-	loadStandardFunctionsPath(rv)
+	groups = append(groups, loadStandardFunctionsPath())
 
 	// Encoding / Decoding
-	loadStandardFunctionsCodecs(rv)
+	groups = append(groups, loadStandardFunctionsCodecs())
 
 	// Type Handling and Conversion
-	loadStandardFunctionsTypes(rv)
+	groups = append(groups, loadStandardFunctionsTypes())
 
 	// Time and Date Formatting
-	loadStandardFunctionsTime(rv)
+	groups = append(groups, loadStandardFunctionsTime())
 
 	// Random Numbers and Encoding
-	loadStandardFunctionsCryptoRand(rv)
+	groups = append(groups, loadStandardFunctionsCryptoRand())
 
 	// Numeric/Math Functions
-	loadStandardFunctionsMath(rv)
+	groups = append(groups, loadStandardFunctionsMath())
 
 	// Collections
-	loadStandardFunctionsCollections(rv)
+	groups = append(groups, loadStandardFunctionsCollections())
 
-	// Web Scraping
-	loadStandardFunctionsWebScraping(rv)
+	// HTML processing
+	groups = append(groups, loadStandardFunctionsHtmlProcessing())
 
 	// Colors
-	loadStandardFunctionsColor(rv)
+	groups = append(groups, loadStandardFunctionsColor())
 
 	// Location-based functions
-	loadStandardFunctionsLocation(rv)
+	groups = append(groups, loadStandardFunctionsLocation())
 
 	// Unit Conversions
-	loadStandardFunctionsConvert(rv)
+	groups = append(groups, loadStandardFunctionsConvert())
 
 	// Template Introspection functions
-	loadStandardFunctionsIntrospection(rv)
+	groups = append(groups, loadStandardFunctionsIntrospection())
 
 	// Miscellaneous
-	loadStandardFunctionsMisc(rv)
+	groups = append(groups, loadStandardFunctionsMisc())
 
-	return rv
+	return groups
+}
+
+func GetStandardFunctions() FuncMap {
+	return getAllFunctions().ToFuncMap()
 }
 
 type statsTplFunc func(in interface{}) (float64, error) // {}
@@ -106,7 +110,8 @@ func delimited(comma rune, header []interface{}, lines []interface{}) (string, e
 	csvwriter.UseCRLF = true
 	input := make([][]string, 0)
 
-	input = append(input, sliceutil.Stringify(header))
+	columnNames := sliceutil.Stringify(header)
+	input = append(input, columnNames)
 
 	for _, line := range lines {
 		lineslice := sliceutil.Sliceify(line)
@@ -117,6 +122,14 @@ func delimited(comma rune, header []interface{}, lines []interface{}) (string, e
 					lineslice = append(lineslice[:i], lineslice[i+1:]...)
 				} else {
 					lineslice = lineslice[:i]
+				}
+			} else if typeutil.IsMap(value) {
+				m := maputil.M(value)
+
+				for j, col := range columnNames {
+					if j < len(lineslice) {
+						lineslice[j] = m.Get(col)
+					}
 				}
 			}
 		}
