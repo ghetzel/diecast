@@ -8,71 +8,89 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
-func loadStandardFunctionsTypes(rv FuncMap) {
-	// fn isBool: Return whether the given *value* is a boolean type.
-	rv[`isBool`] = stringutil.IsBoolean
-
-	// fn isInt: Return whether the given *value* is an integer type.
-	rv[`isInt`] = stringutil.IsInteger
-
-	// fn isFloat: Return whether the given *value* is a floating-point type.
-	rv[`isFloat`] = stringutil.IsFloat
-
-	// fn isZero: Return whether the given *value* is an zero-valued variable.
-	rv[`isZero`] = typeutil.IsZero
-
-	// fn isEmpty: Return whether the given *value* is empty.
-	rv[`isEmpty`] = typeutil.IsEmpty
-
-	// fn isArray: Return whether the given *value* is an iterable array or slice.
-	rv[`isArray`] = typeutil.IsArray
-
-	// fn isMap: Return whether the given *value* is a key-value map type.
-	rv[`isMap`] = func(value interface{}) bool {
-		return typeutil.IsKind(value, reflect.Map)
+func loadStandardFunctionsTypes() funcGroup {
+	return funcGroup{
+		Name:        `Type Detection and Manipulation`,
+		Description: `Used to detect and convert discrete values into different data types.`,
+		Functions: []funcDef{
+			{
+				Name:     `isBool`,
+				Summary:  `Return whether the given *value* is a boolean type.`,
+				Function: stringutil.IsBoolean,
+			}, {
+				Name:     `isInt`,
+				Summary:  `Return whether the given *value* is an integer type.`,
+				Function: stringutil.IsInteger,
+			}, {
+				Name:     `isFloat`,
+				Summary:  `Return whether the given *value* is a floating-point type.`,
+				Function: stringutil.IsFloat,
+			}, {
+				Name:     `isZero`,
+				Summary:  `Return whether the given *value* is an zero-valued variable.`,
+				Function: typeutil.IsZero,
+			}, {
+				Name:     `isEmpty`,
+				Summary:  `Return whether the given *value* is empty.`,
+				Function: typeutil.IsEmpty,
+			}, {
+				Name:     `isArray`,
+				Summary:  `Return whether the given *value* is an iterable array or slice.`,
+				Function: typeutil.IsArray,
+			}, {
+				Name:    `isMap`,
+				Summary: `Return whether the given *value* is a key-value map type.`,
+				Function: func(value interface{}) bool {
+					return typeutil.IsKind(value, reflect.Map)
+				},
+			}, {
+				Name:    `isTime`,
+				Summary: `Return whether the given *value* is parsable as a date/time value.`,
+				Function: func(value interface{}) bool {
+					return !typeutil.V(value).Time().IsZero()
+				},
+			}, {
+				Name:    `isDuration`,
+				Summary: `Return whether the given *value* is parsable as a duration.`,
+				Function: func(value interface{}) bool {
+					return (typeutil.V(value).Duration() != 0)
+				},
+			}, {
+				Name:     `autotype`,
+				Summary:  `Attempt to automatically determine the type if *value* and return the converted output.`,
+				Function: stringutil.Autotype,
+			}, {
+				Name:     `asStr`,
+				Summary:  `Return the *value* as a string.`,
+				Function: stringutil.ToString,
+			}, {
+				Name:    `asInt`,
+				Summary: `Attempt to convert the given *value* to an integer.`,
+				Function: func(value interface{}) (int64, error) {
+					if v, err := stringutil.ConvertToFloat(value); err == nil {
+						return int64(v), nil
+					} else {
+						return 0, err
+					}
+				},
+			}, {
+				Name:     `asFloat`,
+				Summary:  `Attempt to convert the given *value* to a floating-point number.`,
+				Function: stringutil.ConvertToFloat,
+			}, {
+				Name:     `asBool`,
+				Summary:  `Attempt to convert the given *value* to a boolean value.`,
+				Function: stringutil.ConvertToBool,
+			}, {
+				Name:     `asTime`,
+				Summary:  `Attempt to parse the given *value* as a date/time value.`,
+				Function: stringutil.ConvertToTime,
+			}, {
+				Name:     `asDuration`,
+				Summary:  `Attempt to parse the given *value* as a time duration.`,
+				Function: timeutil.ParseDuration,
+			},
+		},
 	}
 
-	// fn isTime: Return whether the given *value* is parsable as a date/time value.
-	rv[`isTime`] = func(value interface{}) bool {
-		return !typeutil.V(value).Time().IsZero()
-	}
-
-	// fn isDuration: Return whether the given *value* is parsable as a duration.
-	rv[`isDuration`] = func(value interface{}) bool {
-		return (typeutil.V(value).Duration() != 0)
-	}
-
-	// fn autotype: Attempt to automatically determine the type if *value* and return the converted output.
-	rv[`autotype`] = stringutil.Autotype
-
-	// fn asStr: Return the *value* as a string.
-	rv[`asStr`] = stringutil.ToString
-
-	// fn asInt: Attempt to convert the given *value* to an integer.
-	rv[`asInt`] = func(value interface{}) (int64, error) {
-		if v, err := stringutil.ConvertToFloat(value); err == nil {
-			return int64(v), nil
-		} else {
-			return 0, err
-		}
-	}
-
-	// fn asFloat: Attempt to convert the given *value* to a floating-point number.
-	rv[`asFloat`] = stringutil.ConvertToFloat
-
-	// fn asBool: Attempt to convert the given *value* to a boolean value.
-	rv[`asBool`] = stringutil.ConvertToBool
-
-	// fn asTime: Attempt to parse the given *value* as a date/time value.
-	rv[`asTime`] = stringutil.ConvertToTime
-
-	// fn asDuration: Attempt to parse the given *value* as a time duration.
-	rv[`asDuration`] = timeutil.ParseDuration
-
-	rv[`s`] = rv[`asStr`]
-	rv[`i`] = rv[`asInt`]
-	rv[`f`] = rv[`asFloat`]
-	rv[`b`] = rv[`asBool`]
-	rv[`t`] = rv[`asTime`]
-	rv[`d`] = rv[`asDuration`]
 }
