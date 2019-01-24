@@ -1,3830 +1,1645 @@
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous">
-  </script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous">
-  </script>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-  <link rel="stylesheet" href="/diecast/style.css" type="text/css">
-  <link rel="stylesheet" href="/style.scss" type="text/css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <link rel="stylesheet" href="/diecast/style.css" type="text/css">
+    <link rel="stylesheet" href="/style.scss" type="text/css">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg sticky-top bg-diecast">
-  <a class="navbar-brand" href="/">
-    <img src="/diecast/src/assets/img/diecast-text-dark-bg-36.png">
-  </a>
-</nav>
-<div class="container-fluid">
-<div class="row">
-<nav
+    <nav class="navbar navbar-expand-lg sticky-top bg-diecast">
+        <a class="navbar-brand" href="/">
+            <img src="/diecast/src/assets/img/diecast-text-dark-bg-36.png">
+        </a>
+    </nav>
+    <div class="container-fluid">
+        <div class="row">
+            <nav
                 id="sidebar"
                 class="navbar navbar-light bg-diecast-dark col-md-3 col-xl-2 align-items-start d-none d-sm-block"
             >
-  <nav class="nav nav-pills flex-column">
-    <a class="nav-link" href="#introduction">
-      Introduction
-    </a>
-    <a class="nav-link" href="#installation">
-      Installation
-    </a>
-    <a class="nav-link" href="#getting-started">
-      Getting Started
-    </a>
-    <a class="nav-link" href="#url-structure">
-      URL Structure
-    </a>
-    <a class="nav-link" href="#configuration">
-      Configuration
-    </a>
-    <a class="nav-link" href="#templating">
-      Templating
-    </a>
-    <a class="nav-link" href="#bindings">
-      Bindings
-    </a>
-    <a class="nav-link" href="#funcref">
-      Functions
-    </a>
-    <nav class="nav nav-pills flex-column ml-4">
-      <a class="nav-link" href="#string-functions">
-        String Functions
-      </a>
-      <a class="nav-link" href="#arrays-and-objects">
-        Arrays and Objects
-      </a>
-      <a class="nav-link" href="#time-functions">
-        Time Functions
-      </a>
-      <a class="nav-link" href="#type-comparison-and-manipulation">
-        Type Comparison and Manipulation
-      </a>
-      <a class="nav-link" href="#encoding-and-decoding">
-        Encoding and Decoding
-      </a>
-      <a class="nav-link" href="#file-path-manipulation">
-        File Path Manipulation
-      </a>
-      <a class="nav-link" href="#color-manipulation">
-        Color Manipulation
-      </a>
-      <a class="nav-link" href="#math-functions">
-        Math Functions
-      </a>
-      <a class="nav-link" href="#hashing-and-cryptography">
-        Hashing and Cryptography
-      </a>
-    </nav>
-  </nav>
-</nav>
-<div class="col" id="content" data-spy="scroll" data-target="#sidebar" data-offset="50">
-<div class="col-xl-8">
-<html>
-  <head>
-  </head>
-  <body>
-    <h2 id="introduction">
-      Introduction
-    </h2>
-    <p>
-      Diecast is a web server that allows you to render a directory tree of template files into HTML, CSS or anything other text-based media in real-time.  Data can be retrieved from remote sources during the template rendering process, creating dynamic web pages built by consuming APIs and remote files without the need to use client-side Javascript/AJAX calls or an intermediate server framework.
-    </p>
-    <h2 id="installation">
-      Installation
-    </h2>
-    <p>
-    </p>
-    <details>
-      <summary>
-        Golang / via 
-        <code>
-          go get
-        </code>
-      </summary>
-      <code>
-            go get github.com/ghetzel/diecast/diecast
-      </code>
-    </details>
-    <details>
-      <summary>
-        macOS / Homebrew
-      </summary>
-    </details>
-    <details>
-      <summary>
-        Windows
-      </summary>
-    </details>
-    <details>
-      <summary>
-        Linux
-      </summary>
-    </details>
-    <details>
-      <summary>
-        FreeBSD
-      </summary>
-    </details>
-    <details>
-      <summary>
-        Binaries
-      </summary>
-    </details>
-    <details>
-      <summary>
-        From Source
-      </summary>
-    </details>
-    <p>
-    </p>
-    <h2 id="getting-started">
-      Getting Started
-    </h2>
-    <p>
-      Building a site using Diecast begins (and, to some extent, ends) with putting files in a directory.  When the 
-      <code>
-        diecast
-      </code>
-       command is run in this directory, a local production-ready webserver will be started and the contents of the directory will be served.  If no other filenames or paths are requested, Diecast will look for and attempt to serve the file 
-      <code>
-        index.html
-      </code>
-      .
-    </p>
-    <h2 id="url-structure">
-      URL Structure
-    </h2>
-    <p>
-      Diecast does not have a concept of URL path routing, but rather strives to enforce simple, linear hierarchies by exposing the working directory directly as routable paths.  For example, if a user visits the path 
-      <code>
-        /users/list
-      </code>
-      , Diecast will look for files to serve in the following order:
-    </p>
-    <ul>
-      <li>
-        <code>
-          ./users/list/index.html
-        </code>
-      </li>
-      <li>
-        <code>
-          ./users/list.html
-        </code>
-      </li>
-      <li>
-        <code>
-          ./_errors/404.html
-        </code>
-      </li>
-      <li>
-        <code>
-          ./_errors/4xx.html
-        </code>
-      </li>
-      <li>
-        <code>
-          ./_errors/default.html
-        </code>
-      </li>
-    </ul>
-    <p>
-      The first matching file from the list above will be served.
-    </p>
-    <h2 id="configuration">
-      Configuration
-    </h2>
-    <p>
-      Diecast is configured by placing a file called 
-      <code>
-        diecast.yml
-      </code>
-       in the same directory that the 
-      <code>
-        diecast
-      </code>
-       command is run, or by specifying a filename with the 
-      <code>
-        --config
-      </code>
-       command line flag.  This file is used to adjust how Diecast renders templates and when, as well as setting up options for how files are accessed and from where.  For more details, see the 
-      <a href="/examples/diecast.sample.yml" rel="nofollow">
-        Example Config File
-      </a>
-      .
-    </p>
-    <h2 id="templating">
-      Templating
-    </h2>
-    <p>
-      Beyond merely acting as a simple file server, Diecast comes with a rich templating environment that allows for complex sites to be built in a composable way.  The default templating language used by Diecast is 
-      <a href="https://golang.org/pkg/text/template/" rel="nofollow">
-        Golang’s built-in 
-        <code>
-          text/template
-        </code>
-         package.
-      </a>
-      .  Templates are plain text files that reside in the working directory, and consist of the template content, and optionally a header section called 
-      <em>
-        front matter
-      </em>
-      .  These headers are used to specify template-specific data such as predefined data structures, paths of other templates to include, rendering options, and the inclusion of remote data via 
-      <a href="#Bindings" rel="nofollow">
-        bindings
-      </a>
-      .  An example template looks like this:
-    </p>
-    <pre>
-      <code>
-        ---
-        layout: mobile-v1
-        bindings:
-        -   name:     members
-            resource: /api/members.json
-        postprocessors:
-        - trim-empty-lines
-        - prettify-html
-        ---
-        &lt;!DOCTYPE html&gt;
-        &lt;html&gt;
-        &lt;body&gt;
-            &lt;ul&gt;
-            {{ range $member := $.bindings.members }}
-                &lt;li&gt;{{ $member }}&lt;/li&gt;
-            {{ end }}
-            &lt;/ul&gt;
-        &lt;/body&gt;
-        &lt;/html&gt;
-      </code>
-    </pre>
-    <h3 id="language-overview">
-      Language Overview
-    </h3>
-    <p>
-      Golang’s 
-      <code>
-        text/template
-      </code>
-       package provides a syntactically-familiar and highly performant templating language.  When rendering HTML, CSS, or Javascript documents, the 
-      <code>
-        html/template
-      </code>
-       parser is used.  This is the exact same language, but offers extensive context-aware automatic code escaping capabilities that ensure the output is safe against many common code injection techniques.  This is especially useful when using templates to render user-defined input.
-    </p>
-    <h4 id="intro-to-text-template">
-      Intro to 
-      <code>
-        text/template
-      </code>
-    </h4>
-    <p>
-      The built-in templating language should be familiar to those coming from a background in other templating languages like 
-      <a href="https://jekyllrb.com/" rel="nofollow">
-        Jekyll
-      </a>
-      , 
-      <a href="http://jinja.pocoo.org/docs/2.10/" rel="nofollow">
-        Jinja2
-      </a>
-      , and 
-      <a href="https://mustache.github.io/" rel="nofollow">
-        Mustache
-      </a>
-      .  Below is a quick guide on the high-level language constructs.  For detailed information, check out the 
-      <a href="https://golang.org/pkg/text/template/#pkg-overview" rel="nofollow">
-        Golang 
-        <code>
-          text/template
-        </code>
-         Language Overview
-      </a>
-      .
-    </p>
-    <h5 id="output-text">
-      Output Text
-    </h5>
-    <pre>
-      <code>
-        Hello {{ $name }}! Today is {{ $date }}.
-      </code>
-    </pre>
-    <h5 id="conditionals-if-else-if-else">
-      Conditionals (if/else if/else)
-    </h5>
-    <pre>
-      <code>
-        {{ if $pending }}
-        Access Pending
-        {{ else if $allowed }}
-        Access Granted
-        {{ else }}
-        Access Denied
+                <nav class="nav nav-pills flex-column">
+                    <a class="nav-link" href="#introduction">Introduction</a>
+                    <a class="nav-link" href="#installation">Installation</a>
+                    <a class="nav-link" href="#getting-started">Getting Started</a>
+                    <a class="nav-link" href="#url-structure">URL Structure</a>
+                    <a class="nav-link" href="#configuration">Configuration</a>
+                    <a class="nav-link" href="#templating">Templating</a>
+                    <a class="nav-link" href="#bindings">Bindings</a>
+                    <a class="nav-link" href="#funcref">Functions</a>
+                    <nav class="nav nav-pills flex-column ml-4">
+                        <a class="nav-link" href="#string-functions">String Functions</a>
+                        <a class="nav-link" href="#arrays-and-objects">Arrays and Objects</a>
+                        <a class="nav-link" href="#time-functions">Time Functions</a>
+                        <a class="nav-link" href="#type-comparison-and-manipulation">Type Comparison and Manipulation</a>
+                        <a class="nav-link" href="#encoding-and-decoding">Encoding and Decoding</a>
+                        <a class="nav-link" href="#file-path-manipulation">File Path Manipulation</a>
+                        <a class="nav-link" href="#color-manipulation">Color Manipulation</a>
+                        <a class="nav-link" href="#math-functions">Math Functions</a>
+                        <a class="nav-link" href="#hashing-and-cryptography">Hashing and Cryptography</a>
+                    </nav>
+                </nav>
+            </nav>
+            <div class="col" id="content" data-spy="scroll" data-target="#sidebar" data-offset="50">
+                <div class="col-xl-8">
+<html><head></head><body>
+<h2 id="introduction">Introduction</h2>
+<p>Diecast is a web server that allows you to render a directory tree of template files into HTML, CSS or anything other text-based media in real-time.  Data can be retrieved from remote sources during the template rendering process, creating dynamic web pages built by consuming APIs and remote files without the need to use client-side Javascript/AJAX calls or an intermediate server framework.</p>
+<h2 id="installation">Installation</h2>
+<p></p><details>
+    <summary>Golang / via <code>go get</code></summary>
+    <code>
+    go get github.com/ghetzel/diecast/diecast
+</code>
+</details>
+<details>
+    <summary>macOS / Homebrew</summary>
+</details>
+<details>
+    <summary>Windows</summary>
+</details>
+<details>
+    <summary>Linux</summary>
+</details>
+<details>
+    <summary>FreeBSD</summary>
+</details>
+<details>
+    <summary>Binaries</summary>
+</details>
+<details>
+    <summary>From Source</summary>
+</details><p></p>
+<h2 id="getting-started">Getting Started</h2>
+<p>Building a site using Diecast begins (and, to some extent, ends) with putting files in a directory.  When the <code>diecast</code> command is run in this directory, a local production-ready webserver will be started and the contents of the directory will be served.  If no other filenames or paths are requested, Diecast will look for and attempt to serve the file <code>index.html</code>.</p>
+<h2 id="url-structure">URL Structure</h2>
+<p>Diecast does not have a concept of URL path routing, but rather strives to enforce simple, linear hierarchies by exposing the working directory directly as routable paths.  For example, if a user visits the path <code>/users/list</code>, Diecast will look for files to serve in the following order:</p>
+<ul>
+<li><code>./users/list/index.html</code></li>
+<li><code>./users/list.html</code></li>
+<li><code>./_errors/404.html</code></li>
+<li><code>./_errors/4xx.html</code></li>
+<li><code>./_errors/default.html</code></li>
+</ul>
+<p>The first matching file from the list above will be served.</p>
+<h2 id="configuration">Configuration</h2>
+<p>Diecast is configured by placing a file called <code>diecast.yml</code> in the same directory that the <code>diecast</code> command is run, or by specifying a filename with the <code>--config</code> command line flag.  This file is used to adjust how Diecast renders templates and when, as well as setting up options for how files are accessed and from where.  For more details, see the <a href="/examples/diecast.sample.yml" rel="nofollow">Example Config File</a>.</p>
+<h2 id="templating">Templating</h2>
+<p>Beyond merely acting as a simple file server, Diecast comes with a rich templating environment that allows for complex sites to be built in a composable way.  The default templating language used by Diecast is <a href="https://golang.org/pkg/text/template/" rel="nofollow">Golang’s built-in <code>text/template</code> package.</a>.  Templates are plain text files that reside in the working directory, and consist of the template content, and optionally a header section called <em>front matter</em>.  These headers are used to specify template-specific data such as predefined data structures, paths of other templates to include, rendering options, and the inclusion of remote data via <a href="#Bindings" rel="nofollow">bindings</a>.  An example template looks like this:</p>
+<pre><code>---
+layout: mobile-v1
+bindings:
+-   name:     members
+    resource: /api/members.json
+postprocessors:
+- trim-empty-lines
+- prettify-html
+---
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+    &lt;ul&gt;
+    {{ range $member := $.bindings.members }}
+        &lt;li&gt;{{ $member }}&lt;/li&gt;
+    {{ end }}
+    &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="language-overview">Language Overview</h3>
+<p>Golang’s <code>text/template</code> package provides a syntactically-familiar and highly performant templating language.  When rendering HTML, CSS, or Javascript documents, the <code>html/template</code> parser is used.  This is the exact same language, but offers extensive context-aware automatic code escaping capabilities that ensure the output is safe against many common code injection techniques.  This is especially useful when using templates to render user-defined input.</p>
+<h4 id="intro-to-text-template">Intro to <code>text/template</code></h4>
+<p>The built-in templating language should be familiar to those coming from a background in other templating languages like <a href="https://jekyllrb.com/" rel="nofollow">Jekyll</a>, <a href="http://jinja.pocoo.org/docs/2.10/" rel="nofollow">Jinja2</a>, and <a href="https://mustache.github.io/" rel="nofollow">Mustache</a>.  Below is a quick guide on the high-level language constructs.  For detailed information, check out the <a href="https://golang.org/pkg/text/template/#pkg-overview" rel="nofollow">Golang <code>text/template</code> Language Overview</a>.</p>
+<h5 id="output-text">Output Text</h5>
+<pre><code>Hello {{ $name }}! Today is {{ $date }}.
+</code></pre>
+<h5 id="conditionals-if-else-if-else">Conditionals (if/else if/else)</h5>
+<pre><code>{{ if $pending }}
+Access Pending
+{{ else if $allowed }}
+Access Granted
+{{ else }}
+Access Denied
+{{ end }}
+</code></pre>
+<h5 id="loops">Loops</h5>
+<pre><code>&lt;h2&gt;Members:&lt;/h2&gt;
+&lt;ul&gt;
+{{ range $name := $names }}
+    &lt;li&gt;{{ $name }}&lt;/li&gt;
+{{ end }}
+&lt;/ul&gt;
+&lt;h2&gt;Ranks:&lt;/h2&gt;
+&lt;ul&gt;
+{{ range $i, $name := $rankedNames }}
+    &lt;li&gt;{{ $i }}: {{ $name }}&lt;/li&gt;
+{{ end }}
+&lt;/ul&gt;
+</code></pre>
+<h5 id="functions">Functions</h5>
+<pre><code>Today is {{ now &#34;ymd&#34; }}, at {{ now &#34;timer&#34; }}.
+There are {{ count $names }} members.
+</code></pre>
+<h3 id="layouts">Layouts</h3>
+<p>In addition to rendering individual files as standalone pages, Diecast also supports layouts.  Layouts serve as wrapper templates for the files being rendered in a directory tree.  Their primary purpose is to eliminate copying and boilerplate code.  Layouts are stored in a top-level directory called <code>_layouts</code>.  If the layout <code>_layouts/default.html</code> is present, it will automatically be used by default (e.g.: without explicitly specifying it in the Front Matter) on all pages.  The layout for any page can be specified in the <code>layout</code> Front Matter property, and the special value <code>layout: none</code> will disable layouts entirely for that page.</p>
+<h3 id="page-object">Page Object</h3>
+<p>Diecast defines a global data structure in the <code>$.page</code> variable that can be used to provide site-wide values to templates.  The <code>page</code> structure can be defined in multiple places, allowing for the flexible expression of hierarchical data when rendering templates.  The <code>page</code> structure is inherited by child templates when rendering, and all values are deeply-merged together to form a single data structure for the template(s) to use.  For example, given the following files:</p>
+<pre><code># diecast.yml
+header:
+    page:
+        site_title: WELCOME TO MY WEBSITE
+</code></pre>
+<pre><code>---
+# _layouts/default.html
+page:
+    colors:
+    - red
+    - green
+    - blue
+---
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;{{ if $.page.title }}{{ $.page.title }} :: {{ end }}{{ $.page.site_title }}&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    {{ template &#34;content&#34; . }}
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<pre><code>---
+# index.html
+page:
+    title: Home
+---
+&lt;h1&gt;Hello World!&lt;/h1&gt;
+&lt;ul&gt;
+    {{ range $color := $.page.colors }}
+    &lt;li style=&#34;color: {{ $color }}&#34;&gt;{{ $color }}&lt;/li&gt;
+    {{ end }}
+&lt;/ul&gt;
+</code></pre>
+<p>The final <code>page</code> data structure would look like this immediately before rendering <code>index.html</code>:</p>
+<pre><code>page:
+    site_title: WELCOME TO MY WEBSITE
+    colors:
+    - red
+    - green
+    - blue
+    title: Home
+</code></pre>
+<p>…and the rendered output for <code>index.html</code> would look like this:</p>
+<pre><code>&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Home :: WELCOME TO MY WEBSITE&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Hello World!&lt;/h1&gt;
+    &lt;ul&gt;
+        &lt;li style=&#34;color: red&#34;&gt;red&lt;/li&gt;
+        &lt;li style=&#34;color: green&#34;&gt;green&lt;/li&gt;
+        &lt;li style=&#34;color: blue&#34;&gt;blue&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h2 id="bindings">Bindings</h2>
+<p>Bindings are one of the most important concepts in Diecast.  Bindings (short for <em>data bindings</em>) are directives added to the Front Matter of layouts and templates that specify remote URLs to retrieve (via an HTTP client built in to <code>diecast</code>), as well as how to handle parsing the response data and what to do about errors.  This concept is extremely powerful, in that it allows you to create complex data-driven sites easily and cleanly by treating remote data from RESTful APIs and other sources as first-class citizens in the templating language.</p>
+<h3 id="overview">Overview</h3>
+<p>Bindings are specified in the <code>bindings</code> array in the Front Matter of layouts and template files.  Here is a basic example that will perform an HTTP GET against a URL, parse the output, and store the parsed results in a variable that can be used anywhere inside the template.</p>
+<pre><code>---
+bindings:
+-   name:     todos
+    resource: https://jsonplaceholder.typicode.com/todos/
+---
+&lt;h1&gt;TODO List&lt;/h1&gt;
+&lt;ul&gt;
+{{ range $todo := $.bindings.todos }}
+    &lt;li
+        {{ if $todo.completed }}
+        style=&#34;text-decoration: line-through;&#34;
         {{ end }}
-      </code>
-    </pre>
-    <h5 id="loops">
-      Loops
-    </h5>
-    <pre>
-      <code>
-        &lt;h2&gt;Members:&lt;/h2&gt;
-        &lt;ul&gt;
-        {{ range $name := $names }}
-            &lt;li&gt;{{ $name }}&lt;/li&gt;
-        {{ end }}
-        &lt;/ul&gt;
-        &lt;h2&gt;Ranks:&lt;/h2&gt;
-        &lt;ul&gt;
-        {{ range $i, $name := $rankedNames }}
-            &lt;li&gt;{{ $i }}: {{ $name }}&lt;/li&gt;
-        {{ end }}
-        &lt;/ul&gt;
-      </code>
-    </pre>
-    <h5 id="functions">
-      Functions
-    </h5>
-    <pre>
-      <code>
-        Today is {{ now &#34;ymd&#34; }}, at {{ now &#34;timer&#34; }}.
-        There are {{ count $names }} members.
-      </code>
-    </pre>
-    <h3 id="layouts">
-      Layouts
-    </h3>
-    <p>
-      In addition to rendering individual files as standalone pages, Diecast also supports layouts.  Layouts serve as wrapper templates for the files being rendered in a directory tree.  Their primary purpose is to eliminate copying and boilerplate code.  Layouts are stored in a top-level directory called 
-      <code>
-        _layouts
-      </code>
-      .  If the layout 
-      <code>
-        _layouts/default.html
-      </code>
-       is present, it will automatically be used by default (e.g.: without explicitly specifying it in the Front Matter) on all pages.  The layout for any page can be specified in the 
-      <code>
-        layout
-      </code>
-       Front Matter property, and the special value 
-      <code>
-        layout: none
-      </code>
-       will disable layouts entirely for that page.
-    </p>
-    <h3 id="page-object">
-      Page Object
-    </h3>
-    <p>
-      Diecast defines a global data structure in the 
-      <code>
-        $.page
-      </code>
-       variable that can be used to provide site-wide values to templates.  The 
-      <code>
-        page
-      </code>
-       structure can be defined in multiple places, allowing for the flexible expression of hierarchical data when rendering templates.  The 
-      <code>
-        page
-      </code>
-       structure is inherited by child templates when rendering, and all values are deeply-merged together to form a single data structure for the template(s) to use.  For example, given the following files:
-    </p>
-    <pre>
-      <code>
-        # diecast.yml
-        header:
-            page:
-                site_title: WELCOME TO MY WEBSITE
-      </code>
-    </pre>
-    <pre>
-      <code>
-        ---
-        # _layouts/default.html
-        page:
-            colors:
-            - red
-            - green
-            - blue
-        ---
-        &lt;html&gt;
-        &lt;head&gt;
-            &lt;title&gt;{{ if $.page.title }}{{ $.page.title }} :: {{ end }}{{ $.page.site_title }}&lt;/title&gt;
-        &lt;/head&gt;
-        &lt;body&gt;
-            {{ template &#34;content&#34; . }}
-        &lt;/body&gt;
-        &lt;/html&gt;
-      </code>
-    </pre>
-    <pre>
-      <code>
-        ---
-        # index.html
-        page:
-            title: Home
-        ---
-        &lt;h1&gt;Hello World!&lt;/h1&gt;
-        &lt;ul&gt;
-            {{ range $color := $.page.colors }}
-            &lt;li style=&#34;color: {{ $color }}&#34;&gt;{{ $color }}&lt;/li&gt;
-            {{ end }}
-        &lt;/ul&gt;
-      </code>
-    </pre>
-    <p>
-      The final 
-      <code>
-        page
-      </code>
-       data structure would look like this immediately before rendering 
-      <code>
-        index.html
-      </code>
-      :
-    </p>
-    <pre>
-      <code>
-        page:
-            site_title: WELCOME TO MY WEBSITE
-            colors:
-            - red
-            - green
-            - blue
-            title: Home
-      </code>
-    </pre>
-    <p>
-      …and the rendered output for 
-      <code>
-        index.html
-      </code>
-       would look like this:
-    </p>
-    <pre>
-      <code>
-        &lt;html&gt;
-        &lt;head&gt;
-            &lt;title&gt;Home :: WELCOME TO MY WEBSITE&lt;/title&gt;
-        &lt;/head&gt;
-        &lt;body&gt;
-            &lt;h1&gt;Hello World!&lt;/h1&gt;
-            &lt;ul&gt;
-                &lt;li style=&#34;color: red&#34;&gt;red&lt;/li&gt;
-                &lt;li style=&#34;color: green&#34;&gt;green&lt;/li&gt;
-                &lt;li style=&#34;color: blue&#34;&gt;blue&lt;/li&gt;
-            &lt;/ul&gt;
-        &lt;/body&gt;
-        &lt;/html&gt;
-      </code>
-    </pre>
-    <h2 id="bindings">
-      Bindings
-    </h2>
-    <p>
-      Bindings are one of the most important concepts in Diecast.  Bindings (short for 
-      <em>
-        data bindings
-      </em>
-      ) are directives added to the Front Matter of layouts and templates that specify remote URLs to retrieve (via an HTTP client built in to 
-      <code>
-        diecast
-      </code>
-      ), as well as how to handle parsing the response data and what to do about errors.  This concept is extremely powerful, in that it allows you to create complex data-driven sites easily and cleanly by treating remote data from RESTful APIs and other sources as first-class citizens in the templating language.
-    </p>
-    <h3 id="overview">
-      Overview
-    </h3>
-    <p>
-      Bindings are specified in the 
-      <code>
-        bindings
-      </code>
-       array in the Front Matter of layouts and template files.  Here is a basic example that will perform an HTTP GET against a URL, parse the output, and store the parsed results in a variable that can be used anywhere inside the template.
-    </p>
-    <pre>
-      <code>
-        ---
-        bindings:
-        -   name:     todos
-            resource: https://jsonplaceholder.typicode.com/todos/
-        ---
-        &lt;h1&gt;TODO List&lt;/h1&gt;
-        &lt;ul&gt;
-        {{ range $todo := $.bindings.todos }}
-            &lt;li
-                {{ if $todo.completed }}
-                style=&#34;text-decoration: line-through;&#34;
-                {{ end }}
-            &gt;
-                {{ $todo.title }}
-            &lt;/li&gt;
-        {{ end }}
-        &lt;/ul&gt;
-      </code>
-    </pre>
-    <h3 id="controlling-the-request">
-      Controlling the Request
-    </h3>
-    <p>
-      The 
-      <code>
-        name
-      </code>
-       and 
-      <code>
-        resource
-      </code>
-       properties are required for a binding to run, but there are many other optional values supported that allow you to control how the request is performed, how the response if parsed (if at all), as well as what to do if an error occurs (e.g.: connection errors, timeouts, non-2xx HTTP statuses).  These properties are as follows:
-    </p>
-    <table class="table table-sm table-striped">
-      <thead>
-        <tr>
-          <th>
-            Property Name
-          </th>
-          <th>
-            Acceptable Values
-          </th>
-          <th>
-            Default
-          </th>
-          <th>
-            Description
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            <code>
-              body
-            </code>
-          </td>
-          <td>
-            Object
-          </td>
-          <td>
-            -
-          </td>
-          <td>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              fallback
-            </code>
-          </td>
-          <td>
-            Anything
-          </td>
-          <td>
-            -
-          </td>
-          <td>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              formatter
-            </code>
-          </td>
-          <td>
-            <code>
-              json
-            </code>
-            , 
-            <code>
-              form
-            </code>
-          </td>
-          <td>
-            <code>
-              json
-            </code>
-          </td>
-          <td>
-            Specify how the 
-            <code>
-              body
-            </code>
-             should be serialized before performing the request.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              if_status
-            </code>
-          </td>
-          <td>
-            Anything
-          </td>
-          <td>
-            -
-          </td>
-          <td>
-            Actions to take when specific HTTP response codes are encountered.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              insecure
-            </code>
-          </td>
-          <td>
-            <code>
-              true
-            </code>
-            , 
-            <code>
-              false
-            </code>
-          </td>
-          <td>
-            <code>
-              false
-            </code>
-          </td>
-          <td>
-            Whether SSL/TLS peer verification should be enforced.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              method
-            </code>
-          </td>
-          <td>
-            String
-          </td>
-          <td>
-            <code>
-              get
-            </code>
-          </td>
-          <td>
-            The HTTP method to use when making the request.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              no_template
-            </code>
-          </td>
-          <td>
-            <code>
-              true
-            </code>
-            , 
-            <code>
-              false
-            </code>
-          </td>
-          <td>
-            <code>
-              false
-            </code>
-          </td>
-          <td>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              not_if
-            </code>
-          </td>
-          <td>
-            String
-          </td>
-          <td>
-            -
-          </td>
-          <td>
-            If this value or expression yields a truthy value, the binding will not be evaluated.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              on_error
-            </code>
-          </td>
-          <td>
-            String
-          </td>
-          <td>
-            -
-          </td>
-          <td>
-            What to do if the request fails.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              only_if
-            </code>
-          </td>
-          <td>
-            String
-          </td>
-          <td>
-            -
-          </td>
-          <td>
-            Only evaluate if this value or expression yields a truthy value.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              optional
-            </code>
-          </td>
-          <td>
-            <code>
-              true
-            </code>
-            , 
-            <code>
-              false
-            </code>
-          </td>
-          <td>
-            <code>
-              false
-            </code>
-          </td>
-          <td>
-            Whether a response error causes the entire template render to fail.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              param_joiner
-            </code>
-          </td>
-          <td>
-            String
-          </td>
-          <td>
-            <code>
-              ;
-            </code>
-          </td>
-          <td>
-            When a key in 
-            <code>
-              params
-            </code>
-             is specified as an array, how should those array elements be joined into a single string value.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              params
-            </code>
-          </td>
-          <td>
-            Object
-          </td>
-          <td>
-            -
-          </td>
-          <td>
-            An object representing the query string parameters to append to the URL in 
-            <code>
-              resource
-            </code>
-            .  Keys may be any scalar value or array of scalar values.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              parser
-            </code>
-          </td>
-          <td>
-            <code>
-              json
-            </code>
-            , 
-            <code>
-              html
-            </code>
-            , 
-            <code>
-              text
-            </code>
-            , 
-            <code>
-              raw
-            </code>
-          </td>
-          <td>
-            <code>
-              json
-            </code>
-          </td>
-          <td>
-            Specify how the response body should be parsed into the binding variable.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              rawbody
-            </code>
-          </td>
-          <td>
-            String
-          </td>
-          <td>
-            -
-          </td>
-          <td>
-            The 
-            <em>
-              exact
-            </em>
-             string to send as the request body.
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <code>
-              skip_inherit_headers
-            </code>
-          </td>
-          <td>
-            <code>
-              true
-            </code>
-            , 
-            <code>
-              false
-            </code>
-          </td>
-          <td>
-            <code>
-              false
-            </code>
-          </td>
-          <td>
-            If true, no headers from the originating request to render the template will be included in this request, even if Header Passthrough is enabled.
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <h3 id="handling-response-codes-and-errors">
-      Handling Response Codes and Errors
-    </h3>
-    <h3 id="conditional-evaluation">
-      Conditional Evaluation
-    </h3>
-    <h3 id="repeaters">
-      Repeaters
-    </h3>
-    <h3 id="dynamic-variables">
-      Dynamic Variables
-    </h3>
-    <p>
-      Sometimes it is useful to be able to dynamically manipulate data during template evaluation.  Diecast has a set of functions that allow for custom data to be set, retrieved, and removed at runtime.
-    </p>
-    <h4 id="runtime-variable-functions">
-      Runtime Variable Functions
-    </h4>
-    <h5 id="var-varname-value">
-      <code>
-        var &#34;VARNAME&#34; [VALUE]
-      </code>
-    </h5>
-    <p>
-      The 
-      <code>
-        var
-      </code>
-       function declares a new variable with a given name, optionally setting it to an initial value.  If a value is not provided, the variable is set to a 
-      <code>
-        nil
-      </code>
-       value.  This is also how you can clear out the value of an existing variable.
-    </p>
-    <p>
-      The string defining the variable name is interpreted as a “dot.separated.path” that is used to set the value in a deeply-nested object.  For example, the following code:
-    </p>
-    <pre>
-      <code>
-        var &#34;user.auth.scheme&#34; &#34;basic&#34;
-      </code>
-    </pre>
-    <p>
-      …would produce the following object:
-    </p>
-    <pre>
-      <code>
-        {
-            &#34;vars&#34;: {
-                &#34;user&#34;: {
-                    &#34;auth&#34;: {
-                        &#34;scheme&#34;: &#34;basic&#34;
-                    }
-                }
+    &gt;
+        {{ $todo.title }}
+    &lt;/li&gt;
+{{ end }}
+&lt;/ul&gt;
+</code></pre>
+<h3 id="controlling-the-request">Controlling the Request</h3>
+<p>The <code>name</code> and <code>resource</code> properties are required for a binding to run, but there are many other optional values supported that allow you to control how the request is performed, how the response if parsed (if at all), as well as what to do if an error occurs (e.g.: connection errors, timeouts, non-2xx HTTP statuses).  These properties are as follows:</p>
+<table class="table table-sm table-striped">
+<thead>
+<tr>
+<th>Property Name</th>
+<th>Acceptable Values</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>body</code></td>
+<td>Object</td>
+<td>-</td>
+<td></td>
+</tr>
+<tr>
+<td><code>fallback</code></td>
+<td>Anything</td>
+<td>-</td>
+<td></td>
+</tr>
+<tr>
+<td><code>formatter</code></td>
+<td><code>json</code>, <code>form</code></td>
+<td><code>json</code></td>
+<td>Specify how the <code>body</code> should be serialized before performing the request.</td>
+</tr>
+<tr>
+<td><code>if_status</code></td>
+<td>Anything</td>
+<td>-</td>
+<td>Actions to take when specific HTTP response codes are encountered.</td>
+</tr>
+<tr>
+<td><code>insecure</code></td>
+<td><code>true</code>, <code>false</code></td>
+<td><code>false</code></td>
+<td>Whether SSL/TLS peer verification should be enforced.</td>
+</tr>
+<tr>
+<td><code>method</code></td>
+<td>String</td>
+<td><code>get</code></td>
+<td>The HTTP method to use when making the request.</td>
+</tr>
+<tr>
+<td><code>no_template</code></td>
+<td><code>true</code>, <code>false</code></td>
+<td><code>false</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>not_if</code></td>
+<td>String</td>
+<td>-</td>
+<td>If this value or expression yields a truthy value, the binding will not be evaluated.</td>
+</tr>
+<tr>
+<td><code>on_error</code></td>
+<td>String</td>
+<td>-</td>
+<td>What to do if the request fails.</td>
+</tr>
+<tr>
+<td><code>only_if</code></td>
+<td>String</td>
+<td>-</td>
+<td>Only evaluate if this value or expression yields a truthy value.</td>
+</tr>
+<tr>
+<td><code>optional</code></td>
+<td><code>true</code>, <code>false</code></td>
+<td><code>false</code></td>
+<td>Whether a response error causes the entire template render to fail.</td>
+</tr>
+<tr>
+<td><code>param_joiner</code></td>
+<td>String</td>
+<td><code>;</code></td>
+<td>When a key in <code>params</code> is specified as an array, how should those array elements be joined into a single string value.</td>
+</tr>
+<tr>
+<td><code>params</code></td>
+<td>Object</td>
+<td>-</td>
+<td>An object representing the query string parameters to append to the URL in <code>resource</code>.  Keys may be any scalar value or array of scalar values.</td>
+</tr>
+<tr>
+<td><code>parser</code></td>
+<td><code>json</code>, <code>html</code>, <code>text</code>, <code>raw</code></td>
+<td><code>json</code></td>
+<td>Specify how the response body should be parsed into the binding variable.</td>
+</tr>
+<tr>
+<td><code>rawbody</code></td>
+<td>String</td>
+<td>-</td>
+<td>The <em>exact</em> string to send as the request body.</td>
+</tr>
+<tr>
+<td><code>skip_inherit_headers</code></td>
+<td><code>true</code>, <code>false</code></td>
+<td><code>false</code></td>
+<td>If true, no headers from the originating request to render the template will be included in this request, even if Header Passthrough is enabled.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="handling-response-codes-and-errors">Handling Response Codes and Errors</h3>
+<h3 id="conditional-evaluation">Conditional Evaluation</h3>
+<h3 id="repeaters">Repeaters</h3>
+<h3 id="dynamic-variables">Dynamic Variables</h3>
+<p>Sometimes it is useful to be able to dynamically manipulate data during template evaluation.  Diecast has a set of functions that allow for custom data to be set, retrieved, and removed at runtime.</p>
+<h4 id="runtime-variable-functions">Runtime Variable Functions</h4>
+<h5 id="var-varname-value"><code>var &#34;VARNAME&#34; [VALUE]</code></h5>
+<p>The <code>var</code> function declares a new variable with a given name, optionally setting it to an initial value.  If a value is not provided, the variable is set to a <code>nil</code> value.  This is also how you can clear out the value of an existing variable.</p>
+<p>The string defining the variable name is interpreted as a “dot.separated.path” that is used to set the value in a deeply-nested object.  For example, the following code:</p>
+<pre><code>var &#34;user.auth.scheme&#34; &#34;basic&#34;
+</code></pre>
+<p>…would produce the following object:</p>
+<pre><code>{
+    &#34;vars&#34;: {
+        &#34;user&#34;: {
+            &#34;auth&#34;: {
+                &#34;scheme&#34;: &#34;basic&#34;
             }
         }
-      </code>
-    </pre>
-    <p>
-      …and would be accessible with the code 
-      <code>
-        {{ $.vars.user.auth.scheme }}
-      </code>
-    </p>
-    <h5 id="push-varname-value">
-      <code>
-        push &#34;VARNAME&#34; VALUE
-      </code>
-    </h5>
-    <p>
-      The 
-      <code>
-        push
-      </code>
-       function appends the given 
-      <em>
-        VALUE
-      </em>
-       to the variable at 
-      <em>
-        “VARNAME”
-      </em>
-      .  If the current value is nil, the result will be an array containing just the element 
-      <code>
-        [ VALUE ]
-      </code>
-      .  If the current value is not an array, it will first be converted to one.  Then 
-      <em>
-        VALUE
-      </em>
-       will be appended to the array.
-    </p>
-    <h5 id="pop-varname">
-      <code>
-        pop &#34;VARNAME&#34;
-      </code>
-    </h5>
-    <p>
-      The 
-      <code>
-        pop
-      </code>
-       function remove the last element from the array at variable 
-      <em>
-        “VARNAME”
-      </em>
-      .  This value will be returned, or if the array is non-existent or empty, will return 
-      <code>
-        nil
-      </code>
-      .
-    </p>
-    <h3 id="postprocessors">
-      Postprocessors
-    </h3>
-    <p>
-      Postprocessors are routines that are run after the template is rendered for a request, but before the response is returned to the client.  This allows for actions to be taken on the final output, processing it in various ways.
-    </p>
-    <h4 id="prettify-html">
-      Prettify HTML
-    </h4>
-    <p>
-      The 
-      <code>
-        prettify-html
-      </code>
-       postprocessor will treat the incoming document as HTML, running it through an autoformatter and autoindent routine.  This is useful for ensuring that well-formed and visually pleasing HTML is emitted from Diecast.
-    </p>
-    <h4 id="trim-empty-lines">
-      Trim Empty Lines
-    </h4>
-    <p>
-      The 
-      <code>
-        trim-empty-lines
-      </code>
-       postprocessor removes all lines from the final document that are zero-length or only contain whitespace.  This is especially useful when producing responses encoded as Tab-Separated Values (TSV) or Comma-Separated Values (CSV).
-    </p>
-    <h3 id="renderers">
-      Renderers
-    </h3>
-    <p>
-      Diecast supports various methods of converting the output of the rendered templates and layouts into a finished product that can be delivered to the client.  Renderers receive the rendered template as input and are responsible for writing 
-      <em>
-        something
-      </em>
-       to the client.
-    </p>
-    <h4 id="html">
-      HTML
-    </h4>
-    <p>
-      The HTML renderer ensures that external template content, that is, template data sourced from a variable or function, is escaped properly within the context of the type of file being processed (HTML, CSS, or Javascript.)  This makes user-defined content safe to use in Diecast because it will always be sanitized before being returned to the client.  The 
-      <code>
-        html
-      </code>
-       renderer is the default renderer if no other renderer is specified.
-    </p>
-    <h4 id="pdf">
-      PDF
-    </h4>
-    <p>
-      The 
-      <code>
-        pdf
-      </code>
-       renderer is used in tandem with the HTML renderer to convert the HTML page into a PDF document that is then returned to the client.
-    </p>
-    <h4 id="sass">
-      Sass
-    </h4>
-    <p>
-      The 
-      <code>
-        sass
-      </code>
-       renderer takes file or template output and compiles it on the fly using the 
-      <code>
-        libsass
-      </code>
-       library.  This is the default renderer for files matching the pattern 
-      <code>
-        *.scss
-      </code>
-      .
-    </p>
-    <h4 id="image-png-jpg-gif">
-      [ Image / PNG / JPG / GIF ]
-    </h4>
-    <h3 id="mounts">
-      Mounts
-    </h3>
-    <p>
-      Another useful feature of Diecast is its ability to expose multiple, overlapping file trees in one logical namespace.  These alternative file trees (called 
-      <em>
-        mounts
-      </em>
-      ) can be located locally or remotely, and through careful configuration of the scope and order of mounts, fairly complex serving configurations can be achieved.
-    </p>
-    <p>
-      For example, lets take a GET request to the path 
-      <code>
-        /assets/js/my-lib.js
-      </code>
-      .  By default, Diecast will look for this path relative to the working directory, and if the file is not found, will return an error.  However, a mount can be configured to handle this path (or its parent folder(s)), serving the file from another directory outside of the working directory, or from another server entirely.
-    </p>
-    <p>
-      Mounts can also be stacked, in which the URL path they handle refers to multiple possible locations.  When multiple mounts are eligible to handle a request, the requested file is passed to each mount in the order they are defined.  The first mount to successfully handle the file will do so.  This setup can be used to present multiple directories as a single logical one, as well as providing useful fallbacks and proxying capabilities granular to the individual file level.
-    </p>
-    <h4 id="file">
-      File
-    </h4>
-    <p>
-      The file mount type is used for mount sources that do not begin with a URL scheme.  This means paths like 
-      <code>
-        /usr/share/www/
-      </code>
-       or 
-      <code>
-        ./some/other/path
-      </code>
-      .  Consider the following mount configuration:
-    </p>
-    <pre>
-      <code>
-        mounts:
-        -   mount: /usr/share/www/
-            to:    /assets/
-      </code>
-    </pre>
-    <p>
-      A request for the file 
-      <code>
-        /assets/js/my-lib.js
-      </code>
-       would first attempt to find that file at the path 
-      <code>
-        /usr/share/www/js/my-lib.js
-      </code>
-      .  Note that the 
-      <code>
-        /assets/
-      </code>
-       part of the URL path was substituted for the value of the 
-      <code>
-        mount
-      </code>
-       key.
-    </p>
-    <h4 id="http">
-      HTTP
-    </h4>
-    <p>
-      The HTTP (aka 
-      <em>
-        proxy
-      </em>
-      ) mount type is used for sources starting with 
-      <code>
-        http://
-      </code>
-       or 
-      <code>
-        https://
-      </code>
-      .  In this configuration, the behavior matches that of the File type, except the content is sourced by making an HTTP request to a URL.  Consider the following mount configuration:
-    </p>
-    <pre>
-      <code>
-        mounts:
-        -   mount: https://assets.example.com/
-            to:    /assets/
-      </code>
-    </pre>
-    <p>
-      A request for the file 
-      <code>
-        /assets/js/my-lib.js
-      </code>
-       here would result in an HTTP GET request to 
-      <code>
-        https://assets.example.com/assets/js/my-lib.js
-      </code>
-      .  If the response is a 2xx-series status code, the response body will be sent to the client as if the file resided on the server itself.  Note that in this case, the entire original URL path is sent along to the remote server.
-    </p>
-    <p>
-      This is useful because it allows Diecast to act as a proxy server, while still layering on features like additional mounts and authenticators.  This means Diecast can be configured to proxy a website, but intercept and substitute requests for specific files on a case-by-case basis.  For example:
-    </p>
-    <pre>
-      <code>
-        mounts:
-        -   mount: /usr/share/custom-google-logos/
-            to:    /logos/
-        -   mount: https://google.com
-            to:    /
-      </code>
-    </pre>
-    <p>
-      In this configuration, a request to 
-      <code>
-        http://localhost:28419/
-      </code>
-       will load Google’s homepage, but when the browser attempts to load the logo (typically located at 
-      <code>
-        /logos/...
-      </code>
-      ), 
-      <em>
-        that
-      </em>
-       request will be routed to the local 
-      <code>
-        /usr/share/custom-google-logos/
-      </code>
-       directory.  So if the logo for that day is at 
-      <code>
-        /logos/doodles/2018/something.png
-      </code>
-      , and the file 
-      <code>
-        /usr/share/custom-google-logos/doodles/2018/something.png
-      </code>
-       exists, that file will be served in lieu of the version on Google’s servers.
-    </p>
-  </body>
-</html>
-<a name="funcref">
-</a>
-<h2>
-  Function Reference
-</h2>
+    }
+}
+</code></pre>
+<p>…and would be accessible with the code <code>{{ $.vars.user.auth.scheme }}</code></p>
+<h5 id="push-varname-value"><code>push &#34;VARNAME&#34; VALUE</code></h5>
+<p>The <code>push</code> function appends the given <em>VALUE</em> to the variable at <em>“VARNAME”</em>.  If the current value is nil, the result will be an array containing just the element <code>[ VALUE ]</code>.  If the current value is not an array, it will first be converted to one.  Then <em>VALUE</em> will be appended to the array.</p>
+<h5 id="pop-varname"><code>pop &#34;VARNAME&#34;</code></h5>
+<p>The <code>pop</code> function remove the last element from the array at variable <em>“VARNAME”</em>.  This value will be returned, or if the array is non-existent or empty, will return <code>nil</code>.</p>
+<h3 id="postprocessors">Postprocessors</h3>
+<p>Postprocessors are routines that are run after the template is rendered for a request, but before the response is returned to the client.  This allows for actions to be taken on the final output, processing it in various ways.</p>
+<h4 id="prettify-html">Prettify HTML</h4>
+<p>The <code>prettify-html</code> postprocessor will treat the incoming document as HTML, running it through an autoformatter and autoindent routine.  This is useful for ensuring that well-formed and visually pleasing HTML is emitted from Diecast.</p>
+<h4 id="trim-empty-lines">Trim Empty Lines</h4>
+<p>The <code>trim-empty-lines</code> postprocessor removes all lines from the final document that are zero-length or only contain whitespace.  This is especially useful when producing responses encoded as Tab-Separated Values (TSV) or Comma-Separated Values (CSV).</p>
+<h3 id="renderers">Renderers</h3>
+<p>Diecast supports various methods of converting the output of the rendered templates and layouts into a finished product that can be delivered to the client.  Renderers receive the rendered template as input and are responsible for writing <em>something</em> to the client.</p>
+<h4 id="html">HTML</h4>
+<p>The HTML renderer ensures that external template content, that is, template data sourced from a variable or function, is escaped properly within the context of the type of file being processed (HTML, CSS, or Javascript.)  This makes user-defined content safe to use in Diecast because it will always be sanitized before being returned to the client.  The <code>html</code> renderer is the default renderer if no other renderer is specified.</p>
+<h4 id="pdf">PDF</h4>
+<p>The <code>pdf</code> renderer is used in tandem with the HTML renderer to convert the HTML page into a PDF document that is then returned to the client.</p>
+<h4 id="sass">Sass</h4>
+<p>The <code>sass</code> renderer takes file or template output and compiles it on the fly using the <code>libsass</code> library.  This is the default renderer for files matching the pattern <code>*.scss</code>.</p>
+<h4 id="image-png-jpg-gif">[ Image / PNG / JPG / GIF ]</h4>
+<h3 id="mounts">Mounts</h3>
+<p>Another useful feature of Diecast is its ability to expose multiple, overlapping file trees in one logical namespace.  These alternative file trees (called <em>mounts</em>) can be located locally or remotely, and through careful configuration of the scope and order of mounts, fairly complex serving configurations can be achieved.</p>
+<p>For example, lets take a GET request to the path <code>/assets/js/my-lib.js</code>.  By default, Diecast will look for this path relative to the working directory, and if the file is not found, will return an error.  However, a mount can be configured to handle this path (or its parent folder(s)), serving the file from another directory outside of the working directory, or from another server entirely.</p>
+<p>Mounts can also be stacked, in which the URL path they handle refers to multiple possible locations.  When multiple mounts are eligible to handle a request, the requested file is passed to each mount in the order they are defined.  The first mount to successfully handle the file will do so.  This setup can be used to present multiple directories as a single logical one, as well as providing useful fallbacks and proxying capabilities granular to the individual file level.</p>
+<h4 id="file">File</h4>
+<p>The file mount type is used for mount sources that do not begin with a URL scheme.  This means paths like <code>/usr/share/www/</code> or <code>./some/other/path</code>.  Consider the following mount configuration:</p>
+<pre><code>mounts:
+-   mount: /usr/share/www/
+    to:    /assets/
+</code></pre>
+<p>A request for the file <code>/assets/js/my-lib.js</code> would first attempt to find that file at the path <code>/usr/share/www/js/my-lib.js</code>.  Note that the <code>/assets/</code> part of the URL path was substituted for the value of the <code>mount</code> key.</p>
+<h4 id="http">HTTP</h4>
+<p>The HTTP (aka <em>proxy</em>) mount type is used for sources starting with <code>http://</code> or <code>https://</code>.  In this configuration, the behavior matches that of the File type, except the content is sourced by making an HTTP request to a URL.  Consider the following mount configuration:</p>
+<pre><code>mounts:
+-   mount: https://assets.example.com/
+    to:    /assets/
+</code></pre>
+<p>A request for the file <code>/assets/js/my-lib.js</code> here would result in an HTTP GET request to <code>https://assets.example.com/assets/js/my-lib.js</code>.  If the response is a 2xx-series status code, the response body will be sent to the client as if the file resided on the server itself.  Note that in this case, the entire original URL path is sent along to the remote server.</p>
+<p>This is useful because it allows Diecast to act as a proxy server, while still layering on features like additional mounts and authenticators.  This means Diecast can be configured to proxy a website, but intercept and substitute requests for specific files on a case-by-case basis.  For example:</p>
+<pre><code>mounts:
+-   mount: /usr/share/custom-google-logos/
+    to:    /logos/
+-   mount: https://google.com
+    to:    /
+</code></pre>
+<p>In this configuration, a request to <code>http://localhost:28419/</code> will load Google’s homepage, but when the browser attempts to load the logo (typically located at <code>/logos/...</code>), <em>that</em> request will be routed to the local <code>/usr/share/custom-google-logos/</code> directory.  So if the logo for that day is at <code>/logos/doodles/2018/something.png</code>, and the file <code>/usr/share/custom-google-logos/doodles/2018/something.png</code> exists, that file will be served in lieu of the version on Google’s servers.</p>
+</body></html>
+<a name="funcref"></a>
+<h2>Function Reference</h2>
 <section class="group" id="string-functions"  >
-<header>
-  <h3>
-    String Functions
-  </h3>
-  <p>
-    <p>
-      Used to modify strings in various ways. Whitespace trimming, substring and concatenation, conversion, and find &amp; replace functions can all be found here.
-    </p>
-  </p>
-</header>
-<h4>
-  Functions
-</h4>
-<section class="function">
-<h5>
-  <code>
-    autobyte
-  </code>
-</h5>
-<p>
-  Attempt to convert the given number to a string representation of the value interpreted as bytes. The unit will be automatically determined as the closest one that produces a value less than 1024 in that unit. The second argument is a printf-style format string that is used when the converted number is being stringified.  By specifying precision and leading digit values to the 
-  <code>
-    %f
-  </code>
-   format token, you can control how many decimal places are in the resulting output.
+    <header>
+        <h3>String Functions</h3>
+        <p><p>Used to modify strings in various ways. Whitespace trimming, substring and concatenation, conversion, and find &amp; replace functions can all be found here.</p>
 </p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      bytes
-    </th>
-    <td>
-      number
-    </td>
-    <td>
-      A number representing the value to format, in bytes.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    format
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    A printf-style format string used to represent the output number.
-  </td>
-</tr>
-<h5>
-  Examples
-</h5>
-<dl class="examples">
-  <dd>
-    autobyte 2490368 &#34;%.2f&#34;
-  </dd>
-  <dt>
-    2.38MB
-  </dt>
-</dl>
-<section class="function">
-  <h5>
-    <code>
-      camelize
-    </code>
-  </h5>
-  <p>
-    Reformat the given string by changing it into camelCase capitalization.
-  </p>
-  <h5>
-    Arguments
-  </h5>
-  <table class="table table-sm">
-    <thead>
-      <tr>
-        <th class="col-2">
-          Name
-        </th>
-        <th class="col-2">
-          Data Type
-        </th>
-        <th class="col">
-          Description
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>
-          in
-        </th>
-        <td>
-          string
-        </td>
-        <td>
-          The input string to reformat.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-<section class="function">
-  <h5>
-    <code>
-      concat
-    </code>
-  </h5>
-  <p>
-    Return the string that results in stringifying and joining all of the given arguments.
-  </p>
-  <h5>
-    Arguments
-  </h5>
-  <table class="table table-sm">
-    <thead>
-      <tr>
-        <th class="col-2">
-          Name
-        </th>
-        <th class="col-2">
-          Data Type
-        </th>
-        <th class="col">
-          Description
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>
-          strings
-        </th>
-        <td>
-          any (1+)
-        </td>
-        <td>
-          One or more values to be stringified and joined together.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <h5>
-    Examples
-  </h5>
-  <dl class="examples">
-    <dd>
-      concat &#34;There are &#34; 5 &#34; apples, yes it&#39;s &#34; true
-    </dd>
-    <dt>
-      There are 5 apples, yes it&#39;s true.
-    </dt>
-  </dl>
-</section>
-<section class="function">
-<h5>
-  <code>
-    contains
-  </code>
-</h5>
-<p>
-  Return true of the given string contains another string.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      input
-    </th>
-    <td>
-      string
-    </td>
-    <td>
-      The string to search within.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    substring
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The substring to find in the `input` string.
-  </td>
-</tr>
-<section class="function">
-<h5>
-  <code>
-    elide
-  </code>
-</h5>
-<p>
-  Takes an input string and ensures it is no longer than a given number of characters.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      input
-    </th>
-    <td>
-      string
-    </td>
-    <td>
-      The string to (possibly) truncate.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    charcount
-  </th>
-  <td>
-    integer
-  </td>
-  <td>
-    The maximum number of character that can appear in a string before it is truncated.
-  </td>
-</tr>
-<h5>
-  Examples
-</h5>
-<dl class="examples">
-  <dd>
-    elide &#34;This is a sentence that contains fifty characters.&#34; 18
-  </dd>
-  <dt>
-    This is a sentence
-  </dt>
-  <dd>
-    elide &#34;hello.&#34; 16
-  </dd>
-  <dt>
-    hello.
-  </dt>
-</dl>
-<section class="function">
-<h5>
-  <code>
-    elideWords
-  </code>
-</h5>
-<p>
-  Takes an input string and counts the number of words in it. If that number exceeds a given count, the string will be truncated to be equal to that number of words.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      input
-    </th>
-    <td>
-      string
-    </td>
-    <td>
-      The string to (possibly) truncate.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    wordcount
-  </th>
-  <td>
-    integer
-  </td>
-  <td>
-    The maximum number of words that can appear in the string before it is truncated.
-  </td>
-</tr>
-<h5>
-  Examples
-</h5>
-<dl class="examples">
-  <dd>
-    elideWords &#34;This is a sentence that contains eight words.&#34; 5
-  </dd>
-  <dt>
-    This is a sentence that
-  </dt>
-  <dd>
-    elideWords &#34;Hello world&#34; 10
-  </dd>
-  <dt>
-    Hello world
-  </dt>
-</dl>
-<section class="function">
-<h5>
-  <code>
-    hasPrefix
-  </code>
-</h5>
-<p>
-  Return true if the given string begins with the given prefix.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      in
-    </th>
-    <td>
-      string
-    </td>
-    <td>
-      The input string to test.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    prefix
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The prefix to test for the presence of.
-  </td>
-</tr>
-<section class="function">
-<h5>
-  <code>
-    hasSuffix
-  </code>
-</h5>
-<p>
-  Return true if the given string ends with the given suffix.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      in
-    </th>
-    <td>
-      string
-    </td>
-    <td>
-      The input string to test.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    suffix
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The suffix to test for the presence of.
-  </td>
-</tr>
-<section class="function">
-  <h5>
-    <code>
-      hyphenate
-    </code>
-  </h5>
-  <p>
-    Reformat the given string by changing it into hypen-case capitalization.
-  </p>
-  <h5>
-    Arguments
-  </h5>
-  <table class="table table-sm">
-    <thead>
-      <tr>
-        <th class="col-2">
-          Name
-        </th>
-        <th class="col-2">
-          Data Type
-        </th>
-        <th class="col">
-          Description
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>
-          in
-        </th>
-        <td>
-          string
-        </td>
-        <td>
-          The input string to reformat.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-<section class="function">
-<h5>
-  <code>
-    join
-  </code>
-</h5>
-<p>
-  Stringify the given array of values and join them together into a string, separated by a given separator string.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      input
-    </th>
-    <td>
-      array[any]
-    </td>
-    <td>
-      An array of values to stringify and join.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    separator
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The string used to join all elements of the array together.
-  </td>
-</tr>
-<section class="function">
-  <h5>
-    <code>
-      lower
-    </code>
-  </h5>
-  <p>
-    Reformat the given string by changing it into lower case capitalization.
-  </p>
-  <h5>
-    Arguments
-  </h5>
-  <table class="table table-sm">
-    <thead>
-      <tr>
-        <th class="col-2">
-          Name
-        </th>
-        <th class="col-2">
-          Data Type
-        </th>
-        <th class="col">
-          Description
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>
-          in
-        </th>
-        <td>
-          string
-        </td>
-        <td>
-          The input string to reformat.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-<section class="function">
-  <h5>
-    <code>
-      ltrim
-    </code>
-  </h5>
-  <p>
-    Return the given string with any leading whitespace removed.
-  </p>
-  <h5>
-    Arguments
-  </h5>
-  <table class="table table-sm">
-    <thead>
-      <tr>
-        <th class="col-2">
-          Name
-        </th>
-        <th class="col-2">
-          Data Type
-        </th>
-        <th class="col">
-          Description
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>
-          in
-        </th>
-        <td>
-          string
-        </td>
-        <td>
-          The string to trim.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-<section class="function">
-<h5>
-  <code>
-    match
-  </code>
-</h5>
-<i>
-  Undocumented
-</i>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      in
-    </th>
-    <td>
-      string
-    </td>
-    <td>
-      The string to match against.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    pattern
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    A Golang-compatible regular expression defining what is being sought.
-  </td>
-</tr>
-<section class="function">
-  <h5>
-    <code>
-      pascalize
-    </code>
-  </h5>
-  <p>
-    Reformat the given string by changing it into PascalCase capitalization.
-  </p>
-  <h5>
-    Arguments
-  </h5>
-  <table class="table table-sm">
-    <thead>
-      <tr>
-        <th class="col-2">
-          Name
-        </th>
-        <th class="col-2">
-          Data Type
-        </th>
-        <th class="col">
-          Description
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>
-          in
-        </th>
-        <td>
-          string
-        </td>
-        <td>
-          The input string to reformat.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-<section class="function">
-<h5>
-  <code>
-    percent
-  </code>
-</h5>
-<p>
-  Takes an integer or decimal value and returns it formatted as a percentage.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      value
-    </th>
-    <td>
-      number
-    </td>
-    <td>
-      The value you wish to express as a percentage.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    whole
-  </th>
-  <td>
-    number
-  </td>
-  <td>
-    The number that represents 100%.
-  </td>
-</tr>
-<tr>
-  <th>
-    format
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The printf format string used for rounding and truncating the converted number.
-  </td>
-</tr>
-<h5>
-  Examples
-</h5>
-<dl class="examples">
-  <dd>
-    percent 99
-  </dd>
-  <dt>
-    99
-  </dt>
-  <dd>
-    percent 3.3 10
-  </dd>
-  <dt>
-    33
-  </dt>
-  <dd>
-    percent 3.33 10 &#34;%.3f&#34;
-  </dd>
-  <dt>
-    33.3
-  </dt>
-</dl>
-<section class="function">
-<h5>
-  <code>
-    replace
-  </code>
-</h5>
-<p>
-  Replace occurrences of one substring with another string in a given input string.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      wholestring
-    </th>
-    <td>
-      string
-    </td>
-    <td>
-      The whole string being searched.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    old
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The old value being sought.
-  </td>
-</tr>
-<tr>
-  <th>
-    new
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The new value that is replacing old.
-  </td>
-</tr>
-<tr>
-  <th>
-    count
-  </th>
-  <td>
-    int
-  </td>
-  <td>
-    The number of matches to replace before stopping. If this number is &lt; 0, the all occurrences will be replaced.
-  </td>
-</tr>
-<section class="function">
-  <h5>
-    <code>
-      rtrim
-    </code>
-  </h5>
-  <p>
-    Return the given string with any trailing whitespace removed.
-  </p>
-  <h5>
-    Arguments
-  </h5>
-  <table class="table table-sm">
-    <thead>
-      <tr>
-        <th class="col-2">
-          Name
-        </th>
-        <th class="col-2">
-          Data Type
-        </th>
-        <th class="col">
-          Description
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>
-          in
-        </th>
-        <td>
-          string
-        </td>
-        <td>
-          The string to trim.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-<section class="function">
-<h5>
-  <code>
-    rxreplace
-  </code>
-</h5>
-<p>
-  Return the given string with all substrings matching the given regular expression replaced with another string.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      wholestring
-    </th>
-    <td>
-      string
-    </td>
-    <td>
-      The whole string being searched.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    pattern
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    A Golang-compatible regular expression that matches what should be replaced.
-  </td>
-</tr>
-<tr>
-  <th>
-    repl
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The string to replace matches with.
-  </td>
-</tr>
-<section class="function">
-<h5>
-  <code>
-    split
-  </code>
-</h5>
-<p>
-  Split a given string into an array of strings by a given separator.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      in
-    </th>
-    <td>
-      string
-    </td>
-    <td>
-      The string to split into pieces.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    separator
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The separator on which `in` will be split.
-  </td>
-</tr>
-<h5>
-  Examples
-</h5>
-<dl class="examples">
-  <dd>
-    split &#34;this is a sentence.&#34;
-  </dd>
-  <dt>
-    [&#34;this&#34;, &#34;is&#34;, &#34;a&#34;, &#34;sentence.&#34;]
-  </dt>
-</dl>
-<section class="function">
-  <h5>
-    <code>
-      splitWords
-    </code>
-  </h5>
-  <p>
-    Detect word boundaries in a given string and split that string into an array where each element is a word.
-  </p>
-</section>
-<section class="function">
-<h5>
-  <code>
-    strcount
-  </code>
-</h5>
-<p>
-  Count counts the number of non-overlapping instances of a substring. If the given substring is empty, then this returns the length of the string plus one.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      input
-    </th>
-    <td>
-      string
-    </td>
-    <td>
-      The string to search within.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    substring
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The substring to count the number of instances of.
-  </td>
-</tr>
-<h5>
-  Examples
-</h5>
-<dl class="examples">
-  <dd>
-    strcount &#34;cheese&#34; &#34;e&#34;
-  </dd>
-  <dt>
-    3
-  </dt>
-  <dd>
-    strcount &#34;five&#34; &#34;&#34;
-  </dd>
-  <dt>
-    5
-  </dt>
-</dl>
-<section class="function">
-  <h5>
-    <code>
-      stripHtml
-    </code>
-  </h5>
-  <p>
-    Removes all HTML tags from a given input string, leaving behind only the textual content of the nodes.  Only text nodes are preserved; attribute names and values, and comments, will be omitted.
-  </p>
-  <h5>
-    Arguments
-  </h5>
-  <table class="table table-sm">
-    <thead>
-      <tr>
-        <th class="col-2">
-          Name
-        </th>
-        <th class="col-2">
-          Data Type
-        </th>
-        <th class="col">
-          Description
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>
-          input
-        </th>
-        <td>
-          string
-        </td>
-        <td>
-          The string to parse as HTML and extract text from.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <h5>
-    Examples
-  </h5>
-  <dl class="examples">
-    <dd>
-      stripHtml &#34;&lt;!-- A link --&gt;&lt;a href=&#39;/test&#39;&gt;&lt;b&gt;Hello &lt;i&gt;world!&lt;/i&gt;&lt;/b&gt;&lt;/a&gt;&#34;
-    </dd>
-    <dt>
-      Hello world!
-    </dt>
-  </dl>
-</section>
-<section class="function">
-<h5>
-  <code>
-    surroundedBy
-  </code>
-</h5>
-<p>
-  Return whether the given string is begins with a specific prefix 
-  <em>
-    and
-  </em>
-   ends with a specific suffix.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      in
-    </th>
-    <td>
-      string
-    </td>
-    <td>
-      The string to test.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    prefix
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The string the input must start with.
-  </td>
-</tr>
-<tr>
-  <th>
-    suffix
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The string the input must end with.
-  </td>
-</tr>
-<h5>
-  Examples
-</h5>
-<dl class="examples">
-  <dd>
-    surroundedBy &#34;&lt;html&gt;&#34; &#34;&lt;&#34; &#34;&gt;&#34;
-  </dd>
-  <dt>
-    true
-  </dt>
-  <dd>
-    surroundedBy &#34;&lt;html&gt;&#34; &#34;&lt;/&#34; &#34;&gt;&#34;
-  </dd>
-  <dt>
-    false
-  </dt>
-</dl>
-<section class="function">
-<h5>
-  <code>
-    thousandify
-  </code>
-</h5>
-<p>
-  Take a number and reformat it to be more readable by adding a separator between every three successive places.
-</p>
-<h5>
-  Arguments
-</h5>
-<table class="table table-sm">
-<thead>
-  <tr>
-    <th class="col-2">
-      Name
-    </th>
-    <th class="col-2">
-      Data Type
-    </th>
-    <th class="col">
-      Description
-    </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <th>
-      value
-    </th>
-    <td>
-      number
-    </td>
-    <td>
-      The number to reformat.
-    </td>
-  </tr>
-</tbody>
-<tr>
-  <th>
-    separator
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The character used to separate groups of digits.
-  </td>
-</tr>
-<tr>
-  <th>
-    decimal
-  </th>
-  <td>
-    string
-  </td>
-  <td>
-    The character used as a decimal point.
-  </td>
-</tr>
-<h5>
-  Examples
-</h5>
-<dl class="examples">
-  <dd>
-    thousandify 31536000 &#34;,&#34; &#34;.&#34;
-  </dd>
-  <dt>
-    31,536,000
-  </dt>
-  <dd>
-    thousandify 525600.72 &#34; &#34; &#34;,&#34;
-  </dd>
-  <dt>
-    525 600,72
-  </dt>
-</dl>
-<section class="function">
-  <h5>
-    <code>
-      titleize
-    </code>
-  </h5>
-  <p>
-    Reformat the given string by changing it into Title Case capitalization.
-  </p>
-  <h5>
-    Arguments
-  </h5>
-  <table class="table table-sm">
-    <thead>
-      <tr>
-        <th class="col-2">
-          Name
-        </th>
-        <th class="col-2">
-          Data Type
-        </th>
-        <th class="col">
-          Description
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>
-          in
-        </th>
-        <td>
-          string
-        </td>
-        <td>
-          The input string to reformat.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-<section class="function">
-  <h5>
-    <code>
-      trim
-    </code>
-  </h5>
-  <p>
-    Return the given string with any leading and trailing whitespace removed.
-  </p>
-  <h5>
-    Arguments
-  </h5>
-  <table class="table table-sm">
-    <thead>
-      <tr>
-        <th class="col-2">
-          Name
-        </th>
-        <th class="col-2">
-          Data Type
-        </th>
-        <th class="col">
-          Description
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>
-          in
-        </th>
-        <td>
-          string
-        </td>
-        <td>
-          The string to trim.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-<section class="function">
-  <h5>
-    <code>
-      underscore
-    </code>
-  </h5>
-  <p>
-    Reformat the given string by changing it into underscore
-    <em>
-      case capitalization (also known as snake
-    </em>
-    case).
-  </p>
-  <h5>
-    Arguments
-  </h5>
-  <table class="table table-sm">
-    <thead>
-      <tr>
-        <th class="col-2">
-          Name
-        </th>
-        <th class="col-2">
-          Data Type
-        </th>
-        <th class="col">
-          Description
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>
-          in
-        </th>
-        <td>
-          string
-        </td>
-        <td>
-          The input string to reformat.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-<section class="function">
-  <h5>
-    <code>
-      upper
-    </code>
-  </h5>
-  <p>
-    Reformat the given string by changing it into UPPER CASE capitalization.
-  </p>
-  <h5>
-    Arguments
-  </h5>
-  <table class="table table-sm">
-    <thead>
-      <tr>
-        <th class="col-2">
-          Name
-        </th>
-        <th class="col-2">
-          Data Type
-        </th>
-        <th class="col">
-          Description
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th>
-          in
-        </th>
-        <td>
-          string
-        </td>
-        <td>
-          The input string to reformat.
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    </header>
+    <h4>Functions</h4>
+    <section class="function">
+        <h5><code>autobyte</code></h5>
+    <p>Attempt to convert the given number to a string representation of the value interpreted as bytes. The unit will be automatically determined as the closest one that produces a value less than 1024 in that unit. The second argument is a printf-style format string that is used when the converted number is being stringified.  By specifying precision and leading digit values to the <code>%f</code> format token, you can control how many decimal places are in the resulting output.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>bytes</th>
+                    <td>number</td>
+                    <td>A number representing the value to format, in bytes.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>format</th>
+                    <td>string</td>
+                    <td>A printf-style format string used to represent the output number.</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>autobyte 2490368 &#34;%.2f&#34;</dd>
+            <dt>2.38MB</dt>
+        </dl>
+    </section>
+    <section class="function">
+        <h5><code>camelize</code></h5>
+    <p>Reformat the given string by changing it into camelCase capitalization.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The input string to reformat.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>concat</code></h5>
+    <p>Return the string that results in stringifying and joining all of the given arguments.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>strings</th>
+                    <td>any (1+)</td>
+                    <td>One or more values to be stringified and joined together.</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>concat &#34;There are &#34; 5 &#34; apples, yes it&#39;s &#34; true</dd>
+            <dt>There are 5 apples, yes it&#39;s true.</dt>
+        </dl>
+    </section>
+    <section class="function">
+        <h5><code>contains</code></h5>
+    <p>Return true of the given string contains another string.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>input</th>
+                    <td>string</td>
+                    <td>The string to search within.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>substring</th>
+                    <td>string</td>
+                    <td>The substring to find in the `input` string.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>elide</code></h5>
+    <p>Takes an input string and ensures it is no longer than a given number of characters.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>input</th>
+                    <td>string</td>
+                    <td>The string to (possibly) truncate.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>charcount</th>
+                    <td>integer</td>
+                    <td>The maximum number of character that can appear in a string before it is truncated.</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>elide &#34;This is a sentence that contains fifty characters.&#34; 18</dd>
+            <dt>This is a sentence</dt>
+            <dd>elide &#34;hello.&#34; 16</dd>
+            <dt>hello.</dt>
+        </dl>
+    </section>
+    <section class="function">
+        <h5><code>elideWords</code></h5>
+    <p>Takes an input string and counts the number of words in it. If that number exceeds a given count, the string will be truncated to be equal to that number of words.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>input</th>
+                    <td>string</td>
+                    <td>The string to (possibly) truncate.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>wordcount</th>
+                    <td>integer</td>
+                    <td>The maximum number of words that can appear in the string before it is truncated.</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>elideWords &#34;This is a sentence that contains eight words.&#34; 5</dd>
+            <dt>This is a sentence that</dt>
+            <dd>elideWords &#34;Hello world&#34; 10</dd>
+            <dt>Hello world</dt>
+        </dl>
+    </section>
+    <section class="function">
+        <h5><code>hasPrefix</code></h5>
+    <p>Return true if the given string begins with the given prefix.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The input string to test.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>prefix</th>
+                    <td>string</td>
+                    <td>The prefix to test for the presence of.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>hasSuffix</code></h5>
+    <p>Return true if the given string ends with the given suffix.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The input string to test.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>suffix</th>
+                    <td>string</td>
+                    <td>The suffix to test for the presence of.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>hyphenate</code></h5>
+    <p>Reformat the given string by changing it into hypen-case capitalization.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The input string to reformat.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>join</code></h5>
+    <p>Stringify the given array of values and join them together into a string, separated by a given separator string.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>input</th>
+                    <td>array[any]</td>
+                    <td>An array of values to stringify and join.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>separator</th>
+                    <td>string</td>
+                    <td>The string used to join all elements of the array together.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>lower</code></h5>
+    <p>Reformat the given string by changing it into lower case capitalization.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The input string to reformat.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>ltrim</code></h5>
+    <p>Return the given string with any leading whitespace removed.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The string to trim.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>match</code></h5>
+    <i>Undocumented</i>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The string to match against.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>pattern</th>
+                    <td>string</td>
+                    <td>A Golang-compatible regular expression defining what is being sought.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>pascalize</code></h5>
+    <p>Reformat the given string by changing it into PascalCase capitalization.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The input string to reformat.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>percent</code></h5>
+    <p>Takes an integer or decimal value and returns it formatted as a percentage.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>value</th>
+                    <td>number</td>
+                    <td>The value you wish to express as a percentage.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>whole</th>
+                    <td>number</td>
+                    <td>The number that represents 100%.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>format</th>
+                    <td>string</td>
+                    <td>The printf format string used for rounding and truncating the converted number.</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>percent 99</dd>
+            <dt>99</dt>
+            <dd>percent 3.3 10</dd>
+            <dt>33</dt>
+            <dd>percent 3.33 10 &#34;%.3f&#34;</dd>
+            <dt>33.3</dt>
+        </dl>
+    </section>
+    <section class="function">
+        <h5><code>replace</code></h5>
+    <p>Replace occurrences of one substring with another string in a given input string.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>wholestring</th>
+                    <td>string</td>
+                    <td>The whole string being searched.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>old</th>
+                    <td>string</td>
+                    <td>The old value being sought.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>new</th>
+                    <td>string</td>
+                    <td>The new value that is replacing old.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>count</th>
+                    <td>int</td>
+                    <td>The number of matches to replace before stopping. If this number is &lt; 0, the all occurrences will be replaced.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>rtrim</code></h5>
+    <p>Return the given string with any trailing whitespace removed.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The string to trim.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>rxreplace</code></h5>
+    <p>Return the given string with all substrings matching the given regular expression replaced with another string.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>wholestring</th>
+                    <td>string</td>
+                    <td>The whole string being searched.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>pattern</th>
+                    <td>string</td>
+                    <td>A Golang-compatible regular expression that matches what should be replaced.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>repl</th>
+                    <td>string</td>
+                    <td>The string to replace matches with.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>split</code></h5>
+    <p>Split a given string into an array of strings by a given separator.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The string to split into pieces.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>separator</th>
+                    <td>string</td>
+                    <td>The separator on which `in` will be split.</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>split &#34;this is a sentence.&#34;</dd>
+            <dt>[&#34;this&#34;, &#34;is&#34;, &#34;a&#34;, &#34;sentence.&#34;]</dt>
+        </dl>
+    </section>
+    <section class="function">
+        <h5><code>splitWords</code></h5>
+    <p>Detect word boundaries in a given string and split that string into an array where each element is a word.</p>
+    </section>
+    <section class="function">
+        <h5><code>strcount</code></h5>
+    <p>Count counts the number of non-overlapping instances of a substring. If the given substring is empty, then this returns the length of the string plus one.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>input</th>
+                    <td>string</td>
+                    <td>The string to search within.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>substring</th>
+                    <td>string</td>
+                    <td>The substring to count the number of instances of.</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>strcount &#34;cheese&#34; &#34;e&#34;</dd>
+            <dt>3</dt>
+            <dd>strcount &#34;five&#34; &#34;&#34;</dd>
+            <dt>5</dt>
+        </dl>
+    </section>
+    <section class="function">
+        <h5><code>stripHtml</code></h5>
+    <p>Removes all HTML tags from a given input string, leaving behind only the textual content of the nodes.  Only text nodes are preserved; attribute names and values, and comments, will be omitted.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>input</th>
+                    <td>string</td>
+                    <td>The string to parse as HTML and extract text from.</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>stripHtml &#34;&lt;!-- A link --&gt;&lt;a href=&#39;/test&#39;&gt;&lt;b&gt;Hello &lt;i&gt;world!&lt;/i&gt;&lt;/b&gt;&lt;/a&gt;&#34;</dd>
+            <dt>Hello world!</dt>
+        </dl>
+    </section>
+    <section class="function">
+        <h5><code>surroundedBy</code></h5>
+    <p>Return whether the given string is begins with a specific prefix <em>and</em> ends with a specific suffix.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The string to test.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>prefix</th>
+                    <td>string</td>
+                    <td>The string the input must start with.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>suffix</th>
+                    <td>string</td>
+                    <td>The string the input must end with.</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>surroundedBy &#34;&lt;html&gt;&#34; &#34;&lt;&#34; &#34;&gt;&#34;</dd>
+            <dt>true</dt>
+            <dd>surroundedBy &#34;&lt;html&gt;&#34; &#34;&lt;/&#34; &#34;&gt;&#34;</dd>
+            <dt>false</dt>
+        </dl>
+    </section>
+    <section class="function">
+        <h5><code>thousandify</code></h5>
+    <p>Take a number and reformat it to be more readable by adding a separator between every three successive places.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>value</th>
+                    <td>number</td>
+                    <td>The number to reformat.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>separator</th>
+                    <td>string</td>
+                    <td>The character used to separate groups of digits.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>decimal</th>
+                    <td>string</td>
+                    <td>The character used as a decimal point.</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>thousandify 31536000 &#34;,&#34; &#34;.&#34;</dd>
+            <dt>31,536,000</dt>
+            <dd>thousandify 525600.72 &#34; &#34; &#34;,&#34;</dd>
+            <dt>525 600,72</dt>
+        </dl>
+    </section>
+    <section class="function">
+        <h5><code>titleize</code></h5>
+    <p>Reformat the given string by changing it into Title Case capitalization.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The input string to reformat.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>trim</code></h5>
+    <p>Return the given string with any leading and trailing whitespace removed.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The string to trim.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>underscore</code></h5>
+    <p>Reformat the given string by changing it into underscore<em>case capitalization (also known as snake</em>case).</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The input string to reformat.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function">
+        <h5><code>upper</code></h5>
+    <p>Reformat the given string by changing it into UPPER CASE capitalization.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>in</th>
+                    <td>string</td>
+                    <td>The input string to reformat.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 </section>
 <section class="group" id="arrays-and-objects"  >
-  <header>
-    <h3>
-      Arrays and Objects
-    </h3>
-    <p>
-      <p>
-        For converting, modifying, and filtering arrays, objects, and arrays of objects. These functions are especially useful when working with data returned from Bindings.
-      </p>
-    </p>
-  </header>
-  <h4>
-    Functions
-  </h4>
-  <section class="function">
-    <h5>
-      <code>
-        any
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        apply
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        compact
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        count
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        filter
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        filterByKey
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        findkey
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        first
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        firstByKey
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        flatten
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        get
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        groupBy
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        has
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        head
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        indexOf
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        intersect
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        ireverse
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        isort
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        keys
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        last
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        leastcommon
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        mostcommon
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        pluck
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        rest
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        reverse
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        sequence
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        shuffle
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        slice
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        sslice
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        tail
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        transformValues
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        uniq
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        uniqByKey
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        uniqByKeyLast
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        values
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
+    <header>
+        <h3>Arrays and Objects</h3>
+        <p><p>For converting, modifying, and filtering arrays, objects, and arrays of objects. These functions are especially useful when working with data returned from Bindings.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function">
+        <h5><code>any</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>apply</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>compact</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>count</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>filter</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>filterByKey</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>findkey</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>first</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>firstByKey</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>flatten</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>get</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>groupBy</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>has</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>head</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>indexOf</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>intersect</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>ireverse</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>isort</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>keys</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>last</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>leastcommon</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>mostcommon</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>pluck</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>rest</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>reverse</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>sequence</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>shuffle</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>slice</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>sslice</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>tail</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>transformValues</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>uniq</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>uniqByKey</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>uniqByKeyLast</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>values</code></h5>
+    <i>Undocumented</i>
+    </section>
 </section>
 <section class="group" id="time-functions"  >
-  <header>
-    <h3>
-      Time Functions
-    </h3>
-    <p>
-      <p>
-        Used for working with time and duration values.  Among this collection are functions for converting values to times, formatting time values, and performing time-oriented calculatons on those values.
-      </p>
-    </p>
-  </header>
-  <h4>
-    Functions
-  </h4>
-  <section class="function">
-    <h5>
-      <code>
-        addTime
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        ago
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        duration
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        extractTime
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        isAfter
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        isBefore
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        now
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        since
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        sunrise
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        sunset
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        time
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
+    <header>
+        <h3>Time Functions</h3>
+        <p><p>Used for working with time and duration values.  Among this collection are functions for converting values to times, formatting time values, and performing time-oriented calculatons on those values.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function">
+        <h5><code>addTime</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>ago</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>duration</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>extractTime</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>isAfter</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>isBefore</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>now</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>since</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>sunrise</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>sunset</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>time</code></h5>
+    <i>Undocumented</i>
+    </section>
 </section>
 <section class="group" id="type-comparison-and-manipulation"  >
-  <header>
-    <h3>
-      Type Comparison and Manipulation
-    </h3>
-    <p>
-      <p>
-        Used to detect and convert discrete values into different data types.
-      </p>
-    </p>
-  </header>
-  <h4>
-    Functions
-  </h4>
-  <section class="function">
-    <h5>
-      <code>
-        asBool
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        asDuration
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        asFloat
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        asInt
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        asStr
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        asTime
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        autotype
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        b
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        d
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        f
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        i
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        isArray
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        isBool
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        isDuration
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        isEmpty
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        isFloat
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        isInt
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        isMap
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        isTime
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        isZero
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        mapify
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        s
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        sliceify
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        stringify
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        t
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
+    <header>
+        <h3>Type Comparison and Manipulation</h3>
+        <p><p>Used to detect and convert discrete values into different data types.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function">
+        <h5><code>asBool</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>asDuration</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>asFloat</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>asInt</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>asStr</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>asTime</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>autotype</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>b</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>d</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>f</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>i</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>isArray</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>isBool</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>isDuration</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>isEmpty</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>isFloat</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>isInt</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>isMap</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>isTime</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>isZero</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>mapify</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>s</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>sliceify</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>stringify</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>t</code></h5>
+    <i>Undocumented</i>
+    </section>
 </section>
 <section class="group" id="encoding-and-decoding"  >
-  <header>
-    <h3>
-      Encoding and Decoding
-    </h3>
-    <p>
-      <p>
-        For encoding typed data and data structures into well-known formats like JSON, CSV, and TSV.
-      </p>
-    </p>
-  </header>
-  <h4>
-    Functions
-  </h4>
-  <section class="function">
-    <h5>
-      <code>
-        base32
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        base58
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        base64
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        csv
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        jsonify
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        markdown
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        sanitize
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        tsv
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        unsafe
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
+    <header>
+        <h3>Encoding and Decoding</h3>
+        <p><p>For encoding typed data and data structures into well-known formats like JSON, CSV, and TSV.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function">
+        <h5><code>base32</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>base58</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>base64</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>csv</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>jsonify</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>markdown</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>sanitize</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>tsv</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>unsafe</code></h5>
+    <i>Undocumented</i>
+    </section>
 </section>
 <section class="group" id="file-path-manipulation"  >
-  <header>
-    <h3>
-      File Path Manipulation
-    </h3>
-    <p>
-      <p>
-        Used to parse and extract data from strings representing paths in a filesystem or tree hierarchy.
-      </p>
-    </p>
-  </header>
-  <h4>
-    Functions
-  </h4>
-  <section class="function">
-    <h5>
-      <code>
-        basename
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        dir
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        dirname
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        extname
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        pathjoin
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        pwd
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
+    <header>
+        <h3>File Path Manipulation</h3>
+        <p><p>Used to parse and extract data from strings representing paths in a filesystem or tree hierarchy.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function">
+        <h5><code>basename</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>dir</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>dirname</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>extname</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>pathjoin</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>pwd</code></h5>
+    <i>Undocumented</i>
+    </section>
 </section>
 <section class="group" id="color-manipulation"  >
-  <header>
-    <h3>
-      Color Manipulation
-    </h3>
-    <p>
-      <p>
-        Used to parse, manipulate, and adjust string representations of visible colors.
-      </p>
-    </p>
-  </header>
-  <h4>
-    Functions
-  </h4>
-  <section class="function">
-    <h5>
-      <code>
-        colorFromValue
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        colorToHSL
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        colorToHex
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        colorToRGB
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        darken
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        lighten
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
+    <header>
+        <h3>Color Manipulation</h3>
+        <p><p>Used to parse, manipulate, and adjust string representations of visible colors.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function">
+        <h5><code>colorFromValue</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>colorToHSL</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>colorToHex</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>colorToRGB</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>darken</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>lighten</code></h5>
+    <i>Undocumented</i>
+    </section>
 </section>
 <section class="group" id="math-functions"  >
-  <header>
-    <h3>
-      Math Functions
-    </h3>
-    <p>
-      <p>
-        These functions implement basic math operations on numbers.
-      </p>
-    </p>
-  </header>
-  <h4>
-    Functions
-  </h4>
-  <section class="function">
-    <h5>
-      <code>
-        add
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        divide
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        mod
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        multiply
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        negate
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
-  <section class="function">
-    <h5>
-      <code>
-        subtract
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
+    <header>
+        <h3>Math Functions</h3>
+        <p><p>These functions implement basic math operations on numbers.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function">
+        <h5><code>add</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>divide</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>mod</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>multiply</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>negate</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function">
+        <h5><code>subtract</code></h5>
+    <i>Undocumented</i>
+    </section>
 </section>
 <section class="group" id="hashing-and-cryptography"  >
-  <header>
-    <h3>
-      Hashing and Cryptography
-    </h3>
-    <p>
-      <p>
-        These functions provide basic cryptographic and hashing functions, including cryptographically-secure random number generation.
-      </p>
-    </p>
-  </header>
-  <h4>
-    Functions
-  </h4>
-  <section class="function">
-    <h5>
-      <code>
-      </code>
-    </h5>
-    <i>
-      Undocumented
-    </i>
-  </section>
+    <header>
+        <h3>Hashing and Cryptography</h3>
+        <p><p>These functions provide basic cryptographic and hashing functions, including cryptographically-secure random number generation.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function">
+        <h5><code></code></h5>
+    <i>Undocumented</i>
+    </section>
 </section>
-
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

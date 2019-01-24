@@ -1,9 +1,5 @@
 root: src
 
-header:
-  postprocessors:
-  - prettify-html
-
 start:
   command:          'bash -c "curl -o index.html ${DIECAST_ADDRESS}/ && curl -o style.css ${DIECAST_ADDRESS}/style.scss"'
   delay:            '1s'
