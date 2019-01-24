@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -115,7 +116,7 @@ func main() {
 		},
 		cli.DurationFlag{
 			Name:  `start-command-delay`,
-			Usage: `Wait this amount of time nefore starting the command.`,
+			Usage: `Wait this amount of time before starting the command.`,
 		},
 		cli.StringFlag{
 			Name:  `start-command-dir`,
@@ -125,9 +126,25 @@ func main() {
 			Name:  `debug, D`,
 			Usage: `Allow template debugging by appending the "?__viewsource=true" query string parameter.`,
 		},
+		cli.BoolFlag{
+			Name:  `help-functions`,
+			Usage: `Generate documentation on all supported functions.`,
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
+		if c.Bool(`help-functions`) {
+			defs, _ := diecast.GetFunctions()
+
+			if data, err := json.MarshalIndent(&defs, ``, `  `); err == nil {
+				os.Stdout.Write(data)
+				os.Exit(0)
+				return nil
+			} else {
+				return err
+			}
+		}
+
 		log.SetLevelString(c.String(`log-level`))
 		return nil
 	}
@@ -136,6 +153,7 @@ func main() {
 		servePath := filepath.Clean(c.Args().First())
 		server := diecast.NewServer(servePath)
 
+		server.BinPath, _ = filepath.Abs(os.Args[0])
 		server.Address = c.String(`address`)
 		server.EnableDebugging = c.Bool(`debug`)
 		server.BindingPrefix = c.String(`binding-prefix`)

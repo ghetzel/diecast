@@ -9,7 +9,7 @@ import (
 	"github.com/russross/blackfriday/v2"
 )
 
-func loadStandardFunctionsCodecs() funcGroup {
+func loadStandardFunctionsCodecs(funcs FuncMap) funcGroup {
 	return funcGroup{
 		Name:        `Encoding and Decoding`,
 		Description: `For encoding typed data and data structures into well-known formats like JSON, CSV, and TSV.`,

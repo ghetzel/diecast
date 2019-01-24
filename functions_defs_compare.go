@@ -8,7 +8,7 @@ import (
 	"regexp"
 )
 
-func loadStandardFunctionsComparisons() funcGroup {
+func loadStandardFunctionsComparisons(funcs FuncMap) funcGroup {
 	return funcGroup{
 		Name:        `Comparison and Conditionals`,
 		Description: `Used for comparing two values, or for returning one of many options based on a given condition.`,

@@ -74,6 +74,7 @@ type StartCommand struct {
 }
 
 type Server struct {
+	BinPath             string                 `json:"-"`
 	Address             string                 `json:"address"`
 	Bindings            []Binding              `json:"bindings"`
 	BindingPrefix       string                 `json:"bindingPrefix"`
@@ -1442,6 +1443,7 @@ func (self *Server) RunStartCommand(scmd *StartCommand, waitForCommand bool) err
 			}
 
 			env[`DIECAST`] = true
+			env[`DIECAST_BIN`] = self.BinPath
 			env[`DIECAST_DEBUG`] = self.EnableDebugging
 			env[`DIECAST_ADDRESS`] = self.Address
 			env[`DIECAST_ROOT`] = self.RootPath

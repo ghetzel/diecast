@@ -11,8 +11,8 @@ $inlineFg:       #FF7F2B;
     }
 }
 
-body {
-    overflow: hidden;
+body > nav {
+    height: 62px;
 }
 
 .code {
@@ -54,11 +54,14 @@ h3 {
     padding: 0;
 }
 
+#sidebar {
+    position: sticky !important;
+    top:      62px;
+}
+
 #content {
-    height: calc(100vh - 62px);
-    margin-top: 6px;
+    padding-top: 15px;
     position: relative;
-    overflow-y: auto;
 }
 
 .bg-diecast {

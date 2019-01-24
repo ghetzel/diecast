@@ -16,7 +16,7 @@ import (
 
 var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
 
-func loadStandardFunctionsCollections() funcGroup {
+func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 	return funcGroup{
 		Name: `Arrays and Objects`,
 		Description: `For converting, modifying, and filtering arrays, objects, and arrays of ` +
@@ -59,7 +59,7 @@ func loadStandardFunctionsCollections() funcGroup {
 
 					for i, value := range sliceutil.Sliceify(input) {
 						tmpl := NewTemplate(`inline`, TextEngine)
-						tmpl.Funcs(rv)
+						tmpl.Funcs(funcs)
 
 						if !strings.HasPrefix(expr, `{{`) {
 							expr = `{{` + expr
@@ -95,7 +95,7 @@ func loadStandardFunctionsCollections() funcGroup {
 					`the array can be passed to a template expression.  If that expression produces a ` +
 					`truthy value, the object will be included in the output.  Otherwise it will not.`,
 				Function: func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
-					return filterByKey(rv, input, key, exprs...)
+					return filterByKey(funcs, input, key, exprs...)
 				},
 				Examples: []funcExample{},
 			}, {
@@ -103,7 +103,7 @@ func loadStandardFunctionsCollections() funcGroup {
 				Summary: `Identical to [filterByKey](#fn-filterByKey), except it returns only the first ` +
 					`object in the resulting array instead of the whole array.`,
 				Function: func(input interface{}, key string, exprs ...interface{}) (interface{}, error) {
-					if v, err := filterByKey(rv, input, key, exprs...); err == nil {
+					if v, err := filterByKey(funcs, input, key, exprs...); err == nil {
 						return sliceutil.First(v), nil
 					} else {
 						return nil, err
@@ -118,7 +118,7 @@ func loadStandardFunctionsCollections() funcGroup {
 
 					for i, obj := range sliceutil.Sliceify(input) {
 						tmpl := NewTemplate(`inline`, TextEngine)
-						tmpl.Funcs(rv)
+						tmpl.Funcs(funcs)
 						m := maputil.M(obj)
 
 						if !strings.HasPrefix(expr, `{{`) {
@@ -154,14 +154,14 @@ func loadStandardFunctionsCollections() funcGroup {
 					`time a value is encountered, that value's parent object is included in the output.  All ` +
 					`subsequent objects with the same value at that key will be discarded.`,
 				Function: func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
-					return uniqByKey(rv, input, key, false, exprs...)
+					return uniqByKey(funcs, input, key, false, exprs...)
 				},
 			}, {
 				Name: `uniqByKeyLast`,
 				Summary: `Identical to [uniqByKey](#fn-uniqByKey), except the _last_ of a set of objects grouped ` +
 					`by key is included in the output, not the first.`,
 				Function: func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
-					return uniqByKey(rv, input, key, true, exprs...)
+					return uniqByKey(funcs, input, key, true, exprs...)
 				},
 			}, {
 
@@ -433,7 +433,7 @@ func loadStandardFunctionsCollections() funcGroup {
 							if len(valueTpls) > 0 && valueTpls[0] != `` {
 								if stringutil.IsSurroundedBy(valueTpls[0], `{{`, `}}`) {
 									tmpl := NewTemplate(`inline`, TextEngine)
-									tmpl.Funcs(rv)
+									tmpl.Funcs(funcs)
 
 									if err := tmpl.Parse(valueTpls[0]); err == nil {
 										output := bytes.NewBuffer(nil)
@@ -524,7 +524,7 @@ func loadStandardFunctionsCollections() funcGroup {
 								return fmt.Errorf("nested %q is unsupported", "apply")
 							}
 
-							if fn, ok := rv[fnName]; ok {
+							if fn, ok := funcs[fnName]; ok {
 								if fnV := reflect.ValueOf(fn); fnV.Kind() == reflect.Func {
 									var returns []reflect.Value
 

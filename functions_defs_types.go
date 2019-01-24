@@ -8,8 +8,8 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
-func loadStandardFunctionsTypes() funcGroup {
-	return funcGroup{
+func loadStandardFunctionsTypes(funcs FuncMap) funcGroup {
+	group := funcGroup{
 		Name:        `Type Detection and Manipulation`,
 		Description: `Used to detect and convert discrete values into different data types.`,
 		Functions: []funcDef{
@@ -89,32 +89,37 @@ func loadStandardFunctionsTypes() funcGroup {
 				Name:     `asDuration`,
 				Summary:  `Attempt to parse the given *value* as a time duration.`,
 				Function: timeutil.ParseDuration,
-			}, {
-				Name:     `s`,
-				Alias:    `asStr`,
-				Function: g.fn(`asStr`),
-			}, {
-				Name:     `i`,
-				Alias:    `asInt`,
-				Function: g.fn(`asInt`),
-			}, {
-				Name:     `f`,
-				Alias:    `asFloat`,
-				Function: g.fn(`asFloat`),
-			}, {
-				Name:     `b`,
-				Alias:    `asBool`,
-				Function: g.fn(`asBool`),
-			}, {
-				Name:     `t`,
-				Alias:    `asTime`,
-				Function: g.fn(`asTime`),
-			}, {
-				Name:     `d`,
-				Alias:    `asDuration`,
-				Function: g.fn(`asDuration`),
 			},
 		},
 	}
 
+	group.Functions = append(group.Functions, []funcDef{
+		{
+			Name:     `s`,
+			Alias:    `asStr`,
+			Function: group.fn(`asStr`),
+		}, {
+			Name:     `i`,
+			Alias:    `asInt`,
+			Function: group.fn(`asInt`),
+		}, {
+			Name:     `f`,
+			Alias:    `asFloat`,
+			Function: group.fn(`asFloat`),
+		}, {
+			Name:     `b`,
+			Alias:    `asBool`,
+			Function: group.fn(`asBool`),
+		}, {
+			Name:     `t`,
+			Alias:    `asTime`,
+			Function: group.fn(`asTime`),
+		}, {
+			Name:     `d`,
+			Alias:    `asDuration`,
+			Function: group.fn(`asDuration`),
+		},
+	}...)
+
+	return group
 }

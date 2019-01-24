@@ -14,7 +14,7 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 )
 
-func loadStandardFunctionsPath() funcGroup {
+func loadStandardFunctionsPath(funcs FuncMap) funcGroup {
 	return funcGroup{
 		Name:        `File Path Manipulation`,
 		Description: `Used to parse and extract data from strings representing paths in a filesystem or tree hierarchy.`,

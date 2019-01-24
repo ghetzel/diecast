@@ -7,7 +7,7 @@ Diecast is a web server that allows you to render a directory tree of template f
 ### Golang / via `go get`
 
 ```
-go get github.com/ghetzel/diecast/diecast
+go get github.com/ghetzel/diecast/cmd/diecast
 ```
 
 ### macOS / Homebrew

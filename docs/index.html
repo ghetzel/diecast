@@ -52,7 +52,7 @@
 <p></p><details>
     <summary>Golang / via <code>go get</code></summary>
     <code>
-    go get github.com/ghetzel/diecast/diecast
+    go get github.com/ghetzel/diecast/cmd/diecast
 </code>
 </details>
 <details>
@@ -415,1118 +415,109 @@ bindings:
 </p>
     </header>
     <h4>Functions</h4>
-    <section class="function">
-        <h5><code>autobyte</code></h5>
-    <p>Attempt to convert the given number to a string representation of the value interpreted as bytes. The unit will be automatically determined as the closest one that produces a value less than 1024 in that unit. The second argument is a printf-style format string that is used when the converted number is being stringified.  By specifying precision and leading digit values to the <code>%f</code> format token, you can control how many decimal places are in the resulting output.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>bytes</th>
-                    <td>number</td>
-                    <td>A number representing the value to format, in bytes.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>format</th>
-                    <td>string</td>
-                    <td>A printf-style format string used to represent the output number.</td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <dl class="examples">
-            <dd>autobyte 2490368 &#34;%.2f&#34;</dd>
-            <dt>2.38MB</dt>
-        </dl>
-    </section>
-    <section class="function">
-        <h5><code>camelize</code></h5>
-    <p>Reformat the given string by changing it into camelCase capitalization.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The input string to reformat.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-    <section class="function">
-        <h5><code>concat</code></h5>
-    <p>Return the string that results in stringifying and joining all of the given arguments.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>strings</th>
-                    <td>any (1+)</td>
-                    <td>One or more values to be stringified and joined together.</td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <dl class="examples">
-            <dd>concat &#34;There are &#34; 5 &#34; apples, yes it&#39;s &#34; true</dd>
-            <dt>There are 5 apples, yes it&#39;s true.</dt>
-        </dl>
-    </section>
-    <section class="function">
+    <section class="function" id="fn-contains">
         <h5><code>contains</code></h5>
     <p>Return true of the given string contains another string.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>input</th>
-                    <td>string</td>
-                    <td>The string to search within.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>substring</th>
-                    <td>string</td>
-                    <td>The substring to find in the `input` string.</td>
-                </tr>
-            </tbody>
-        </table>
     </section>
-    <section class="function">
-        <h5><code>elide</code></h5>
-    <p>Takes an input string and ensures it is no longer than a given number of characters.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>input</th>
-                    <td>string</td>
-                    <td>The string to (possibly) truncate.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>charcount</th>
-                    <td>integer</td>
-                    <td>The maximum number of character that can appear in a string before it is truncated.</td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <dl class="examples">
-            <dd>elide &#34;This is a sentence that contains fifty characters.&#34; 18</dd>
-            <dt>This is a sentence</dt>
-            <dd>elide &#34;hello.&#34; 16</dd>
-            <dt>hello.</dt>
-        </dl>
-    </section>
-    <section class="function">
-        <h5><code>elideWords</code></h5>
-    <p>Takes an input string and counts the number of words in it. If that number exceeds a given count, the string will be truncated to be equal to that number of words.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>input</th>
-                    <td>string</td>
-                    <td>The string to (possibly) truncate.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>wordcount</th>
-                    <td>integer</td>
-                    <td>The maximum number of words that can appear in the string before it is truncated.</td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <dl class="examples">
-            <dd>elideWords &#34;This is a sentence that contains eight words.&#34; 5</dd>
-            <dt>This is a sentence that</dt>
-            <dd>elideWords &#34;Hello world&#34; 10</dd>
-            <dt>Hello world</dt>
-        </dl>
-    </section>
-    <section class="function">
-        <h5><code>hasPrefix</code></h5>
-    <p>Return true if the given string begins with the given prefix.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The input string to test.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>prefix</th>
-                    <td>string</td>
-                    <td>The prefix to test for the presence of.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-    <section class="function">
-        <h5><code>hasSuffix</code></h5>
-    <p>Return true if the given string ends with the given suffix.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The input string to test.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>suffix</th>
-                    <td>string</td>
-                    <td>The suffix to test for the presence of.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-    <section class="function">
-        <h5><code>hyphenate</code></h5>
-    <p>Reformat the given string by changing it into hypen-case capitalization.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The input string to reformat.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-    <section class="function">
-        <h5><code>join</code></h5>
-    <p>Stringify the given array of values and join them together into a string, separated by a given separator string.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>input</th>
-                    <td>array[any]</td>
-                    <td>An array of values to stringify and join.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>separator</th>
-                    <td>string</td>
-                    <td>The string used to join all elements of the array together.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-    <section class="function">
+    <section class="function" id="fn-lower">
         <h5><code>lower</code></h5>
     <p>Reformat the given string by changing it into lower case capitalization.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The input string to reformat.</td>
-                </tr>
-            </tbody>
-        </table>
     </section>
-    <section class="function">
+    <section class="function" id="fn-ltrim">
         <h5><code>ltrim</code></h5>
     <p>Return the given string with any leading whitespace removed.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The string to trim.</td>
-                </tr>
-            </tbody>
-        </table>
     </section>
-    <section class="function">
-        <h5><code>match</code></h5>
-    <i>Undocumented</i>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The string to match against.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>pattern</th>
-                    <td>string</td>
-                    <td>A Golang-compatible regular expression defining what is being sought.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-    <section class="function">
-        <h5><code>pascalize</code></h5>
-    <p>Reformat the given string by changing it into PascalCase capitalization.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The input string to reformat.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-    <section class="function">
-        <h5><code>percent</code></h5>
-    <p>Takes an integer or decimal value and returns it formatted as a percentage.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>value</th>
-                    <td>number</td>
-                    <td>The value you wish to express as a percentage.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>whole</th>
-                    <td>number</td>
-                    <td>The number that represents 100%.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>format</th>
-                    <td>string</td>
-                    <td>The printf format string used for rounding and truncating the converted number.</td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <dl class="examples">
-            <dd>percent 99</dd>
-            <dt>99</dt>
-            <dd>percent 3.3 10</dd>
-            <dt>33</dt>
-            <dd>percent 3.33 10 &#34;%.3f&#34;</dd>
-            <dt>33.3</dt>
-        </dl>
-    </section>
-    <section class="function">
+    <section class="function" id="fn-replace">
         <h5><code>replace</code></h5>
     <p>Replace occurrences of one substring with another string in a given input string.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>wholestring</th>
-                    <td>string</td>
-                    <td>The whole string being searched.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>old</th>
-                    <td>string</td>
-                    <td>The old value being sought.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>new</th>
-                    <td>string</td>
-                    <td>The new value that is replacing old.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>count</th>
-                    <td>int</td>
-                    <td>The number of matches to replace before stopping. If this number is &lt; 0, the all occurrences will be replaced.</td>
-                </tr>
-            </tbody>
-        </table>
     </section>
-    <section class="function">
-        <h5><code>rtrim</code></h5>
-    <p>Return the given string with any trailing whitespace removed.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The string to trim.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-    <section class="function">
+    <section class="function" id="fn-rxreplace">
         <h5><code>rxreplace</code></h5>
     <p>Return the given string with all substrings matching the given regular expression replaced with another string.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>wholestring</th>
-                    <td>string</td>
-                    <td>The whole string being searched.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>pattern</th>
-                    <td>string</td>
-                    <td>A Golang-compatible regular expression that matches what should be replaced.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>repl</th>
-                    <td>string</td>
-                    <td>The string to replace matches with.</td>
-                </tr>
-            </tbody>
-        </table>
     </section>
-    <section class="function">
+    <section class="function" id="fn-concat">
+        <h5><code>concat</code></h5>
+    <p>Return the string that results in stringifying and joining all of the given arguments.</p>
+    </section>
+    <section class="function" id="fn-rtrim">
+        <h5><code>rtrim</code></h5>
+    <p>Return the given string with any trailing whitespace removed.</p>
+    </section>
+    <section class="function" id="fn-split">
         <h5><code>split</code></h5>
     <p>Split a given string into an array of strings by a given separator.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The string to split into pieces.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>separator</th>
-                    <td>string</td>
-                    <td>The separator on which `in` will be split.</td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <dl class="examples">
-            <dd>split &#34;this is a sentence.&#34;</dd>
-            <dt>[&#34;this&#34;, &#34;is&#34;, &#34;a&#34;, &#34;sentence.&#34;]</dt>
-        </dl>
     </section>
-    <section class="function">
+    <section class="function" id="fn-join">
+        <h5><code>join</code></h5>
+    <p>Stringify the given array of values and join them together into a string, separated by a given separator string.</p>
+    </section>
+    <section class="function" id="fn-strcount">
+        <h5><code>strcount</code></h5>
+    <p>Count counts the number of non-overlapping instances of a substring. If the given substring is empty, then this returns the length of the string plus one.</p>
+    </section>
+    <section class="function" id="fn-titleize">
+        <h5><code>titleize</code></h5>
+    <p>Reformat the given string by changing it into Title Case capitalization.</p>
+    </section>
+    <section class="function" id="fn-camelize">
+        <h5><code>camelize</code></h5>
+    <p>Reformat the given string by changing it into camelCase capitalization.</p>
+    </section>
+    <section class="function" id="fn-pascalize">
+        <h5><code>pascalize</code></h5>
+    <p>Reformat the given string by changing it into PascalCase capitalization.</p>
+    </section>
+    <section class="function" id="fn-underscore">
+        <h5><code>underscore</code></h5>
+    <p>Reformat the given string by changing it into _underscorecase_ capitalization (also known as snake_case).</p>
+    </section>
+    <section class="function" id="fn-hyphenate">
+        <h5><code>hyphenate</code></h5>
+    <p>Reformat the given string by changing it into hyphen-case capitalization.</p>
+    </section>
+    <section class="function" id="fn-trim">
+        <h5><code>trim</code></h5>
+    <p>Return the given string with any leading and trailing whitespace removed.</p>
+    </section>
+    <section class="function" id="fn-upper">
+        <h5><code>upper</code></h5>
+    <p>Reformat the given string by changing it into UPPER CASE capitalization.</p>
+    </section>
+    <section class="function" id="fn-hasPrefix">
+        <h5><code>hasPrefix</code></h5>
+    <p>Return true if the given string begins with the given prefix.</p>
+    </section>
+    <section class="function" id="fn-hasSuffix">
+        <h5><code>hasSuffix</code></h5>
+    <p>Return true if the given string ends with the given suffix.</p>
+    </section>
+    <section class="function" id="fn-surroundedBy">
+        <h5><code>surroundedBy</code></h5>
+    <p>Return whether the given string is begins with a specific prefix <em>and</em> ends with a specific suffix.</p>
+    </section>
+    <section class="function" id="fn-percent">
+        <h5><code>percent</code></h5>
+    <p>Takes an integer or decimal value and returns it formatted as a percentage.</p>
+    </section>
+    <section class="function" id="fn-autobyte">
+        <h5><code>autobyte</code></h5>
+    <p>Attempt to convert the given number to a string representation of the value interpreted as bytes. The unit will be automatically determined as the closest one that produces a value less than 1024 in that unit. The second argument is a printf-style format string that is used when the converted number is being stringified. By specifying precision and leading digit values to the %f format token, you can control how many decimal places are in the resulting output.</p>
+    </section>
+    <section class="function" id="fn-thousandify">
+        <h5><code>thousandify</code></h5>
+    <p>Take a number and reformat it to be more readable by adding a separator between every three successive places.</p>
+    </section>
+    <section class="function" id="fn-splitWords">
         <h5><code>splitWords</code></h5>
     <p>Detect word boundaries in a given string and split that string into an array where each element is a word.</p>
     </section>
-    <section class="function">
-        <h5><code>strcount</code></h5>
-    <p>Count counts the number of non-overlapping instances of a substring. If the given substring is empty, then this returns the length of the string plus one.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>input</th>
-                    <td>string</td>
-                    <td>The string to search within.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>substring</th>
-                    <td>string</td>
-                    <td>The substring to count the number of instances of.</td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <dl class="examples">
-            <dd>strcount &#34;cheese&#34; &#34;e&#34;</dd>
-            <dt>3</dt>
-            <dd>strcount &#34;five&#34; &#34;&#34;</dd>
-            <dt>5</dt>
-        </dl>
-    </section>
-    <section class="function">
-        <h5><code>stripHtml</code></h5>
-    <p>Removes all HTML tags from a given input string, leaving behind only the textual content of the nodes.  Only text nodes are preserved; attribute names and values, and comments, will be omitted.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>input</th>
-                    <td>string</td>
-                    <td>The string to parse as HTML and extract text from.</td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <dl class="examples">
-            <dd>stripHtml &#34;&lt;!-- A link --&gt;&lt;a href=&#39;/test&#39;&gt;&lt;b&gt;Hello &lt;i&gt;world!&lt;/i&gt;&lt;/b&gt;&lt;/a&gt;&#34;</dd>
-            <dt>Hello world!</dt>
-        </dl>
-    </section>
-    <section class="function">
-        <h5><code>surroundedBy</code></h5>
-    <p>Return whether the given string is begins with a specific prefix <em>and</em> ends with a specific suffix.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The string to test.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>prefix</th>
-                    <td>string</td>
-                    <td>The string the input must start with.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>suffix</th>
-                    <td>string</td>
-                    <td>The string the input must end with.</td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <dl class="examples">
-            <dd>surroundedBy &#34;&lt;html&gt;&#34; &#34;&lt;&#34; &#34;&gt;&#34;</dd>
-            <dt>true</dt>
-            <dd>surroundedBy &#34;&lt;html&gt;&#34; &#34;&lt;/&#34; &#34;&gt;&#34;</dd>
-            <dt>false</dt>
-        </dl>
-    </section>
-    <section class="function">
-        <h5><code>thousandify</code></h5>
-    <p>Take a number and reformat it to be more readable by adding a separator between every three successive places.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>value</th>
-                    <td>number</td>
-                    <td>The number to reformat.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>separator</th>
-                    <td>string</td>
-                    <td>The character used to separate groups of digits.</td>
-                </tr>
-            </tbody>
-                <tr>
-                    <th>decimal</th>
-                    <td>string</td>
-                    <td>The character used as a decimal point.</td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <dl class="examples">
-            <dd>thousandify 31536000 &#34;,&#34; &#34;.&#34;</dd>
-            <dt>31,536,000</dt>
-            <dd>thousandify 525600.72 &#34; &#34; &#34;,&#34;</dd>
-            <dt>525 600,72</dt>
-        </dl>
-    </section>
-    <section class="function">
-        <h5><code>titleize</code></h5>
-    <p>Reformat the given string by changing it into Title Case capitalization.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The input string to reformat.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-    <section class="function">
-        <h5><code>trim</code></h5>
-    <p>Return the given string with any leading and trailing whitespace removed.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The string to trim.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-    <section class="function">
-        <h5><code>underscore</code></h5>
-    <p>Reformat the given string by changing it into underscore<em>case capitalization (also known as snake</em>case).</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The input string to reformat.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-    <section class="function">
-        <h5><code>upper</code></h5>
-    <p>Reformat the given string by changing it into UPPER CASE capitalization.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>in</th>
-                    <td>string</td>
-                    <td>The input string to reformat.</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-</section>
-<section class="group" id="arrays-and-objects"  >
-    <header>
-        <h3>Arrays and Objects</h3>
-        <p><p>For converting, modifying, and filtering arrays, objects, and arrays of objects. These functions are especially useful when working with data returned from Bindings.</p>
-</p>
-    </header>
-    <h4>Functions</h4>
-    <section class="function">
-        <h5><code>any</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>apply</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>compact</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>count</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>filter</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>filterByKey</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>findkey</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>first</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>firstByKey</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>flatten</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>get</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>groupBy</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>has</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>head</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>indexOf</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>intersect</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>ireverse</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>isort</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>keys</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>last</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>leastcommon</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>mostcommon</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>pluck</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>rest</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>reverse</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>sequence</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>shuffle</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>slice</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>sslice</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>tail</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>transformValues</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>uniq</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>uniqByKey</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>uniqByKeyLast</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>values</code></h5>
-    <i>Undocumented</i>
-    </section>
-</section>
-<section class="group" id="time-functions"  >
-    <header>
-        <h3>Time Functions</h3>
-        <p><p>Used for working with time and duration values.  Among this collection are functions for converting values to times, formatting time values, and performing time-oriented calculatons on those values.</p>
-</p>
-    </header>
-    <h4>Functions</h4>
-    <section class="function">
-        <h5><code>addTime</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>ago</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>duration</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>extractTime</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>isAfter</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>isBefore</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>now</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>since</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>sunrise</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>sunset</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>time</code></h5>
-    <i>Undocumented</i>
-    </section>
-</section>
-<section class="group" id="type-comparison-and-manipulation"  >
-    <header>
-        <h3>Type Comparison and Manipulation</h3>
-        <p><p>Used to detect and convert discrete values into different data types.</p>
-</p>
-    </header>
-    <h4>Functions</h4>
-    <section class="function">
-        <h5><code>asBool</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>asDuration</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>asFloat</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>asInt</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>asStr</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>asTime</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>autotype</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>b</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>d</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>f</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>i</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>isArray</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>isBool</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>isDuration</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>isEmpty</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>isFloat</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>isInt</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>isMap</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>isTime</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>isZero</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>mapify</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>s</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>sliceify</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>stringify</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>t</code></h5>
-    <i>Undocumented</i>
-    </section>
-</section>
-<section class="group" id="encoding-and-decoding"  >
-    <header>
-        <h3>Encoding and Decoding</h3>
-        <p><p>For encoding typed data and data structures into well-known formats like JSON, CSV, and TSV.</p>
-</p>
-    </header>
-    <h4>Functions</h4>
-    <section class="function">
-        <h5><code>base32</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>base58</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>base64</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>csv</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>jsonify</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>markdown</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>sanitize</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>tsv</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>unsafe</code></h5>
-    <i>Undocumented</i>
+    <section class="function" id="fn-elideWords">
+        <h5><code>elideWords</code></h5>
+    <p>Takes an input string and counts the number of words in it. If that number exceeds a given count, the string will be truncated to be equal to that number of words.</p>
+    </section>
+    <section class="function" id="fn-elide">
+        <h5><code>elide</code></h5>
+    <p>Takes an input string and ensures it is no longer than a given number of characters.</p>
     </section>
 </section>
 <section class="group" id="file-path-manipulation"  >
@@ -1536,29 +527,778 @@ bindings:
 </p>
     </header>
     <h4>Functions</h4>
-    <section class="function">
+    <section class="function" id="fn-basename">
         <h5><code>basename</code></h5>
-    <i>Undocumented</i>
+    <p>Return the filename component of the given path.</p>
     </section>
-    <section class="function">
-        <h5><code>dir</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>dirname</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
+    <section class="function" id="fn-extname">
         <h5><code>extname</code></h5>
-    <i>Undocumented</i>
+    <p>Return the extension component of the given path (always prefixed with a dot [.]).</p>
     </section>
-    <section class="function">
+    <section class="function" id="fn-dirname">
+        <h5><code>dirname</code></h5>
+    <p>Return the directory path component of the given path.</p>
+    </section>
+    <section class="function" id="fn-pathjoin">
         <h5><code>pathjoin</code></h5>
+    <p>Return a string of all given path components joined together using the system path separator.</p>
+    </section>
+    <section class="function" id="fn-pwd">
+        <h5><code>pwd</code></h5>
+    <p>Return the present working directory.</p>
+    </section>
+    <section class="function" id="fn-dir">
+        <h5><code>dir</code></h5>
+    <p>Return a list of files and directories in <em>path</em>, or in the current directory if not specified.</p>
+    </section>
+    <section class="function" id="fn-mimetype">
+        <h5><code>mimetype</code></h5>
+    <p>Returns a best guess at the MIME type for the given filename.</p>
+    </section>
+    <section class="function" id="fn-mimeparams">
+        <h5><code>mimeparams</code></h5>
+    <p>Returns the parameters portion of the MIME type of the given filename.</p>
+    </section>
+</section>
+<section class="group" id="encoding-and-decoding"  >
+    <header>
+        <h3>Encoding and Decoding</h3>
+        <p><p>For encoding typed data and data structures into well-known formats like JSON, CSV, and TSV.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function" id="fn-jsonify">
+        <h5><code>jsonify</code></h5>
+    <p>Encode the given argument as a JSON document.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>data</th>
+                    <td>any</td>
+                    <td>The data to encode as JSON.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>indent</th>
+                    <td>string</td>
+                    <td>The string to indent successive tiers in the document hierarchy with.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-markdown">
+        <h5><code>markdown</code></h5>
+    <p>Parse the given string as a Markdown document and return it represented as HTML.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>document</th>
+                    <td>string</td>
+                    <td>The full text of the Markdown to parse</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>extensions</th>
+                    <td>string(s) (1+)</td>
+                    <td>A list of zero of more Markdown extensions to enable when rendering the HTML.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-csv">
+        <h5><code>csv</code></h5>
+    <p>Encode the given data as a comma-separated values document.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>columns</th>
+                    <td>array[string]</td>
+                    <td>An array of values that represent the column names of the table being created.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>rows</th>
+                    <td>array[array[string]], array[object]</td>
+                    <td>An array of values that represent the column names of the table being created.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-tsv">
+        <h5><code>tsv</code></h5>
+    <p>Encode the given data as a tab-separated values document.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>columns</th>
+                    <td>array[string]</td>
+                    <td>An array of values that represent the column names of the table being created.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>rows</th>
+                    <td>array[array[string]], array[object]</td>
+                    <td>An array of values that represent the column names of the table being created.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-unsafe">
+        <h5><code>unsafe</code></h5>
+    <p>Return an unescaped raw HTML segment for direct inclusion in the rendered template output.This function bypasses the built-in HTML escaping and sanitization security features, and you almost certainly want to use <a href="#fn-sanitize" rel="nofollow">sanitize</a> instead.  This is a common antipattern that leads to all kinds of security issues from poorly-constrained implementations, so you are forced to acknowledge this by typing “unsafe”.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>document</th>
+                    <td>string</td>
+                    <td>The raw HTML snippet you sneakily want to sneak past the HTML sanitizer for reasons.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-sanitize">
+        <h5><code>sanitize</code></h5>
+    <p>Takes a raw HTML string and santizes it, removing attributes and elements that can be used to evaluate scripts, but leaving the rest. Useful for preparing user-generated HTML for display.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th></th>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</section>
+<section class="group" id="type-detection-and-manipulation"  >
+    <header>
+        <h3>Type Detection and Manipulation</h3>
+        <p><p>Used to detect and convert discrete values into different data types.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function" id="fn-isBool">
+        <h5><code>isBool</code></h5>
+    <p>Return whether the given <em>value</em> is a boolean type.</p>
+    </section>
+    <section class="function" id="fn-isInt">
+        <h5><code>isInt</code></h5>
+    <p>Return whether the given <em>value</em> is an integer type.</p>
+    </section>
+    <section class="function" id="fn-isFloat">
+        <h5><code>isFloat</code></h5>
+    <p>Return whether the given <em>value</em> is a floating-point type.</p>
+    </section>
+    <section class="function" id="fn-isZero">
+        <h5><code>isZero</code></h5>
+    <p>Return whether the given <em>value</em> is an zero-valued variable.</p>
+    </section>
+    <section class="function" id="fn-isEmpty">
+        <h5><code>isEmpty</code></h5>
+    <p>Return whether the given <em>value</em> is empty.</p>
+    </section>
+    <section class="function" id="fn-isArray">
+        <h5><code>isArray</code></h5>
+    <p>Return whether the given <em>value</em> is an iterable array or slice.</p>
+    </section>
+    <section class="function" id="fn-isMap">
+        <h5><code>isMap</code></h5>
+    <p>Return whether the given <em>value</em> is a key-value map type.</p>
+    </section>
+    <section class="function" id="fn-isTime">
+        <h5><code>isTime</code></h5>
+    <p>Return whether the given <em>value</em> is parsable as a date/time value.</p>
+    </section>
+    <section class="function" id="fn-isDuration">
+        <h5><code>isDuration</code></h5>
+    <p>Return whether the given <em>value</em> is parsable as a duration.</p>
+    </section>
+    <section class="function" id="fn-autotype">
+        <h5><code>autotype</code></h5>
+    <p>Attempt to automatically determine the type if <em>value</em> and return the converted output.</p>
+    </section>
+    <section class="function" id="fn-asStr">
+        <h5><code>asStr</code></h5>
+    <p>Return the <em>value</em> as a string.</p>
+    </section>
+    <section class="function" id="fn-asInt">
+        <h5><code>asInt</code></h5>
+    <p>Attempt to convert the given <em>value</em> to an integer.</p>
+    </section>
+    <section class="function" id="fn-asFloat">
+        <h5><code>asFloat</code></h5>
+    <p>Attempt to convert the given <em>value</em> to a floating-point number.</p>
+    </section>
+    <section class="function" id="fn-asBool">
+        <h5><code>asBool</code></h5>
+    <p>Attempt to convert the given <em>value</em> to a boolean value.</p>
+    </section>
+    <section class="function" id="fn-asTime">
+        <h5><code>asTime</code></h5>
+    <p>Attempt to parse the given <em>value</em> as a date/time value.</p>
+    </section>
+    <section class="function" id="fn-asDuration">
+        <h5><code>asDuration</code></h5>
+    <p>Attempt to parse the given <em>value</em> as a time duration.</p>
+    </section>
+    <section class="function" id="fn-s">
+        <h5><code>s</code></h5>
     <i>Undocumented</i>
     </section>
-    <section class="function">
-        <h5><code>pwd</code></h5>
+    <section class="function" id="fn-i">
+        <h5><code>i</code></h5>
     <i>Undocumented</i>
+    </section>
+    <section class="function" id="fn-f">
+        <h5><code>f</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function" id="fn-b">
+        <h5><code>b</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function" id="fn-t">
+        <h5><code>t</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function" id="fn-d">
+        <h5><code>d</code></h5>
+    <i>Undocumented</i>
+    </section>
+</section>
+<section class="group" id="time-functions"  >
+    <header>
+        <h3>Time Functions</h3>
+        <p><p>Used for working with time and duration values. Among this collection are functions for converting values to times, formatting time values, and performing time-oriented calculations on those values.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function" id="fn-time">
+        <h5><code>time</code></h5>
+    <p>Return the given time formatted using a given format.  See <a href="#time-formats" rel="nofollow">Time Formats</a> for acceptable formats.</p>
+    </section>
+    <section class="function" id="fn-now">
+        <h5><code>now</code></h5>
+    <p>Return the current time, optionally formatted using the given <em>format</em>.  See <a href="#time-formats" rel="nofollow">Time Formats</a> for</p>
+    </section>
+    <section class="function" id="fn-addTime">
+        <h5><code>addTime</code></h5>
+    <p>Return a time with with given duration added to it.  Can specify time <em>at</em> to apply the change to. Defaults to the current time.</p>
+    </section>
+    <section class="function" id="fn-ago">
+        <h5><code>ago</code></h5>
+    <p>Return a new time subtracted by the given duration.</p>
+    </section>
+    <section class="function" id="fn-since">
+        <h5><code>since</code></h5>
+    <p>Return the amount of time that has elapsed since the given time, optionally rounded to the nearest time interval.</p>
+    </section>
+    <section class="function" id="fn-duration">
+        <h5><code>duration</code></h5>
+    <p>Convert the given value from a duration (specified with the given unit) into the given time format.</p>
+    </section>
+    <section class="function" id="fn-isBefore">
+        <h5><code>isBefore</code></h5>
+    <p>Return whether the first time occurs before the second one.</p>
+    </section>
+    <section class="function" id="fn-isAfter">
+        <h5><code>isAfter</code></h5>
+    <p>Return whether the first time occurs after the second one.</p>
+    </section>
+    <section class="function" id="fn-isBetweenTimes">
+        <h5><code>isBetweenTimes</code></h5>
+    <p>Return whether the current time is between two times [first, second).</p>
+    </section>
+    <section class="function" id="fn-extractTime">
+        <h5><code>extractTime</code></h5>
+    <p>Attempt to extract a time value from the given string.</p>
+    </section>
+    <section class="function" id="fn-sunrise">
+        <h5><code>sunrise</code></h5>
+    <p>Return the time of apparent sunrise at the given coordinates, optionally for a given time.</p>
+    </section>
+    <section class="function" id="fn-sunset">
+        <h5><code>sunset</code></h5>
+    <p>Return the time of apparent sunset at the given coordinates, optionally for a given time.</p>
+    </section>
+</section>
+<section class="group" id="hashing-and-cryptography"  >
+    <header>
+        <h3>Hashing and Cryptography</h3>
+        <p><p>These functions provide basic cryptographic and non-cryptographic functions, including cryptographically-secure random number generation.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function" id="fn-random">
+        <h5><code>random</code></h5>
+    <p>Return a random array of <em>n</em> bytes. The random source used is suitable for cryptographic purposes.</p>
+    </section>
+    <section class="function" id="fn-uuid">
+        <h5><code>uuid</code></h5>
+    <p>Generate a new Version 4 UUID as a string.</p>
+    </section>
+    <section class="function" id="fn-uuidRaw">
+        <h5><code>uuidRaw</code></h5>
+    <p>Generate the raw bytes of a new Version 4 UUID value.</p>
+    </section>
+    <section class="function" id="fn-base32">
+        <h5><code>base32</code></h5>
+    <p>Encode the <em>input</em> bytes with the Base32 encoding scheme.</p>
+    </section>
+    <section class="function" id="fn-base58">
+        <h5><code>base58</code></h5>
+    <p>Encode the <em>input</em> bytes with the Base58 (Bitcoin alphabet) encoding scheme.</p>
+    </section>
+    <section class="function" id="fn-base64">
+        <h5><code>base64</code></h5>
+    <p>Encode the <em>input</em> bytes with the Base64 encoding scheme.  Optionally specify the encoding mode: one of “padded”, “url”, “url-padded”, or empty (unpadded, default).</p>
+    </section>
+    <section class="function" id="fn-murmur3">
+        <h5><code>murmur3</code></h5>
+    <p>Hash the given data using the Murmur 3 algorithm.</p>
+    </section>
+</section>
+<section class="group" id="math-and-statistics"  >
+    <header>
+        <h3>Math and Statistics</h3>
+        <p><p>These functions implement basic mathematical and statistical operations on numbers.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function" id="fn-calc">
+        <h5><code>calc</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function" id="fn-add">
+        <h5><code>add</code></h5>
+    <p>Return the sum of all of the given values.</p>
+    </section>
+    <section class="function" id="fn-subtract">
+        <h5><code>subtract</code></h5>
+    <p>Sequentially subtract all of the given values.</p>
+    </section>
+    <section class="function" id="fn-multiply">
+        <h5><code>multiply</code></h5>
+    <p>Return the product of all of the given values.</p>
+    </section>
+    <section class="function" id="fn-divide">
+        <h5><code>divide</code></h5>
+    <p>Sequentially divide all of the given values in the order given.</p>
+    </section>
+    <section class="function" id="fn-mod">
+        <h5><code>mod</code></h5>
+    <p>Return the modulus of all of the given values.</p>
+    </section>
+    <section class="function" id="fn-pow">
+        <h5><code>pow</code></h5>
+    <i>Undocumented</i>
+    </section>
+    <section class="function" id="fn-sequence">
+        <h5><code>sequence</code></h5>
+    <p>Return an array of integers representing a sequence from [0, <em>n</em>).</p>
+    </section>
+    <section class="function" id="fn-round">
+        <h5><code>round</code></h5>
+    <p>Round a number to the nearest <em>n</em> places.</p>
+    </section>
+    <section class="function" id="fn-negate">
+        <h5><code>negate</code></h5>
+    <p>Return the given number multiplied by -1.</p>
+    </section>
+    <section class="function" id="fn-minimum_nz">
+        <h5><code>minimum_nz</code></h5>
+    <p>Return the minimum (excluding zero) of the given array of numbers.</p>
+    </section>
+    <section class="function" id="fn-stddev">
+        <h5><code>stddev</code></h5>
+    <p>Return the standard deviation of the given array of numbers.</p>
+    </section>
+    <section class="function" id="fn-sum">
+        <h5><code>sum</code></h5>
+    <p>Return the sum of the given array of numbers.</p>
+    </section>
+    <section class="function" id="fn-maximum">
+        <h5><code>maximum</code></h5>
+    <p>Return the maximum of the given array of numbers.</p>
+    </section>
+    <section class="function" id="fn-mean">
+        <h5><code>mean</code></h5>
+    <p>Return the mean of the given array of numbers.</p>
+    </section>
+    <section class="function" id="fn-median">
+        <h5><code>median</code></h5>
+    <p>Return the median of the given array of numbers.</p>
+    </section>
+    <section class="function" id="fn-minimum">
+        <h5><code>minimum</code></h5>
+    <p>Return the minimum of the given array of numbers.</p>
+    </section>
+</section>
+<section class="group" id="arrays-and-objects"  >
+    <header>
+        <h3>Arrays and Objects</h3>
+        <p><p>For converting, modifying, and filtering arrays, objects, and arrays of objects. These functions are especially useful when working with data returned from Bindings.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function" id="fn-page">
+        <h5><code>page</code></h5>
+    <p>Returns an integer representing an offset used for accessing paginated values when given a page number and number of results per page.</p>
+    </section>
+    <section class="function" id="fn-reverse">
+        <h5><code>reverse</code></h5>
+    <p>Return the given array in reverse order.</p>
+    </section>
+    <section class="function" id="fn-filter">
+        <h5><code>filter</code></h5>
+    <p>Return the given array with only elements where expression evaluates to a truthy value.</p>
+    </section>
+    <section class="function" id="fn-filterByKey">
+        <h5><code>filterByKey</code></h5>
+    <p>Return a subset of the elements in the given array whose values are objects that contain the given key.  Optionally, the values at the key for each object in the array can be passed to a template expression.  If that expression produces a truthy value, the object will be included in the output.  Otherwise it will not.</p>
+    </section>
+    <section class="function" id="fn-firstByKey">
+        <h5><code>firstByKey</code></h5>
+    <p>Identical to <a href="#fn-filterByKey" rel="nofollow">filterByKey</a>, except it returns only the first object in the resulting array instead of the whole array.</p>
+    </section>
+    <section class="function" id="fn-transformValues">
+        <h5><code>transformValues</code></h5>
+    <p>Return all elements of the given array of objects with the value at a key transformed by the given expression.</p>
+    </section>
+    <section class="function" id="fn-uniqByKey">
+        <h5><code>uniqByKey</code></h5>
+    <p>Return an array of objects containing only unique entries in the given array of objects. Uniqueness is determined by comparing the values at the given key for each object.  The first time a value is encountered, that value’s parent object is included in the output.  All subsequent objects with the same value at that key will be discarded.</p>
+    </section>
+    <section class="function" id="fn-uniqByKeyLast">
+        <h5><code>uniqByKeyLast</code></h5>
+    <p>Identical to <a href="#fn-uniqByKey" rel="nofollow">uniqByKey</a>, except the <em>last</em> of a set of objects grouped by key is included in the output, not the first.</p>
+    </section>
+    <section class="function" id="fn-sortByKey">
+        <h5><code>sortByKey</code></h5>
+    <p>Sort the given array of objects by comparing the values of the given key for all objects.</p>
+    </section>
+    <section class="function" id="fn-pluck">
+        <h5><code>pluck</code></h5>
+    <p>Retrieve a value at the given key from each object in a given array of objects.</p>
+    </section>
+    <section class="function" id="fn-keys">
+        <h5><code>keys</code></h5>
+    <p>Return an array of key names specifying all the keys of the given object.</p>
+    </section>
+    <section class="function" id="fn-values">
+        <h5><code>values</code></h5>
+    <p>Return an array of values from the given object.</p>
+    </section>
+    <section class="function" id="fn-get">
+        <h5><code>get</code></h5>
+    <p>Retrieve a value from a given object.  Key can be specified as a dot.separated.list of keys that describes a path from the given object, through any intermediate nested objects, down to the object containing the desired value.</p>
+    </section>
+    <section class="function" id="fn-findkey">
+        <h5><code>findkey</code></h5>
+    <p>Recursively scans the given array or map and returns all values of the given key.</p>
+    </section>
+    <section class="function" id="fn-has">
+        <h5><code>has</code></h5>
+    <p>Return whether a specific element is in an array.</p>
+    </section>
+    <section class="function" id="fn-any">
+        <h5><code>any</code></h5>
+    <p>Return whether an array contains any of a set of desired.</p>
+    </section>
+    <section class="function" id="fn-indexOf">
+        <h5><code>indexOf</code></h5>
+    <p>Iterate through an array and return the index of a given value, or -1 if not present.</p>
+    </section>
+    <section class="function" id="fn-slice">
+        <h5><code>slice</code></h5>
+    <p>Return a subset of the given array.</p>
+    </section>
+    <section class="function" id="fn-sslice">
+        <h5><code>sslice</code></h5>
+    <p>Identical to <a href="#fn-slice" rel="nofollow">slice</a>, but returns an array of strings.</p>
+    </section>
+    <section class="function" id="fn-uniq">
+        <h5><code>uniq</code></h5>
+    <p>Return an array containing only unique values from the given array.</p>
+    </section>
+    <section class="function" id="fn-flatten">
+        <h5><code>flatten</code></h5>
+    <p>Return an array of values with all nested arrays collapsed down to a single, flat array.</p>
+    </section>
+    <section class="function" id="fn-compact">
+        <h5><code>compact</code></h5>
+    <p>Return an copy of given array with all empty, null, and zero elements removed.</p>
+    </section>
+    <section class="function" id="fn-first">
+        <h5><code>first</code></h5>
+    <p>Return the first value from the given array, or null if the array is empty.</p>
+    </section>
+    <section class="function" id="fn-rest">
+        <h5><code>rest</code></h5>
+    <p>Return all but the first value from the given array, or an empty array of the given array’s length is &lt;= 1.</p>
+    </section>
+    <section class="function" id="fn-last">
+        <h5><code>last</code></h5>
+    <p>Return the last value from the given array, or null if the array is empty.</p>
+    </section>
+    <section class="function" id="fn-count">
+        <h5><code>count</code></h5>
+    <p>Identical to the built-in “len” function, but is less picky about types.</p>
+    </section>
+    <section class="function" id="fn-sort">
+        <h5><code>sort</code></h5>
+    <p>Return an array sorted in lexical ascending order.</p>
+    </section>
+    <section class="function" id="fn-rsort">
+        <h5><code>rsort</code></h5>
+    <p>Return the array sorted in lexical descending order.</p>
+    </section>
+    <section class="function" id="fn-isort">
+        <h5><code>isort</code></h5>
+    <p>Return an array sorted in lexical ascending order (case-insensitive.)</p>
+    </section>
+    <section class="function" id="fn-irsort">
+        <h5><code>irsort</code></h5>
+    <p>Return the array sorted in lexical descending order (case-insensitive.)</p>
+    </section>
+    <section class="function" id="fn-mostcommon">
+        <h5><code>mostcommon</code></h5>
+    <p>Return the element in a given array that appears the most frequently.</p>
+    </section>
+    <section class="function" id="fn-leastcommon">
+        <h5><code>leastcommon</code></h5>
+    <p>Return the element in a given array that appears the least frequently.</p>
+    </section>
+    <section class="function" id="fn-sliceify">
+        <h5><code>sliceify</code></h5>
+    <p>Convert the given input into an array.  If the value is already an array, this just returns that array.  Otherwise, it returns an array containing the given value as its only element.</p>
+    </section>
+    <section class="function" id="fn-stringify">
+        <h5><code>stringify</code></h5>
+    <p>Identical to <a href="#fn-sliceify" rel="nofollow">sliceify</a>, but converts all values to strings and returns an array of strings.</p>
+    </section>
+    <section class="function" id="fn-intersect">
+        <h5><code>intersect</code></h5>
+    <p>Return the intersection of two arrays.</p>
+    </section>
+    <section class="function" id="fn-mapify">
+        <h5><code>mapify</code></h5>
+    <p>Return the given value returned as a rangeable object.</p>
+    </section>
+    <section class="function" id="fn-groupBy">
+        <h5><code>groupBy</code></h5>
+    <p>Return the given array of objects as a grouped object, keyed on the value of the specified group field. The field argument can be an expression that receives the value and returns a transformed version of it.</p>
+    </section>
+    <section class="function" id="fn-head">
+        <h5><code>head</code></h5>
+    <p>Return the first <em>n</em> items from an array.</p>
+    </section>
+    <section class="function" id="fn-tail">
+        <h5><code>tail</code></h5>
+    <p>Return the last <em>n</em> items from an array.</p>
+    </section>
+    <section class="function" id="fn-shuffle">
+        <h5><code>shuffle</code></h5>
+    <p>Return the array with the elements rearranged in random order.</p>
+    </section>
+    <section class="function" id="fn-apply">
+        <h5><code>apply</code></h5>
+    <p>Apply a function to each of the elements in the given array. Note that functions must be unary (accept one argument of type <em>any</em>).</p>
+    </section>
+</section>
+<section class="group" id="html-processing"  >
+    <header>
+        <h3>HTML Processing</h3>
+        <p><p>Used to parse and modify HTML documents.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function" id="fn-stripHtml">
+        <h5><code>stripHtml</code></h5>
+    <p>Removes all HTML tags from a given input string, leaving behind only the textual content of the nodes. Only text nodes are preserved; attribute names and values, and comments, will be omitted.</p>
+    </section>
+    <section class="function" id="fn-htmlquery">
+        <h5><code>htmlquery</code></h5>
+    <p>Parse a given HTML document and return details about all elements matching a CSS selector.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>document</th>
+                    <td>string</td>
+                    <td>The HTML document to parse.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>selector</th>
+                    <td>string</td>
+                    <td>A CSS selector that targets the elements that will be returned.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-htmlRemove">
+        <h5><code>htmlRemove</code></h5>
+    <p>Parse a given HTML document and remove all elements matching a CSS selector.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>document</th>
+                    <td>string</td>
+                    <td>The HTML document to parse.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>selector</th>
+                    <td>string</td>
+                    <td>A CSS selector that targets the elements that will be returned.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-htmlAddClass">
+        <h5><code>htmlAddClass</code></h5>
+    <p>Parse a given HTML document and add a CSS class to all elements matching a CSS selector.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>document</th>
+                    <td>string</td>
+                    <td>The HTML document to parse.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>selector</th>
+                    <td>string</td>
+                    <td>A CSS selector that targets the elements that will be returned.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-htmlRemoveClass">
+        <h5><code>htmlRemoveClass</code></h5>
+    <p>Parse a given HTML document and remove a CSS class to all elements matching a CSS selector.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>document</th>
+                    <td>string</td>
+                    <td>The HTML document to parse.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>selector</th>
+                    <td>string</td>
+                    <td>A CSS selector that targets the elements that will be returned.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-htmlSetAttr">
+        <h5><code>htmlSetAttr</code></h5>
+    <p>Parse a given HTML document and set an attribute to a given value on all elements matching a CSS selector.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>document</th>
+                    <td>string</td>
+                    <td>The HTML document to parse.</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th>selector</th>
+                    <td>string</td>
+                    <td>A CSS selector that targets the elements that will be returned.</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </section>
 <section class="group" id="color-manipulation"  >
@@ -1568,73 +1308,101 @@ bindings:
 </p>
     </header>
     <h4>Functions</h4>
-    <section class="function">
-        <h5><code>colorFromValue</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>colorToHSL</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>colorToHex</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>colorToRGB</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>darken</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
+    <section class="function" id="fn-lighten">
         <h5><code>lighten</code></h5>
-    <i>Undocumented</i>
+    <p>Lighten the given color by a percent [0-100].</p>
+    </section>
+    <section class="function" id="fn-darken">
+        <h5><code>darken</code></h5>
+    <p>Darken the given color by a percent [0-100].</p>
+    </section>
+    <section class="function" id="fn-colorToHex">
+        <h5><code>colorToHex</code></h5>
+    <p>Convert the given color to a hexadecimal (“#RRGGBB”, “#RRGGBBAA”) value.</p>
+    </section>
+    <section class="function" id="fn-colorToRGB">
+        <h5><code>colorToRGB</code></h5>
+    <p>Convert the given color to an “rgb()” or “rgba()” value.</p>
+    </section>
+    <section class="function" id="fn-colorToHSL">
+        <h5><code>colorToHSL</code></h5>
+    <p>Convert the given color to an “hsl()” or “hsla()” value.</p>
+    </section>
+    <section class="function" id="fn-colorFromValue">
+        <h5><code>colorFromValue</code></h5>
+    <p>Consistently generate the same color from color from a given value.</p>
     </section>
 </section>
-<section class="group" id="math-functions"  >
+<section class="group" id="unit-conversions"  >
     <header>
-        <h3>Math Functions</h3>
-        <p><p>These functions implement basic math operations on numbers.</p>
+        <h3>Unit Conversions</h3>
+        <p><p>Used to convert numeric values between different unit systems.</p>
 </p>
     </header>
     <h4>Functions</h4>
-    <section class="function">
-        <h5><code>add</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>divide</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>mod</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>multiply</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>negate</code></h5>
-    <i>Undocumented</i>
-    </section>
-    <section class="function">
-        <h5><code>subtract</code></h5>
-    <i>Undocumented</i>
+    <section class="function" id="fn-convert">
+        <h5><code>convert</code></h5>
+    <p>A generic unit conversion function that allows for units to be specified by value as strings.</p>
     </section>
 </section>
-<section class="group" id="hashing-and-cryptography"  >
+<section class="group" id="introspection-and-reflection"  >
     <header>
-        <h3>Hashing and Cryptography</h3>
-        <p><p>These functions provide basic cryptographic and hashing functions, including cryptographically-secure random number generation.</p>
+        <h3>Introspection and Reflection</h3>
+        <p><p>Functions for inspecting runtime information about templates and Diecast itself.</p>
 </p>
     </header>
     <h4>Functions</h4>
-    <section class="function">
+    <section class="function" id="fn-templateKey">
+        <h5><code>templateKey</code></h5>
+    <p>Open the given file and retrieve the key from the page object defined in its header.</p>
+    </section>
+</section>
+<section class="group" id="comparison-and-conditionals"  >
+    <header>
+        <h3>Comparison and Conditionals</h3>
+        <p><p>Used for comparing two values, or for returning one of many options based on a given condition.</p>
+</p>
+    </header>
+    <h4>Functions</h4>
+    <section class="function" id="fn-">
         <h5><code></code></h5>
     <i>Undocumented</i>
+    </section>
+    <section class="function" id="fn-eqx">
+        <h5><code>eqx</code></h5>
+    <p>Return whether two values are equal (any type).</p>
+    </section>
+    <section class="function" id="fn-nex">
+        <h5><code>nex</code></h5>
+    <p>Return whether two values are not equal (any type).</p>
+    </section>
+    <section class="function" id="fn-gtx">
+        <h5><code>gtx</code></h5>
+    <p>Return whether the first value is numerically or lexically greater than the second.</p>
+    </section>
+    <section class="function" id="fn-gex">
+        <h5><code>gex</code></h5>
+    <p>Return whether the first value is numerically or lexically greater than or equal to the second.</p>
+    </section>
+    <section class="function" id="fn-ltx">
+        <h5><code>ltx</code></h5>
+    <p>Return whether the first value is numerically or lexically less than the second.</p>
+    </section>
+    <section class="function" id="fn-lex">
+        <h5><code>lex</code></h5>
+    <p>Return whether the first value is numerically or lexically less than or equal to the second.</p>
+    </section>
+    <section class="function" id="fn-compare">
+        <h5><code>compare</code></h5>
+    <p>A generic comparison function. Accepts operators: “gt”, “ge”, “lt”, “le”, “eq”, “ne”</p>
+    </section>
+    <section class="function" id="fn-match">
+        <h5><code>match</code></h5>
+    <p>Return whether the given value matches the given regular expression.</p>
+    </section>
+    <section class="function" id="fn-switch">
+        <h5><code>switch</code></h5>
+    <p>Provide a simple inline switch-case style decision mechanism.</p>
     </section>
 </section>
                 </div>

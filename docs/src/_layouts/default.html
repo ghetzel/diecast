@@ -20,7 +20,7 @@ postprocessors:
     <link rel="stylesheet" href="/style.scss" type="text/css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg sticky-top bg-diecast">
+    <nav class="navbar navbar-expand-lg bg-diecast">
         <a class="navbar-brand" href="/">
             <img src="/diecast/src/assets/img/diecast-text-dark-bg-36.png">
         </a>
@@ -30,7 +30,7 @@ postprocessors:
         <div class="row">
             <nav
                 id="sidebar"
-                class="navbar navbar-light bg-diecast-dark col-md-3 col-xl-2 align-items-start d-none d-sm-block"
+                class="navbar navbar-light bg-diecast-dark col-md-3 col-xl-2 align-items-start d-none d-sm-block position-sticky"
             >
                 <nav class="nav nav-pills flex-column">
                     {{ $doc := markdown (read "/README.md") "common" "auto-heading-ids" }}
@@ -48,7 +48,7 @@ postprocessors:
                 </nav>
             </nav>
 
-            <div class="col" id="content" data-spy="scroll" data-target="#sidebar" data-offset="50">
+            <div class="col" id="content" data-spy="scroll" data-target="#sidebar" data-offset="0">
                 <div class="col-xl-8">
                     {{ template "content" . }}
                 </div>

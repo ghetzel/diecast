@@ -1,32 +1,32 @@
 ---
 bindings:
--   name:     docs
-    resource: /functions.yml
+-   name:     functionGroups
+    resource: /functions.json
 
 postprocessors:
 - trim-empty-lines
 ---
 
-{{ range $group := $.bindings.docs.groups }}
-<section class="group" id="{{ hyphenate $group.group }}"  >
+{{ range $group := $.bindings.functionGroups }}
+<section class="group" id="{{ hyphenate $group.Name }}"  >
     <header>
-        <h3>{{ $group.group }}</h3>
-        <p>{{ markdown $group.description }}</p>
+        <h3>{{ $group.Name }}</h3>
+        <p>{{ markdown $group.Description }}</p>
     </header>
 
     <h4>Functions</h4>
 
-{{   range $fn := sortByKey $group.functions "name" }}
-    <section class="function">
-        <h5><code>{{ $fn.name }}</code></h5>
+{{   range $fn := sortByKey $group.Functions "name" }}
+    <section class="function" id="fn-{{ $fn.Name }}">
+        <h5><code>{{ $fn.Name }}</code></h5>
 
-{{     if $fn.summary }}
-    {{   markdown $fn.summary }}
+{{     if $fn.Summary }}
+    {{   markdown $fn.Summary }}
 {{     else }}
     <i>Undocumented</i>
 {{     end }}
 
-{{     if $fn.arguments }}
+{{     if $fn.Arguments }}
         <h5>Arguments</h5>
         <table class="table table-sm">
             <thead>
@@ -37,23 +37,23 @@ postprocessors:
                 </tr>
             </thead>
             <tbody>
-{{       range $arg := $fn.arguments }}
+{{       range $arg := $fn.Arguments }}
                 <tr>
-                    <th>{{ $arg.name }}</th>
-                    <td>{{ $arg.type }}{{ if $arg.variadic }} (1+){{ end }}</td>
-                    <td>{{ $arg.desc }}</td>
+                    <th>{{ $arg.Name }}</th>
+                    <td>{{ $arg.Type }}{{ if $arg.Variadic }} (1+){{ end }}</td>
+                    <td>{{ $arg.Description }}</td>
                 </tr>
             </tbody>
 {{       end }}
         </table>
 {{     end }}
 
-{{     if $fn.examples }}
+{{     if $fn.Examples }}
         <h5>Examples</h5>
         <dl class="examples">
-{{       range $x := $fn.examples }}
-            <dd>{{ $x.code }}</dd>
-            <dt>{{ $x.retr }}</dt>
+{{       range $x := $fn.Examples }}
+            <dd>{{ $x.Code }}</dd>
+            <dt>{{ $x.Returns }}</dt>
 {{       end }}
         </dl>
 {{     end }}

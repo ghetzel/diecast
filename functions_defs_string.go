@@ -11,9 +11,9 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 )
 
-func loadStandardFunctionsString(rv FuncMap) {
+func loadStandardFunctionsString(funcs FuncMap) funcGroup {
 	return funcGroup{
-		Name: `String`,
+		Name: `String Functions`,
 		Description: `Used to modify strings in various ways. Whitespace trimming, substring and ` +
 			`concatenation, conversion, and find & replace functions can all be found here.`,
 		Functions: []funcDef{

@@ -49,56 +49,57 @@ func MinNonZero(data stats.Float64Data) (float64, error) {
 	return stats.Min(data)
 }
 
-func getAllFunctions() funcGroups {
+func GetFunctions() (funcGroups, FuncMap) {
+	funcs := make(FuncMap)
 	groups := make(funcGroups, 0)
 
 	// String Processing
-	groups = append(groups, loadStandardFunctionsString())
+	groups = append(groups, loadStandardFunctionsString(funcs))
 
 	// File Pathname Handling
-	groups = append(groups, loadStandardFunctionsPath())
+	groups = append(groups, loadStandardFunctionsPath(funcs))
 
 	// Encoding / Decoding
-	groups = append(groups, loadStandardFunctionsCodecs())
+	groups = append(groups, loadStandardFunctionsCodecs(funcs))
 
 	// Type Handling and Conversion
-	groups = append(groups, loadStandardFunctionsTypes())
+	groups = append(groups, loadStandardFunctionsTypes(funcs))
 
 	// Time and Date Formatting
-	groups = append(groups, loadStandardFunctionsTime())
+	groups = append(groups, loadStandardFunctionsTime(funcs))
 
 	// Random Numbers and Encoding
-	groups = append(groups, loadStandardFunctionsCryptoRand())
+	groups = append(groups, loadStandardFunctionsCryptoRand(funcs))
 
 	// Numeric/Math Functions
-	groups = append(groups, loadStandardFunctionsMath())
+	groups = append(groups, loadStandardFunctionsMath(funcs))
 
 	// Collections
-	groups = append(groups, loadStandardFunctionsCollections())
+	groups = append(groups, loadStandardFunctionsCollections(funcs))
 
 	// HTML processing
-	groups = append(groups, loadStandardFunctionsHtmlProcessing())
+	groups = append(groups, loadStandardFunctionsHtmlProcessing(funcs))
 
 	// Colors
-	groups = append(groups, loadStandardFunctionsColor())
-
-	// Location-based functions
-	groups = append(groups, loadStandardFunctionsLocation())
+	groups = append(groups, loadStandardFunctionsColor(funcs))
 
 	// Unit Conversions
-	groups = append(groups, loadStandardFunctionsConvert())
+	groups = append(groups, loadStandardFunctionsConvert(funcs))
 
 	// Template Introspection functions
-	groups = append(groups, loadStandardFunctionsIntrospection())
+	groups = append(groups, loadStandardFunctionsIntrospection(funcs))
 
 	// Comparators
-	groups = append(groups, loadStandardFunctionsComparisons())
+	groups = append(groups, loadStandardFunctionsComparisons(funcs))
 
-	return groups
+	groups.PopulateFuncMap(funcs)
+
+	return groups, funcs
 }
 
 func GetStandardFunctions() FuncMap {
-	return getAllFunctions().ToFuncMap()
+	_, funcs := GetFunctions()
+	return funcs
 }
 
 type statsTplFunc func(in interface{}) (float64, error) // {}

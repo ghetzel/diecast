@@ -1,0 +1,1729 @@
+[
+  {
+    "Name": "String Functions",
+    "Description": "Used to modify strings in various ways. Whitespace trimming, substring and concatenation, conversion, and find \u0026 replace functions can all be found here.",
+    "Functions": [
+      {
+        "Name": "contains",
+        "Alias": "",
+        "Summary": "Return true of the given string contains another string.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "lower",
+        "Alias": "",
+        "Summary": "Reformat the given string by changing it into lower case capitalization.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "ltrim",
+        "Alias": "",
+        "Summary": "Return the given string with any leading whitespace removed.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "replace",
+        "Alias": "",
+        "Summary": "Replace occurrences of one substring with another string in a given input string.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "rxreplace",
+        "Alias": "",
+        "Summary": "Return the given string with all substrings matching the given regular expression replaced with another string.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "concat",
+        "Alias": "",
+        "Summary": "Return the string that results in stringifying and joining all of the given arguments.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "rtrim",
+        "Alias": "",
+        "Summary": "Return the given string with any trailing whitespace removed.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "split",
+        "Alias": "",
+        "Summary": "Split a given string into an array of strings by a given separator.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "join",
+        "Alias": "",
+        "Summary": "Stringify the given array of values and join them together into a string, separated by a given separator string.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "strcount",
+        "Alias": "",
+        "Summary": "Count counts the number of non-overlapping instances of a substring. If the given substring is empty, then this returns the length of the string plus one.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "titleize",
+        "Alias": "",
+        "Summary": "Reformat the given string by changing it into Title Case capitalization.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "camelize",
+        "Alias": "",
+        "Summary": "Reformat the given string by changing it into camelCase capitalization.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "pascalize",
+        "Alias": "",
+        "Summary": "Reformat the given string by changing it into PascalCase capitalization.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "underscore",
+        "Alias": "",
+        "Summary": "Reformat the given string by changing it into \\_underscorecase\\_ capitalization (also known as snake\\_case).",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "hyphenate",
+        "Alias": "",
+        "Summary": "Reformat the given string by changing it into hyphen-case capitalization.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "trim",
+        "Alias": "",
+        "Summary": "Return the given string with any leading and trailing whitespace removed.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "upper",
+        "Alias": "",
+        "Summary": "Reformat the given string by changing it into UPPER CASE capitalization.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "hasPrefix",
+        "Alias": "",
+        "Summary": "Return true if the given string begins with the given prefix.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "hasSuffix",
+        "Alias": "",
+        "Summary": "Return true if the given string ends with the given suffix.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "surroundedBy",
+        "Alias": "",
+        "Summary": "Return whether the given string is begins with a specific prefix _and_ ends with a specific suffix.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "percent",
+        "Alias": "",
+        "Summary": "Takes an integer or decimal value and returns it formatted as a percentage.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "autobyte",
+        "Alias": "",
+        "Summary": "Attempt to convert the given number to a string representation of the value interpreted as bytes. The unit will be automatically determined as the closest one that produces a value less than 1024 in that unit. The second argument is a printf-style format string that is used when the converted number is being stringified. By specifying precision and leading digit values to the %f format token, you can control how many decimal places are in the resulting output.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "thousandify",
+        "Alias": "",
+        "Summary": "Take a number and reformat it to be more readable by adding a separator between every three successive places.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "splitWords",
+        "Alias": "",
+        "Summary": "Detect word boundaries in a given string and split that string into an array where each element is a word.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "elideWords",
+        "Alias": "",
+        "Summary": "Takes an input string and counts the number of words in it. If that number exceeds a given count, the string will be truncated to be equal to that number of words.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "elide",
+        "Alias": "",
+        "Summary": "Takes an input string and ensures it is no longer than a given number of characters.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      }
+    ]
+  },
+  {
+    "Name": "File Path Manipulation",
+    "Description": "Used to parse and extract data from strings representing paths in a filesystem or tree hierarchy.",
+    "Functions": [
+      {
+        "Name": "basename",
+        "Alias": "",
+        "Summary": "Return the filename component of the given path.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "extname",
+        "Alias": "",
+        "Summary": "Return the extension component of the given path (always prefixed with a dot [.]).",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "dirname",
+        "Alias": "",
+        "Summary": "Return the directory path component of the given path.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "pathjoin",
+        "Alias": "",
+        "Summary": "Return a string of all given path components joined together using the system path separator.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "pwd",
+        "Alias": "",
+        "Summary": "Return the present working directory.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "dir",
+        "Alias": "",
+        "Summary": "Return a list of files and directories in *path*, or in the current directory if not specified.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "mimetype",
+        "Alias": "",
+        "Summary": "Returns a best guess at the MIME type for the given filename.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "mimeparams",
+        "Alias": "",
+        "Summary": "Returns the parameters portion of the MIME type of the given filename.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      }
+    ]
+  },
+  {
+    "Name": "Encoding and Decoding",
+    "Description": "For encoding typed data and data structures into well-known formats like JSON, CSV, and TSV.",
+    "Functions": [
+      {
+        "Name": "jsonify",
+        "Alias": "",
+        "Summary": "Encode the given argument as a JSON document.",
+        "Returns": "",
+        "Arguments": [
+          {
+            "Name": "data",
+            "Type": "any",
+            "Description": "The data to encode as JSON.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "indent",
+            "Type": "string",
+            "Description": "The string to indent successive tiers in the document hierarchy with.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": "  ",
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "markdown",
+        "Alias": "",
+        "Summary": "Parse the given string as a Markdown document and return it represented as HTML.",
+        "Returns": "",
+        "Arguments": [
+          {
+            "Name": "document",
+            "Type": "string",
+            "Description": "The full text of the Markdown to parse",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "extensions",
+            "Type": "string(s)",
+            "Description": "A list of zero of more Markdown extensions to enable when rendering the HTML.",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": [
+              {
+                "Name": "no-intra-emphasis",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "tables",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "fenced-code",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "autolink",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "strikethrough",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "lax-html-blocks",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "space-headings",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "hard-line-break",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "tab-size-eight",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "footnotes",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "no-empty-line-before-block",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "heading-ids",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "titleblock",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "auto-heading-ids",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "backslash-line-break",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "definition-lists",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "common",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              }
+            ]
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "csv",
+        "Alias": "",
+        "Summary": "Encode the given data as a comma-separated values document.",
+        "Returns": "",
+        "Arguments": [
+          {
+            "Name": "columns",
+            "Type": "array[string]",
+            "Description": "An array of values that represent the column names of the table being created.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "rows",
+            "Type": "array[array[string]], array[object]",
+            "Description": "An array of values that represent the column names of the table being created.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "tsv",
+        "Alias": "",
+        "Summary": "Encode the given data as a tab-separated values document.",
+        "Returns": "",
+        "Arguments": [
+          {
+            "Name": "columns",
+            "Type": "array[string]",
+            "Description": "An array of values that represent the column names of the table being created.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "rows",
+            "Type": "array[array[string]], array[object]",
+            "Description": "An array of values that represent the column names of the table being created.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "unsafe",
+        "Alias": "",
+        "Summary": "Return an unescaped raw HTML segment for direct inclusion in the rendered template output.This function bypasses the built-in HTML escaping and sanitization security features, and you almost certainly want to use [sanitize](#fn-sanitize) instead.  This is a common antipattern that leads to all kinds of security issues from poorly-constrained implementations, so you are forced to acknowledge this by typing \"unsafe\".",
+        "Returns": "",
+        "Arguments": [
+          {
+            "Name": "document",
+            "Type": "string",
+            "Description": "The raw HTML snippet you sneakily want to sneak past the HTML sanitizer for reasons.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "sanitize",
+        "Alias": "",
+        "Summary": "Takes a raw HTML string and santizes it, removing attributes and elements that can be used to evaluate scripts, but leaving the rest. Useful for preparing user-generated HTML for display.",
+        "Returns": "",
+        "Arguments": [
+          {
+            "Name": "",
+            "Type": "",
+            "Description": "",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      }
+    ]
+  },
+  {
+    "Name": "Type Detection and Manipulation",
+    "Description": "Used to detect and convert discrete values into different data types.",
+    "Functions": [
+      {
+        "Name": "isBool",
+        "Alias": "",
+        "Summary": "Return whether the given *value* is a boolean type.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isInt",
+        "Alias": "",
+        "Summary": "Return whether the given *value* is an integer type.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isFloat",
+        "Alias": "",
+        "Summary": "Return whether the given *value* is a floating-point type.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isZero",
+        "Alias": "",
+        "Summary": "Return whether the given *value* is an zero-valued variable.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isEmpty",
+        "Alias": "",
+        "Summary": "Return whether the given *value* is empty.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isArray",
+        "Alias": "",
+        "Summary": "Return whether the given *value* is an iterable array or slice.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isMap",
+        "Alias": "",
+        "Summary": "Return whether the given *value* is a key-value map type.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isTime",
+        "Alias": "",
+        "Summary": "Return whether the given *value* is parsable as a date/time value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isDuration",
+        "Alias": "",
+        "Summary": "Return whether the given *value* is parsable as a duration.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "autotype",
+        "Alias": "",
+        "Summary": "Attempt to automatically determine the type if *value* and return the converted output.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "asStr",
+        "Alias": "",
+        "Summary": "Return the *value* as a string.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "asInt",
+        "Alias": "",
+        "Summary": "Attempt to convert the given *value* to an integer.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "asFloat",
+        "Alias": "",
+        "Summary": "Attempt to convert the given *value* to a floating-point number.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "asBool",
+        "Alias": "",
+        "Summary": "Attempt to convert the given *value* to a boolean value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "asTime",
+        "Alias": "",
+        "Summary": "Attempt to parse the given *value* as a date/time value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "asDuration",
+        "Alias": "",
+        "Summary": "Attempt to parse the given *value* as a time duration.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "s",
+        "Alias": "asStr",
+        "Summary": "",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "i",
+        "Alias": "asInt",
+        "Summary": "",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "f",
+        "Alias": "asFloat",
+        "Summary": "",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "b",
+        "Alias": "asBool",
+        "Summary": "",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "t",
+        "Alias": "asTime",
+        "Summary": "",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "d",
+        "Alias": "asDuration",
+        "Summary": "",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      }
+    ]
+  },
+  {
+    "Name": "Time Functions",
+    "Description": "Used for working with time and duration values. Among this collection are functions for converting values to times, formatting time values, and performing time-oriented calculations on those values.",
+    "Functions": [
+      {
+        "Name": "time",
+        "Alias": "",
+        "Summary": "Return the given time formatted using a given format.  See [Time Formats](#time-formats) for acceptable formats.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "now",
+        "Alias": "",
+        "Summary": "Return the current time, optionally formatted using the given *format*.  See [Time Formats](#time-formats) for",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "addTime",
+        "Alias": "",
+        "Summary": "Return a time with with given duration added to it.  Can specify time *at* to apply the change to. Defaults to the current time.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "ago",
+        "Alias": "",
+        "Summary": "Return a new time subtracted by the given duration.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "since",
+        "Alias": "",
+        "Summary": "Return the amount of time that has elapsed since the given time, optionally rounded to the nearest time interval.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "duration",
+        "Alias": "",
+        "Summary": "Convert the given value from a duration (specified with the given unit) into the given time format.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isBefore",
+        "Alias": "",
+        "Summary": "Return whether the first time occurs before the second one.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isAfter",
+        "Alias": "",
+        "Summary": "Return whether the first time occurs after the second one.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isBetweenTimes",
+        "Alias": "",
+        "Summary": "Return whether the current time is between two times [first, second).",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "extractTime",
+        "Alias": "",
+        "Summary": "Attempt to extract a time value from the given string.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sunrise",
+        "Alias": "",
+        "Summary": "Return the time of apparent sunrise at the given coordinates, optionally for a given time.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sunset",
+        "Alias": "",
+        "Summary": "Return the time of apparent sunset at the given coordinates, optionally for a given time.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      }
+    ]
+  },
+  {
+    "Name": "Hashing and Cryptography",
+    "Description": "These functions provide basic cryptographic and non-cryptographic functions, including cryptographically-secure random number generation.",
+    "Functions": [
+      {
+        "Name": "random",
+        "Alias": "",
+        "Summary": "Return a random array of _n_ bytes. The random source used is suitable for cryptographic purposes.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "uuid",
+        "Alias": "",
+        "Summary": "Generate a new Version 4 UUID as a string.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "uuidRaw",
+        "Alias": "",
+        "Summary": "Generate the raw bytes of a new Version 4 UUID value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "base32",
+        "Alias": "",
+        "Summary": "Encode the *input* bytes with the Base32 encoding scheme.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "base58",
+        "Alias": "",
+        "Summary": "Encode the *input* bytes with the Base58 (Bitcoin alphabet) encoding scheme.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "base64",
+        "Alias": "",
+        "Summary": "Encode the *input* bytes with the Base64 encoding scheme.  Optionally specify the encoding mode: one of \"padded\", \"url\", \"url-padded\", or empty (unpadded, default).",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "murmur3",
+        "Alias": "",
+        "Summary": "Hash the given data using the Murmur 3 algorithm.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      }
+    ]
+  },
+  {
+    "Name": "Math and Statistics",
+    "Description": "These functions implement basic mathematical and statistical operations on numbers.",
+    "Functions": [
+      {
+        "Name": "calc",
+        "Alias": "",
+        "Summary": "",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "add",
+        "Alias": "",
+        "Summary": "Return the sum of all of the given values.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "subtract",
+        "Alias": "",
+        "Summary": "Sequentially subtract all of the given values.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "multiply",
+        "Alias": "",
+        "Summary": "Return the product of all of the given values.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "divide",
+        "Alias": "",
+        "Summary": "Sequentially divide all of the given values in the order given.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "mod",
+        "Alias": "",
+        "Summary": "Return the modulus of all of the given values.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "pow",
+        "Alias": "",
+        "Summary": "",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sequence",
+        "Alias": "",
+        "Summary": "Return an array of integers representing a sequence from [0, _n_).",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "round",
+        "Alias": "",
+        "Summary": "Round a number to the nearest _n_ places.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "negate",
+        "Alias": "",
+        "Summary": "Return the given number multiplied by -1.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "minimum_nz",
+        "Alias": "",
+        "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "stddev",
+        "Alias": "",
+        "Summary": "Return the standard deviation of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sum",
+        "Alias": "",
+        "Summary": "Return the sum of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "maximum",
+        "Alias": "",
+        "Summary": "Return the maximum of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "mean",
+        "Alias": "",
+        "Summary": "Return the mean of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "median",
+        "Alias": "",
+        "Summary": "Return the median of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "minimum",
+        "Alias": "",
+        "Summary": "Return the minimum of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      }
+    ]
+  },
+  {
+    "Name": "Arrays and Objects",
+    "Description": "For converting, modifying, and filtering arrays, objects, and arrays of objects. These functions are especially useful when working with data returned from Bindings.",
+    "Functions": [
+      {
+        "Name": "page",
+        "Alias": "",
+        "Summary": "Returns an integer representing an offset used for accessing paginated values when given a page number and number of results per page.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "reverse",
+        "Alias": "",
+        "Summary": "Return the given array in reverse order.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "filter",
+        "Alias": "",
+        "Summary": "Return the given array with only elements where expression evaluates to a truthy value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "filterByKey",
+        "Alias": "",
+        "Summary": "Return a subset of the elements in the given array whose values are objects that contain the given key.  Optionally, the values at the key for each object in the array can be passed to a template expression.  If that expression produces a truthy value, the object will be included in the output.  Otherwise it will not.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": []
+      },
+      {
+        "Name": "firstByKey",
+        "Alias": "",
+        "Summary": "Identical to [filterByKey](#fn-filterByKey), except it returns only the first object in the resulting array instead of the whole array.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "transformValues",
+        "Alias": "",
+        "Summary": "Return all elements of the given array of objects with the value at a key transformed by the given expression.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "uniqByKey",
+        "Alias": "",
+        "Summary": "Return an array of objects containing only unique entries in the given array of objects. Uniqueness is determined by comparing the values at the given key for each object.  The first time a value is encountered, that value's parent object is included in the output.  All subsequent objects with the same value at that key will be discarded.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "uniqByKeyLast",
+        "Alias": "",
+        "Summary": "Identical to [uniqByKey](#fn-uniqByKey), except the _last_ of a set of objects grouped by key is included in the output, not the first.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sortByKey",
+        "Alias": "",
+        "Summary": "Sort the given array of objects by comparing the values of the given key for all objects.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "pluck",
+        "Alias": "",
+        "Summary": "Retrieve a value at the given key from each object in a given array of objects.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "keys",
+        "Alias": "",
+        "Summary": "Return an array of key names specifying all the keys of the given object.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "values",
+        "Alias": "",
+        "Summary": "Return an array of values from the given object.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "get",
+        "Alias": "",
+        "Summary": "Retrieve a value from a given object.  Key can be specified as a dot.separated.list of keys that describes a path from the given object, through any intermediate nested objects, down to the object containing the desired value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "findkey",
+        "Alias": "",
+        "Summary": "Recursively scans the given array or map and returns all values of the given key.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "has",
+        "Alias": "",
+        "Summary": "Return whether a specific element is in an array.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "any",
+        "Alias": "",
+        "Summary": "Return whether an array contains any of a set of desired.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "indexOf",
+        "Alias": "",
+        "Summary": "Iterate through an array and return the index of a given value, or -1 if not present.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "slice",
+        "Alias": "",
+        "Summary": "Return a subset of the given array.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sslice",
+        "Alias": "",
+        "Summary": "Identical to [slice](#fn-slice), but returns an array of strings.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "uniq",
+        "Alias": "",
+        "Summary": "Return an array containing only unique values from the given array.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "flatten",
+        "Alias": "",
+        "Summary": "Return an array of values with all nested arrays collapsed down to a single, flat array.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "compact",
+        "Alias": "",
+        "Summary": "Return an copy of given array with all empty, null, and zero elements removed.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "first",
+        "Alias": "",
+        "Summary": "Return the first value from the given array, or null if the array is empty.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "rest",
+        "Alias": "",
+        "Summary": "Return all but the first value from the given array, or an empty array of the given array's length is \u003c= 1.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "last",
+        "Alias": "",
+        "Summary": "Return the last value from the given array, or null if the array is empty.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "count",
+        "Alias": "",
+        "Summary": "Identical to the built-in \"len\" function, but is less picky about types.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sort",
+        "Alias": "",
+        "Summary": "Return an array sorted in lexical ascending order.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "rsort",
+        "Alias": "",
+        "Summary": "Return the array sorted in lexical descending order.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isort",
+        "Alias": "",
+        "Summary": "Return an array sorted in lexical ascending order (case-insensitive.)",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "irsort",
+        "Alias": "",
+        "Summary": "Return the array sorted in lexical descending order (case-insensitive.)",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "mostcommon",
+        "Alias": "",
+        "Summary": "Return the element in a given array that appears the most frequently.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "leastcommon",
+        "Alias": "",
+        "Summary": "Return the element in a given array that appears the least frequently.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sliceify",
+        "Alias": "",
+        "Summary": "Convert the given input into an array.  If the value is already an array, this just returns that array.  Otherwise, it returns an array containing the given value as its only element.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "stringify",
+        "Alias": "",
+        "Summary": "Identical to [sliceify](#fn-sliceify), but converts all values to strings and returns an array of strings.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "intersect",
+        "Alias": "",
+        "Summary": "Return the intersection of two arrays.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "mapify",
+        "Alias": "",
+        "Summary": "Return the given value returned as a rangeable object.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "groupBy",
+        "Alias": "",
+        "Summary": "Return the given array of objects as a grouped object, keyed on the value of the specified group field. The field argument can be an expression that receives the value and returns a transformed version of it.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "head",
+        "Alias": "",
+        "Summary": "Return the first _n_ items from an array.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "tail",
+        "Alias": "",
+        "Summary": "Return the last _n_ items from an array.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "shuffle",
+        "Alias": "",
+        "Summary": "Return the array with the elements rearranged in random order.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "apply",
+        "Alias": "",
+        "Summary": "Apply a function to each of the elements in the given array. Note that functions must be unary (accept one argument of type _any_).",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      }
+    ]
+  },
+  {
+    "Name": "HTML Processing",
+    "Description": "Used to parse and modify HTML documents.",
+    "Functions": [
+      {
+        "Name": "stripHtml",
+        "Alias": "",
+        "Summary": "Removes all HTML tags from a given input string, leaving behind only the textual content of the nodes. Only text nodes are preserved; attribute names and values, and comments, will be omitted.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "htmlquery",
+        "Alias": "",
+        "Summary": "Parse a given HTML document and return details about all elements matching a CSS selector.",
+        "Returns": "",
+        "Arguments": [
+          {
+            "Name": "document",
+            "Type": "string",
+            "Description": "The HTML document to parse.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "selector",
+            "Type": "string",
+            "Description": "A CSS selector that targets the elements that will be returned.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "htmlRemove",
+        "Alias": "",
+        "Summary": "Parse a given HTML document and remove all elements matching a CSS selector.",
+        "Returns": "",
+        "Arguments": [
+          {
+            "Name": "document",
+            "Type": "string",
+            "Description": "The HTML document to parse.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "selector",
+            "Type": "string",
+            "Description": "A CSS selector that targets the elements that will be returned.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "htmlAddClass",
+        "Alias": "",
+        "Summary": "Parse a given HTML document and add a CSS class to all elements matching a CSS selector.",
+        "Returns": "",
+        "Arguments": [
+          {
+            "Name": "document",
+            "Type": "string",
+            "Description": "The HTML document to parse.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "selector",
+            "Type": "string",
+            "Description": "A CSS selector that targets the elements that will be returned.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "htmlRemoveClass",
+        "Alias": "",
+        "Summary": "Parse a given HTML document and remove a CSS class to all elements matching a CSS selector.",
+        "Returns": "",
+        "Arguments": [
+          {
+            "Name": "document",
+            "Type": "string",
+            "Description": "The HTML document to parse.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "selector",
+            "Type": "string",
+            "Description": "A CSS selector that targets the elements that will be returned.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "htmlSetAttr",
+        "Alias": "",
+        "Summary": "Parse a given HTML document and set an attribute to a given value on all elements matching a CSS selector.",
+        "Returns": "",
+        "Arguments": [
+          {
+            "Name": "document",
+            "Type": "string",
+            "Description": "The HTML document to parse.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "selector",
+            "Type": "string",
+            "Description": "A CSS selector that targets the elements that will be returned.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      }
+    ]
+  },
+  {
+    "Name": "Color Manipulation",
+    "Description": "Used to parse, manipulate, and adjust string representations of visible colors.",
+    "Functions": [
+      {
+        "Name": "lighten",
+        "Alias": "",
+        "Summary": "Lighten the given color by a percent [0-100].",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "darken",
+        "Alias": "",
+        "Summary": "Darken the given color by a percent [0-100].",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "colorToHex",
+        "Alias": "",
+        "Summary": "Convert the given color to a hexadecimal (\"#RRGGBB\", \"#RRGGBBAA\") value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "colorToRGB",
+        "Alias": "",
+        "Summary": "Convert the given color to an \"rgb()\" or \"rgba()\" value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "colorToHSL",
+        "Alias": "",
+        "Summary": "Convert the given color to an \"hsl()\" or \"hsla()\" value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "colorFromValue",
+        "Alias": "",
+        "Summary": "Consistently generate the same color from color from a given value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      }
+    ]
+  },
+  {
+    "Name": "Unit Conversions",
+    "Description": "Used to convert numeric values between different unit systems.",
+    "Functions": [
+      {
+        "Name": "convert",
+        "Alias": "",
+        "Summary": "A generic unit conversion function that allows for units to be specified by value as strings.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      }
+    ]
+  },
+  {
+    "Name": "Introspection and Reflection",
+    "Description": "Functions for inspecting runtime information about templates and Diecast itself.",
+    "Functions": [
+      {
+        "Name": "templateKey",
+        "Alias": "",
+        "Summary": "Open the given file and retrieve the key from the page object defined in its header.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      }
+    ]
+  },
+  {
+    "Name": "Comparison and Conditionals",
+    "Description": "Used for comparing two values, or for returning one of many options based on a given condition.",
+    "Functions": [
+      {
+        "Name": "",
+        "Alias": "",
+        "Summary": "",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "eqx",
+        "Alias": "",
+        "Summary": "Return whether two values are equal (any type).",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "nex",
+        "Alias": "",
+        "Summary": "Return whether two values are not equal (any type).",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "gtx",
+        "Alias": "",
+        "Summary": "Return whether the first value is numerically or lexically greater than the second.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "gex",
+        "Alias": "",
+        "Summary": "Return whether the first value is numerically or lexically greater than or equal to the second.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "ltx",
+        "Alias": "",
+        "Summary": "Return whether the first value is numerically or lexically less than the second.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "lex",
+        "Alias": "",
+        "Summary": "Return whether the first value is numerically or lexically less than or equal to the second.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "compare",
+        "Alias": "",
+        "Summary": "A generic comparison function. Accepts operators: \"gt\", \"ge\", \"lt\", \"le\", \"eq\", \"ne\"",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "match",
+        "Alias": "",
+        "Summary": "Return whether the given value matches the given regular expression.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "switch",
+        "Alias": "",
+        "Summary": "Provide a simple inline switch-case style decision mechanism.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      }
+    ]
+  }
+]

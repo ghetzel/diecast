@@ -1,13 +1,14 @@
 package diecast
 
 import (
+	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	strip "github.com/grokify/html-strip-tags-go"
 	htmlmain "html"
 	"html/template"
 )
 
-func loadStandardFunctionsHtmlProcessing() funcGroup {
+func loadStandardFunctionsHtmlProcessing(funcs FuncMap) funcGroup {
 	return funcGroup{
 		Name:        `HTML Processing`,
 		Description: `Used to parse and modify HTML documents.`,
