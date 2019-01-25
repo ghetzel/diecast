@@ -8,71 +8,282 @@
         "Alias": "",
         "Summary": "Return true of the given string contains another string.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string",
+            "Description": "The string to search within.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "substring",
+            "Type": "string",
+            "Description": "The substring to find in the input string.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "contains \"Alice met Bob at the store.\" \"store\"",
+            "Return": "true"
+          }
+        ]
       },
       {
         "Name": "lower",
         "Alias": "",
         "Summary": "Reformat the given string by changing it into lower case capitalization.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "string",
+            "Description": "The input string to reformat.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "lower \"This is a thing\"",
+            "Return": "this is a thing"
+          }
+        ]
       },
       {
         "Name": "ltrim",
         "Alias": "",
         "Summary": "Return the given string with any leading whitespace removed.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "string",
+            "Description": "The input string to trim.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "trim \" Hello   World  \"",
+            "Return": "Hello  World  "
+          }
+        ]
       },
       {
         "Name": "replace",
         "Alias": "",
         "Summary": "Replace occurrences of one substring with another string in a given input string.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "wholestring",
+            "Type": "string",
+            "Description": "The whole string being searched.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "old",
+            "Type": "string",
+            "Description": "The old value being sought.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "new",
+            "Type": "string",
+            "Description": "The new value that is replacing old.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "count",
+            "Type": "integer",
+            "Description": "The number of matches to replace before stopping. If this number is \u003c 0, the all occurrences will be replaced.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "replace \"oink oink oink\" \"oink\" \"moo\" -1",
+            "Return": "moo moo moo"
+          },
+          {
+            "Code": "replace \"cheese\" \"e\" \"o\" 2",
+            "Return": "choose"
+          }
+        ]
       },
       {
         "Name": "rxreplace",
         "Alias": "",
         "Summary": "Return the given string with all substrings matching the given regular expression replaced with another string.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "wholestring",
+            "Type": "string",
+            "Description": "The whole string being searched.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "pattern",
+            "Type": "string",
+            "Description": "A Golang-compatible regular expression that matches what should be replaced.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "repl",
+            "Type": "string",
+            "Description": "The string to replace matches with.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "rxreplace \"\u003cb\u003eHello \u003ci\u003eWorld\u003c/i\u003e\u003c/b\u003e\" \"\u003c/?[bi]\u003e\" \"*\"",
+            "Return": "*Hello *World**"
+          }
+        ]
       },
       {
         "Name": "concat",
         "Alias": "",
         "Summary": "Return the string that results in stringifying and joining all of the given arguments.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "values",
+            "Type": "any",
+            "Description": "One or more values to be stringified and joined together.",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "concat \"There are \" 5 \" apples, yes it's \" true",
+            "Return": "There are 5 apples, yes it's true."
+          }
+        ]
       },
       {
         "Name": "rtrim",
         "Alias": "",
         "Summary": "Return the given string with any trailing whitespace removed.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "string",
+            "Description": "The input string to trim.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "trim \" Hello   World  \"",
+            "Return": " Hello  World"
+          }
+        ]
       },
       {
         "Name": "split",
         "Alias": "",
         "Summary": "Split a given string into an array of strings by a given separator.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "string",
+            "Description": "The string to split into pieces.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "separator",
+            "Type": "string",
+            "Description": "The separator on which the input will be split.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "split \"this is a sentence.\"",
+            "Return": [
+              "this",
+              "is",
+              "a",
+              "sentence."
+            ]
+          }
+        ]
       },
       {
         "Name": "join",
         "Alias": "",
         "Summary": "Stringify the given array of values and join them together into a string, separated by a given separator string.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "array[any]",
+            "Description": "An array of values to stringify and join.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "separator",
+            "Type": "string",
+            "Description": "The string used to join all elements of the array together.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -96,55 +307,164 @@
         "Alias": "",
         "Summary": "Reformat the given string by changing it into camelCase capitalization.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "string",
+            "Description": "The input string to reformat.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "camelize \"This is a thing\"",
+            "Return": "thisIsAThing"
+          }
+        ]
       },
       {
         "Name": "pascalize",
         "Alias": "",
         "Summary": "Reformat the given string by changing it into PascalCase capitalization.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "string",
+            "Description": "The input string to reformat.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "pascalize \"This is a thing\"",
+            "Return": "ThisIsAThing"
+          }
+        ]
       },
       {
         "Name": "underscore",
         "Alias": "",
         "Summary": "Reformat the given string by changing it into \\_underscorecase\\_ capitalization (also known as snake\\_case).",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "string",
+            "Description": "The input string to reformat.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "underscore \"This is a thing\"",
+            "Return": "this_is_a_thing"
+          }
+        ]
       },
       {
         "Name": "hyphenate",
         "Alias": "",
         "Summary": "Reformat the given string by changing it into hyphen-case capitalization.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "string",
+            "Description": "The input string to reformat.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "hyphenate \"This is a thing\"",
+            "Return": "this-is-a-thing"
+          }
+        ]
       },
       {
         "Name": "trim",
         "Alias": "",
         "Summary": "Return the given string with any leading and trailing whitespace removed.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "string",
+            "Description": "The input string to trim.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "trim \" Hello   World  \"",
+            "Return": "Hello  World"
+          }
+        ]
       },
       {
         "Name": "upper",
         "Alias": "",
         "Summary": "Reformat the given string by changing it into UPPER CASE capitalization.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "string",
+            "Description": "The input string to reformat.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "upper \"This is a thing",
+            "Return": "THIS IS A THING"
+          }
+        ]
       },
       {
         "Name": "hasPrefix",
         "Alias": "",
         "Summary": "Return true if the given string begins with the given prefix.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "string",
+            "Description": "The input string to test.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "prefix",
+            "Type": "string",
+            "Description": "The prefix to test for the presence of.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -152,7 +472,26 @@
         "Alias": "",
         "Summary": "Return true if the given string ends with the given suffix.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "string",
+            "Description": "The input string to test.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "suffix",
+            "Type": "string",
+            "Description": "The suffix to test for the presence of.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -168,16 +507,81 @@
         "Alias": "",
         "Summary": "Takes an integer or decimal value and returns it formatted as a percentage.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "value",
+            "Type": "number",
+            "Description": "The value you wish to express as a percentage.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "whole",
+            "Type": "number",
+            "Description": "The number that represents 100%.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "format",
+            "Type": "string",
+            "Description": "The printf format string used for rounding and truncating the converted number.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": "%.f",
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "percent 99",
+            "Return": "99"
+          },
+          {
+            "Code": "percent 3.3 10",
+            "Return": "33"
+          },
+          {
+            "Code": "percent 3.33 10 \"%.3f\"",
+            "Return": "33.300"
+          }
+        ]
       },
       {
         "Name": "autobyte",
         "Alias": "",
         "Summary": "Attempt to convert the given number to a string representation of the value interpreted as bytes. The unit will be automatically determined as the closest one that produces a value less than 1024 in that unit. The second argument is a printf-style format string that is used when the converted number is being stringified. By specifying precision and leading digit values to the %f format token, you can control how many decimal places are in the resulting output.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "bytes",
+            "Type": "number",
+            "Description": "A number representing the value to format, in bytes.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "format",
+            "Type": "string",
+            "Description": "A printf-style format string used to represent the output number.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "autobyte 2490368 \"%.2f\"",
+            "Return": "2.38MB"
+          }
+        ]
       },
       {
         "Name": "thousandify",
@@ -200,16 +604,72 @@
         "Alias": "",
         "Summary": "Takes an input string and counts the number of words in it. If that number exceeds a given count, the string will be truncated to be equal to that number of words.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string",
+            "Description": "The string to (possibly) truncate.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "wordcount",
+            "Type": "integer",
+            "Description": "The maximum number of words that can appear in a string before it is truncated.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "elideWords \"This is a sentence that contains eight words.\" 5",
+            "Return": "This is a sentence that"
+          },
+          {
+            "Code": "elideWords \"Hello world\" 10",
+            "Return": "Hello world"
+          }
+        ]
       },
       {
         "Name": "elide",
         "Alias": "",
         "Summary": "Takes an input string and ensures it is no longer than a given number of characters.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string",
+            "Description": "The string to (possibly) truncate.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "charcount",
+            "Type": "integer",
+            "Description": "The maximum number of characters that can appear in a string before it is truncated.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "elide \"This is a sentence that contains fifty characters.\" 18",
+            "Return": "This is a sentence"
+          },
+          {
+            "Code": "elide \"hello.\" 16",
+            "Return": "hello."
+          }
+        ]
       }
     ]
   },
@@ -988,7 +1448,7 @@
       {
         "Name": "pow",
         "Alias": "",
-        "Summary": "",
+        "Summary": "Sequentially exponentiate of all of the given *values*.",
         "Returns": "",
         "Arguments": null,
         "Examples": null
@@ -1013,6 +1473,14 @@
         "Name": "negate",
         "Alias": "",
         "Summary": "Return the given number multiplied by -1.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "minimum",
+        "Alias": "",
+        "Summary": "Return the minimum of the given array of numbers.",
         "Returns": "",
         "Arguments": null,
         "Examples": null
@@ -1061,14 +1529,6 @@
         "Name": "median",
         "Alias": "",
         "Summary": "Return the median of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "minimum",
-        "Alias": "",
-        "Summary": "Return the minimum of the given array of numbers.",
         "Returns": "",
         "Arguments": null,
         "Examples": null

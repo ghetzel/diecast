@@ -16,9 +16,13 @@ postprocessors:
 
     <h4>Functions</h4>
 
-{{   range $fn := sortByKey $group.Functions "name" }}
+{{   range $fn := sortByKey $group.Functions "Name" }}
     <section class="function" id="fn-{{ $fn.Name }}">
-        <h5><code>{{ $fn.Name }}</code></h5>
+        <h5>
+            <a href="#fn-{{ $fn.Name }}">
+                <code>{{ $fn.Name }}</code>
+            </a>
+        </h5>
 
 {{     if $fn.Summary }}
     {{   markdown $fn.Summary }}
@@ -53,7 +57,7 @@ postprocessors:
         <dl class="examples">
 {{       range $x := $fn.Examples }}
             <dd>{{ $x.Code }}</dd>
-            <dt>{{ $x.Returns }}</dt>
+            <dt>{{ $x.Return }}</dt>
 {{       end }}
         </dl>
 {{     end }}

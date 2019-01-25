@@ -52,10 +52,8 @@ func loadStandardFunctionsMath(funcs FuncMap) funcGroup {
 					return calcFn(`%`, values...)
 				},
 			}, {
-
-				// fn pow: Sequentially exponentiate of all of the given *values*.
 				Name:    `pow`,
-				Summary: ``,
+				Summary: `Sequentially exponentiate of all of the given *values*.`,
 				Function: func(values ...interface{}) (float64, error) {
 					return calcFn(`^`, values...)
 				},
