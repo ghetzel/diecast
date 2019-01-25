@@ -24,12 +24,13 @@
             >
                 <nav class="nav nav-pills flex-column">
                     <a class="nav-link" href="#introduction">Introduction</a>
-                    <a class="nav-link" href="#installation">Installation</a>
+                    <a class="nav-link" href="#benefits-and-useful-features">Benefits and Useful Features</a>
                     <a class="nav-link" href="#getting-started">Getting Started</a>
+                    <a class="nav-link" href="#installation">Installation</a>
                     <a class="nav-link" href="#url-structure">URL Structure</a>
                     <a class="nav-link" href="#configuration">Configuration</a>
                     <a class="nav-link" href="#templating">Templating</a>
-                    <a class="nav-link" href="#bindings">Bindings</a>
+                    <a class="nav-link" href="#data-bindings">Data Bindings</a>
                     <a class="nav-link" href="#funcref">Functions</a>
                     <nav class="nav nav-pills flex-column ml-4">
                         <a class="nav-link" href="#string-functions">String Functions</a>
@@ -54,34 +55,46 @@
     <img src="/diecast/src/assets/img/diecast-text-light-bg-64.png" alt="Diecast Logo"/>
 </div>
 <h2 id="introduction">Introduction</h2>
-<p>Diecast is a web server that allows you to render a directory tree of template files into HTML, CSS or anything other text-based media in real-time.  Data can be retrieved from remote sources during the template rendering process, creating dynamic web pages built by consuming APIs and remote files without the need to use client-side Javascript/AJAX calls or an intermediate server framework.</p>
+<p>Diecast is a web server that allows you to render a directory tree of template files into HTML, CSS or anything other text-based media in real-time.  You can used Diecast to retrieve data from remote sources during the template rendering process, creating dynamic web pages built by consuming APIs and remote files without the need to use client-side Javascript/AJAX calls or an intermediate server framework.</p>
+<h2 id="benefits-and-useful-features">Benefits and Useful Features</h2>
+<p>Diecast is a good choice for any web project that consumes data from a remote data source for the purpose of building web pages or other text-based file types.  Think of Diecast as an intermediary that takes raw data and transforms it, in real-time, into websites.</p>
+<p>One of the benefits to this approach is that it enforces separation between data storage and data presentation.  It is often the case that web programming frameworks try to “do it all”, they provide access to data, mediate requests, and generate HTML content.  It is easy to create close dependencies between these separate tasks, the kind that can be very hard to change or remove.</p>
+<p>Diecast, on the other hand, consumes data primarily via HTTP/RESTful API services.  This means that the service(s) responsible for providing the data can focus on doing that one thing well, while the parts of the application responsible for turning that data into something visual and interactive can focus on doing that.  If you need to change out backend languages in the future, or incorporate new data sources, you can do so without a major overhaul of the frontend components.  The HTTP protocol is language-agnostic.</p>
+<h2 id="getting-started">Getting Started</h2>
+<p>Building a site using Diecast is as easy as putting files in a folder.  When you run the <code>diecast</code> command in this folder (the <em>working directory</em>), Diecast will make the contents of the folder available as a web page (by default, at <a href="http://localhost:28419" rel="nofollow"><code>http://localhost:28419</code></a>.)  Any file ending in <code>.html</code> will be treated as a template and be processed before being returned to the user.  If no other filenames or paths are requested, Diecast will look for and attempt to serve the file <code>index.html</code>.</p>
 <h2 id="installation">Installation</h2>
-<p></p><details>
-    <summary>Golang / via <code>go get</code></summary>
+<p></p><details class="card mb-2">
+    <summary class="card-header">Golang / via <code>go get</code></summary>
+    <div class="card-body">
     <code>
     go get github.com/ghetzel/diecast/cmd/diecast
 </code>
+    </div>
 </details>
-<details>
-    <summary>macOS / Homebrew</summary>
+<details class="card mb-2">
+    <summary class="card-header">macOS / Homebrew</summary>
+    <div class="card-body"></div>
 </details>
-<details>
-    <summary>Windows</summary>
+<details class="card mb-2">
+    <summary class="card-header">Windows</summary>
+    <div class="card-body"></div>
 </details>
-<details>
-    <summary>Linux</summary>
+<details class="card mb-2">
+    <summary class="card-header">Linux</summary>
+    <div class="card-body"></div>
 </details>
-<details>
-    <summary>FreeBSD</summary>
+<details class="card mb-2">
+    <summary class="card-header">FreeBSD</summary>
+    <div class="card-body"></div>
 </details>
-<details>
-    <summary>Binaries</summary>
+<details class="card mb-2">
+    <summary class="card-header">Binaries</summary>
+    <div class="card-body"></div>
 </details>
-<details>
-    <summary>From Source</summary>
+<details class="card mb-2">
+    <summary class="card-header">From Source</summary>
+    <div class="card-body"></div>
 </details><p></p>
-<h2 id="getting-started">Getting Started</h2>
-<p>Building a site using Diecast begins (and, to some extent, ends) with putting files in a directory.  When the <code>diecast</code> command is run in this directory, a local production-ready webserver will be started and the contents of the directory will be served.  If no other filenames or paths are requested, Diecast will look for and attempt to serve the file <code>index.html</code>.</p>
 <h2 id="url-structure">URL Structure</h2>
 <p>Diecast does not have a concept of URL path routing, but rather strives to enforce simple, linear hierarchies by exposing the working directory directly as routable paths.  For example, if a user visits the path <code>/users/list</code>, Diecast will look for files to serve in the following order:</p>
 <ul>
@@ -93,9 +106,9 @@
 </ul>
 <p>The first matching file from the list above will be served.</p>
 <h2 id="configuration">Configuration</h2>
-<p>Diecast is configured by placing a file called <code>diecast.yml</code> in the same directory that the <code>diecast</code> command is run, or by specifying a filename with the <code>--config</code> command line flag.  This file is used to adjust how Diecast renders templates and when, as well as setting up options for how files are accessed and from where.  For more details, see the <a href="/examples/diecast.sample.yml" rel="nofollow">Example Config File</a>.</p>
+<p>You can configure Diecast by creating a file called <code>diecast.yml</code> in the same folder that the <code>diecast</code> command is run in, or by specifying the path to the file with the <code>--config</code> command line option.  You can use this configuration file to control how Diecast renders templates and when, as well as set options for how files are accessed and from where.  Diecast tries to use “sane defaults” whenever possible, but you can configure Diecast in many ways to suit your needs.  For more details on these defaults and to see what goes in a <code>diecast.yml</code> file, see the <a href="/examples/diecast.sample.yml" rel="nofollow">Example Config File</a>.</p>
 <h2 id="templating">Templating</h2>
-<p>Beyond merely acting as a simple file server, Diecast comes with a rich templating environment that allows for complex sites to be built in a composable way.  The default templating language used by Diecast is <a href="https://golang.org/pkg/text/template/" rel="nofollow">Golang’s built-in <code>text/template</code> package.</a>.  Templates are plain text files that reside in the working directory, and consist of the template content, and optionally a header section called <em>front matter</em>.  These headers are used to specify template-specific data such as predefined data structures, paths of other templates to include, rendering options, and the inclusion of remote data via <a href="#Bindings" rel="nofollow">bindings</a>.  An example template looks like this:</p>
+<p>Beyond merely acting as a simple file server, Diecast comes with a rich templating environment that you can use to build complex sites in a straightforward, easy to understand way.  Templates are just files that you tell Diecast to treat specially.  The default templating language used by Diecast is <a href="https://golang.org/pkg/text/template/" rel="nofollow">Golang’s built-in <code>text/template</code> package.</a>.  Templates files consist of the template content, and optionally a header section called <em>front matter</em>.  These headers are used to specify template-specific data such as predefined data structures, paths of other templates to include, rendering options, and the inclusion of remote data via <a href="#data-bindings" rel="nofollow">data bindings</a>.  An example template looks like this:</p>
 <pre><code>---
 layout: mobile-v1
 bindings:
@@ -117,9 +130,9 @@ postprocessors:
 &lt;/html&gt;
 </code></pre>
 <h3 id="language-overview">Language Overview</h3>
-<p>Golang’s <code>text/template</code> package provides a syntactically-familiar and highly performant templating language.  When rendering HTML, CSS, or Javascript documents, the <code>html/template</code> parser is used.  This is the exact same language, but offers extensive context-aware automatic code escaping capabilities that ensure the output is safe against many common code injection techniques.  This is especially useful when using templates to render user-defined input.</p>
+<p>Golang’s <code>text/template</code> package provides a fast templating language that is used to generate things like HTML on-the-fly.  When generating HTML, CSS, or Javascript documents, Diecast understands that it is working with these languages and performs automatic escaping of code to ensure the output is safe against many common code injection techniques.  This is especially useful when using templates to render user-defined input that may contain HTML tags or embedded Javascript.</p>
 <h4 id="intro-to-text-template">Intro to <code>text/template</code></h4>
-<p>The built-in templating language should be familiar to those coming from a background in other templating languages like <a href="https://jekyllrb.com/" rel="nofollow">Jekyll</a>, <a href="http://jinja.pocoo.org/docs/2.10/" rel="nofollow">Jinja2</a>, and <a href="https://mustache.github.io/" rel="nofollow">Mustache</a>.  Below is a quick guide on the high-level language constructs.  For detailed information, check out the <a href="https://golang.org/pkg/text/template/#pkg-overview" rel="nofollow">Golang <code>text/template</code> Language Overview</a>.</p>
+<p>The built-in templating language will be familiar to those coming from a background in other templating languages like <a href="https://jekyllrb.com/" rel="nofollow">Jekyll</a>, <a href="http://jinja.pocoo.org/docs/2.10/" rel="nofollow">Jinja2</a>, and <a href="https://mustache.github.io/" rel="nofollow">Mustache</a>.  Below is a quick guide on how to accomplish certain common tasks when writing templates for Diecast.  For detailed information, check out the <a href="https://golang.org/pkg/text/template/#pkg-overview" rel="nofollow">Golang <code>text/template</code> Language Overview</a>.</p>
 <h5 id="output-text">Output Text</h5>
 <pre><code>Hello {{ $name }}! Today is {{ $date }}.
 </code></pre>
@@ -153,7 +166,7 @@ There are {{ count $names }} members.
 <h3 id="layouts">Layouts</h3>
 <p>In addition to rendering individual files as standalone pages, Diecast also supports layouts.  Layouts serve as wrapper templates for the files being rendered in a directory tree.  Their primary purpose is to eliminate copying and boilerplate code.  Layouts are stored in a top-level directory called <code>_layouts</code>.  If the layout <code>_layouts/default.html</code> is present, it will automatically be used by default (e.g.: without explicitly specifying it in the Front Matter) on all pages.  The layout for any page can be specified in the <code>layout</code> Front Matter property, and the special value <code>layout: none</code> will disable layouts entirely for that page.</p>
 <h3 id="page-object">Page Object</h3>
-<p>Diecast defines a global data structure in the <code>$.page</code> variable that can be used to provide site-wide values to templates.  The <code>page</code> structure can be defined in multiple places, allowing for the flexible expression of hierarchical data when rendering templates.  The <code>page</code> structure is inherited by child templates when rendering, and all values are deeply-merged together to form a single data structure for the template(s) to use.  For example, given the following files:</p>
+<p>Diecast defines a global data structure in the <code>$.page</code> variable that can be used to provide site-wide values to templates.  You can define the <code>page</code> structure in multiple places, which lets you explicitly provide data when serving templates that doesn’t come from a data binding.  The <code>page</code> structure is inherited by child templates, and all values are merged together to form a single data structure.  For example, given the following files:</p>
 <pre><code># diecast.yml
 header:
     page:
@@ -188,7 +201,7 @@ page:
     {{ end }}
 &lt;/ul&gt;
 </code></pre>
-<p>The final <code>page</code> data structure would look like this immediately before rendering <code>index.html</code>:</p>
+<p>The final <code>page</code> data structure would look like this immediately before processing <code>index.html</code>:</p>
 <pre><code>page:
     site_title: WELCOME TO MY WEBSITE
     colors:
@@ -212,8 +225,8 @@ page:
 &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
-<h2 id="bindings">Bindings</h2>
-<p>Bindings are one of the most important concepts in Diecast.  Bindings (short for <em>data bindings</em>) are directives added to the Front Matter of layouts and templates that specify remote URLs to retrieve (via an HTTP client built in to <code>diecast</code>), as well as how to handle parsing the response data and what to do about errors.  This concept is extremely powerful, in that it allows you to create complex data-driven sites easily and cleanly by treating remote data from RESTful APIs and other sources as first-class citizens in the templating language.</p>
+<h2 id="data-bindings">Data Bindings</h2>
+<p>Data Bindings (or just <em>bindings</em>) are one of the most important concepts in Diecast.  Bindings are directives you add to the Front Matter of layouts and templates that specify remote URLs to retrieve (via an HTTP client built in to <code>diecast</code>), as well as how to handle parsing the response data and what to do about errors.  This concept is extremely powerful, in that it allows you to create complex data-driven sites easily and cleanly by treating remote data from RESTful APIs and other sources as first-class citizens in the templating language.</p>
 <h3 id="overview">Overview</h3>
 <p>Bindings are specified in the <code>bindings</code> array in the Front Matter of layouts and template files.  Here is a basic example that will perform an HTTP GET against a URL, parse the output, and store the parsed results in a variable that can be used anywhere inside the template.</p>
 <pre><code>---
@@ -345,8 +358,36 @@ bindings:
 </tbody>
 </table>
 <h3 id="handling-response-codes-and-errors">Handling Response Codes and Errors</h3>
+<p>By default, the response to a binding’s HTTP request must be a <a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success" rel="nofollow">200-series HTTP status code</a>.  If it is not (e.g. returns an 404 or 500 error), Diecast will return an error page instead.  Custom error pages live in a top-level <code>_errors</code> folder.  This folder will be checked for specially-named files that are to be used for handling different error types.  These filenames will be checked, in order, in the event of a binding error:</p>
+<p><strong><code>/_errors/404.html</code></strong></p>
+<p>Uses the exact HTTP status code that was encountered.  Use this to handle specific, well-known error cases like “404 Not Found” or “500 Internal Server Error”.</p>
+<p><strong><code>/_errors/4xx.html</code></strong></p>
+<p>Specifies an error page that is used for an entire range of error types.  HTTP errors are grouped by type; e.g.: status codes between 400-499 indiciate a <em>client</em> error that the user can fix, whereas 500-599 describes <em>server</em> errors the user cannot do anything about.</p>
+<p><strong><code>/_errors/default.html</code></strong></p>
+<p>Specifies an error page that is used to handle <em>any</em> non-2xx HTTP status, as well as deeper problems like connection issues, SSL security violations, and DNS lookup problems.</p>
 <h3 id="conditional-evaluation">Conditional Evaluation</h3>
+<p>By default, all bindings specified in a template are evaluated in the order they appear.  It is sometimes useful to place conditions on whether a binding will evaluate.  You can specify these conditions using the <code>only_if</code> and <code>not_if</code> properties on a binding.  These properties take a string containing an inline template.  If the template in an <code>only_if</code> property returns a “truthy” value (non-empty, non-zero, or “true”), that binding will be run.  Otherwise, it will be skipped.  The inverse is true for <code>not_if</code>: if truthy, the binding is not evaluated.</p>
+<pre><code>---
+bindings:
+#   --------------------------------------------------------------------------------
+#   Always evaluated
+-   name:     always
+    resource: /api/status
+#   --------------------------------------------------------------------------------
+#   Only evaluated if the &#34;login&#34; query string is a &#34;truthy&#34; values (i.e.: &#34;1&#34;,
+#   &#34;true&#34;, &#34;yes&#34;)
+-   name:     user
+    resource: /api/users/self
+    only_if:  &#39;{{ qs &#34;login&#34; }}&#39;
+#   --------------------------------------------------------------------------------
+#   Evaluated every day except Mondays
+-   name:     i_hate_mondays
+    resource: /api/details
+    not_if:   &#39;{{ eqx (now &#34;day&#34;) &#34;Monday&#34; }}&#39;
+---
+</code></pre>
 <h3 id="repeaters">Repeaters</h3>
+<p><em>TODO</em></p>
 <h3 id="dynamic-variables">Dynamic Variables</h3>
 <p>Sometimes it is useful to be able to dynamically manipulate data during template evaluation.  Diecast has a set of functions that allow for custom data to be set, retrieved, and removed at runtime.</p>
 <h4 id="runtime-variable-functions">Runtime Variable Functions</h4>
