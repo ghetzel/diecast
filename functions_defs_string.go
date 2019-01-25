@@ -21,20 +21,91 @@ func loadStandardFunctionsString(funcs FuncMap) funcGroup {
 				Name:     `contains`,
 				Summary:  `Return true of the given string contains another string.`,
 				Function: strings.Contains,
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `string`,
+						Description: `The string to search within.`,
+					}, {
+						Name:        `substring`,
+						Type:        `string`,
+						Description: `The substring to find in the input string.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `contains "Alice met Bob at the store." "store"`,
+						Return: `true`,
+					},
+				},
 			}, {
 				Name:     `lower`,
 				Summary:  `Reformat the given string by changing it into lower case capitalization.`,
 				Function: strings.ToLower,
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `string`,
+						Description: `The input string to reformat.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `lower "This is a thing"`,
+						Return: `this is a thing`,
+					},
+				},
 			}, {
 				Name:    `ltrim`,
 				Summary: `Return the given string with any leading whitespace removed.`,
 				Function: func(in interface{}, str string) string {
 					return strings.TrimPrefix(fmt.Sprintf("%v", in), str)
 				},
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `string`,
+						Description: `The input string to trim.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `trim " Hello   World  "`,
+						Return: `Hello  World  `,
+					},
+				},
 			}, {
 				Name:     `replace`,
 				Summary:  `Replace occurrences of one substring with another string in a given input string.`,
 				Function: strings.Replace,
+				Arguments: []funcArg{
+					{
+						Name:        `wholestring`,
+						Type:        `string`,
+						Description: `The whole string being searched.`,
+					}, {
+						Name:        `old`,
+						Type:        `string`,
+						Description: `The old value being sought.`,
+					}, {
+						Name:        `new`,
+						Type:        `string`,
+						Description: `The new value that is replacing old.`,
+					}, {
+						Name:        `count`,
+						Type:        `integer`,
+						Description: `The number of matches to replace before stopping. If this number is < 0, the all occurrences will be replaced.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `replace "oink oink oink" "oink" "moo" -1`,
+						Return: `moo moo moo`,
+					}, {
+						Code:   `replace "cheese" "e" "o" 2`,
+						Return: `choose`,
+					},
+				},
 			}, {
 				Name:    `rxreplace`,
 				Summary: `Return the given string with all substrings matching the given regular expression replaced with another string.`,
@@ -49,6 +120,27 @@ func loadStandardFunctionsString(funcs FuncMap) funcGroup {
 						return ``, err
 					}
 				},
+				Arguments: []funcArg{
+					{
+						Name:        `wholestring`,
+						Type:        `string`,
+						Description: `The whole string being searched.`,
+					}, {
+						Name:        `pattern`,
+						Type:        `string`,
+						Description: `A Golang-compatible regular expression that matches what should be replaced.`,
+					}, {
+						Name:        `repl`,
+						Type:        `string`,
+						Description: `The string to replace matches with.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `rxreplace "<b>Hello <i>World</i></b>" "</?[bi]>" "*"`,
+						Return: `*Hello *World**`,
+					},
+				},
 			}, {
 				Name:    `concat`,
 				Summary: `Return the string that results in stringifying and joining all of the given arguments.`,
@@ -61,11 +153,38 @@ func loadStandardFunctionsString(funcs FuncMap) funcGroup {
 
 					return strings.Join(out, ``)
 				},
+				Arguments: []funcArg{
+					{
+						Name:        `values`,
+						Type:        `any`,
+						Description: `One or more values to be stringified and joined together.`,
+						Variadic:    true,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `concat "There are " 5 " apples, yes it's " true`,
+						Return: `There are 5 apples, yes it's true.`,
+					},
+				},
 			}, {
 				Name:    `rtrim`,
 				Summary: `Return the given string with any trailing whitespace removed.`,
 				Function: func(in interface{}, str string) string {
 					return strings.TrimSuffix(fmt.Sprintf("%v", in), str)
+				},
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `string`,
+						Description: `The input string to trim.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `trim " Hello   World  "`,
+						Return: ` Hello  World`,
+					},
 				},
 			}, {
 				Name:    `split`,
@@ -77,6 +196,23 @@ func loadStandardFunctionsString(funcs FuncMap) funcGroup {
 						return strings.SplitN(input, delimiter, n[0])
 					}
 				},
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `string`,
+						Description: `The string to split into pieces.`,
+					}, {
+						Name:        `separator`,
+						Type:        `string`,
+						Description: `The separator on which the input will be split.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `split "this is a sentence."`,
+						Return: []string{`this`, `is`, `a`, `sentence.`},
+					},
+				},
 			}, {
 				Name: `join`,
 				Summary: `Stringify the given array of values and join them together into a string, ` +
@@ -84,6 +220,17 @@ func loadStandardFunctionsString(funcs FuncMap) funcGroup {
 				Function: func(input interface{}, delimiter string) string {
 					inStr := sliceutil.Stringify(input)
 					return strings.Join(inStr, delimiter)
+				},
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `array[any]`,
+						Description: `An array of values to stringify and join.`,
+					}, {
+						Name:        `separator`,
+						Type:        `string`,
+						Description: `The string used to join all elements of the array together.`,
+					},
 				},
 			}, {
 				Name: `strcount`,
@@ -106,34 +253,134 @@ func loadStandardFunctionsString(funcs FuncMap) funcGroup {
 
 					return str
 				},
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `string`,
+						Description: `The input string to reformat.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `camelize "This is a thing"`,
+						Return: `thisIsAThing`,
+					},
+				},
 			}, {
 				Name:     `pascalize`,
 				Summary:  `Reformat the given string by changing it into PascalCase capitalization.`,
 				Function: stringutil.Camelize,
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `string`,
+						Description: `The input string to reformat.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `pascalize "This is a thing"`,
+						Return: `ThisIsAThing`,
+					},
+				},
 			}, {
 				Name:     `underscore`,
 				Summary:  `Reformat the given string by changing it into \_underscorecase\_ capitalization (also known as snake\_case).`,
 				Function: stringutil.Underscore,
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `string`,
+						Description: `The input string to reformat.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `underscore "This is a thing"`,
+						Return: `this_is_a_thing`,
+					},
+				},
 			}, {
 				Name:     `hyphenate`,
 				Summary:  `Reformat the given string by changing it into hyphen-case capitalization.`,
 				Function: stringutil.Hyphenate,
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `string`,
+						Description: `The input string to reformat.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `hyphenate "This is a thing"`,
+						Return: `this-is-a-thing`,
+					},
+				},
 			}, {
 				Name:     `trim`,
 				Summary:  `Return the given string with any leading and trailing whitespace removed.`,
 				Function: strings.TrimSpace,
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `string`,
+						Description: `The input string to trim.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `trim " Hello   World  "`,
+						Return: `Hello  World`,
+					},
+				},
 			}, {
 				Name:     `upper`,
 				Summary:  `Reformat the given string by changing it into UPPER CASE capitalization.`,
 				Function: strings.ToUpper,
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `string`,
+						Description: `The input string to reformat.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `upper "This is a thing`,
+						Return: `THIS IS A THING`,
+					},
+				},
 			}, {
 				Name:     `hasPrefix`,
 				Summary:  `Return true if the given string begins with the given prefix.`,
 				Function: strings.HasPrefix,
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `string`,
+						Description: `The input string to test.`,
+					}, {
+						Name:        `prefix`,
+						Type:        `string`,
+						Description: `The prefix to test for the presence of.`,
+					},
+				},
 			}, {
 				Name:     `hasSuffix`,
 				Summary:  `Return true if the given string ends with the given suffix.`,
 				Function: strings.HasSuffix,
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `string`,
+						Description: `The input string to test.`,
+					}, {
+						Name:        `suffix`,
+						Type:        `string`,
+						Description: `The suffix to test for the presence of.`,
+					},
+				},
 			}, {
 				Name:    `surroundedBy`,
 				Summary: `Return whether the given string is begins with a specific prefix _and_ ends with a specific suffix.`,
@@ -171,6 +418,35 @@ func loadStandardFunctionsString(funcs FuncMap) funcGroup {
 						return ``, err
 					}
 				},
+				Arguments: []funcArg{
+					{
+						Name:        `value`,
+						Type:        `number`,
+						Description: `The value you wish to express as a percentage.`,
+					}, {
+						Name:        `whole`,
+						Type:        `number`,
+						Description: `The number that represents 100%.`,
+					}, {
+						Name:        `format`,
+						Type:        `string`,
+						Optional:    true,
+						Default:     `%.f`,
+						Description: `The printf format string used for rounding and truncating the converted number.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `percent 99`,
+						Return: `99`,
+					}, {
+						Code:   `percent 3.3 10`,
+						Return: `33`,
+					}, {
+						Code:   `percent 3.33 10 "%.3f"`,
+						Return: `33.300`,
+					},
+				},
 			}, {
 				Name: `autobyte`,
 				Summary: `Attempt to convert the given number to a string representation of the ` +
@@ -180,6 +456,23 @@ func loadStandardFunctionsString(funcs FuncMap) funcGroup {
 					`is being stringified. By specifying precision and leading digit values to the %f ` +
 					`format token, you can control how many decimal places are in the resulting output.`,
 				Function: stringutil.ToByteString,
+				Arguments: []funcArg{
+					{
+						Name:        `bytes`,
+						Type:        `number`,
+						Description: `A number representing the value to format, in bytes.`,
+					}, {
+						Name:        `format`,
+						Type:        `string`,
+						Description: `A printf-style format string used to represent the output number.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `autobyte 2490368 "%.2f"`,
+						Return: `2.38MB`,
+					},
+				},
 			}, {
 				Name: `thousandify`,
 				Summary: `Take a number and reformat it to be more readable by adding a separator ` +
@@ -212,6 +505,26 @@ func loadStandardFunctionsString(funcs FuncMap) funcGroup {
 				Function: func(in interface{}, wordcount int) string {
 					return stringutil.ElideWords(fmt.Sprintf("%v", in), uint(wordcount))
 				},
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `string`,
+						Description: `The string to (possibly) truncate.`,
+					}, {
+						Name:        `wordcount`,
+						Type:        `integer`,
+						Description: `The maximum number of words that can appear in a string before it is truncated.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `elideWords "This is a sentence that contains eight words." 5`,
+						Return: `This is a sentence that`,
+					}, {
+						Code:   `elideWords "Hello world" 10`,
+						Return: `Hello world`,
+					},
+				},
 			}, {
 				Name:    `elide`,
 				Summary: `Takes an input string and ensures it is no longer than a given number of characters.`,
@@ -227,6 +540,26 @@ func loadStandardFunctionsString(funcs FuncMap) funcGroup {
 					}
 
 					return inS
+				},
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `string`,
+						Description: `The string to (possibly) truncate.`,
+					}, {
+						Name:        `charcount`,
+						Type:        `integer`,
+						Description: `The maximum number of characters that can appear in a string before it is truncated.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `elide "This is a sentence that contains fifty characters." 18`,
+						Return: `This is a sentence`,
+					}, {
+						Code:   `elide "hello." 16`,
+						Return: `hello.`,
+					},
 				},
 			},
 		},
