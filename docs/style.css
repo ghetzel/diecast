@@ -8,14 +8,21 @@ body > nav {
   color: #EEEEEE;
   font-family: monospace;
   white-space: pre-wrap;
-  padding: 0.25em 0.5em;
+  padding: 1em;
   margin-bottom: 0;
   width: 100%;
   display: block;
 }
 
 code {
-  color: #FF7F2B;
+  color: inherit;
+  background: #EEEEEE;
+  padding: 0.125em;
+  border-radius: 0.125em;
+}
+
+table code {
+  background: transparent;
 }
 
 h3 {
@@ -23,8 +30,7 @@ h3 {
 }
 
 .nav-pills .nav-link {
-  border-radius: 0;
-  padding: 0.8rem;
+  padding: 0.4rem;
 }
 
 .nav-pills .nav-link.active {
@@ -36,8 +42,8 @@ h3 {
 }
 
 #sidebar {
-  position: sticky !important;
-  top: 62px;
+  position: sticky;
+  top: 0px;
 }
 
 #content {
@@ -67,9 +73,10 @@ h3 {
 }
 
 .group > header > h3 {
-  background: #162D4F 99.5% 65% no-repeat url("/diecast/src/assets/img/diecast-logo-dark-bg-36.png");
+  background-color: #162D4F;
   color: #EEEEEE;
   padding: 0.5rem;
+  border-radius: 0.25em;
 }
 
 .group .function {
@@ -94,9 +101,11 @@ h3 {
 .group .function .examples dd {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
+  padding-bottom: 0.25em;
 }
 
 .group .function .examples dt {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+  padding-top: 0.25em;
 }

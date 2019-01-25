@@ -1,4 +1,8 @@
-# Diecast [![GoDoc](https://godoc.org/github.com/ghetzel/diecast?status.svg)](https://godoc.org/github.com/ghetzel/diecast)
+<div id="logo">
+    <img src="/diecast/src/assets/img/diecast-text-light-bg-64.png" alt="Diecast Logo">
+</div>
+
+
 ## Introduction
 
 Diecast is a web server that allows you to render a directory tree of template files into HTML, CSS or anything other text-based media in real-time.  Data can be retrieved from remote sources during the template rendering process, creating dynamic web pages built by consuming APIs and remote files without the need to use client-side Javascript/AJAX calls or an intermediate server framework.
@@ -244,20 +248,20 @@ The `name` and `resource` properties are required for a binding to run, but ther
 | ---------------------- | ----------------------------- | ------------- | -----------
 | `body`                 | Object                        | -             |
 | `fallback`             | Anything                      | -             |
-| `formatter`            | `json`, `form`                | `json`        | Specify how the `body` should be serialized before performing the request.
+| `formatter`            | `json, form`                | `json`        | Specify how the `body` should be serialized before performing the request.
 | `if_status`            | Anything                      | -             | Actions to take when specific HTTP response codes are encountered.
-| `insecure`             | `true`, `false`               | `false`       | Whether SSL/TLS peer verification should be enforced.
+| `insecure`             | Boolean                       | `false`       | Whether SSL/TLS peer verification should be enforced.
 | `method`               | String                        | `get`         | The HTTP method to use when making the request.
-| `no_template`          | `true`, `false`               | `false`       |
+| `no_template`          | Boolean                         | `false`       |
 | `not_if`               | String                        | -             | If this value or expression yields a truthy value, the binding will not be evaluated.
 | `on_error`             | String                        | -             | What to do if the request fails.
 | `only_if`              | String                        | -             | Only evaluate if this value or expression yields a truthy value.
-| `optional`             | `true`, `false`               | `false`       | Whether a response error causes the entire template render to fail.
+| `optional`             | Boolean                       | `false`       | Whether a response error causes the entire template render to fail.
 | `param_joiner`         | String                        | `;`           | When a key in `params` is specified as an array, how should those array elements be joined into a single string value.
 | `params`               | Object                        | -             | An object representing the query string parameters to append to the URL in `resource`.  Keys may be any scalar value or array of scalar values.
-| `parser`               | `json`, `html`, `text`, `raw` | `json`        | Specify how the response body should be parsed into the binding variable.
+| `parser`               | `json, html, text, raw` | `json`        | Specify how the response body should be parsed into the binding variable.
 | `rawbody`              | String                        | -             | The *exact* string to send as the request body.
-| `skip_inherit_headers` | `true`, `false`               | `false`       | If true, no headers from the originating request to render the template will be included in this request, even if Header Passthrough is enabled.
+| `skip_inherit_headers` | Boolean                       | `false`       | If true, no headers from the originating request to render the template will be included in this request, even if Header Passthrough is enabled.
 
 ### Handling Response Codes and Errors
 

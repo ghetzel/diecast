@@ -5,8 +5,10 @@ includes:
 {{ $docs := markdown (read "/README.md") "common" "auto-heading-ids" }}
 {{ $docs := htmlRemove $docs "h1" }}
 {{ $docs := htmlAddClass $docs "table" "table" "table-sm" "table-striped" }}
+{{ $docs := htmlAddClass $docs "#logo" "text-center" "w-100" "mb-4" "d-none" "d-sm-block" }}
+
 {{ $docs }}
 
 <a name="funcref"></a>
-<h2>Function Reference</h2>
+<h2 class="mb-4">Function Reference</h2>
 {{ template "functions" . }}

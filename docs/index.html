@@ -1,5 +1,6 @@
 <html lang="en">
 <head>
+    <title>Diecast Framework</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -10,16 +11,16 @@
     <link rel="stylesheet" href="/style.scss" type="text/css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg bg-diecast">
+    <nav class="navbar bg-diecast justify-content-center justify-content-sm-start">
         <a class="navbar-brand" href="/">
             <img src="/diecast/src/assets/img/diecast-text-dark-bg-36.png">
         </a>
     </nav>
-    <div class="container-fluid">
-        <div class="row">
+    <div class="d-flex justify-content-stretch align-items-stretch">
+        <div class="col-md-3 col-xl-2 bg-diecast-dark sticky-top d-none d-sm-block p-0">
             <nav
                 id="sidebar"
-                class="navbar navbar-light bg-diecast-dark col-md-3 col-xl-2 align-items-start d-none d-sm-block position-sticky"
+                class="navbar navbar-light align-items-start"
             >
                 <nav class="nav nav-pills flex-column">
                     <a class="nav-link" href="#introduction">Introduction</a>
@@ -32,20 +33,26 @@
                     <a class="nav-link" href="#funcref">Functions</a>
                     <nav class="nav nav-pills flex-column ml-4">
                         <a class="nav-link" href="#string-functions">String Functions</a>
-                        <a class="nav-link" href="#arrays-and-objects">Arrays and Objects</a>
-                        <a class="nav-link" href="#time-functions">Time Functions</a>
-                        <a class="nav-link" href="#type-comparison-and-manipulation">Type Comparison and Manipulation</a>
-                        <a class="nav-link" href="#encoding-and-decoding">Encoding and Decoding</a>
                         <a class="nav-link" href="#file-path-manipulation">File Path Manipulation</a>
-                        <a class="nav-link" href="#color-manipulation">Color Manipulation</a>
-                        <a class="nav-link" href="#math-functions">Math Functions</a>
+                        <a class="nav-link" href="#encoding-and-decoding">Encoding and Decoding</a>
+                        <a class="nav-link" href="#type-detection-and-manipulation">Type Detection and Manipulation</a>
+                        <a class="nav-link" href="#time-functions">Time Functions</a>
                         <a class="nav-link" href="#hashing-and-cryptography">Hashing and Cryptography</a>
+                        <a class="nav-link" href="#math-and-statistics">Math and Statistics</a>
+                        <a class="nav-link" href="#arrays-and-objects">Arrays and Objects</a>
+                        <a class="nav-link" href="#html-processing">HTML Processing</a>
+                        <a class="nav-link" href="#color-manipulation">Color Manipulation</a>
+                        <a class="nav-link" href="#unit-conversions">Unit Conversions</a>
+                        <a class="nav-link" href="#introspection-and-reflection">Introspection and Reflection</a>
+                        <a class="nav-link" href="#comparison-and-conditionals">Comparison and Conditionals</a>
                     </nav>
                 </nav>
             </nav>
-            <div class="col" id="content" data-spy="scroll" data-target="#sidebar" data-offset="0">
-                <div class="col-xl-8">
-<html><head></head><body>
+        </div>
+        <div class="col-md-9 col-xl-6 p-4" id="content">
+<html><head></head><body><div id="logo" class="text-center w-100 mb-4 d-none d-sm-block">
+    <img src="/diecast/src/assets/img/diecast-text-light-bg-64.png" alt="Diecast Logo"/>
+</div>
 <h2 id="introduction">Introduction</h2>
 <p>Diecast is a web server that allows you to render a directory tree of template files into HTML, CSS or anything other text-based media in real-time.  Data can be retrieved from remote sources during the template rendering process, creating dynamic web pages built by consuming APIs and remote files without the need to use client-side Javascript/AJAX calls or an intermediate server framework.</p>
 <h2 id="installation">Installation</h2>
@@ -253,7 +260,7 @@ bindings:
 </tr>
 <tr>
 <td><code>formatter</code></td>
-<td><code>json</code>, <code>form</code></td>
+<td><code>json, form</code></td>
 <td><code>json</code></td>
 <td>Specify how the <code>body</code> should be serialized before performing the request.</td>
 </tr>
@@ -265,7 +272,7 @@ bindings:
 </tr>
 <tr>
 <td><code>insecure</code></td>
-<td><code>true</code>, <code>false</code></td>
+<td>Boolean</td>
 <td><code>false</code></td>
 <td>Whether SSL/TLS peer verification should be enforced.</td>
 </tr>
@@ -277,7 +284,7 @@ bindings:
 </tr>
 <tr>
 <td><code>no_template</code></td>
-<td><code>true</code>, <code>false</code></td>
+<td>Boolean</td>
 <td><code>false</code></td>
 <td></td>
 </tr>
@@ -301,7 +308,7 @@ bindings:
 </tr>
 <tr>
 <td><code>optional</code></td>
-<td><code>true</code>, <code>false</code></td>
+<td>Boolean</td>
 <td><code>false</code></td>
 <td>Whether a response error causes the entire template render to fail.</td>
 </tr>
@@ -319,7 +326,7 @@ bindings:
 </tr>
 <tr>
 <td><code>parser</code></td>
-<td><code>json</code>, <code>html</code>, <code>text</code>, <code>raw</code></td>
+<td><code>json, html, text, raw</code></td>
 <td><code>json</code></td>
 <td>Specify how the response body should be parsed into the binding variable.</td>
 </tr>
@@ -331,7 +338,7 @@ bindings:
 </tr>
 <tr>
 <td><code>skip_inherit_headers</code></td>
-<td><code>true</code>, <code>false</code></td>
+<td>Boolean</td>
 <td><code>false</code></td>
 <td>If true, no headers from the originating request to render the template will be included in this request, even if Header Passthrough is enabled.</td>
 </tr>
@@ -407,7 +414,7 @@ bindings:
 <p>In this configuration, a request to <code>http://localhost:28419/</code> will load Google’s homepage, but when the browser attempts to load the logo (typically located at <code>/logos/...</code>), <em>that</em> request will be routed to the local <code>/usr/share/custom-google-logos/</code> directory.  So if the logo for that day is at <code>/logos/doodles/2018/something.png</code>, and the file <code>/usr/share/custom-google-logos/doodles/2018/something.png</code> exists, that file will be served in lieu of the version on Google’s servers.</p>
 </body></html>
 <a name="funcref"></a>
-<h2>Function Reference</h2>
+<h2 class="mb-4">Function Reference</h2>
 <section class="group" id="string-functions"  >
     <header>
         <h3>String Functions</h3>
@@ -2604,8 +2611,6 @@ bindings:
     <p>Provide a simple inline switch-case style decision mechanism.</p>
     </section>
 </section>
-                </div>
-            </div>
         </div>
     </div>
 </body>

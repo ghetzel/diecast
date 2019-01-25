@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -25,6 +26,7 @@ import (
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/netutil"
 	"github.com/ghetzel/go-stockutil/pathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -227,6 +229,17 @@ func (self *Server) Initialize() error {
 	}
 
 	self.fileServer = http.FileServer(self.fs)
+
+	// allocate ephemeral address if we're supposed to
+	if addr, port, err := net.SplitHostPort(self.Address); err == nil {
+		if port == `0` {
+			if allocated, err := netutil.EphemeralPort(); err == nil {
+				self.Address = fmt.Sprintf("%v:%d", addr, allocated)
+			} else {
+				return err
+			}
+		}
+	}
 
 	if self.VerifyFile != `` {
 		if verify, err := self.fs.Open(self.VerifyFile); err == nil {
