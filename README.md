@@ -5,4 +5,4 @@ Diecast is a web server that allows you to render a directory tree of template f
 
 ## Documentation
 
-You can read the complete Diecast manual at [https://ghetzel.github.io/diecast/](https://ghetzel.github.io/diecast/).
+You can read the complete Diecast manual at [https://ghetzel.github.io/diecast](https://ghetzel.github.io/diecast).
