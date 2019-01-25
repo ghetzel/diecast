@@ -5,38 +5,54 @@
 
 ## Introduction
 
-Diecast is a web server that allows you to render a directory tree of template files into HTML, CSS or anything other text-based media in real-time.  Data can be retrieved from remote sources during the template rendering process, creating dynamic web pages built by consuming APIs and remote files without the need to use client-side Javascript/AJAX calls or an intermediate server framework.
+Diecast is a web server that allows you to render a directory tree of template files into HTML, CSS or anything other text-based media in real-time.  You can used Diecast to retrieve data from remote sources during the template rendering process, creating dynamic web pages built by consuming APIs and remote files without the need to use client-side Javascript/AJAX calls or an intermediate server framework.
+
+## Benefits and Useful Features
+
+Diecast is a good choice for any web project that consumes data from a remote data source for the purpose of building web pages or other text-based file types.  Think of Diecast as an intermediary that takes raw data and transforms it, in real-time, into websites.
+
+One of the benefits to this approach is that it enforces separation between data storage and data presentation.  It is often the case that web programming frameworks try to "do it all", they provide access to data, mediate requests, and generate HTML content.  It is easy to create close dependencies between these separate tasks, the kind that can be very hard to change or remove.
+
+Diecast, on the other hand, consumes data primarily via HTTP/RESTful API services.  This means that the service(s) responsible for providing the data can focus on doing that one thing well, while the parts of the application responsible for turning that data into something visual and interactive can focus on doing that.  If you need to change out backend languages in the future, or incorporate new data sources, you can do so without a major overhaul of the frontend components.  The HTTP protocol is language-agnostic.
+
+## Getting Started
+
+Building a site using Diecast is as easy as putting files in a folder.  When you run the `diecast` command in this folder (the _working directory_), Diecast will make the contents of the folder available as a web page (by default, at [`http://localhost:28419`](http://localhost:28419).)  Any file ending in `.html` will be treated as a template and be processed before being returned to the user.  If no other filenames or paths are requested, Diecast will look for and attempt to serve the file `index.html`.
 
 ## Installation
 
 <details>
     <summary>Golang / via `go get`</summary>
+    <div>
     ```
     go get github.com/ghetzel/diecast/cmd/diecast
     ```
+    </div>
 </details>
 <details>
     <summary>macOS / Homebrew</summary>
+    <div></div>
 </details>
 <details>
     <summary>Windows</summary>
+    <div></div>
 </details>
 <details>
     <summary>Linux</summary>
+    <div></div>
 </details>
 <details>
     <summary>FreeBSD</summary>
+    <div></div>
 </details>
 <details>
     <summary>Binaries</summary>
+    <div></div>
 </details>
 <details>
     <summary>From Source</summary>
+    <div></div>
 </details>
-
-## Getting Started
-
-Building a site using Diecast begins (and, to some extent, ends) with putting files in a directory.  When the `diecast` command is run in this directory, a local production-ready webserver will be started and the contents of the directory will be served.  If no other filenames or paths are requested, Diecast will look for and attempt to serve the file `index.html`.
 
 ## URL Structure
 
@@ -52,11 +68,11 @@ The first matching file from the list above will be served.
 
 ## Configuration
 
-Diecast is configured by placing a file called `diecast.yml` in the same directory that the `diecast` command is run, or by specifying a filename with the `--config` command line flag.  This file is used to adjust how Diecast renders templates and when, as well as setting up options for how files are accessed and from where.  For more details, see the [Example Config File](/examples/diecast.sample.yml).
+You can configure Diecast by creating a file called `diecast.yml` in the same folder that the `diecast` command is run in, or by specifying the path to the file with the `--config` command line option.  You can use this configuration file to control how Diecast renders templates and when, as well as set options for how files are accessed and from where.  Diecast tries to use "sane defaults" whenever possible, but you can configure Diecast in many ways to suit your needs.  For more details on these defaults and to see what goes in a `diecast.yml` file, see the [Example Config File](/examples/diecast.sample.yml).
 
 ## Templating
 
-Beyond merely acting as a simple file server, Diecast comes with a rich templating environment that allows for complex sites to be built in a composable way.  The default templating language used by Diecast is [Golang's built-in `text/template` package.](https://golang.org/pkg/text/template/).  Templates are plain text files that reside in the working directory, and consist of the template content, and optionally a header section called _front matter_.  These headers are used to specify template-specific data such as predefined data structures, paths of other templates to include, rendering options, and the inclusion of remote data via [bindings](#Bindings).  An example template looks like this:
+Beyond merely acting as a simple file server, Diecast comes with a rich templating environment that you can use to build complex sites in a straightforward, easy to understand way.  Templates are just files that you tell Diecast to treat specially.  The default templating language used by Diecast is [Golang's built-in `text/template` package.](https://golang.org/pkg/text/template/).  Templates files consist of the template content, and optionally a header section called _front matter_.  These headers are used to specify template-specific data such as predefined data structures, paths of other templates to include, rendering options, and the inclusion of remote data via [data bindings](#data-bindings).  An example template looks like this:
 
 ```
 ---
@@ -84,11 +100,11 @@ postprocessors:
 
 ### Language Overview
 
-Golang's `text/template` package provides a syntactically-familiar and highly performant templating language.  When rendering HTML, CSS, or Javascript documents, the `html/template` parser is used.  This is the exact same language, but offers extensive context-aware automatic code escaping capabilities that ensure the output is safe against many common code injection techniques.  This is especially useful when using templates to render user-defined input.
+Golang's `text/template` package provides a fast templating language that is used to generate things like HTML on-the-fly.  When generating HTML, CSS, or Javascript documents, Diecast understands that it is working with these languages and performs automatic escaping of code to ensure the output is safe against many common code injection techniques.  This is especially useful when using templates to render user-defined input that may contain HTML tags or embedded Javascript.
 
 #### Intro to `text/template`
 
-The built-in templating language should be familiar to those coming from a background in other templating languages like [Jekyll](https://jekyllrb.com/), [Jinja2](http://jinja.pocoo.org/docs/2.10/), and [Mustache](https://mustache.github.io/).  Below is a quick guide on the high-level language constructs.  For detailed information, check out the [Golang `text/template` Language Overview](https://golang.org/pkg/text/template/#pkg-overview).
+The built-in templating language will be familiar to those coming from a background in other templating languages like [Jekyll](https://jekyllrb.com/), [Jinja2](http://jinja.pocoo.org/docs/2.10/), and [Mustache](https://mustache.github.io/).  Below is a quick guide on how to accomplish certain common tasks when writing templates for Diecast.  For detailed information, check out the [Golang `text/template` Language Overview](https://golang.org/pkg/text/template/#pkg-overview).
 
 ##### Output Text
 
@@ -140,7 +156,7 @@ In addition to rendering individual files as standalone pages, Diecast also supp
 
 ### Page Object
 
-Diecast defines a global data structure in the `$.page` variable that can be used to provide site-wide values to templates.  The `page` structure can be defined in multiple places, allowing for the flexible expression of hierarchical data when rendering templates.  The `page` structure is inherited by child templates when rendering, and all values are deeply-merged together to form a single data structure for the template(s) to use.  For example, given the following files:
+Diecast defines a global data structure in the `$.page` variable that can be used to provide site-wide values to templates.  You can define the `page` structure in multiple places, which lets you explicitly provide data when serving templates that doesn't come from a data binding.  The `page` structure is inherited by child templates, and all values are merged together to form a single data structure.  For example, given the following files:
 
 ```yaml
 # diecast.yml
@@ -182,7 +198,7 @@ page:
 </ul>
 ```
 
-The final `page` data structure would look like this immediately before rendering `index.html`:
+The final `page` data structure would look like this immediately before processing `index.html`:
 
 ```yaml
 page:
@@ -212,9 +228,9 @@ page:
 </html>
 ```
 
-## Bindings
+## Data Bindings
 
-Bindings are one of the most important concepts in Diecast.  Bindings (short for _data bindings_) are directives added to the Front Matter of layouts and templates that specify remote URLs to retrieve (via an HTTP client built in to `diecast`), as well as how to handle parsing the response data and what to do about errors.  This concept is extremely powerful, in that it allows you to create complex data-driven sites easily and cleanly by treating remote data from RESTful APIs and other sources as first-class citizens in the templating language.
+Data Bindings (or just _bindings_) are one of the most important concepts in Diecast.  Bindings are directives you add to the Front Matter of layouts and templates that specify remote URLs to retrieve (via an HTTP client built in to `diecast`), as well as how to handle parsing the response data and what to do about errors.  This concept is extremely powerful, in that it allows you to create complex data-driven sites easily and cleanly by treating remote data from RESTful APIs and other sources as first-class citizens in the templating language.
 
 ### Overview
 
@@ -265,8 +281,51 @@ The `name` and `resource` properties are required for a binding to run, but ther
 
 ### Handling Response Codes and Errors
 
+By default, the response to a binding's HTTP request must be a [200-series HTTP status code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success).  If it is not (e.g. returns an 404 or 500 error), Diecast will return an error page instead.  Custom error pages live in a top-level `_errors` folder.  This folder will be checked for specially-named files that are to be used for handling different error types.  These filenames will be checked, in order, in the event of a binding error:
+
+
+**`/_errors/404.html`**
+
+Uses the exact HTTP status code that was encountered.  Use this to handle specific, well-known error cases like "404 Not Found" or "500 Internal Server Error".
+
+**`/_errors/4xx.html`**
+
+Specifies an error page that is used for an entire range of error types.  HTTP errors are grouped by type; e.g.: status codes between 400-499 indiciate a _client_ error that the user can fix, whereas 500-599 describes _server_ errors the user cannot do anything about.
+
+**`/_errors/default.html`**
+
+Specifies an error page that is used to handle _any_ non-2xx HTTP status, as well as deeper problems like connection issues, SSL security violations, and DNS lookup problems.
+
+
 ### Conditional Evaluation
+
+By default, all bindings specified in a template are evaluated in the order they appear.  It is sometimes useful to place conditions on whether a binding will evaluate.  You can specify these conditions using the `only_if` and `not_if` properties on a binding.  These properties take a string containing an inline template.  If the template in an `only_if` property returns a "truthy" value (non-empty, non-zero, or "true"), that binding will be run.  Otherwise, it will be skipped.  The inverse is true for `not_if`: if truthy, the binding is not evaluated.
+
+
+```
+---
+bindings:
+#   --------------------------------------------------------------------------------
+#   Always evaluated
+-   name:     always
+    resource: /api/status
+#   --------------------------------------------------------------------------------
+#   Only evaluated if the "login" query string is a "truthy" values (i.e.: "1",
+#   "true", "yes")
+-   name:     user
+    resource: /api/users/self
+    only_if:  '{{ qs "login" }}'
+#   --------------------------------------------------------------------------------
+#   Evaluated every day except Mondays
+-   name:     i_hate_mondays
+    resource: /api/details
+    not_if:   '{{ eqx (now "day") "Monday" }}'
+---
+```
+
 ### Repeaters
+
+_TODO_
 
 ### Dynamic Variables
 
