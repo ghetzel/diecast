@@ -168,8 +168,8 @@ github.com/tg123/go-htpasswd v0.0.0-20150618065153-49fe3fd1681b h1:QrbGYrwDZ5kis
 github.com/tg123/go-htpasswd v0.0.0-20150618065153-49fe3fd1681b/go.mod h1:rFFqmvZbM9kVmDDVpeVr8VJ+8nRWwuXR/uvvjJ/3aJo=
 github.com/urfave/negroni v1.0.0 h1:kIimOitoypq34K7TG7DUaJ9kq/N4Ofuwi1sjz0KipXc=
 github.com/urfave/negroni v1.0.0/go.mod h1:Meg73S6kFm/4PpbYdq35yYWoCZ9mS/YSx+lKnmiohz4=
-github.com/wellington/go-libsass v0.9.2 h1:6Ims04UDdBs6/CGSVK5JC8FNikR5ssrsMMKE/uaO5Q8=
-github.com/wellington/go-libsass v0.9.2/go.mod h1:mxgxgam0N0E+NAUMHLcu20Ccfc3mVpDkyrLDayqfiTs=
+github.com/wellington/go-libsass v0.9.3-0.20190110124256-dc056fc24fcf h1:HCLFQbPG1Uh7uoAIrhKSYWdTfpKMIxU+3BWcmpsMkwY=
+github.com/wellington/go-libsass v0.9.3-0.20190110124256-dc056fc24fcf/go.mod h1:mxgxgam0N0E+NAUMHLcu20Ccfc3mVpDkyrLDayqfiTs=
 github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8 h1:OlIHDBRrlQk8fHa662oG2gzOO/ixBRU9sLht/M9kzK0=
 github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8/go.mod h1:+ccdNT0xMY1dtc5XBxumbYfOUhmduiGudqaDgD2rVRE=
 github.com/yudai/gojsondiff v0.0.0-20170107030110-7b1b7adf999d h1:yJIizrfO599ot2kQ6Af1enICnwBD3XoxgX3MrMwot2M=
