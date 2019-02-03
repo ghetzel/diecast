@@ -20,7 +20,7 @@ test:
 	go test ./...
 
 build: fmt
-	test -d diecast && go build -i -o bin/diecast cmd/diecast/main.go
+	test -d diecast && go build -o bin/diecast cmd/diecast/main.go
 	which diecast && cp -v bin/diecast `which diecast` || true
 
 docs:
