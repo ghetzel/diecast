@@ -1478,6 +1478,14 @@
         "Examples": null
       },
       {
+        "Name": "mean",
+        "Alias": "",
+        "Summary": "Return the mean of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "median",
         "Alias": "",
         "Summary": "Return the median of the given array of numbers.",
@@ -1521,14 +1529,6 @@
         "Name": "maximum",
         "Alias": "",
         "Summary": "Return the maximum of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "mean",
-        "Alias": "",
-        "Summary": "Return the mean of the given array of numbers.",
         "Returns": "",
         "Arguments": null,
         "Examples": null

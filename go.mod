@@ -18,7 +18,6 @@ require (
 	github.com/mattn/go-shellwords v1.0.3
 	github.com/mcuadros/go-defaults v1.1.0 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.0
-	github.com/mjibson/esc v0.1.0 // indirect
 	github.com/montanaflynn/stats v0.0.0-20151014174947-eeaced052adb
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 // indirect
