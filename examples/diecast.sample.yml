@@ -173,6 +173,12 @@ authenticators:
     # access the protected resources.
     htpasswd: '/etc/my-app/htpasswd'
 
+- type: oauth2
+  callback: http://mydomain.example.com/auth
+  options:
+    provider:  'google'
+    client_id: 'oauth_client_id_abc123'
+    secret:    'oauth_client_secret_xyz987'
 
 # It is possible to specify a command to run before Diecast begins serving
 # data, as well as after the server has started and is confirmed running.

@@ -5,20 +5,38 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/gobwas/glob"
 )
 
 type Authenticator interface {
 	Authenticate(http.ResponseWriter, *http.Request) bool
+	IsCallback(*url.URL) bool
+	Callback(w http.ResponseWriter, req *http.Request)
 }
 
 type AuthenticatorConfig struct {
-	Type        string                 `json:"type"`
-	Paths       []string               `json:"paths"`
-	Except      []string               `json:"except"`
-	Options     map[string]interface{} `json:"options"`
-	globs       []glob.Glob
-	exceptGlobs []glob.Glob
+	Type         string                 `json:"type"`
+	Paths        []string               `json:"paths"`
+	Except       []string               `json:"except"`
+	CallbackPath string                 `json:"callback"`
+	Options      map[string]interface{} `json:"options"`
+	globs        []glob.Glob
+	exceptGlobs  []glob.Glob
+}
+
+func (self *AuthenticatorConfig) O(key string, fallback ...interface{}) typeutil.Variant {
+	if len(self.Options) > 0 {
+		if v, ok := self.Options[key]; ok {
+			return typeutil.V(v)
+		}
+	}
+
+	if len(fallback) > 0 {
+		return typeutil.V(fallback[0])
+	} else {
+		return typeutil.V(nil)
+	}
 }
 
 type AuthenticatorConfigs []AuthenticatorConfig
@@ -53,11 +71,15 @@ func (self AuthenticatorConfigs) isUrlMatch(auth *AuthenticatorConfig, u *url.UR
 	var match bool
 
 	// determine if any of our paths match the request path
-	for _, px := range auth.globs {
-		if px.Match(u.Path) {
-			match = true
-			break
+	if len(auth.globs) > 0 {
+		for _, px := range auth.globs {
+			if px.Match(u.Path) {
+				match = true
+				break
+			}
 		}
+	} else {
+		match = true
 	}
 
 	// no matches? then except wouldn't do anything anyway. return false now
@@ -65,7 +87,7 @@ func (self AuthenticatorConfigs) isUrlMatch(auth *AuthenticatorConfig, u *url.UR
 		return false
 	}
 
-	// we have at least one match, make sure we don't run afould of any excepts
+	// we have at least one match, make sure we don't run afoul of any excepts
 	for _, xx := range auth.exceptGlobs {
 		if xx.Match(u.Path) {
 			return false
@@ -82,7 +104,9 @@ func returnAuthenticatorFor(auth *AuthenticatorConfig) (Authenticator, error) {
 
 	switch auth.Type {
 	case `basic`:
-		authenticator, err = NewBasicAuthenticator(auth.Options)
+		authenticator, err = NewBasicAuthenticator(auth)
+	case `oauth2`:
+		authenticator, err = NewOauthAuthenticator(auth)
 	default:
 		err = fmt.Errorf("unrecognized authenticator type %q", auth.Type)
 	}

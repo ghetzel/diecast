@@ -921,7 +921,10 @@ func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) 
 
 	if auth, err := self.Authenticators.Authenticator(req); err == nil {
 		if auth != nil {
-			if !auth.Authenticate(w, req) {
+			if auth.IsCallback(req.URL) {
+				auth.Callback(w, req)
+				return
+			} else if !auth.Authenticate(w, req) {
 				return
 			}
 		}
