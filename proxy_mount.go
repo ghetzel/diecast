@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ghetzel/diecast/util"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/sliceutil"
@@ -155,11 +154,11 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 
 				// make the upstream request body the aggregate of the already-read portion of the body
 				// and the unread remainder of the incoming request body
-				newReq.Body = util.NewChainableReader(&buf, requestBody)
+				newReq.Body = MultiReadCloser(&buf, requestBody)
 
 			} else if err == io.EOF {
 				log.Debugf("  fixed-length request body (%d bytes)", buf.Len())
-				newReq.Body = ioutil.NopCloser(&buf)
+				newReq.Body = MultiReadCloser(&buf)
 				newReq.ContentLength = int64(buf.Len())
 				newReq.TransferEncoding = []string{`identity`}
 			} else {

@@ -5,6 +5,7 @@ import (
 	"encoding/base32"
 	"encoding/csv"
 	"fmt"
+	"html/template"
 	"math"
 	"os"
 	"path"
@@ -12,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	humanize "github.com/dustin/go-humanize"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
@@ -19,6 +21,7 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/kelvins/sunrisesunset"
 	"github.com/montanaflynn/stats"
+	"github.com/russross/blackfriday/v2"
 	"golang.org/x/net/html"
 )
 
@@ -46,52 +49,57 @@ func MinNonZero(data stats.Float64Data) (float64, error) {
 	return stats.Min(data)
 }
 
-func GetStandardFunctions() FuncMap {
-	rv := make(FuncMap)
+func GetFunctions() (funcGroups, FuncMap) {
+	funcs := make(FuncMap)
+	groups := make(funcGroups, 0)
 
 	// String Processing
-	loadStandardFunctionsString(rv)
+	groups = append(groups, loadStandardFunctionsString(funcs))
 
 	// File Pathname Handling
-	loadStandardFunctionsPath(rv)
+	groups = append(groups, loadStandardFunctionsPath(funcs))
 
 	// Encoding / Decoding
-	loadStandardFunctionsCodecs(rv)
+	groups = append(groups, loadStandardFunctionsCodecs(funcs))
 
 	// Type Handling and Conversion
-	loadStandardFunctionsTypes(rv)
+	groups = append(groups, loadStandardFunctionsTypes(funcs))
 
 	// Time and Date Formatting
-	loadStandardFunctionsTime(rv)
+	groups = append(groups, loadStandardFunctionsTime(funcs))
 
 	// Random Numbers and Encoding
-	loadStandardFunctionsCryptoRand(rv)
+	groups = append(groups, loadStandardFunctionsCryptoRand(funcs))
 
 	// Numeric/Math Functions
-	loadStandardFunctionsMath(rv)
+	groups = append(groups, loadStandardFunctionsMath(funcs))
 
 	// Collections
-	loadStandardFunctionsCollections(rv)
+	groups = append(groups, loadStandardFunctionsCollections(funcs))
 
-	// Web Scraping
-	loadStandardFunctionsWebScraping(rv)
+	// HTML processing
+	groups = append(groups, loadStandardFunctionsHtmlProcessing(funcs))
 
 	// Colors
-	loadStandardFunctionsColor(rv)
-
-	// Location-based functions
-	loadStandardFunctionsLocation(rv)
+	groups = append(groups, loadStandardFunctionsColor(funcs))
 
 	// Unit Conversions
-	loadStandardFunctionsConvert(rv)
+	groups = append(groups, loadStandardFunctionsConvert(funcs))
 
 	// Template Introspection functions
-	loadStandardFunctionsIntrospection(rv)
+	groups = append(groups, loadStandardFunctionsIntrospection(funcs))
 
-	// Miscellaneous
-	loadStandardFunctionsMisc(rv)
+	// Comparators
+	groups = append(groups, loadStandardFunctionsComparisons(funcs))
 
-	return rv
+	groups.PopulateFuncMap(funcs)
+
+	return groups, funcs
+}
+
+func GetStandardFunctions() FuncMap {
+	_, funcs := GetFunctions()
+	return funcs
 }
 
 type statsTplFunc func(in interface{}) (float64, error) // {}
@@ -103,7 +111,8 @@ func delimited(comma rune, header []interface{}, lines []interface{}) (string, e
 	csvwriter.UseCRLF = true
 	input := make([][]string, 0)
 
-	input = append(input, sliceutil.Stringify(header))
+	columnNames := sliceutil.Stringify(header)
+	input = append(input, columnNames)
 
 	for _, line := range lines {
 		lineslice := sliceutil.Sliceify(line)
@@ -114,6 +123,14 @@ func delimited(comma rune, header []interface{}, lines []interface{}) (string, e
 					lineslice = append(lineslice[:i], lineslice[i+1:]...)
 				} else {
 					lineslice = lineslice[:i]
+				}
+			} else if typeutil.IsMap(value) {
+				m := maputil.M(value)
+
+				for j, col := range columnNames {
+					if j < len(lineslice) {
+						lineslice[j] = m.Get(col)
+					}
 				}
 			}
 		}
@@ -546,5 +563,86 @@ func cmp(op string, first interface{}, second interface{}) (bool, error) {
 		default:
 			return false, fmt.Errorf("Invalid operator %q", op)
 		}
+	}
+}
+
+func toMarkdownExt(extensions ...string) blackfriday.Extensions {
+	var ext blackfriday.Extensions
+
+	for _, x := range extensions {
+		switch stringutil.Hyphenate(x) {
+		case `no-intra-emphasis`:
+			ext |= blackfriday.NoIntraEmphasis
+		case `tables`:
+			ext |= blackfriday.Tables
+		case `fenced-code`:
+			ext |= blackfriday.FencedCode
+		case `autolink`:
+			ext |= blackfriday.Autolink
+		case `strikethrough`:
+			ext |= blackfriday.Strikethrough
+		case `lax-html-blocks`:
+			ext |= blackfriday.LaxHTMLBlocks
+		case `space-headings`:
+			ext |= blackfriday.SpaceHeadings
+		case `hard-line-break`:
+			ext |= blackfriday.HardLineBreak
+		case `tab-size-eight`:
+			ext |= blackfriday.TabSizeEight
+		case `footnotes`:
+			ext |= blackfriday.Footnotes
+		case `no-empty-line-before-block`:
+			ext |= blackfriday.NoEmptyLineBeforeBlock
+		case `heading-ids`:
+			ext |= blackfriday.HeadingIDs
+		case `titleblock`:
+			ext |= blackfriday.Titleblock
+		case `auto-heading-ids`:
+			ext |= blackfriday.AutoHeadingIDs
+		case `backslash-line-break`:
+			ext |= blackfriday.BackslashLineBreak
+		case `definition-lists`:
+			ext |= blackfriday.DefinitionLists
+		case `common`:
+			ext |= blackfriday.CommonExtensions
+		}
+	}
+
+	return ext
+}
+
+func htmldoc(docI interface{}) (*goquery.Document, error) {
+	if d, ok := docI.(*goquery.Document); ok {
+		return d, nil
+	} else if d, ok := docI.(string); ok {
+		return goquery.NewDocumentFromReader(bytes.NewBufferString(d))
+	} else if d, ok := docI.(template.HTML); ok {
+		return goquery.NewDocumentFromReader(bytes.NewBufferString(string(d)))
+	} else {
+		return nil, fmt.Errorf("Expected a HTML document string or object, got: %T", docI)
+	}
+}
+
+func htmlModify(docI interface{}, selector string, action string, k string, v interface{}) (template.HTML, error) {
+	if doc, err := htmldoc(docI); err == nil {
+		switch action {
+		case `remove`:
+			doc.Find(selector).Remove()
+		case `add-class`:
+			doc.Find(selector).AddClass(sliceutil.Stringify(sliceutil.Flatten(v))...)
+		case `remove-class`:
+			doc.Find(selector).RemoveClass(sliceutil.Stringify(sliceutil.Flatten(v))...)
+		case `set-attr`:
+			doc.Find(selector).SetAttr(k, typeutil.String(v))
+		default:
+			return ``, fmt.Errorf("unknown HTML action %q", action)
+		}
+
+		doc.End()
+		output, err := doc.Html()
+
+		return template.HTML(output), err
+	} else {
+		return ``, err
 	}
 }

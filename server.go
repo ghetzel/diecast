@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -21,9 +22,11 @@ import (
 	"time"
 
 	"github.com/fatih/structs"
+	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/netutil"
 	"github.com/ghetzel/go-stockutil/pathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -73,6 +76,7 @@ type StartCommand struct {
 }
 
 type Server struct {
+	BinPath             string                 `json:"-"`
 	Address             string                 `json:"address"`
 	Bindings            []Binding              `json:"bindings"`
 	BindingPrefix       string                 `json:"bindingPrefix"`
@@ -225,6 +229,17 @@ func (self *Server) Initialize() error {
 	}
 
 	self.fileServer = http.FileServer(self.fs)
+
+	// allocate ephemeral address if we're supposed to
+	if addr, port, err := net.SplitHostPort(self.Address); err == nil {
+		if port == `0` {
+			if allocated, err := netutil.EphemeralPort(); err == nil {
+				self.Address = fmt.Sprintf("%v:%d", addr, allocated)
+			} else {
+				return err
+			}
+		}
+	}
 
 	if self.VerifyFile != `` {
 		if verify, err := self.fs.Open(self.VerifyFile); err == nil {
@@ -711,6 +726,21 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 		return ``
 	}
 
+	// read a file from the serving path
+	funcs[`read`] = func(filename string) (string, error) {
+		if file, err := self.fs.Open(filename); err == nil {
+			defer file.Close()
+
+			if data, err := ioutil.ReadAll(file); err == nil {
+				return string(data), nil
+			} else {
+				return ``, err
+			}
+		} else {
+			return ``, err
+		}
+	}
+
 	return funcs
 }
 
@@ -1097,7 +1127,7 @@ func (self *Server) tryToHandleFoundFile(requestPath string, mimeType string, fi
 	}
 
 	if mimeType == `` {
-		mimeType = `application/octet-stream`
+		mimeType = fileutil.GetMimeType(requestPath, `application/octet-stream`)
 	}
 
 	// write out the HTTP status if we were given one
@@ -1429,6 +1459,7 @@ func (self *Server) RunStartCommand(scmd *StartCommand, waitForCommand bool) err
 			}
 
 			env[`DIECAST`] = true
+			env[`DIECAST_BIN`] = self.BinPath
 			env[`DIECAST_DEBUG`] = self.EnableDebugging
 			env[`DIECAST_ADDRESS`] = self.Address
 			env[`DIECAST_ROOT`] = self.RootPath

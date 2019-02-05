@@ -50,6 +50,8 @@ type Template struct {
 	headerOffset   int64
 	contentOffset  int64
 	postprocessors []PostprocessorFunc
+	delimOpen      string
+	delimClose     string
 }
 
 func GetEngineForFile(filename string) Engine {
@@ -70,6 +72,11 @@ func NewTemplate(name string, engine Engine) *Template {
 
 func (self *Template) SetHeaderOffset(offset int) {
 	self.headerOffset = int64(offset)
+}
+
+func (self *Template) SetDelimiters(open string, close string) {
+	self.delimOpen = open
+	self.delimClose = close
 }
 
 func (self *Template) AddPostProcessors(postprocessors ...string) error {
@@ -207,6 +214,8 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 	switch self.engine {
 	case TextEngine:
 		if t, ok := self.tmpl.(*text.Template); ok {
+			t.Delims(self.delimOpen, self.delimClose)
+
 			if subtemplate == `` {
 				err = t.Execute(output, data)
 			} else {
@@ -218,6 +227,8 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 
 	case HtmlEngine:
 		if t, ok := self.tmpl.(*html.Template); ok {
+			t.Delims(self.delimOpen, self.delimClose)
+
 			if subtemplate == `` {
 				err = t.Execute(output, data)
 			} else {

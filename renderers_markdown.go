@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday"
+	"github.com/russross/blackfriday/v2"
 )
 
 type MarkdownRenderer struct {
@@ -20,7 +20,10 @@ func (self *MarkdownRenderer) Render(w http.ResponseWriter, req *http.Request, o
 	defer options.Input.Close()
 
 	if input, err := ioutil.ReadAll(options.Input); err == nil {
-		output := blackfriday.MarkdownCommon(input)
+		output := blackfriday.Run(
+			input,
+			blackfriday.WithExtensions(blackfriday.CommonExtensions),
+		)
 		output = bluemonday.UGCPolicy().SanitizeBytes(output)
 
 		w.Header().Set(`Content-Type`, `text/html; charset=utf-8`)

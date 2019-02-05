@@ -17,13 +17,11 @@ use them.
 - [asInt](#asInt)
 - [asStr](#asStr)
 - [asTime](#asTime)
-- [autobyte](#autobyte)
 - [autotype](#autotype)
 - [base32](#base32)
 - [base58](#base58)
 - [base64](#base64)
 - [basename](#basename)
-- [camelize](#camelize)
 - [camelize](#camelize)
 - [colorFromValue](#colorFromValue)
 - [colorToHSL](#colorToHSL)
@@ -101,6 +99,7 @@ use them.
 - [now](#now)
 - [page](#page)
 - [param](#param)
+- [pascalize](#pascalize)
 - [pathjoin](#pathjoin)
 - [payload](#payload)
 - [percent](#percent)
@@ -142,6 +141,7 @@ use them.
 - [thousandify](#thousandify)
 - [time](#time)
 - [titleize](#titleize)
+- [transformValues](#transformValues)
 - [trim](#trim)
 - [tsv](#tsv)
 - [underscore](#underscore)
@@ -246,14 +246,6 @@ Attempt to parse the given *value* as a date/time value.
 
 ---
 
-<a name="autobyte"></a>
-```
-autobyte bytesize any [any ..] -> string error
-```
-Attempt to convert the given *bytesize* number to a string representation of the value in bytes.
-
----
-
 <a name="autotype"></a>
 ```
 autotype value any -> 
@@ -299,14 +291,6 @@ Return the filename component of the given *path*.
 camelize s any -> string
 ```
 Return a copy of *s* transformed into camelCase.
-
----
-
-<a name="camelize"></a>
-```
-camelize s any -> string
-```
-Return a copy of *s* transformed into PascalCase.
 
 ---
 
@@ -918,6 +902,14 @@ Return the value of the named or indexed URL parameter, or nil of none are prese
 
 ---
 
+<a name="pascalize"></a>
+```
+pascalize s any -> string
+```
+Return a copy of *s* transformed into PascalCase.
+
+---
+
 <a name="pathjoin"></a>
 ```
 pathjoin values [any ..] -> string
@@ -1243,6 +1235,14 @@ Return the given Time formatted using *format*.  See [Time Formats](#time-format
 titleize s string -> string
 ```
 Return a copy of *s* with all Unicode letters that begin words mapped to their title case.
+
+---
+
+<a name="transformValues"></a>
+```
+transformValues input any string string ->  error
+```
+Return all elements of the given *input* array of objects with the value at *key* transformed by the given expression.
 
 ---
 

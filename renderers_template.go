@@ -30,6 +30,10 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 	tmpl.Funcs(options.FunctionSet)
 	tmpl.SetHeaderOffset(options.HeaderOffset)
 
+	// if delim := options.Header.Delimiters; len(delim) == 2 {
+	// 	tmpl.SetDelimiters(delim[0], delim[1])
+	// }
+
 	if err := tmpl.AddPostProcessors(options.Header.Postprocessors...); err != nil {
 		return err
 	}
@@ -43,6 +47,10 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 				for name, value := range options.Header.Headers {
 					w.Header().Set(name, fmt.Sprintf("%v", value))
 				}
+			}
+
+			if options.MimeType == `` {
+				options.MimeType = `text/html; charset=utf-8`
 			}
 
 			if self.server.ShouldReturnSource(req) {
