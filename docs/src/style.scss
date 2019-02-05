@@ -48,8 +48,8 @@ h3 {
 
 .nav-pills {
     .nav-link {
-        // border-radius:    0;
-        padding:          0.4rem;
+        border-radius:    0;
+        padding:          0.2rem;
     }
 
     .nav-link.active {
@@ -90,15 +90,13 @@ h3 {
 
 .group {
     > header > h3 {
-        background-color: $hilite;
-        color:            $darkForeground;
-        padding:          0.5rem;
-        border-radius:    0.25em;
+        padding-bottom:   0.25em;
+        border-bottom:    3px solid $darkPrimary;
     }
 
     .function {
         margin-bottom: 4em;
-        border-top:    3px solid $primary;
+        border-top:    1px dotted $primary;
 
         h5 {
             margin-top: 1em;
