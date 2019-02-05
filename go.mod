@@ -29,6 +29,7 @@ require (
 	github.com/wellington/go-libsass v0.9.3-0.20190110124256-dc056fc24fcf
 	github.com/wellington/sass v0.0.0-20160911051022-cab90b3986d6
 	github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8
-	golang.org/x/net v0.0.0-20181114220301-adae6a3d119a
+	golang.org/x/net v0.0.0-20190108225652-1e06a53dbb7e
+	golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
