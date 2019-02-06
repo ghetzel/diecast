@@ -215,6 +215,14 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 					return maputil.DeepGet(input, strings.Split(key, `.`), fb)
 				},
 			}, {
+				Name: `set`,
+				Summary: `Set a key on a given object to a value. Key can be specified as a dot.separated.list of ` +
+					`keys that describes a path in the given object, through any intermediate nested objects, ` +
+					`down to the object where the given value will go.`,
+				Function: func(input interface{}, key string, value interface{}) interface{} {
+					return maputil.DeepSet(input, strings.Split(key, `.`), value)
+				},
+			}, {
 				Name:    `findkey`,
 				Summary: `Recursively scans the given array or map and returns all values of the given key.`,
 				Function: func(input interface{}, key string) ([]interface{}, error) {

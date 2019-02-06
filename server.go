@@ -629,8 +629,8 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 		return ``
 	}
 
-	// fn set: Treat the runtime variable *name* as a map, setting *key* to *value*.
-	funcs[`set`] = func(name string, key string, vI ...interface{}) interface{} {
+	// fn varset: Treat the runtime variable *name* as a map, setting *key* to *value*.
+	funcs[`varset`] = func(name string, key string, vI ...interface{}) interface{} {
 		var value interface{}
 		path := makeVarKey(name)
 

@@ -1478,30 +1478,6 @@
         "Examples": null
       },
       {
-        "Name": "minimum_nz",
-        "Alias": "",
-        "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "stddev",
-        "Alias": "",
-        "Summary": "Return the standard deviation of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "sum",
-        "Alias": "",
-        "Summary": "Return the sum of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
         "Name": "maximum",
         "Alias": "",
         "Summary": "Return the maximum of the given array of numbers.",
@@ -1529,6 +1505,30 @@
         "Name": "minimum",
         "Alias": "",
         "Summary": "Return the minimum of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "minimum_nz",
+        "Alias": "",
+        "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "stddev",
+        "Alias": "",
+        "Summary": "Return the standard deviation of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sum",
+        "Alias": "",
+        "Summary": "Return the sum of the given array of numbers.",
         "Returns": "",
         "Arguments": null,
         "Examples": null
@@ -1639,6 +1639,14 @@
         "Name": "get",
         "Alias": "",
         "Summary": "Retrieve a value from a given object.  Key can be specified as a dot.separated.list of keys that describes a path from the given object, through any intermediate nested objects, down to the object containing the desired value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "set",
+        "Alias": "",
+        "Summary": "Set a key on a given object to a value. Key can be specified as a dot.separated.list of keys that describes a path in the given object, through any intermediate nested objects, down to the object where the given value will go.",
         "Returns": "",
         "Arguments": null,
         "Examples": null
