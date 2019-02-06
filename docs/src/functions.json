@@ -1478,30 +1478,6 @@
         "Examples": null
       },
       {
-        "Name": "mean",
-        "Alias": "",
-        "Summary": "Return the mean of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "median",
-        "Alias": "",
-        "Summary": "Return the median of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "minimum",
-        "Alias": "",
-        "Summary": "Return the minimum of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
         "Name": "minimum_nz",
         "Alias": "",
         "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
@@ -1532,6 +1508,30 @@
         "Returns": "",
         "Arguments": null,
         "Examples": null
+      },
+      {
+        "Name": "mean",
+        "Alias": "",
+        "Summary": "Return the mean of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "median",
+        "Alias": "",
+        "Summary": "Return the median of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "minimum",
+        "Alias": "",
+        "Summary": "Return the minimum of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
       }
     ]
   },
@@ -1539,6 +1539,14 @@
     "Name": "Arrays and Objects",
     "Description": "For converting, modifying, and filtering arrays, objects, and arrays of objects. These functions are especially useful when working with data returned from Bindings.",
     "Functions": [
+      {
+        "Name": "append",
+        "Alias": "",
+        "Summary": "Append one or more values to the given array.  If the array given is not in fact an array, it will be converted into one, with the exception of null values, which will create an empty array.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
       {
         "Name": "page",
         "Alias": "",

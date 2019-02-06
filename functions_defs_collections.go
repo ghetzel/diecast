@@ -23,6 +23,21 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 			`objects. These functions are especially useful when working with data returned from Bindings.`,
 		Functions: []funcDef{
 			{
+				Name: `append`,
+				Summary: `Append one or more values to the given array.  If the array given is not in fact an array, ` +
+					`it will be converted into one, with the exception of null values, which will create an empty array.`,
+				Function: func(array interface{}, values ...interface{}) ([]interface{}, error) {
+					out := make([]interface{}, 0)
+
+					if array != nil && !typeutil.IsArray(array) {
+						out = sliceutil.Sliceify(array)
+					}
+
+					out = append(out, values...)
+
+					return out, nil
+				},
+			}, {
 				Name: `page`,
 				Summary: `Returns an integer representing an offset used for accessing paginated values when ` +
 					`given a page number and number of results per page.`,
