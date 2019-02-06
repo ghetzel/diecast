@@ -1478,30 +1478,6 @@
         "Examples": null
       },
       {
-        "Name": "minimum",
-        "Alias": "",
-        "Summary": "Return the minimum of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "minimum_nz",
-        "Alias": "",
-        "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "stddev",
-        "Alias": "",
-        "Summary": "Return the standard deviation of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
         "Name": "sum",
         "Alias": "",
         "Summary": "Return the sum of the given array of numbers.",
@@ -1529,6 +1505,30 @@
         "Name": "median",
         "Alias": "",
         "Summary": "Return the median of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "minimum",
+        "Alias": "",
+        "Summary": "Return the minimum of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "minimum_nz",
+        "Alias": "",
+        "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "stddev",
+        "Alias": "",
+        "Summary": "Return the standard deviation of the given array of numbers.",
         "Returns": "",
         "Arguments": null,
         "Examples": null
