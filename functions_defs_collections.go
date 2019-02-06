@@ -219,8 +219,9 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 				Summary: `Set a key on a given object to a value. Key can be specified as a dot.separated.list of ` +
 					`keys that describes a path in the given object, through any intermediate nested objects, ` +
 					`down to the object where the given value will go.`,
-				Function: func(input interface{}, key string, value interface{}) interface{} {
-					return maputil.DeepSet(input, strings.Split(key, `.`), value)
+				Function: func(input interface{}, key string, value interface{}) error {
+					maputil.DeepSet(input, strings.Split(key, `.`), value)
+					return nil
 				},
 			}, {
 				Name:    `findkey`,
