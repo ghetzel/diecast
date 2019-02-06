@@ -267,19 +267,25 @@ bindings:
 <td><code>body</code></td>
 <td>Object</td>
 <td>-</td>
-<td></td>
+<td>An object that will be encoded according to the value of <code>formatter</code> and used as the request body.</td>
 </tr>
 <tr>
 <td><code>fallback</code></td>
 <td>Anything</td>
 <td>-</td>
-<td></td>
+<td>If the binding is optional and returns a non-2xx status, this value will be used instead of <code>null</code>.</td>
 </tr>
 <tr>
 <td><code>formatter</code></td>
 <td><code>json, form</code></td>
 <td><code>json</code></td>
 <td>Specify how the <code>body</code> should be serialized before performing the request.</td>
+</tr>
+<tr>
+<td><code>headers</code></td>
+<td>Object</td>
+<td>-</td>
+<td>An object container HTTP request headers to be included in the request.</td>
 </tr>
 <tr>
 <td><code>if_status</code></td>
@@ -303,7 +309,7 @@ bindings:
 <td><code>no_template</code></td>
 <td>Boolean</td>
 <td><code>false</code></td>
-<td></td>
+<td>If true, inline expressions in binding values will not be honored.</td>
 </tr>
 <tr>
 <td><code>not_if</code></td>
@@ -352,6 +358,12 @@ bindings:
 <td>String</td>
 <td>-</td>
 <td>The <em>exact</em> string to send as the request body.</td>
+</tr>
+<tr>
+<td><code>restrict</code></td>
+<td>String (Regular Expression)</td>
+<td>-</td>
+<td>If specified, the requested path must match this <a href="https://github.com/google/re2/wiki/Syntax" rel="nofollow">regular expression</a>.  This is a specialized form of <code>only_if</code>.</td>
 </tr>
 <tr>
 <td><code>skip_inherit_headers</code></td>

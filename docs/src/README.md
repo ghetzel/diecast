@@ -262,21 +262,23 @@ The `name` and `resource` properties are required for a binding to run, but ther
 
 | Property Name          | Acceptable Values             | Default       | Description
 | ---------------------- | ----------------------------- | ------------- | -----------
-| `body`                 | Object                        | -             |
-| `fallback`             | Anything                      | -             |
-| `formatter`            | `json, form`                | `json`        | Specify how the `body` should be serialized before performing the request.
+| `body`                 | Object                        | -             | An object that will be encoded according to the value of `formatter` and used as the request body.
+| `fallback`             | Anything                      | -             | If the binding is optional and returns a non-2xx status, this value will be used instead of `null`.
+| `formatter`            | `json, form`                  | `json`        | Specify how the `body` should be serialized before performing the request.
+| `headers`              | Object                        | -             | An object container HTTP request headers to be included in the request.
 | `if_status`            | Anything                      | -             | Actions to take when specific HTTP response codes are encountered.
 | `insecure`             | Boolean                       | `false`       | Whether SSL/TLS peer verification should be enforced.
 | `method`               | String                        | `get`         | The HTTP method to use when making the request.
-| `no_template`          | Boolean                         | `false`       |
+| `no_template`          | Boolean                       | `false`       | If true, inline expressions in binding values will not be honored.
 | `not_if`               | String                        | -             | If this value or expression yields a truthy value, the binding will not be evaluated.
 | `on_error`             | String                        | -             | What to do if the request fails.
 | `only_if`              | String                        | -             | Only evaluate if this value or expression yields a truthy value.
 | `optional`             | Boolean                       | `false`       | Whether a response error causes the entire template render to fail.
 | `param_joiner`         | String                        | `;`           | When a key in `params` is specified as an array, how should those array elements be joined into a single string value.
 | `params`               | Object                        | -             | An object representing the query string parameters to append to the URL in `resource`.  Keys may be any scalar value or array of scalar values.
-| `parser`               | `json, html, text, raw` | `json`        | Specify how the response body should be parsed into the binding variable.
+| `parser`               | `json, html, text, raw`       | `json`        | Specify how the response body should be parsed into the binding variable.
 | `rawbody`              | String                        | -             | The *exact* string to send as the request body.
+| `restrict`             | String (Regular Expression)   | -             | If specified, the requested path must match this [regular expression](https://github.com/google/re2/wiki/Syntax).  This is a specialized form of `only_if`.
 | `skip_inherit_headers` | Boolean                       | `false`       | If true, no headers from the originating request to render the template will be included in this request, even if Header Passthrough is enabled.
 
 ### Handling Response Codes and Errors
