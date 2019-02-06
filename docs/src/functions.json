@@ -1336,6 +1336,54 @@
     "Description": "These functions provide basic cryptographic and non-cryptographic functions, including cryptographically-secure random number generation.",
     "Functions": [
       {
+        "Name": "md5",
+        "Alias": "",
+        "Summary": "Return the MD5 hash of the given value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sha1",
+        "Alias": "",
+        "Summary": "Return the SHA-1 hash of the given value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sha224",
+        "Alias": "",
+        "Summary": "Return the SHA-224 hash of the given value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sha256",
+        "Alias": "",
+        "Summary": "Return the SHA-256 hash of the given value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sha384",
+        "Alias": "",
+        "Summary": "Return the SHA-384 hash of the given value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sha512",
+        "Alias": "",
+        "Summary": "Return the SHA-512 hash of the given value.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "random",
         "Alias": "",
         "Summary": "Return a random array of _n_ bytes. The random source used is suitable for cryptographic purposes.",
@@ -1478,6 +1526,22 @@
         "Examples": null
       },
       {
+        "Name": "median",
+        "Alias": "",
+        "Summary": "Return the median of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "minimum",
+        "Alias": "",
+        "Summary": "Return the minimum of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "minimum_nz",
         "Alias": "",
         "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
@@ -1513,22 +1577,6 @@
         "Name": "mean",
         "Alias": "",
         "Summary": "Return the mean of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "median",
-        "Alias": "",
-        "Summary": "Return the median of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "minimum",
-        "Alias": "",
-        "Summary": "Return the minimum of the given array of numbers.",
         "Returns": "",
         "Arguments": null,
         "Examples": null

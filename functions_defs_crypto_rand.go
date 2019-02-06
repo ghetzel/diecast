@@ -1,22 +1,50 @@
 package diecast
 
 import (
+	"crypto/md5"
 	"crypto/rand"
+	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base64"
+	"fmt"
 
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 	base58 "github.com/jbenet/go-base58"
 	"github.com/spaolacci/murmur3"
 )
 
+func hashTheThing(fn string, input interface{}) ([]byte, error) {
+	data := []byte(typeutil.String(input))
+
+	switch fn {
+	case `md5`:
+		out := md5.Sum(data)
+		return out[:], nil
+	case `sha1`:
+		out := sha1.Sum(data)
+		return out[:], nil
+	case `sha224`:
+		out := sha256.Sum224(data)
+		return out[:], nil
+	case `sha256`:
+		out := sha256.Sum256(data)
+		return out[:], nil
+	case `sha384`:
+		out := sha512.Sum384(data)
+		return out[:], nil
+	case `sha512`:
+		out := sha512.Sum512(data)
+		return out[:], nil
+	default:
+		return nil, fmt.Errorf("Unimplemented hashing function %q", fn)
+	}
+}
+
 func loadStandardFunctionsCryptoRand(funcs FuncMap) funcGroup {
 	// TODO:
 	// urlencode/urldecode
-	// rv[`md5`] =
-	// rv[`sha1`] =
-	// rv[`sha256`] =
-	// rv[`sha384`] =
-	// rv[`sha512`] =
 
 	return funcGroup{
 		Name: `Hashing and Cryptography`,
@@ -24,6 +52,42 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap) funcGroup {
 			`including cryptographically-secure random number generation.`,
 		Functions: []funcDef{
 			{
+				Name:    `md5`,
+				Summary: `Return the MD5 hash of the given value.`,
+				Function: func(input interface{}) ([]byte, error) {
+					return hashTheThing(`md5`, input)
+				},
+			}, {
+				Name:    `sha1`,
+				Summary: `Return the SHA-1 hash of the given value.`,
+				Function: func(input interface{}) ([]byte, error) {
+					return hashTheThing(`sha1`, input)
+				},
+			}, {
+				Name:    `sha224`,
+				Summary: `Return the SHA-224 hash of the given value.`,
+				Function: func(input interface{}) ([]byte, error) {
+					return hashTheThing(`sha224`, input)
+				},
+			}, {
+				Name:    `sha256`,
+				Summary: `Return the SHA-256 hash of the given value.`,
+				Function: func(input interface{}) ([]byte, error) {
+					return hashTheThing(`sha256`, input)
+				},
+			}, {
+				Name:    `sha384`,
+				Summary: `Return the SHA-384 hash of the given value.`,
+				Function: func(input interface{}) ([]byte, error) {
+					return hashTheThing(`sha384`, input)
+				},
+			}, {
+				Name:    `sha512`,
+				Summary: `Return the SHA-512 hash of the given value.`,
+				Function: func(input interface{}) ([]byte, error) {
+					return hashTheThing(`sha512`, input)
+				},
+			}, {
 				Name: `random`,
 				Summary: `Return a random array of _n_ bytes. The random source used is ` +
 					`suitable for cryptographic purposes.`,
