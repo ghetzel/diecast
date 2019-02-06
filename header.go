@@ -16,20 +16,44 @@ type SwitchCase struct {
 }
 
 type TemplateHeader struct {
-	Page           map[string]interface{} `json:"page,omitempty"`
-	Bindings       []Binding              `json:"bindings,omitempty"`
-	Defaults       map[string]string      `json:"defaults,omitempty"`
-	DefaultHeaders map[string]string      `json:"default_headers,omitempty"`
-	Redirect       *Redirect              `json:"redirect,omitempty"`
-	Switch         []*SwitchCase          `json:"switch,omitempty"`
-	Layout         string                 `json:"layout,omitempty"`
-	Includes       map[string]string      `json:"includes,omitempty"`
-	Headers        map[string]interface{} `json:"headers,omitempty"`
-	UrlParams      map[string]interface{} `json:"params,omitempty"`
-	FlagDefs       map[string]interface{} `json:"flags,omitempty"`
-	Postprocessors []string               `json:"postprocessors,omitempty"`
-	Renderer       string                 `json:"renderer,omitempty"`
-	lines          int
+	// An object that is accessible to this template (and all inheriting templates) under the `$.page` variable.
+	Page map[string]interface{} `json:"page,omitempty"`
+
+	// An array of remote URLs to to be retrieved (in order) and added to the `$.bindings` object.
+	Bindings []Binding `json:"bindings,omitempty"`
+
+	// An object containing default query string values that can be accessed via the `qs` function.
+	Defaults map[string]string `json:"defaults,omitempty"`
+
+	// An object containing default HTTP request header values that can be accessed via the `$.request.headers` variable.
+	DefaultHeaders map[string]string `json:"default_headers,omitempty"`
+
+	// Specifies an HTTP redirect should be performed when this page is accessed.
+	Redirect *Redirect `json:"redirect,omitempty"`
+
+	// Specify which template file to load in lieu of this one depending on which condition evaluates true first.
+	Switch []*SwitchCase `json:"switch,omitempty"`
+
+	// The name of the layout (in the _layouts folder) to apply to this template.
+	Layout string `json:"layout,omitempty"`
+
+	// An object specifying a custom name and path to other templates to include when evaluating this one.
+	Includes map[string]string `json:"includes,omitempty"`
+
+	Headers map[string]interface{} `json:"headers,omitempty"`
+
+	UrlParams map[string]interface{} `json:"params,omitempty"`
+
+	// An object containing names and expressions to add to a `$.flags` variable.
+	FlagDefs map[string]interface{} `json:"flags,omitempty"`
+
+	// An array of built-in postprocessors to apply to the output before being returned to the user.
+	Postprocessors []string `json:"postprocessors,omitempty"`
+
+	// The built-in renderer to use when generating the page.
+	Renderer string `json:"renderer,omitempty"`
+
+	lines int
 }
 
 func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error) {
