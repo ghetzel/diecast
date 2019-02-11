@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base32"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"math"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	humanize "github.com/dustin/go-humanize"
+	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -31,6 +33,24 @@ type fileInfo struct {
 	Parent    string
 	Directory bool
 	os.FileInfo
+}
+
+func (self *fileInfo) MarshalJSON() ([]byte, error) {
+	full := path.Join(self.Parent, self.Name())
+
+	data := map[string]interface{}{
+		`name`:          self.Name(),
+		`path`:          full,
+		`size`:          self.Size(),
+		`last_modified`: self.ModTime(),
+		`directory`:     self.IsDir(),
+	}
+
+	if !self.IsDir() {
+		data[`mimetype`] = fileutil.GetMimeType(full)
+	}
+
+	return json.Marshal(data)
 }
 
 func (self *fileInfo) String() string {

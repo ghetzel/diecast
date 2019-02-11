@@ -7,6 +7,7 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/montanaflynn/stats"
+	"math"
 )
 
 func loadStandardFunctionsMath(funcs FuncMap) funcGroup {
@@ -98,6 +99,18 @@ func loadStandardFunctionsMath(funcs FuncMap) funcGroup {
 				Summary: `Return the given number multiplied by -1.`,
 				Function: func(value interface{}) float64 {
 					return -1 * typeutil.V(value).Float()
+				},
+			}, {
+				Name:    `isEven`,
+				Summary: `Return whether the given number is even.`,
+				Function: func(number interface{}) bool {
+					return (math.Mod(typeutil.Float(number), 2) == 0)
+				},
+			}, {
+				Name:    `isOdd`,
+				Summary: `Return whether the given number is odd.`,
+				Function: func(number interface{}) bool {
+					return (math.Mod(typeutil.Float(number), 2) != 0)
 				},
 			},
 		},

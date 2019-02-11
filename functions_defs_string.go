@@ -384,6 +384,27 @@ func loadStandardFunctionsString(funcs FuncMap) funcGroup {
 			}, {
 				Name:    `surroundedBy`,
 				Summary: `Return whether the given string is begins with a specific prefix _and_ ends with a specific suffix.`,
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `string`,
+						Description: `The string to test.`,
+					}, {
+						Name:        `prefix`,
+						Type:        `string`,
+						Description: `A string to prepend to the given input string.`,
+					}, {
+						Name:        `suffix`,
+						Type:        `string`,
+						Description: `A string to append to the given input string.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `surroundedBy "<table>" "<" ">"`,
+						Return: true,
+					},
+				},
 				Function: func(value interface{}, prefix string, suffix string) bool {
 					if v := fmt.Sprintf("%v", value); strings.HasPrefix(v, prefix) && strings.HasSuffix(v, suffix) {
 						return true

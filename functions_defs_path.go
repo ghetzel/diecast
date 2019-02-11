@@ -22,24 +22,77 @@ func loadStandardFunctionsPath(funcs FuncMap) funcGroup {
 			{
 				Name:    `basename`,
 				Summary: `Return the filename component of the given path.`,
+				Arguments: []funcArg{
+					{
+						Name:        `path`,
+						Type:        `string`,
+						Description: `The path to extract the filename from.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `basename "/this/is/my/file.jpg"`,
+						Return: `file.jpg`,
+					},
+				},
 				Function: func(value interface{}) string {
 					return path.Base(fmt.Sprintf("%v", value))
 				},
 			}, {
 				Name:    `extname`,
 				Summary: `Return the extension component of the given path (always prefixed with a dot [.]).`,
+				Arguments: []funcArg{
+					{
+						Name:        `path`,
+						Type:        `string`,
+						Description: `The path to extract the file extension from.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `extname "file.jpg"`,
+						Return: `.jpg`,
+					},
+				},
 				Function: func(value interface{}) string {
 					return path.Ext(fmt.Sprintf("%v", value))
 				},
 			}, {
 				Name:    `dirname`,
 				Summary: `Return the directory path component of the given path.`,
+				Arguments: []funcArg{
+					{
+						Name:        `path`,
+						Type:        `string`,
+						Description: `The path to extract the parent directory from.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `dirname "/this/is/my/file.jpg"`,
+						Return: `/this/is/my`,
+					},
+				},
 				Function: func(value interface{}) string {
 					return path.Dir(fmt.Sprintf("%v", value))
 				},
 			}, {
 				Name:    `pathjoin`,
 				Summary: `Return a string of all given path components joined together using the system path separator.`,
+				Arguments: []funcArg{
+					{
+						Name:        `parts`,
+						Type:        `strings`,
+						Variadic:    true,
+						Description: `One or more strings or string arrays to join together into a path.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `pathjoin "/this" "is/my" "file.jpg"`,
+						Return: `/this/is/my/file.jpg`,
+					},
+				},
 				Function: func(values ...interface{}) string {
 					return path.Join(sliceutil.Stringify(sliceutil.Flatten(values))...)
 				},
@@ -50,6 +103,42 @@ func loadStandardFunctionsPath(funcs FuncMap) funcGroup {
 			}, {
 				Name:    `dir`,
 				Summary: `Return a list of files and directories in *path*, or in the current directory if not specified.`,
+				Arguments: []funcArg{
+					{
+						Name:        `path`,
+						Type:        `string`,
+						Optional:    true,
+						Description: `The path to retrieve an array of children from.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code: `dir`,
+						Return: []map[string]interface{}{
+							{
+								`name`:          `file.jpg`,
+								`path`:          `/this/is/my/file.jpg`,
+								`size`:          `124719`,
+								`last_modified`: `2006-01-02T15:04:05Z07:00`,
+								`directory`:     false,
+								`mimetype`:      `image/jpeg`,
+							}, {
+								`name`:          `css`,
+								`path`:          `/this/is/my/css`,
+								`size`:          `4096`,
+								`last_modified`: `2006-01-02T15:04:05Z07:00`,
+								`directory`:     true,
+							}, {
+								`name`:          `README.md`,
+								`path`:          `/this/is/my/README.md`,
+								`size`:          `11216`,
+								`last_modified`: `2006-01-02T15:04:05Z07:00`,
+								`directory`:     false,
+								`mimetype`:      `text/plain`,
+							},
+						},
+					},
+				},
 				Function: func(dirs ...string) ([]*fileInfo, error) {
 					var dir string
 					entries := make([]*fileInfo, 0)
@@ -99,6 +188,22 @@ func loadStandardFunctionsPath(funcs FuncMap) funcGroup {
 			}, {
 				Name:    `mimetype`,
 				Summary: `Returns a best guess at the MIME type for the given filename.`,
+				Arguments: []funcArg{
+					{
+						Name:        `filename`,
+						Type:        `string`,
+						Description: `The file to determine the type of.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `mimetype "file.jpg"`,
+						Return: `image/jpeg`,
+					}, {
+						Code:   `mimetype "index.html"`,
+						Return: `text/html`,
+					},
+				},
 				Function: func(filename string) string {
 					mime, _ := stringutil.SplitPair(fileutil.GetMimeType(path.Ext(filename)), `;`)
 					return strings.TrimSpace(mime)
@@ -106,6 +211,24 @@ func loadStandardFunctionsPath(funcs FuncMap) funcGroup {
 			}, {
 				Name:    `mimeparams`,
 				Summary: `Returns the parameters portion of the MIME type of the given filename.`,
+				Arguments: []funcArg{
+					{
+						Name:        `filename`,
+						Type:        `string`,
+						Description: `The file to retrieve MIME parameters from.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `mimetype "file.jpg"`,
+						Return: map[string]interface{}{},
+					}, {
+						Code: `mimetype "index.html"`,
+						Return: map[string]interface{}{
+							`charset`: `utf-8`,
+						},
+					},
+				},
 				Function: func(filename string) map[string]interface{} {
 					_, params := stringutil.SplitPair(fileutil.GetMimeType(path.Ext(filename)), `;`)
 					kv := make(map[string]interface{})

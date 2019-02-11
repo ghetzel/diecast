@@ -16,7 +16,7 @@ postprocessors:
     <section class="function" id="fn-{{ $fn.Name }}">
         <h5>
             <a href="#fn-{{ $fn.Name }}">
-                <code>{{ $fn.Name }}</code>
+                <code>{{ $fn.Name }}{{ range $arg := $fn.Arguments }} {{ if or $arg.Optional $arg.Variadic }}[{{ end }}{{ $arg.Name | underscore | upper }}{{ if $arg.Variadic }} ...{{ end }}{{ if or $arg.Optional $arg.Variadic }}]{{ end }}{{ end }}</code>
             </a>
         </h5>
 
@@ -41,7 +41,7 @@ postprocessors:
                 <tr>
                     <th>{{ $arg.Name }}</th>
                     <td>{{ $arg.Type }}{{ if $arg.Variadic }} (1+){{ end }}</td>
-                    <td>{{ $arg.Description }}</td>
+                    <td>{{ markdown $arg.Description }}</td>
                 </tr>
             </tbody>
 {{       end }}
@@ -53,7 +53,7 @@ postprocessors:
         <dl class="examples">
 {{       range $x := $fn.Examples }}
             <dd>{{ $x.Code }}</dd>
-            <dt>{{ $x.Return }}</dt>
+            <dt>{{ jsonify $x.Return }}</dt>
 {{       end }}
         </dl>
 {{     end }}
