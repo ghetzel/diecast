@@ -14,19 +14,25 @@ postprocessors:
 
 {{   range $fn := sortByKey $group.Functions "Name" }}
     <section class="function" id="fn-{{ $fn.Name }}">
-        <h5>
+        <h4 class="mt-3">{{ $fn.Name }}</h4>
+
+{{     if $fn.Alias }}
+        <i>Alias for </i> <a href="#fn-{{ $fn.Alias }}">{{ $fn.Alias }}</a>.
+{{     else }}
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-{{ $fn.Name }}">
                 <code>{{ $fn.Name }}{{ range $arg := $fn.Arguments }} {{ if or $arg.Optional $arg.Variadic }}[{{ end }}{{ $arg.Name | underscore | upper }}{{ if $arg.Variadic }} ...{{ end }}{{ if or $arg.Optional $arg.Variadic }}]{{ end }}{{ end }}</code>
             </a>
-        </h5>
+        </div>
 
-{{     if $fn.Summary }}
+{{       if $fn.Summary }}
     {{   markdown $fn.Summary }}
-{{     else }}
+{{       else }}
     <i>Undocumented</i>
-{{     end }}
+{{       end }}
 
-{{     if $fn.Arguments }}
+{{       if $fn.Arguments }}
         <h5>Arguments</h5>
         <table class="table table-sm">
             <thead>
@@ -37,25 +43,26 @@ postprocessors:
                 </tr>
             </thead>
             <tbody>
-{{       range $arg := $fn.Arguments }}
+{{         range $arg := $fn.Arguments }}
                 <tr>
-                    <th>{{ $arg.Name }}</th>
+                    <th><pre>{{ upper $arg.Name }}</pre></th>
                     <td>{{ $arg.Type }}{{ if $arg.Variadic }} (1+){{ end }}</td>
                     <td>{{ markdown $arg.Description }}</td>
                 </tr>
             </tbody>
-{{       end }}
+{{         end }}
         </table>
-{{     end }}
+{{       end }}
 
-{{     if $fn.Examples }}
+{{       if $fn.Examples }}
         <h5>Examples</h5>
         <dl class="examples">
-{{       range $x := $fn.Examples }}
+{{         range $x := $fn.Examples }}
             <dd>{{ $x.Code }}</dd>
             <dt>{{ jsonify $x.Return }}</dt>
-{{       end }}
+{{         end }}
         </dl>
+{{       end }}
 {{     end }}
     </section>
 {{   end }}

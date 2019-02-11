@@ -495,11 +495,13 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-autobyte">
-        <h5>
+        <h4 class="mt-3">autobyte</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-autobyte">
                 <code>autobyte BYTES FORMAT</code>
             </a>
-        </h5>
+        </div>
     <p>Attempt to convert the given number to a string representation of the value interpreted as bytes. The unit will be automatically determined as the closest one that produces a value less than 1024 in that unit. The second argument is a printf-style format string that is used when the converted number is being stringified. By specifying precision and leading digit values to the %f format token, you can control how many decimal places are in the resulting output.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -512,14 +514,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>bytes</th>
+                    <th><pre>BYTES</pre></th>
                     <td>number</td>
                     <td><p>A number representing the value to format, in bytes.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>format</th>
+                    <th><pre>FORMAT</pre></th>
                     <td>string</td>
                     <td><p>A printf-style format string used to represent the output number.</p>
 </td>
@@ -533,11 +535,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-camelize">
-        <h5>
+        <h4 class="mt-3">camelize</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-camelize">
                 <code>camelize IN</code>
             </a>
-        </h5>
+        </div>
     <p>Reformat the given string by changing it into camelCase capitalization.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -550,7 +554,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>in</th>
+                    <th><pre>IN</pre></th>
                     <td>string</td>
                     <td><p>The input string to reformat.</p>
 </td>
@@ -564,11 +568,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-concat">
-        <h5>
+        <h4 class="mt-3">concat</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-concat">
                 <code>concat [VALUES ...]</code>
             </a>
-        </h5>
+        </div>
     <p>Return the string that results in stringifying and joining all of the given arguments.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -581,7 +587,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>values</th>
+                    <th><pre>VALUES</pre></th>
                     <td>any (1+)</td>
                     <td><p>One or more values to be stringified and joined together.</p>
 </td>
@@ -595,11 +601,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-contains">
-        <h5>
+        <h4 class="mt-3">contains</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-contains">
                 <code>contains INPUT SUBSTRING</code>
             </a>
-        </h5>
+        </div>
     <p>Return true of the given string contains another string.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -612,14 +620,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>string</td>
                     <td><p>The string to search within.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>substring</th>
+                    <th><pre>SUBSTRING</pre></th>
                     <td>string</td>
                     <td><p>The substring to find in the input string.</p>
 </td>
@@ -633,11 +641,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-elide">
-        <h5>
+        <h4 class="mt-3">elide</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-elide">
                 <code>elide INPUT CHARCOUNT</code>
             </a>
-        </h5>
+        </div>
     <p>Takes an input string and ensures it is no longer than a given number of characters.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -650,14 +660,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>string</td>
                     <td><p>The string to (possibly) truncate.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>charcount</th>
+                    <th><pre>CHARCOUNT</pre></th>
                     <td>integer</td>
                     <td><p>The maximum number of characters that can appear in a string before it is truncated.</p>
 </td>
@@ -673,11 +683,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-elideWords">
-        <h5>
+        <h4 class="mt-3">elideWords</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-elideWords">
                 <code>elideWords INPUT WORDCOUNT</code>
             </a>
-        </h5>
+        </div>
     <p>Takes an input string and counts the number of words in it. If that number exceeds a given count, the string will be truncated to be equal to that number of words.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -690,14 +702,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>string</td>
                     <td><p>The string to (possibly) truncate.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>wordcount</th>
+                    <th><pre>WORDCOUNT</pre></th>
                     <td>integer</td>
                     <td><p>The maximum number of words that can appear in a string before it is truncated.</p>
 </td>
@@ -713,11 +725,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-hasPrefix">
-        <h5>
+        <h4 class="mt-3">hasPrefix</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-hasPrefix">
                 <code>hasPrefix IN PREFIX</code>
             </a>
-        </h5>
+        </div>
     <p>Return true if the given string begins with the given prefix.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -730,14 +744,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>in</th>
+                    <th><pre>IN</pre></th>
                     <td>string</td>
                     <td><p>The input string to test.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>prefix</th>
+                    <th><pre>PREFIX</pre></th>
                     <td>string</td>
                     <td><p>The prefix to test for the presence of.</p>
 </td>
@@ -746,11 +760,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-hasSuffix">
-        <h5>
+        <h4 class="mt-3">hasSuffix</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-hasSuffix">
                 <code>hasSuffix IN SUFFIX</code>
             </a>
-        </h5>
+        </div>
     <p>Return true if the given string ends with the given suffix.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -763,14 +779,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>in</th>
+                    <th><pre>IN</pre></th>
                     <td>string</td>
                     <td><p>The input string to test.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>suffix</th>
+                    <th><pre>SUFFIX</pre></th>
                     <td>string</td>
                     <td><p>The suffix to test for the presence of.</p>
 </td>
@@ -779,11 +795,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-hyphenate">
-        <h5>
+        <h4 class="mt-3">hyphenate</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-hyphenate">
                 <code>hyphenate IN</code>
             </a>
-        </h5>
+        </div>
     <p>Reformat the given string by changing it into hyphen-case capitalization.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -796,7 +814,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>in</th>
+                    <th><pre>IN</pre></th>
                     <td>string</td>
                     <td><p>The input string to reformat.</p>
 </td>
@@ -810,11 +828,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-join">
-        <h5>
+        <h4 class="mt-3">join</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-join">
                 <code>join INPUT SEPARATOR</code>
             </a>
-        </h5>
+        </div>
     <p>Stringify the given array of values and join them together into a string, separated by a given separator string.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -827,14 +847,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array[any]</td>
                     <td><p>An array of values to stringify and join.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>separator</th>
+                    <th><pre>SEPARATOR</pre></th>
                     <td>string</td>
                     <td><p>The string used to join all elements of the array together.</p>
 </td>
@@ -843,11 +863,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-lower">
-        <h5>
+        <h4 class="mt-3">lower</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-lower">
                 <code>lower IN</code>
             </a>
-        </h5>
+        </div>
     <p>Reformat the given string by changing it into lower case capitalization.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -860,7 +882,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>in</th>
+                    <th><pre>IN</pre></th>
                     <td>string</td>
                     <td><p>The input string to reformat.</p>
 </td>
@@ -874,11 +896,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-ltrim">
-        <h5>
+        <h4 class="mt-3">ltrim</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-ltrim">
                 <code>ltrim IN</code>
             </a>
-        </h5>
+        </div>
     <p>Return the given string with any leading whitespace removed.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -891,7 +915,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>in</th>
+                    <th><pre>IN</pre></th>
                     <td>string</td>
                     <td><p>The input string to trim.</p>
 </td>
@@ -905,11 +929,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-pascalize">
-        <h5>
+        <h4 class="mt-3">pascalize</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-pascalize">
                 <code>pascalize IN</code>
             </a>
-        </h5>
+        </div>
     <p>Reformat the given string by changing it into PascalCase capitalization.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -922,7 +948,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>in</th>
+                    <th><pre>IN</pre></th>
                     <td>string</td>
                     <td><p>The input string to reformat.</p>
 </td>
@@ -936,11 +962,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-percent">
-        <h5>
+        <h4 class="mt-3">percent</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-percent">
                 <code>percent VALUE WHOLE [FORMAT]</code>
             </a>
-        </h5>
+        </div>
     <p>Takes an integer or decimal value and returns it formatted as a percentage.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -953,21 +981,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>value</th>
+                    <th><pre>VALUE</pre></th>
                     <td>number</td>
                     <td><p>The value you wish to express as a percentage.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>whole</th>
+                    <th><pre>WHOLE</pre></th>
                     <td>number</td>
                     <td><p>The number that represents 100%.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>format</th>
+                    <th><pre>FORMAT</pre></th>
                     <td>string</td>
                     <td><p>The printf format string used for rounding and truncating the converted number.</p>
 </td>
@@ -985,11 +1013,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-replace">
-        <h5>
+        <h4 class="mt-3">replace</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-replace">
                 <code>replace WHOLESTRING OLD NEW COUNT</code>
             </a>
-        </h5>
+        </div>
     <p>Replace occurrences of one substring with another string in a given input string.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1002,28 +1032,28 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>wholestring</th>
+                    <th><pre>WHOLESTRING</pre></th>
                     <td>string</td>
                     <td><p>The whole string being searched.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>old</th>
+                    <th><pre>OLD</pre></th>
                     <td>string</td>
                     <td><p>The old value being sought.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>new</th>
+                    <th><pre>NEW</pre></th>
                     <td>string</td>
                     <td><p>The new value that is replacing old.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>count</th>
+                    <th><pre>COUNT</pre></th>
                     <td>integer</td>
                     <td><p>The number of matches to replace before stopping. If this number is &lt; 0, the all occurrences will be replaced.</p>
 </td>
@@ -1039,11 +1069,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-rtrim">
-        <h5>
+        <h4 class="mt-3">rtrim</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-rtrim">
                 <code>rtrim IN</code>
             </a>
-        </h5>
+        </div>
     <p>Return the given string with any trailing whitespace removed.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1056,7 +1088,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>in</th>
+                    <th><pre>IN</pre></th>
                     <td>string</td>
                     <td><p>The input string to trim.</p>
 </td>
@@ -1070,11 +1102,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-rxreplace">
-        <h5>
+        <h4 class="mt-3">rxreplace</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-rxreplace">
                 <code>rxreplace WHOLESTRING PATTERN REPL</code>
             </a>
-        </h5>
+        </div>
     <p>Return the given string with all substrings matching the given regular expression replaced with another string.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1087,21 +1121,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>wholestring</th>
+                    <th><pre>WHOLESTRING</pre></th>
                     <td>string</td>
                     <td><p>The whole string being searched.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>pattern</th>
+                    <th><pre>PATTERN</pre></th>
                     <td>string</td>
                     <td><p>A Golang-compatible regular expression that matches what should be replaced.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>repl</th>
+                    <th><pre>REPL</pre></th>
                     <td>string</td>
                     <td><p>The string to replace matches with.</p>
 </td>
@@ -1115,11 +1149,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-split">
-        <h5>
+        <h4 class="mt-3">split</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-split">
                 <code>split IN SEPARATOR</code>
             </a>
-        </h5>
+        </div>
     <p>Split a given string into an array of strings by a given separator.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1132,14 +1168,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>in</th>
+                    <th><pre>IN</pre></th>
                     <td>string</td>
                     <td><p>The string to split into pieces.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>separator</th>
+                    <th><pre>SEPARATOR</pre></th>
                     <td>string</td>
                     <td><p>The separator on which the input will be split.</p>
 </td>
@@ -1158,27 +1194,33 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-splitWords">
-        <h5>
+        <h4 class="mt-3">splitWords</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-splitWords">
                 <code>splitWords</code>
             </a>
-        </h5>
+        </div>
     <p>Detect word boundaries in a given string and split that string into an array where each element is a word.</p>
     </section>
     <section class="function" id="fn-strcount">
-        <h5>
+        <h4 class="mt-3">strcount</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-strcount">
                 <code>strcount</code>
             </a>
-        </h5>
+        </div>
     <p>Count counts the number of non-overlapping instances of a substring. If the given substring is empty, then this returns the length of the string plus one.</p>
     </section>
     <section class="function" id="fn-surroundedBy">
-        <h5>
+        <h4 class="mt-3">surroundedBy</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-surroundedBy">
                 <code>surroundedBy INPUT PREFIX SUFFIX</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given string is begins with a specific prefix <em>and</em> ends with a specific suffix.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1191,21 +1233,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>string</td>
                     <td><p>The string to test.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>prefix</th>
+                    <th><pre>PREFIX</pre></th>
                     <td>string</td>
                     <td><p>A string to prepend to the given input string.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>suffix</th>
+                    <th><pre>SUFFIX</pre></th>
                     <td>string</td>
                     <td><p>A string to append to the given input string.</p>
 </td>
@@ -1219,27 +1261,33 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-thousandify">
-        <h5>
+        <h4 class="mt-3">thousandify</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-thousandify">
                 <code>thousandify</code>
             </a>
-        </h5>
+        </div>
     <p>Take a number and reformat it to be more readable by adding a separator between every three successive places.</p>
     </section>
     <section class="function" id="fn-titleize">
-        <h5>
+        <h4 class="mt-3">titleize</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-titleize">
                 <code>titleize</code>
             </a>
-        </h5>
+        </div>
     <p>Reformat the given string by changing it into Title Case capitalization.</p>
     </section>
     <section class="function" id="fn-trim">
-        <h5>
+        <h4 class="mt-3">trim</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-trim">
                 <code>trim IN</code>
             </a>
-        </h5>
+        </div>
     <p>Return the given string with any leading and trailing whitespace removed.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1252,7 +1300,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>in</th>
+                    <th><pre>IN</pre></th>
                     <td>string</td>
                     <td><p>The input string to trim.</p>
 </td>
@@ -1266,11 +1314,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-underscore">
-        <h5>
+        <h4 class="mt-3">underscore</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-underscore">
                 <code>underscore IN</code>
             </a>
-        </h5>
+        </div>
     <p>Reformat the given string by changing it into _underscorecase_ capitalization (also known as snake_case).</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1283,7 +1333,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>in</th>
+                    <th><pre>IN</pre></th>
                     <td>string</td>
                     <td><p>The input string to reformat.</p>
 </td>
@@ -1297,11 +1347,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-upper">
-        <h5>
+        <h4 class="mt-3">upper</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-upper">
                 <code>upper IN</code>
             </a>
-        </h5>
+        </div>
     <p>Reformat the given string by changing it into UPPER CASE capitalization.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1314,7 +1366,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>in</th>
+                    <th><pre>IN</pre></th>
                     <td>string</td>
                     <td><p>The input string to reformat.</p>
 </td>
@@ -1336,11 +1388,13 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-basename">
-        <h5>
+        <h4 class="mt-3">basename</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-basename">
                 <code>basename PATH</code>
             </a>
-        </h5>
+        </div>
     <p>Return the filename component of the given path.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1353,7 +1407,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>path</th>
+                    <th><pre>PATH</pre></th>
                     <td>string</td>
                     <td><p>The path to extract the filename from.</p>
 </td>
@@ -1367,11 +1421,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-dir">
-        <h5>
+        <h4 class="mt-3">dir</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-dir">
                 <code>dir [PATH]</code>
             </a>
-        </h5>
+        </div>
     <p>Return a list of files and directories in <em>path</em>, or in the current directory if not specified.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1384,7 +1440,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>path</th>
+                    <th><pre>PATH</pre></th>
                     <td>string</td>
                     <td><p>The path to retrieve an array of children from.</p>
 </td>
@@ -1422,11 +1478,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-dirname">
-        <h5>
+        <h4 class="mt-3">dirname</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-dirname">
                 <code>dirname PATH</code>
             </a>
-        </h5>
+        </div>
     <p>Return the directory path component of the given path.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1439,7 +1497,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>path</th>
+                    <th><pre>PATH</pre></th>
                     <td>string</td>
                     <td><p>The path to extract the parent directory from.</p>
 </td>
@@ -1453,11 +1511,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-extname">
-        <h5>
+        <h4 class="mt-3">extname</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-extname">
                 <code>extname PATH</code>
             </a>
-        </h5>
+        </div>
     <p>Return the extension component of the given path (always prefixed with a dot [.]).</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1470,7 +1530,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>path</th>
+                    <th><pre>PATH</pre></th>
                     <td>string</td>
                     <td><p>The path to extract the file extension from.</p>
 </td>
@@ -1484,11 +1544,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-mimeparams">
-        <h5>
+        <h4 class="mt-3">mimeparams</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-mimeparams">
                 <code>mimeparams FILENAME</code>
             </a>
-        </h5>
+        </div>
     <p>Returns the parameters portion of the MIME type of the given filename.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1501,7 +1563,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>filename</th>
+                    <th><pre>FILENAME</pre></th>
                     <td>string</td>
                     <td><p>The file to retrieve MIME parameters from.</p>
 </td>
@@ -1519,11 +1581,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-mimetype">
-        <h5>
+        <h4 class="mt-3">mimetype</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-mimetype">
                 <code>mimetype FILENAME</code>
             </a>
-        </h5>
+        </div>
     <p>Returns a best guess at the MIME type for the given filename.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1536,7 +1600,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>filename</th>
+                    <th><pre>FILENAME</pre></th>
                     <td>string</td>
                     <td><p>The file to determine the type of.</p>
 </td>
@@ -1552,11 +1616,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-pathjoin">
-        <h5>
+        <h4 class="mt-3">pathjoin</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-pathjoin">
                 <code>pathjoin [PARTS ...]</code>
             </a>
-        </h5>
+        </div>
     <p>Return a string of all given path components joined together using the system path separator.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1569,7 +1635,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>parts</th>
+                    <th><pre>PARTS</pre></th>
                     <td>strings (1+)</td>
                     <td><p>One or more strings or string arrays to join together into a path.</p>
 </td>
@@ -1583,11 +1649,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-pwd">
-        <h5>
+        <h4 class="mt-3">pwd</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-pwd">
                 <code>pwd</code>
             </a>
-        </h5>
+        </div>
     <p>Return the present working directory.</p>
     </section>
 </section>
@@ -1599,11 +1667,13 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-csv">
-        <h5>
+        <h4 class="mt-3">csv</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-csv">
                 <code>csv COLUMNS ROWS</code>
             </a>
-        </h5>
+        </div>
     <p>Encode the given data as a comma-separated values document.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1616,14 +1686,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>columns</th>
+                    <th><pre>COLUMNS</pre></th>
                     <td>array[string]</td>
                     <td><p>An array of values that represent the column names of the table being created.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>rows</th>
+                    <th><pre>ROWS</pre></th>
                     <td>array[array[string]], array[object]</td>
                     <td><p>An array of values that represent the column names of the table being created.</p>
 </td>
@@ -1632,11 +1702,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-jsonify">
-        <h5>
+        <h4 class="mt-3">jsonify</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-jsonify">
                 <code>jsonify DATA [INDENT]</code>
             </a>
-        </h5>
+        </div>
     <p>Encode the given argument as a JSON document.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1649,14 +1721,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>data</th>
+                    <th><pre>DATA</pre></th>
                     <td>any</td>
                     <td><p>The data to encode as JSON.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>indent</th>
+                    <th><pre>INDENT</pre></th>
                     <td>string</td>
                     <td><p>The string to indent successive tiers in the document hierarchy with.</p>
 </td>
@@ -1665,11 +1737,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-markdown">
-        <h5>
+        <h4 class="mt-3">markdown</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-markdown">
                 <code>markdown DOCUMENT [EXTENSIONS ...]</code>
             </a>
-        </h5>
+        </div>
     <p>Parse the given string as a Markdown document and return it represented as HTML.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1682,14 +1756,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>document</th>
+                    <th><pre>DOCUMENT</pre></th>
                     <td>string</td>
                     <td><p>The full text of the Markdown to parse</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>extensions</th>
+                    <th><pre>EXTENSIONS</pre></th>
                     <td>string(s) (1+)</td>
                     <td><p>A list of zero of more Markdown extensions to enable when rendering the HTML.</p>
 </td>
@@ -1698,11 +1772,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-sanitize">
-        <h5>
+        <h4 class="mt-3">sanitize</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sanitize">
                 <code>sanitize </code>
             </a>
-        </h5>
+        </div>
     <p>Takes a raw HTML string and santizes it, removing attributes and elements that can be used to evaluate scripts, but leaving the rest. Useful for preparing user-generated HTML for display.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1715,7 +1791,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th></th>
+                    <th><pre></pre></th>
                     <td></td>
                     <td></td>
                 </tr>
@@ -1723,11 +1799,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-tsv">
-        <h5>
+        <h4 class="mt-3">tsv</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-tsv">
                 <code>tsv COLUMNS ROWS</code>
             </a>
-        </h5>
+        </div>
     <p>Encode the given data as a tab-separated values document.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1740,14 +1818,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>columns</th>
+                    <th><pre>COLUMNS</pre></th>
                     <td>array[string]</td>
                     <td><p>An array of values that represent the column names of the table being created.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>rows</th>
+                    <th><pre>ROWS</pre></th>
                     <td>array[array[string]], array[object]</td>
                     <td><p>An array of values that represent the column names of the table being created.</p>
 </td>
@@ -1756,11 +1834,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-unsafe">
-        <h5>
+        <h4 class="mt-3">unsafe</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-unsafe">
                 <code>unsafe DOCUMENT</code>
             </a>
-        </h5>
+        </div>
     <p>Return an unescaped raw HTML segment for direct inclusion in the rendered template output.This function bypasses the built-in HTML escaping and sanitization security features, and you almost certainly want to use <a href="#fn-sanitize" rel="nofollow">sanitize</a> instead.  This is a common antipattern that leads to all kinds of security issues from poorly-constrained implementations, so you are forced to acknowledge this by typing “unsafe”.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -1773,7 +1853,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>document</th>
+                    <th><pre>DOCUMENT</pre></th>
                     <td>string</td>
                     <td><p>The raw HTML snippet you sneakily want to sneak past the HTML sanitizer for reasons.</p>
 </td>
@@ -1790,180 +1870,188 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-asBool">
-        <h5>
+        <h4 class="mt-3">asBool</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-asBool">
                 <code>asBool</code>
             </a>
-        </h5>
+        </div>
     <p>Attempt to convert the given <em>value</em> to a boolean value.</p>
     </section>
     <section class="function" id="fn-asDuration">
-        <h5>
+        <h4 class="mt-3">asDuration</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-asDuration">
                 <code>asDuration</code>
             </a>
-        </h5>
+        </div>
     <p>Attempt to parse the given <em>value</em> as a time duration.</p>
     </section>
     <section class="function" id="fn-asFloat">
-        <h5>
+        <h4 class="mt-3">asFloat</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-asFloat">
                 <code>asFloat</code>
             </a>
-        </h5>
+        </div>
     <p>Attempt to convert the given <em>value</em> to a floating-point number.</p>
     </section>
     <section class="function" id="fn-asInt">
-        <h5>
+        <h4 class="mt-3">asInt</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-asInt">
                 <code>asInt</code>
             </a>
-        </h5>
+        </div>
     <p>Attempt to convert the given <em>value</em> to an integer.</p>
     </section>
     <section class="function" id="fn-asStr">
-        <h5>
+        <h4 class="mt-3">asStr</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-asStr">
                 <code>asStr</code>
             </a>
-        </h5>
+        </div>
     <p>Return the <em>value</em> as a string.</p>
     </section>
     <section class="function" id="fn-asTime">
-        <h5>
+        <h4 class="mt-3">asTime</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-asTime">
                 <code>asTime</code>
             </a>
-        </h5>
+        </div>
     <p>Attempt to parse the given <em>value</em> as a date/time value.</p>
     </section>
     <section class="function" id="fn-autotype">
-        <h5>
+        <h4 class="mt-3">autotype</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-autotype">
                 <code>autotype</code>
             </a>
-        </h5>
+        </div>
     <p>Attempt to automatically determine the type if <em>value</em> and return the converted output.</p>
     </section>
     <section class="function" id="fn-b">
-        <h5>
-            <a href="#fn-b">
-                <code>b</code>
-            </a>
-        </h5>
-    <i>Undocumented</i>
+        <h4 class="mt-3">b</h4>
+        <i>Alias for </i> <a href="#fn-asBool">asBool</a>.
     </section>
     <section class="function" id="fn-d">
-        <h5>
-            <a href="#fn-d">
-                <code>d</code>
-            </a>
-        </h5>
-    <i>Undocumented</i>
+        <h4 class="mt-3">d</h4>
+        <i>Alias for </i> <a href="#fn-asDuration">asDuration</a>.
     </section>
     <section class="function" id="fn-f">
-        <h5>
-            <a href="#fn-f">
-                <code>f</code>
-            </a>
-        </h5>
-    <i>Undocumented</i>
+        <h4 class="mt-3">f</h4>
+        <i>Alias for </i> <a href="#fn-asFloat">asFloat</a>.
     </section>
     <section class="function" id="fn-i">
-        <h5>
-            <a href="#fn-i">
-                <code>i</code>
-            </a>
-        </h5>
-    <i>Undocumented</i>
+        <h4 class="mt-3">i</h4>
+        <i>Alias for </i> <a href="#fn-asInt">asInt</a>.
     </section>
     <section class="function" id="fn-isArray">
-        <h5>
+        <h4 class="mt-3">isArray</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isArray">
                 <code>isArray</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given <em>value</em> is an iterable array or slice.</p>
     </section>
     <section class="function" id="fn-isBool">
-        <h5>
+        <h4 class="mt-3">isBool</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isBool">
                 <code>isBool</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given <em>value</em> is a boolean type.</p>
     </section>
     <section class="function" id="fn-isDuration">
-        <h5>
+        <h4 class="mt-3">isDuration</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isDuration">
                 <code>isDuration</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given <em>value</em> is parsable as a duration.</p>
     </section>
     <section class="function" id="fn-isEmpty">
-        <h5>
+        <h4 class="mt-3">isEmpty</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isEmpty">
                 <code>isEmpty</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given <em>value</em> is empty.</p>
     </section>
     <section class="function" id="fn-isFloat">
-        <h5>
+        <h4 class="mt-3">isFloat</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isFloat">
                 <code>isFloat</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given <em>value</em> is a floating-point type.</p>
     </section>
     <section class="function" id="fn-isInt">
-        <h5>
+        <h4 class="mt-3">isInt</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isInt">
                 <code>isInt</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given <em>value</em> is an integer type.</p>
     </section>
     <section class="function" id="fn-isMap">
-        <h5>
+        <h4 class="mt-3">isMap</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isMap">
                 <code>isMap</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given <em>value</em> is a key-value map type.</p>
     </section>
     <section class="function" id="fn-isTime">
-        <h5>
+        <h4 class="mt-3">isTime</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isTime">
                 <code>isTime</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given <em>value</em> is parsable as a date/time value.</p>
     </section>
     <section class="function" id="fn-isZero">
-        <h5>
+        <h4 class="mt-3">isZero</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isZero">
                 <code>isZero</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given <em>value</em> is an zero-valued variable.</p>
     </section>
     <section class="function" id="fn-s">
-        <h5>
-            <a href="#fn-s">
-                <code>s</code>
-            </a>
-        </h5>
-    <i>Undocumented</i>
+        <h4 class="mt-3">s</h4>
+        <i>Alias for </i> <a href="#fn-asStr">asStr</a>.
     </section>
     <section class="function" id="fn-t">
-        <h5>
-            <a href="#fn-t">
-                <code>t</code>
-            </a>
-        </h5>
-    <i>Undocumented</i>
+        <h4 class="mt-3">t</h4>
+        <i>Alias for </i> <a href="#fn-asTime">asTime</a>.
     </section>
 </section>
 <section class="group" id="time-functions"  >
@@ -1974,99 +2062,123 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-addTime">
-        <h5>
+        <h4 class="mt-3">addTime</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-addTime">
                 <code>addTime</code>
             </a>
-        </h5>
+        </div>
     <p>Return a time with with given duration added to it.  Can specify time <em>at</em> to apply the change to. Defaults to the current time.</p>
     </section>
     <section class="function" id="fn-ago">
-        <h5>
+        <h4 class="mt-3">ago</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-ago">
                 <code>ago</code>
             </a>
-        </h5>
+        </div>
     <p>Return a new time subtracted by the given duration.</p>
     </section>
     <section class="function" id="fn-duration">
-        <h5>
+        <h4 class="mt-3">duration</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-duration">
                 <code>duration</code>
             </a>
-        </h5>
+        </div>
     <p>Convert the given value from a duration (specified with the given unit) into the given time format.</p>
     </section>
     <section class="function" id="fn-extractTime">
-        <h5>
+        <h4 class="mt-3">extractTime</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-extractTime">
                 <code>extractTime</code>
             </a>
-        </h5>
+        </div>
     <p>Attempt to extract a time value from the given string.</p>
     </section>
     <section class="function" id="fn-isAfter">
-        <h5>
+        <h4 class="mt-3">isAfter</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isAfter">
                 <code>isAfter</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the first time occurs after the second one.</p>
     </section>
     <section class="function" id="fn-isBefore">
-        <h5>
+        <h4 class="mt-3">isBefore</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isBefore">
                 <code>isBefore</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the first time occurs before the second one.</p>
     </section>
     <section class="function" id="fn-isBetweenTimes">
-        <h5>
+        <h4 class="mt-3">isBetweenTimes</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isBetweenTimes">
                 <code>isBetweenTimes</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the current time is between two times [first, second).</p>
     </section>
     <section class="function" id="fn-now">
-        <h5>
+        <h4 class="mt-3">now</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-now">
                 <code>now</code>
             </a>
-        </h5>
+        </div>
     <p>Return the current time, optionally formatted using the given <em>format</em>.  See <a href="#time-formats" rel="nofollow">Time Formats</a> for</p>
     </section>
     <section class="function" id="fn-since">
-        <h5>
+        <h4 class="mt-3">since</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-since">
                 <code>since</code>
             </a>
-        </h5>
+        </div>
     <p>Return the amount of time that has elapsed since the given time, optionally rounded to the nearest time interval.</p>
     </section>
     <section class="function" id="fn-sunrise">
-        <h5>
+        <h4 class="mt-3">sunrise</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sunrise">
                 <code>sunrise</code>
             </a>
-        </h5>
+        </div>
     <p>Return the time of apparent sunrise at the given coordinates, optionally for a given time.</p>
     </section>
     <section class="function" id="fn-sunset">
-        <h5>
+        <h4 class="mt-3">sunset</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sunset">
                 <code>sunset</code>
             </a>
-        </h5>
+        </div>
     <p>Return the time of apparent sunset at the given coordinates, optionally for a given time.</p>
     </section>
     <section class="function" id="fn-time">
-        <h5>
+        <h4 class="mt-3">time</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-time">
                 <code>time</code>
             </a>
-        </h5>
+        </div>
     <p>Return the given time formatted using a given format.  See <a href="#time-formats" rel="nofollow">Time Formats</a> for acceptable formats.</p>
     </section>
 </section>
@@ -2078,107 +2190,133 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-base32">
-        <h5>
+        <h4 class="mt-3">base32</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-base32">
                 <code>base32</code>
             </a>
-        </h5>
+        </div>
     <p>Encode the <em>input</em> bytes with the Base32 encoding scheme.</p>
     </section>
     <section class="function" id="fn-base58">
-        <h5>
+        <h4 class="mt-3">base58</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-base58">
                 <code>base58</code>
             </a>
-        </h5>
+        </div>
     <p>Encode the <em>input</em> bytes with the Base58 (Bitcoin alphabet) encoding scheme.</p>
     </section>
     <section class="function" id="fn-base64">
-        <h5>
+        <h4 class="mt-3">base64</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-base64">
                 <code>base64</code>
             </a>
-        </h5>
+        </div>
     <p>Encode the <em>input</em> bytes with the Base64 encoding scheme.  Optionally specify the encoding mode: one of “padded”, “url”, “url-padded”, or empty (unpadded, default).</p>
     </section>
     <section class="function" id="fn-md5">
-        <h5>
+        <h4 class="mt-3">md5</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-md5">
                 <code>md5</code>
             </a>
-        </h5>
+        </div>
     <p>Return the MD5 hash of the given value.</p>
     </section>
     <section class="function" id="fn-murmur3">
-        <h5>
+        <h4 class="mt-3">murmur3</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-murmur3">
                 <code>murmur3</code>
             </a>
-        </h5>
+        </div>
     <p>Hash the given data using the Murmur 3 algorithm.</p>
     </section>
     <section class="function" id="fn-random">
-        <h5>
+        <h4 class="mt-3">random</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-random">
                 <code>random</code>
             </a>
-        </h5>
+        </div>
     <p>Return a random array of <em>n</em> bytes. The random source used is suitable for cryptographic purposes.</p>
     </section>
     <section class="function" id="fn-sha1">
-        <h5>
+        <h4 class="mt-3">sha1</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sha1">
                 <code>sha1</code>
             </a>
-        </h5>
+        </div>
     <p>Return the SHA-1 hash of the given value.</p>
     </section>
     <section class="function" id="fn-sha224">
-        <h5>
+        <h4 class="mt-3">sha224</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sha224">
                 <code>sha224</code>
             </a>
-        </h5>
+        </div>
     <p>Return the SHA-224 hash of the given value.</p>
     </section>
     <section class="function" id="fn-sha256">
-        <h5>
+        <h4 class="mt-3">sha256</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sha256">
                 <code>sha256</code>
             </a>
-        </h5>
+        </div>
     <p>Return the SHA-256 hash of the given value.</p>
     </section>
     <section class="function" id="fn-sha384">
-        <h5>
+        <h4 class="mt-3">sha384</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sha384">
                 <code>sha384</code>
             </a>
-        </h5>
+        </div>
     <p>Return the SHA-384 hash of the given value.</p>
     </section>
     <section class="function" id="fn-sha512">
-        <h5>
+        <h4 class="mt-3">sha512</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sha512">
                 <code>sha512</code>
             </a>
-        </h5>
+        </div>
     <p>Return the SHA-512 hash of the given value.</p>
     </section>
     <section class="function" id="fn-uuid">
-        <h5>
+        <h4 class="mt-3">uuid</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-uuid">
                 <code>uuid</code>
             </a>
-        </h5>
+        </div>
     <p>Generate a new Version 4 UUID as a string.</p>
     </section>
     <section class="function" id="fn-uuidRaw">
-        <h5>
+        <h4 class="mt-3">uuidRaw</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-uuidRaw">
                 <code>uuidRaw</code>
             </a>
-        </h5>
+        </div>
     <p>Generate the raw bytes of a new Version 4 UUID value.</p>
     </section>
 </section>
@@ -2190,155 +2328,193 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-add">
-        <h5>
+        <h4 class="mt-3">add</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-add">
                 <code>add</code>
             </a>
-        </h5>
+        </div>
     <p>Return the sum of all of the given values.</p>
     </section>
     <section class="function" id="fn-calc">
-        <h5>
+        <h4 class="mt-3">calc</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-calc">
                 <code>calc</code>
             </a>
-        </h5>
+        </div>
     <i>Undocumented</i>
     </section>
     <section class="function" id="fn-divide">
-        <h5>
+        <h4 class="mt-3">divide</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-divide">
                 <code>divide</code>
             </a>
-        </h5>
+        </div>
     <p>Sequentially divide all of the given values in the order given.</p>
     </section>
     <section class="function" id="fn-isEven">
-        <h5>
+        <h4 class="mt-3">isEven</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isEven">
                 <code>isEven</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given number is even.</p>
     </section>
     <section class="function" id="fn-isOdd">
-        <h5>
+        <h4 class="mt-3">isOdd</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isOdd">
                 <code>isOdd</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given number is odd.</p>
     </section>
     <section class="function" id="fn-maximum">
-        <h5>
+        <h4 class="mt-3">maximum</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-maximum">
                 <code>maximum</code>
             </a>
-        </h5>
+        </div>
     <p>Return the maximum of the given array of numbers.</p>
     </section>
     <section class="function" id="fn-mean">
-        <h5>
+        <h4 class="mt-3">mean</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-mean">
                 <code>mean</code>
             </a>
-        </h5>
+        </div>
     <p>Return the mean of the given array of numbers.</p>
     </section>
     <section class="function" id="fn-median">
-        <h5>
+        <h4 class="mt-3">median</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-median">
                 <code>median</code>
             </a>
-        </h5>
+        </div>
     <p>Return the median of the given array of numbers.</p>
     </section>
     <section class="function" id="fn-minimum">
-        <h5>
+        <h4 class="mt-3">minimum</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-minimum">
                 <code>minimum</code>
             </a>
-        </h5>
+        </div>
     <p>Return the minimum of the given array of numbers.</p>
     </section>
     <section class="function" id="fn-minimum_nz">
-        <h5>
+        <h4 class="mt-3">minimum_nz</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-minimum_nz">
                 <code>minimum_nz</code>
             </a>
-        </h5>
+        </div>
     <p>Return the minimum (excluding zero) of the given array of numbers.</p>
     </section>
     <section class="function" id="fn-mod">
-        <h5>
+        <h4 class="mt-3">mod</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-mod">
                 <code>mod</code>
             </a>
-        </h5>
+        </div>
     <p>Return the modulus of all of the given values.</p>
     </section>
     <section class="function" id="fn-multiply">
-        <h5>
+        <h4 class="mt-3">multiply</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-multiply">
                 <code>multiply</code>
             </a>
-        </h5>
+        </div>
     <p>Return the product of all of the given values.</p>
     </section>
     <section class="function" id="fn-negate">
-        <h5>
+        <h4 class="mt-3">negate</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-negate">
                 <code>negate</code>
             </a>
-        </h5>
+        </div>
     <p>Return the given number multiplied by -1.</p>
     </section>
     <section class="function" id="fn-pow">
-        <h5>
+        <h4 class="mt-3">pow</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-pow">
                 <code>pow</code>
             </a>
-        </h5>
+        </div>
     <p>Sequentially exponentiate of all of the given <em>values</em>.</p>
     </section>
     <section class="function" id="fn-round">
-        <h5>
+        <h4 class="mt-3">round</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-round">
                 <code>round</code>
             </a>
-        </h5>
+        </div>
     <p>Round a number to the nearest <em>n</em> places.</p>
     </section>
     <section class="function" id="fn-sequence">
-        <h5>
+        <h4 class="mt-3">sequence</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sequence">
                 <code>sequence</code>
             </a>
-        </h5>
+        </div>
     <p>Return an array of integers representing a sequence from [0, <em>n</em>).</p>
     </section>
     <section class="function" id="fn-stddev">
-        <h5>
+        <h4 class="mt-3">stddev</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-stddev">
                 <code>stddev</code>
             </a>
-        </h5>
+        </div>
     <p>Return the standard deviation of the given array of numbers.</p>
     </section>
     <section class="function" id="fn-subtract">
-        <h5>
+        <h4 class="mt-3">subtract</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-subtract">
                 <code>subtract</code>
             </a>
-        </h5>
+        </div>
     <p>Sequentially subtract all of the given values.</p>
     </section>
     <section class="function" id="fn-sum">
-        <h5>
+        <h4 class="mt-3">sum</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sum">
                 <code>sum</code>
             </a>
-        </h5>
+        </div>
     <p>Return the sum of the given array of numbers.</p>
     </section>
 </section>
@@ -2350,11 +2526,13 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-any">
-        <h5>
+        <h4 class="mt-3">any</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-any">
                 <code>any INPUT [WANTED ...]</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether an array contains any of a set of desired items.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2367,14 +2545,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to search within.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>wanted</th>
+                    <th><pre>WANTED</pre></th>
                     <td>any (1+)</td>
                     <td><p>A list of values, any of which being present in the given array will return true.</p>
 </td>
@@ -2390,11 +2568,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-append">
-        <h5>
+        <h4 class="mt-3">append</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-append">
                 <code>append ARRAY [VALUES ...]</code>
             </a>
-        </h5>
+        </div>
     <p>Append one or more values to the given array.  If the array given is not in fact an array, it will be converted into one, with the exception of null values, which will create an empty array.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2407,14 +2587,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>array</th>
+                    <th><pre>ARRAY</pre></th>
                     <td>array</td>
                     <td><p>The array to append items to.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>values</th>
+                    <th><pre>VALUES</pre></th>
                     <td>any (1+)</td>
                     <td><p>One or more items to append to the given array.</p>
 </td>
@@ -2433,11 +2613,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-apply">
-        <h5>
+        <h4 class="mt-3">apply</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-apply">
                 <code>apply INPUT [FUNCTIONS ...]</code>
             </a>
-        </h5>
+        </div>
     <p>Apply a function to each of the elements in the given array. Note that functions must be unary (accept one argument of type <em>any</em>).</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2450,14 +2632,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to modify.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>functions</th>
+                    <th><pre>FUNCTIONS</pre></th>
                     <td>strings (1+)</td>
                     <td><p>One or more functions to pass each element to. Only supports functions that accept a zero or one arguments.</p>
 </td>
@@ -2483,11 +2665,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-compact">
-        <h5>
+        <h4 class="mt-3">compact</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-compact">
                 <code>compact INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return an copy of given array with all empty, null, and zero elements removed.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2500,7 +2684,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to compact.</p>
 </td>
@@ -2518,11 +2702,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-count">
-        <h5>
+        <h4 class="mt-3">count</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-count">
                 <code>count INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Identical to the built-in “len” function, but is less picky about types.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2535,7 +2721,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to read from.</p>
 </td>
@@ -2549,11 +2735,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-filter">
-        <h5>
+        <h4 class="mt-3">filter</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-filter">
                 <code>filter ARRAY EXPRESSION</code>
             </a>
-        </h5>
+        </div>
     <p>Return the given array with only elements where expression evaluates to a truthy value.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2566,14 +2754,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>array</th>
+                    <th><pre>ARRAY</pre></th>
                     <td>array</td>
                     <td><p>The array to operate on.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>expression</th>
+                    <th><pre>EXPRESSION</pre></th>
                     <td>string</td>
                     <td><p>An “{{ expression }}” that will be called on each element.  Only if the expression does <em>not</em> yield a zero value (0, false, “”, null) will the element be included in the resulting array.</p>
 </td>
@@ -2602,11 +2790,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-filterByKey">
-        <h5>
+        <h4 class="mt-3">filterByKey</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-filterByKey">
                 <code>filterByKey ARRAY KEY EXPRESSION</code>
             </a>
-        </h5>
+        </div>
     <p>Return a subset of the elements in the given array whose values are objects that contain the given key.  Optionally, the values at the key for each object in the array can be passed to a template expression.  If that expression produces a truthy value, the object will be included in the output.  Otherwise it will not.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2619,21 +2809,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>array</th>
+                    <th><pre>ARRAY</pre></th>
                     <td>array</td>
                     <td><p>The array of objects to filter.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>key</th>
+                    <th><pre>KEY</pre></th>
                     <td>string</td>
                     <td><p>The name of the key on each object in the given array to check the value of.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>expression</th>
+                    <th><pre>EXPRESSION</pre></th>
                     <td>string</td>
                     <td><p>The “{{ expression }}” to apply to the value at key from each object.  Uses the same expression rules as <a href="#fn-filter" rel="nofollow">filter</a></p>
 </td>
@@ -2655,12 +2845,14 @@ bindings:
 ]</dt>
         </dl>
     </section>
-    <section class="function" id="fn-findkey">
-        <h5>
-            <a href="#fn-findkey">
-                <code>findkey INPUT KEY</code>
+    <section class="function" id="fn-findKey">
+        <h4 class="mt-3">findKey</h4>
+        <div class="mb-1">
+            <i>usage:</i>
+            <a href="#fn-findKey">
+                <code>findKey INPUT KEY</code>
             </a>
-        </h5>
+        </div>
     <p>Recursively scans the given array or object and returns all values of the given key.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2673,14 +2865,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array, object</td>
                     <td><p>The object or array of object to retrieve values from.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>key</th>
+                    <th><pre>KEY</pre></th>
                     <td>string</td>
                     <td><p>The name of the key in any objects encountered whose value should be included in the output.</p>
 </td>
@@ -2698,12 +2890,18 @@ bindings:
 ]</dt>
         </dl>
     </section>
+    <section class="function" id="fn-findkey">
+        <h4 class="mt-3">findkey</h4>
+        <i>Alias for </i> <a href="#fn-findKey">findKey</a>.
+    </section>
     <section class="function" id="fn-first">
-        <h5>
+        <h4 class="mt-3">first</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-first">
                 <code>first INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return the first value from the given array, or null if the array is empty.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2716,7 +2914,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to read from.</p>
 </td>
@@ -2730,11 +2928,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-firstByKey">
-        <h5>
+        <h4 class="mt-3">firstByKey</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-firstByKey">
                 <code>firstByKey ARRAY KEY EXPRESSION</code>
             </a>
-        </h5>
+        </div>
     <p>Identical to <a href="#fn-filterByKey" rel="nofollow">filterByKey</a>, except it returns only the first object in the resulting array instead of the whole array.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2747,21 +2947,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>array</th>
+                    <th><pre>ARRAY</pre></th>
                     <td>array</td>
                     <td><p>The array of objects to filter.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>key</th>
+                    <th><pre>KEY</pre></th>
                     <td>string</td>
                     <td><p>The name of the key on each object in the given array to check the value of.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>expression</th>
+                    <th><pre>EXPRESSION</pre></th>
                     <td>string</td>
                     <td><p>The “{{ expression }}” to apply to the value at key from each object.  Uses the same expression rules as <a href="#fn-filter" rel="nofollow">filter</a></p>
 </td>
@@ -2778,11 +2978,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-flatten">
-        <h5>
+        <h4 class="mt-3">flatten</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-flatten">
                 <code>flatten INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return an array of values with all nested arrays collapsed down to a single, flat array.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2795,7 +2997,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to flatten.</p>
 </td>
@@ -2816,11 +3018,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-get">
-        <h5>
+        <h4 class="mt-3">get</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-get">
                 <code>get OBJECT KEY [FALLBACK]</code>
             </a>
-        </h5>
+        </div>
     <p>Retrieve a value from a given object.  Key can be specified as a dot.separated.list string or array of keys that describes a path from the given object, through any intermediate nested objects, down to the object containing the desired value.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2833,21 +3037,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>object</th>
+                    <th><pre>OBJECT</pre></th>
                     <td>object</td>
                     <td><p>The object to retrieve the value from</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>key</th>
+                    <th><pre>KEY</pre></th>
                     <td>string, array</td>
                     <td><p>The key name, path, or array of values representing path segments pointing to the value to retrieve.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>fallback</th>
+                    <th><pre>FALLBACK</pre></th>
                     <td>any</td>
                     <td><p>If the value at the given key does not exist, this value will be returned instead.  If not specified, the default return value is null.</p>
 </td>
@@ -2869,11 +3073,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-groupBy">
-        <h5>
+        <h4 class="mt-3">groupBy</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-groupBy">
                 <code>groupBy ARRAY KEY</code>
             </a>
-        </h5>
+        </div>
     <p>Return the given array of objects as a grouped object, keyed on the value of the specified group field. The field argument can be an expression that receives the value and returns a transformed version of it.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2886,14 +3092,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>array</th>
+                    <th><pre>ARRAY</pre></th>
                     <td>array</td>
                     <td><p>An array of objects to group.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>key</th>
+                    <th><pre>KEY</pre></th>
                     <td>string</td>
                     <td><p>The key to retreive from each object, the value of which will determine the group names.</p>
 </td>
@@ -2924,11 +3130,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-has">
-        <h5>
+        <h4 class="mt-3">has</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-has">
                 <code>has WANTED INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether a specific element is in an array.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2941,14 +3149,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>wanted</th>
+                    <th><pre>WANTED</pre></th>
                     <td>any</td>
                     <td><p>The value being sought out.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to search within.</p>
 </td>
@@ -2970,11 +3178,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-head">
-        <h5>
+        <h4 class="mt-3">head</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-head">
                 <code>head INPUT COUNT</code>
             </a>
-        </h5>
+        </div>
     <p>Return the first <em>n</em> items from an array.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -2987,14 +3197,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to read from.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>count</th>
+                    <th><pre>COUNT</pre></th>
                     <td>integer</td>
                     <td><p>The number of items to retrieve from the beginning of the array.</p>
 </td>
@@ -3011,11 +3221,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-indexOf">
-        <h5>
+        <h4 class="mt-3">indexOf</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-indexOf">
                 <code>indexOf INPUT WANTED</code>
             </a>
-        </h5>
+        </div>
     <p>Iterate through an array and return the index of a given value, or -1 if not present.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3028,14 +3240,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to search within.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>wanted</th>
+                    <th><pre>WANTED</pre></th>
                     <td>any</td>
                     <td><p>The value being sought out.</p>
 </td>
@@ -3051,11 +3263,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-intersect">
-        <h5>
+        <h4 class="mt-3">intersect</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-intersect">
                 <code>intersect FIRST SECOND</code>
             </a>
-        </h5>
+        </div>
     <p>Return the intersection of two arrays.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3068,14 +3282,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>first</th>
+                    <th><pre>FIRST</pre></th>
                     <td>array</td>
                     <td><p>The first array.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>second</th>
+                    <th><pre>SECOND</pre></th>
                     <td>array</td>
                     <td><p>The second array.</p>
 </td>
@@ -3094,11 +3308,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-irsort">
-        <h5>
+        <h4 class="mt-3">irsort</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-irsort">
                 <code>irsort INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return the array sorted in lexical descending order (case-insensitive.)</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3111,7 +3327,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to sort.</p>
 </td>
@@ -3129,11 +3345,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-isort">
-        <h5>
+        <h4 class="mt-3">isort</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-isort">
                 <code>isort INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return an array sorted in lexical ascending order (case-insensitive.)</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3146,7 +3364,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to sort.</p>
 </td>
@@ -3164,11 +3382,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-keys">
-        <h5>
+        <h4 class="mt-3">keys</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-keys">
                 <code>keys OBJECT</code>
             </a>
-        </h5>
+        </div>
     <p>Return an array of key names specifying all the keys of the given object.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3181,7 +3401,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>object</th>
+                    <th><pre>OBJECT</pre></th>
                     <td>object</td>
                     <td><p>The object to return the key names from.</p>
 </td>
@@ -3198,11 +3418,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-last">
-        <h5>
+        <h4 class="mt-3">last</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-last">
                 <code>last INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return the last value from the given array, or null if the array is empty.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3215,7 +3437,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to read from.</p>
 </td>
@@ -3229,11 +3451,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-leastcommon">
-        <h5>
+        <h4 class="mt-3">leastcommon</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-leastcommon">
                 <code>leastcommon INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return the element in a given array that appears the least frequently.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3246,7 +3470,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to read from.</p>
 </td>
@@ -3260,19 +3484,23 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-mapify">
-        <h5>
+        <h4 class="mt-3">mapify</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-mapify">
                 <code>mapify</code>
             </a>
-        </h5>
+        </div>
     <p>Return the given value returned as a rangeable object.</p>
     </section>
     <section class="function" id="fn-mostcommon">
-        <h5>
+        <h4 class="mt-3">mostcommon</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-mostcommon">
                 <code>mostcommon INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return the element in a given array that appears the most frequently.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3285,7 +3513,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to read from.</p>
 </td>
@@ -3299,11 +3527,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-page">
-        <h5>
+        <h4 class="mt-3">page</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-page">
                 <code>page PAGENUM PERPAGE</code>
             </a>
-        </h5>
+        </div>
     <p>Returns an integer representing an offset used for accessing paginated values when given a page number and number of results per page.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3316,14 +3546,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>pagenum</th>
+                    <th><pre>PAGENUM</pre></th>
                     <td>integer</td>
                     <td><p>The page number to calculate the offset of.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>perpage</th>
+                    <th><pre>PERPAGE</pre></th>
                     <td>integer</td>
                     <td><p>The maximum number of results that can appear on a single page.</p>
 </td>
@@ -3343,11 +3573,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-pluck">
-        <h5>
+        <h4 class="mt-3">pluck</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-pluck">
                 <code>pluck ARRAY KEY [ADDITIONAL_KEYS ...]</code>
             </a>
-        </h5>
+        </div>
     <p>Retrieve a value at the given key from each object in a given array of objects.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3360,21 +3592,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>array</th>
+                    <th><pre>ARRAY</pre></th>
                     <td>array</td>
                     <td><p>The array of objects to retrieve values from.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>key</th>
+                    <th><pre>KEY</pre></th>
                     <td>string</td>
                     <td><p>The name of the key on each object whose values should returned.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>additional_keys</th>
+                    <th><pre>ADDITIONAL_KEYS</pre></th>
                     <td>strings (1+)</td>
                     <td><p>If specified, the values of these additional keys will be appended (in order) to the output array.</p>
 </td>
@@ -3392,11 +3624,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-rest">
-        <h5>
+        <h4 class="mt-3">rest</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-rest">
                 <code>rest INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return all but the first value from the given array, or an empty array of the given array’s length is &lt;= 1.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3409,7 +3643,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to read from.</p>
 </td>
@@ -3429,11 +3663,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-reverse">
-        <h5>
+        <h4 class="mt-3">reverse</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-reverse">
                 <code>reverse ARRAY</code>
             </a>
-        </h5>
+        </div>
     <p>Return the given array in reverse order.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3446,7 +3682,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>array</th>
+                    <th><pre>ARRAY</pre></th>
                     <td>array</td>
                     <td><p>The array to reverse.</p>
 </td>
@@ -3464,11 +3700,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-rsort">
-        <h5>
+        <h4 class="mt-3">rsort</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-rsort">
                 <code>rsort INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return the array sorted in lexical descending order.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3481,7 +3719,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to sort.</p>
 </td>
@@ -3500,11 +3738,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-set">
-        <h5>
+        <h4 class="mt-3">set</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-set">
                 <code>set OBJECT KEY VALUE</code>
             </a>
-        </h5>
+        </div>
     <p>Set a key on a given object to a value. Key can be specified as a dot.separated.list string or array of keys that describes a path in the given object, through any intermediate nested objects, down to the object where the given value will go.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3517,21 +3757,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>object</th>
+                    <th><pre>OBJECT</pre></th>
                     <td>object</td>
                     <td><p>The object to retrieve the value from</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>key</th>
+                    <th><pre>KEY</pre></th>
                     <td>string, array</td>
                     <td><p>The key name, path, or array of values representing path segments pointing to the value to create or modify.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>value</th>
+                    <th><pre>VALUE</pre></th>
                     <td>any</td>
                     <td><p>The value to set.</p>
 </td>
@@ -3540,11 +3780,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-shuffle">
-        <h5>
+        <h4 class="mt-3">shuffle</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-shuffle">
                 <code>shuffle INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return the array with the elements rearranged in random order.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3557,7 +3799,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to shuffle.</p>
 </td>
@@ -3576,12 +3818,14 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-slice">
-        <h5>
+        <h4 class="mt-3">slice</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-slice">
                 <code>slice INPUT FROM TO</code>
             </a>
-        </h5>
-    <p>Return a subset of the given array.</p>
+        </div>
+    <p>Return a subset of the given array.  Items in an array are counted starting from zero.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
             <thead>
@@ -3593,21 +3837,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to slice up.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>from</th>
+                    <th><pre>FROM</pre></th>
                     <td>integer</td>
                     <td><p>The starting index within the given array to start returning items from.  Can be negative, indicating the nth element from the end of the array (e.g: -1 means “last element”, -2 is “second from last”, and so on.).</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>to</th>
+                    <th><pre>TO</pre></th>
                     <td>integer</td>
                     <td><p>The end index within the given array to stop returning items from.  Can be negative, indicating the nth element from the end of the array (e.g: -1 means “last element”, -2 is “second from last”, and so on.).</p>
 </td>
@@ -3643,11 +3887,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-sliceify">
-        <h5>
+        <h4 class="mt-3">sliceify</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sliceify">
                 <code>sliceify INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Convert the given input into an array.  If the value is already an array, this just returns that array.  Otherwise, it returns an array containing the given value as its only element.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3660,7 +3906,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>any</td>
                     <td><p>The value to make into an array.</p>
 </td>
@@ -3682,11 +3928,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-sort">
-        <h5>
+        <h4 class="mt-3">sort</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sort">
                 <code>sort INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return an array sorted in lexical ascending order.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3699,7 +3947,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to sort.</p>
 </td>
@@ -3718,11 +3966,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-sortByKey">
-        <h5>
+        <h4 class="mt-3">sortByKey</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sortByKey">
                 <code>sortByKey ARRAY KEY [EXPRESSION]</code>
             </a>
-        </h5>
+        </div>
     <p>Sort the given array of objects by comparing the values of the given key for all objects.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3735,21 +3985,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>array</th>
+                    <th><pre>ARRAY</pre></th>
                     <td>array</td>
                     <td><p>The array of objects to sort.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>key</th>
+                    <th><pre>KEY</pre></th>
                     <td>string</td>
                     <td><p>The name of the key on each object whose values should determine the order of the output array.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>expression</th>
+                    <th><pre>EXPRESSION</pre></th>
                     <td>string</td>
                     <td><p>The “{{ expression }}” to apply to the value at key from each object before determining uniqueness.  Uses the same expression rules as <a href="#fn-filter" rel="nofollow">filter</a></p>
 </td>
@@ -3773,27 +4023,33 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-sslice">
-        <h5>
+        <h4 class="mt-3">sslice</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-sslice">
                 <code>sslice</code>
             </a>
-        </h5>
+        </div>
     <p>Identical to <a href="#fn-slice" rel="nofollow">slice</a>, but returns an array of strings.</p>
     </section>
     <section class="function" id="fn-stringify">
-        <h5>
+        <h4 class="mt-3">stringify</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-stringify">
                 <code>stringify</code>
             </a>
-        </h5>
+        </div>
     <p>Identical to <a href="#fn-sliceify" rel="nofollow">sliceify</a>, but converts all values to strings and returns an array of strings.</p>
     </section>
     <section class="function" id="fn-tail">
-        <h5>
+        <h4 class="mt-3">tail</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-tail">
                 <code>tail INPUT COUNT</code>
             </a>
-        </h5>
+        </div>
     <p>Return the last <em>n</em> items from an array.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3806,14 +4062,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to read from.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>count</th>
+                    <th><pre>COUNT</pre></th>
                     <td>integer</td>
                     <td><p>The number of items to retrieve from the end of the array.</p>
 </td>
@@ -3830,11 +4086,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-transformValues">
-        <h5>
+        <h4 class="mt-3">transformValues</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-transformValues">
                 <code>transformValues ARRAY KEY EXPRESSION</code>
             </a>
-        </h5>
+        </div>
     <p>Return all elements of the given array of objects with the value at a key transformed by the given expression.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3847,21 +4105,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>array</th>
+                    <th><pre>ARRAY</pre></th>
                     <td>array</td>
                     <td><p>The array of objects to filter.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>key</th>
+                    <th><pre>KEY</pre></th>
                     <td>string</td>
                     <td><p>The name of the key on each object in the given array to modify.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>expression</th>
+                    <th><pre>EXPRESSION</pre></th>
                     <td>string</td>
                     <td><p>The “{{ expression }}” to apply to the value at key from each object.  Uses the same expression rules as <a href="#fn-filter" rel="nofollow">filter</a></p>
 </td>
@@ -3885,11 +4143,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-uniq">
-        <h5>
+        <h4 class="mt-3">uniq</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-uniq">
                 <code>uniq INPUT</code>
             </a>
-        </h5>
+        </div>
     <p>Return an array containing only unique values from the given array.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3902,7 +4162,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>input</th>
+                    <th><pre>INPUT</pre></th>
                     <td>array</td>
                     <td><p>The array to unique.</p>
 </td>
@@ -3920,11 +4180,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-uniqByKey">
-        <h5>
+        <h4 class="mt-3">uniqByKey</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-uniqByKey">
                 <code>uniqByKey ARRAY KEY [EXPRESSION]</code>
             </a>
-        </h5>
+        </div>
     <p>Return an array of objects containing only unique entries in the given array of objects. Uniqueness is determined by comparing the values at the given key for each object.  The first time a value is encountered, that value’s parent object is included in the output.  All subsequent objects with the same value at that key will be discarded.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3937,21 +4199,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>array</th>
+                    <th><pre>ARRAY</pre></th>
                     <td>array</td>
                     <td><p>The array of objects to filter.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>key</th>
+                    <th><pre>KEY</pre></th>
                     <td>string</td>
                     <td><p>The name of the key on each object to consider for determining uniqueness.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>expression</th>
+                    <th><pre>EXPRESSION</pre></th>
                     <td>string</td>
                     <td><p>The “{{ expression }}” to apply to the value at key from each object before determining uniqueness.  Uses the same expression rules as <a href="#fn-filter" rel="nofollow">filter</a></p>
 </td>
@@ -3974,11 +4236,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-uniqByKeyLast">
-        <h5>
+        <h4 class="mt-3">uniqByKeyLast</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-uniqByKeyLast">
                 <code>uniqByKeyLast ARRAY KEY [EXPRESSION]</code>
             </a>
-        </h5>
+        </div>
     <p>Identical to <a href="#fn-uniqByKey" rel="nofollow">uniqByKey</a>, except the <em>last</em> of a set of objects grouped by key is included in the output, not the first.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -3991,21 +4255,21 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>array</th>
+                    <th><pre>ARRAY</pre></th>
                     <td>array</td>
                     <td><p>The array of objects to filter.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>key</th>
+                    <th><pre>KEY</pre></th>
                     <td>string</td>
                     <td><p>The name of the key on each object to consider for determining uniqueness.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>expression</th>
+                    <th><pre>EXPRESSION</pre></th>
                     <td>string</td>
                     <td><p>The “{{ expression }}” to apply to the value at key from each object before determining uniqueness.  Uses the same expression rules as <a href="#fn-filter" rel="nofollow">filter</a></p>
 </td>
@@ -4028,11 +4292,13 @@ bindings:
         </dl>
     </section>
     <section class="function" id="fn-values">
-        <h5>
+        <h4 class="mt-3">values</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-values">
                 <code>values OBJECT</code>
             </a>
-        </h5>
+        </div>
     <p>Return an array of values from the given object.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -4045,7 +4311,7 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>object</th>
+                    <th><pre>OBJECT</pre></th>
                     <td>object</td>
                     <td><p>The object to return values from.</p>
 </td>
@@ -4070,11 +4336,13 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-htmlAddClass">
-        <h5>
+        <h4 class="mt-3">htmlAddClass</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-htmlAddClass">
                 <code>htmlAddClass DOCUMENT SELECTOR</code>
             </a>
-        </h5>
+        </div>
     <p>Parse a given HTML document and add a CSS class to all elements matching a CSS selector.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -4087,14 +4355,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>document</th>
+                    <th><pre>DOCUMENT</pre></th>
                     <td>string</td>
                     <td><p>The HTML document to parse.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>selector</th>
+                    <th><pre>SELECTOR</pre></th>
                     <td>string</td>
                     <td><p>A CSS selector that targets the elements that will be returned.</p>
 </td>
@@ -4103,11 +4371,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-htmlRemove">
-        <h5>
+        <h4 class="mt-3">htmlRemove</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-htmlRemove">
                 <code>htmlRemove DOCUMENT SELECTOR</code>
             </a>
-        </h5>
+        </div>
     <p>Parse a given HTML document and remove all elements matching a CSS selector.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -4120,14 +4390,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>document</th>
+                    <th><pre>DOCUMENT</pre></th>
                     <td>string</td>
                     <td><p>The HTML document to parse.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>selector</th>
+                    <th><pre>SELECTOR</pre></th>
                     <td>string</td>
                     <td><p>A CSS selector that targets the elements that will be returned.</p>
 </td>
@@ -4136,11 +4406,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-htmlRemoveClass">
-        <h5>
+        <h4 class="mt-3">htmlRemoveClass</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-htmlRemoveClass">
                 <code>htmlRemoveClass DOCUMENT SELECTOR</code>
             </a>
-        </h5>
+        </div>
     <p>Parse a given HTML document and remove a CSS class to all elements matching a CSS selector.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -4153,14 +4425,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>document</th>
+                    <th><pre>DOCUMENT</pre></th>
                     <td>string</td>
                     <td><p>The HTML document to parse.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>selector</th>
+                    <th><pre>SELECTOR</pre></th>
                     <td>string</td>
                     <td><p>A CSS selector that targets the elements that will be returned.</p>
 </td>
@@ -4169,11 +4441,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-htmlSetAttr">
-        <h5>
+        <h4 class="mt-3">htmlSetAttr</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-htmlSetAttr">
                 <code>htmlSetAttr DOCUMENT SELECTOR</code>
             </a>
-        </h5>
+        </div>
     <p>Parse a given HTML document and set an attribute to a given value on all elements matching a CSS selector.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -4186,14 +4460,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>document</th>
+                    <th><pre>DOCUMENT</pre></th>
                     <td>string</td>
                     <td><p>The HTML document to parse.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>selector</th>
+                    <th><pre>SELECTOR</pre></th>
                     <td>string</td>
                     <td><p>A CSS selector that targets the elements that will be returned.</p>
 </td>
@@ -4202,11 +4476,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-htmlquery">
-        <h5>
+        <h4 class="mt-3">htmlquery</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-htmlquery">
                 <code>htmlquery DOCUMENT SELECTOR</code>
             </a>
-        </h5>
+        </div>
     <p>Parse a given HTML document and return details about all elements matching a CSS selector.</p>
         <h5>Arguments</h5>
         <table class="table table-sm">
@@ -4219,14 +4495,14 @@ bindings:
             </thead>
             <tbody>
                 <tr>
-                    <th>document</th>
+                    <th><pre>DOCUMENT</pre></th>
                     <td>string</td>
                     <td><p>The HTML document to parse.</p>
 </td>
                 </tr>
             </tbody>
                 <tr>
-                    <th>selector</th>
+                    <th><pre>SELECTOR</pre></th>
                     <td>string</td>
                     <td><p>A CSS selector that targets the elements that will be returned.</p>
 </td>
@@ -4235,11 +4511,13 @@ bindings:
         </table>
     </section>
     <section class="function" id="fn-stripHtml">
-        <h5>
+        <h4 class="mt-3">stripHtml</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-stripHtml">
                 <code>stripHtml</code>
             </a>
-        </h5>
+        </div>
     <p>Removes all HTML tags from a given input string, leaving behind only the textual content of the nodes. Only text nodes are preserved; attribute names and values, and comments, will be omitted.</p>
     </section>
 </section>
@@ -4251,52 +4529,216 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-colorFromValue">
-        <h5>
+        <h4 class="mt-3">colorFromValue</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-colorFromValue">
-                <code>colorFromValue</code>
+                <code>colorFromValue VALUE</code>
             </a>
-        </h5>
-    <p>Consistently generate the same color from color from a given value.</p>
+        </div>
+    <p>Consistently generate the same color from a given value of any type. This can be useful for providing automatically generated colors to represent data for which a set of predefined colors may not have significant meaning (for example: user avatars and contact lists).</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>VALUE</pre></th>
+                    <td>any</td>
+                    <td><p>A value to generate a color for.</p>
+</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>colorFromValue &#34;Alice&#34;</dd>
+            <dt>&#34;#416C69&#34;</dt>
+        </dl>
     </section>
     <section class="function" id="fn-colorToHSL">
-        <h5>
+        <h4 class="mt-3">colorToHSL</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-colorToHSL">
-                <code>colorToHSL</code>
+                <code>colorToHSL COLOR</code>
             </a>
-        </h5>
+        </div>
     <p>Convert the given color to an “hsl()” or “hsla()” value.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>COLOR</pre></th>
+                    <td>string</td>
+                    <td><p>The color to convert.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), “#RRGGBB”, or “#RRGGBBAA”.</p>
+</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>colorToHex &#34;#FF0000&#34;</dd>
+            <dt>&#34;hsl(0, 100%, 50%)&#34;</dt>
+        </dl>
     </section>
     <section class="function" id="fn-colorToHex">
-        <h5>
+        <h4 class="mt-3">colorToHex</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-colorToHex">
-                <code>colorToHex</code>
+                <code>colorToHex COLOR</code>
             </a>
-        </h5>
+        </div>
     <p>Convert the given color to a hexadecimal (“#RRGGBB”, “#RRGGBBAA”) value.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>COLOR</pre></th>
+                    <td>string</td>
+                    <td><p>The color to convert.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), “#RRGGBB”, or “#RRGGBBAA”.</p>
+</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>colorToHex &#34;hsl(0, 100%, 50%)&#34;</dd>
+            <dt>&#34;#FF0000&#34;</dt>
+        </dl>
     </section>
     <section class="function" id="fn-colorToRGB">
-        <h5>
+        <h4 class="mt-3">colorToRGB</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-colorToRGB">
-                <code>colorToRGB</code>
+                <code>colorToRGB COLOR</code>
             </a>
-        </h5>
+        </div>
     <p>Convert the given color to an “rgb()” or “rgba()” value.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>COLOR</pre></th>
+                    <td>string</td>
+                    <td><p>The color to convert.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), “#RRGGBB”, or “#RRGGBBAA”.</p>
+</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>colorToHex &#34;#FF0000&#34;</dd>
+            <dt>&#34;rgb(255, 0, 0)&#34;</dt>
+        </dl>
     </section>
     <section class="function" id="fn-darken">
-        <h5>
+        <h4 class="mt-3">darken</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-darken">
-                <code>darken</code>
+                <code>darken COLOR PERCENT</code>
             </a>
-        </h5>
+        </div>
     <p>Darken the given color by a percent [0-100].</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>COLOR</pre></th>
+                    <td>string</td>
+                    <td><p>The base color to operate on.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), “#RRGGBB”, or “#RRGGBBAA”.</p>
+</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th><pre>PERCENT</pre></th>
+                    <td>number</td>
+                    <td><p>A how much darker the color should be made.</p>
+</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>darken &#34;#FF0000&#34; 15</dd>
+            <dt>&#34;#B30000&#34;</dt>
+        </dl>
     </section>
     <section class="function" id="fn-lighten">
-        <h5>
+        <h4 class="mt-3">lighten</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-lighten">
-                <code>lighten</code>
+                <code>lighten COLOR PERCENT</code>
             </a>
-        </h5>
+        </div>
     <p>Lighten the given color by a percent [0-100].</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>COLOR</pre></th>
+                    <td>string</td>
+                    <td><p>The base color to operate on.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), “#RRGGBB”, or “#RRGGBBAA”.</p>
+</td>
+                </tr>
+            </tbody>
+                <tr>
+                    <th><pre>PERCENT</pre></th>
+                    <td>number</td>
+                    <td><p>A how much lighter the color should be made.</p>
+</td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <dl class="examples">
+            <dd>lighten &#34;#FF0000&#34; 15</dd>
+            <dt>&#34;#FF4D4D&#34;</dt>
+        </dl>
     </section>
 </section>
 <section class="group" id="unit-conversions"  >
@@ -4307,11 +4749,13 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-convert">
-        <h5>
+        <h4 class="mt-3">convert</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-convert">
                 <code>convert</code>
             </a>
-        </h5>
+        </div>
     <p>A generic unit conversion function that allows for units to be specified by value as strings.</p>
     </section>
 </section>
@@ -4323,11 +4767,13 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-templateKey">
-        <h5>
+        <h4 class="mt-3">templateKey</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-templateKey">
                 <code>templateKey</code>
             </a>
-        </h5>
+        </div>
     <p>Open the given file and retrieve the key from the page object defined in its header.</p>
     </section>
 </section>
@@ -4339,83 +4785,103 @@ bindings:
     </header>
     <h4>Functions</h4>
     <section class="function" id="fn-">
-        <h5>
+        <h4 class="mt-3"></h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-">
                 <code></code>
             </a>
-        </h5>
+        </div>
     <i>Undocumented</i>
     </section>
     <section class="function" id="fn-compare">
-        <h5>
+        <h4 class="mt-3">compare</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-compare">
                 <code>compare</code>
             </a>
-        </h5>
+        </div>
     <p>A generic comparison function. Accepts operators: “gt”, “ge”, “lt”, “le”, “eq”, “ne”</p>
     </section>
     <section class="function" id="fn-eqx">
-        <h5>
+        <h4 class="mt-3">eqx</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-eqx">
                 <code>eqx</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether two values are equal (any type).</p>
     </section>
     <section class="function" id="fn-gex">
-        <h5>
+        <h4 class="mt-3">gex</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-gex">
                 <code>gex</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the first value is numerically or lexically greater than or equal to the second.</p>
     </section>
     <section class="function" id="fn-gtx">
-        <h5>
+        <h4 class="mt-3">gtx</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-gtx">
                 <code>gtx</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the first value is numerically or lexically greater than the second.</p>
     </section>
     <section class="function" id="fn-lex">
-        <h5>
+        <h4 class="mt-3">lex</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-lex">
                 <code>lex</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the first value is numerically or lexically less than or equal to the second.</p>
     </section>
     <section class="function" id="fn-ltx">
-        <h5>
+        <h4 class="mt-3">ltx</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-ltx">
                 <code>ltx</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the first value is numerically or lexically less than the second.</p>
     </section>
     <section class="function" id="fn-match">
-        <h5>
+        <h4 class="mt-3">match</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-match">
                 <code>match</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether the given value matches the given regular expression.</p>
     </section>
     <section class="function" id="fn-nex">
-        <h5>
+        <h4 class="mt-3">nex</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-nex">
                 <code>nex</code>
             </a>
-        </h5>
+        </div>
     <p>Return whether two values are not equal (any type).</p>
     </section>
     <section class="function" id="fn-switch">
-        <h5>
+        <h4 class="mt-3">switch</h4>
+        <div class="mb-1">
+            <i>usage:</i>
             <a href="#fn-switch">
                 <code>switch</code>
             </a>
-        </h5>
+        </div>
     <p>Provide a simple inline switch-case style decision mechanism.</p>
     </section>
 </section>

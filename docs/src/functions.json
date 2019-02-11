@@ -1714,6 +1714,22 @@
         "Examples": null
       },
       {
+        "Name": "stddev",
+        "Alias": "",
+        "Summary": "Return the standard deviation of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sum",
+        "Alias": "",
+        "Summary": "Return the sum of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "maximum",
         "Alias": "",
         "Summary": "Return the maximum of the given array of numbers.",
@@ -1749,22 +1765,6 @@
         "Name": "minimum_nz",
         "Alias": "",
         "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "stddev",
-        "Alias": "",
-        "Summary": "Return the standard deviation of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "sum",
-        "Alias": "",
-        "Summary": "Return the sum of the given array of numbers.",
         "Returns": "",
         "Arguments": null,
         "Examples": null
@@ -2419,7 +2419,7 @@
         "Examples": null
       },
       {
-        "Name": "findkey",
+        "Name": "findKey",
         "Alias": "",
         "Summary": "Recursively scans the given array or object and returns all values of the given key.",
         "Returns": "",
@@ -2578,7 +2578,7 @@
       {
         "Name": "slice",
         "Alias": "",
-        "Summary": "Return a subset of the given array.",
+        "Summary": "Return a subset of the given array.  Items in an array are counted starting from zero.",
         "Returns": "",
         "Arguments": [
           {
@@ -3272,6 +3272,14 @@
             ]
           }
         ]
+      },
+      {
+        "Name": "findkey",
+        "Alias": "findKey",
+        "Summary": "",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
       }
     ]
   },
@@ -3433,48 +3441,156 @@
         "Alias": "",
         "Summary": "Lighten the given color by a percent [0-100].",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "color",
+            "Type": "string",
+            "Description": "The base color to operate on.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), \"#RRGGBB\", or \"#RRGGBBAA\".",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "percent",
+            "Type": "number",
+            "Description": "A how much lighter the color should be made.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "lighten \"#FF0000\" 15",
+            "Return": "#FF4D4D"
+          }
+        ]
       },
       {
         "Name": "darken",
         "Alias": "",
         "Summary": "Darken the given color by a percent [0-100].",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "color",
+            "Type": "string",
+            "Description": "The base color to operate on.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), \"#RRGGBB\", or \"#RRGGBBAA\".",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "percent",
+            "Type": "number",
+            "Description": "A how much darker the color should be made.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "darken \"#FF0000\" 15",
+            "Return": "#B30000"
+          }
+        ]
       },
       {
         "Name": "colorToHex",
         "Alias": "",
         "Summary": "Convert the given color to a hexadecimal (\"#RRGGBB\", \"#RRGGBBAA\") value.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "color",
+            "Type": "string",
+            "Description": "The color to convert.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), \"#RRGGBB\", or \"#RRGGBBAA\".",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "colorToHex \"hsl(0, 100%, 50%)\"",
+            "Return": "#FF0000"
+          }
+        ]
       },
       {
         "Name": "colorToRGB",
         "Alias": "",
         "Summary": "Convert the given color to an \"rgb()\" or \"rgba()\" value.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "color",
+            "Type": "string",
+            "Description": "The color to convert.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), \"#RRGGBB\", or \"#RRGGBBAA\".",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "colorToHex \"#FF0000\"",
+            "Return": "rgb(255, 0, 0)"
+          }
+        ]
       },
       {
         "Name": "colorToHSL",
         "Alias": "",
         "Summary": "Convert the given color to an \"hsl()\" or \"hsla()\" value.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "color",
+            "Type": "string",
+            "Description": "The color to convert.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), \"#RRGGBB\", or \"#RRGGBBAA\".",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "colorToHex \"#FF0000\"",
+            "Return": "hsl(0, 100%, 50%)"
+          }
+        ]
       },
       {
         "Name": "colorFromValue",
         "Alias": "",
-        "Summary": "Consistently generate the same color from color from a given value.",
+        "Summary": "Consistently generate the same color from a given value of any type. This can be useful for providing automatically generated colors to represent data for which a set of predefined colors may not have significant meaning (for example: user avatars and contact lists).",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "value",
+            "Type": "any",
+            "Description": "A value to generate a color for.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "colorFromValue \"Alice\"",
+            "Return": "#416C69"
+          }
+        ]
       }
     ]
   },

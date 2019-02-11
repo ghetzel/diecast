@@ -17,7 +17,7 @@ import (
 var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
 
 func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
-	return funcGroup{
+	group := funcGroup{
 		Name: `Arrays and Objects`,
 		Description: `For converting, modifying, and filtering arrays, objects, and arrays of ` +
 			`objects. These functions are especially useful when working with data returned from Bindings.`,
@@ -593,7 +593,7 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 					return nil
 				},
 			}, {
-				Name:    `findkey`,
+				Name:    `findKey`,
 				Summary: `Recursively scans the given array or object and returns all values of the given key.`,
 				Arguments: []funcArg{
 					{
@@ -746,7 +746,7 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 				},
 			}, {
 				Name:    `slice`,
-				Summary: `Return a subset of the given array.`,
+				Summary: `Return a subset of the given array.  Items in an array are counted starting from zero.`,
 				Arguments: []funcArg{
 					{
 						Name:        `input`,
@@ -1395,4 +1395,14 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 			},
 		},
 	}
+
+	group.Functions = append(group.Functions, []funcDef{
+		{
+			Name:     `findkey`,
+			Alias:    `findKey`,
+			Function: group.fn(`findKey`),
+		},
+	}...)
+
+	return group
 }
