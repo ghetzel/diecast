@@ -1714,14 +1714,6 @@
         "Examples": null
       },
       {
-        "Name": "stddev",
-        "Alias": "",
-        "Summary": "Return the standard deviation of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
         "Name": "sum",
         "Alias": "",
         "Summary": "Return the sum of the given array of numbers.",
@@ -1765,6 +1757,14 @@
         "Name": "minimum_nz",
         "Alias": "",
         "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "stddev",
+        "Alias": "",
+        "Summary": "Return the standard deviation of the given array of numbers.",
         "Returns": "",
         "Arguments": null,
         "Examples": null
@@ -3627,35 +3627,126 @@
     "Description": "Used for comparing two values, or for returning one of many options based on a given condition.",
     "Functions": [
       {
-        "Name": "",
-        "Alias": "",
-        "Summary": "",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
         "Name": "eqx",
         "Alias": "",
         "Summary": "Return whether two values are equal (any type).",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "left",
+            "Type": "any",
+            "Description": "The first value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "right",
+            "Type": "any",
+            "Description": "The second value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "eqx \"1\" \"1\"",
+            "Return": true
+          },
+          {
+            "Code": "eqx \"1\" \"2\"",
+            "Return": false
+          },
+          {
+            "Code": "eqx \"1\" 1",
+            "Return": true
+          },
+          {
+            "Code": "eqx 1 1.0",
+            "Return": true
+          },
+          {
+            "Code": "eqx \"1\" 2",
+            "Return": false
+          }
+        ]
       },
       {
         "Name": "nex",
         "Alias": "",
         "Summary": "Return whether two values are not equal (any type).",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "left",
+            "Type": "any",
+            "Description": "The first value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "right",
+            "Type": "any",
+            "Description": "The second value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "nex \"1\" \"1\"",
+            "Return": false
+          },
+          {
+            "Code": "nex \"1\" \"2\"",
+            "Return": true
+          },
+          {
+            "Code": "nex \"1\" 1",
+            "Return": false
+          },
+          {
+            "Code": "nex 1 1.0",
+            "Return": false
+          },
+          {
+            "Code": "nex \"1\" 2",
+            "Return": true
+          }
+        ]
       },
       {
         "Name": "gtx",
         "Alias": "",
         "Summary": "Return whether the first value is numerically or lexically greater than the second.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "left",
+            "Type": "any",
+            "Description": "The first value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "right",
+            "Type": "any",
+            "Description": "The second value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3663,7 +3754,26 @@
         "Alias": "",
         "Summary": "Return whether the first value is numerically or lexically greater than or equal to the second.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "left",
+            "Type": "any",
+            "Description": "The first value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "right",
+            "Type": "any",
+            "Description": "The second value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3671,7 +3781,26 @@
         "Alias": "",
         "Summary": "Return whether the first value is numerically or lexically less than the second.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "left",
+            "Type": "any",
+            "Description": "The first value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "right",
+            "Type": "any",
+            "Description": "The second value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3679,7 +3808,26 @@
         "Alias": "",
         "Summary": "Return whether the first value is numerically or lexically less than or equal to the second.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "left",
+            "Type": "any",
+            "Description": "The first value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "right",
+            "Type": "any",
+            "Description": "The second value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3687,7 +3835,35 @@
         "Alias": "",
         "Summary": "A generic comparison function. Accepts operators: \"gt\", \"ge\", \"lt\", \"le\", \"eq\", \"ne\"",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "operator",
+            "Type": "string",
+            "Description": "The type of compare operation being performed.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "left",
+            "Type": "any",
+            "Description": "The first value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "right",
+            "Type": "any",
+            "Description": "The second value.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3695,7 +3871,26 @@
         "Alias": "",
         "Summary": "Return whether the given value matches the given regular expression.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "pattern",
+            "Type": "string",
+            "Description": "The regular expression to match with.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "value",
+            "Type": "string",
+            "Description": "The value to match against.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3703,8 +3898,57 @@
         "Alias": "",
         "Summary": "Provide a simple inline switch-case style decision mechanism.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "any",
+            "Description": "The value being tested.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "fallback",
+            "Type": "any",
+            "Description": "The \"default\" value if none of the subsequent conditions match.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "criteria",
+            "Type": "array[if, then]",
+            "Description": "An array of values representing possible values of _input_, and the value to return if input matches. Arguments are consumed as an array of value-result pairs.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "switch \"yellow\" \"danger\" \"yellow\" \"warning\" \"green\" \"success\" \"blue\" \"info\"",
+            "Return": "warning"
+          },
+          {
+            "Code": "switch \"green\" \"danger\" \"yellow\" \"warning\" \"green\" \"success\" \"blue\" \"info\"",
+            "Return": "success"
+          },
+          {
+            "Code": "switch \"blue\" \"danger\" \"yellow\" \"warning\" \"green\" \"success\" \"blue\" \"info\"",
+            "Return": "info"
+          },
+          {
+            "Code": "switch \"red\" \"danger\" \"yellow\" \"warning\" \"green\" \"success\" \"blue\" \"info\"",
+            "Return": "danger"
+          },
+          {
+            "Code": "switch \"potato\" \"danger\" \"yellow\" \"warning\" \"green\" \"success\" \"blue\" \"info\"",
+            "Return": "danger"
+          }
+        ]
       }
     ]
   }
