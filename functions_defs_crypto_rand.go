@@ -54,36 +54,78 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap) funcGroup {
 			{
 				Name:    `md5`,
 				Summary: `Return the MD5 hash of the given value.`,
+				Arguments: []funcArg{
+					{
+						Name:        `cleartext`,
+						Type:        `string`,
+						Description: `The value to perform a one-way hash operation on.`,
+					},
+				},
 				Function: func(input interface{}) ([]byte, error) {
 					return hashTheThing(`md5`, input)
 				},
 			}, {
 				Name:    `sha1`,
 				Summary: `Return the SHA-1 hash of the given value.`,
+				Arguments: []funcArg{
+					{
+						Name:        `cleartext`,
+						Type:        `string`,
+						Description: `The value to perform a one-way hash operation on.`,
+					},
+				},
 				Function: func(input interface{}) ([]byte, error) {
 					return hashTheThing(`sha1`, input)
 				},
 			}, {
 				Name:    `sha224`,
 				Summary: `Return the SHA-224 hash of the given value.`,
+				Arguments: []funcArg{
+					{
+						Name:        `cleartext`,
+						Type:        `string`,
+						Description: `The value to perform a one-way hash operation on.`,
+					},
+				},
 				Function: func(input interface{}) ([]byte, error) {
 					return hashTheThing(`sha224`, input)
 				},
 			}, {
 				Name:    `sha256`,
 				Summary: `Return the SHA-256 hash of the given value.`,
+				Arguments: []funcArg{
+					{
+						Name:        `cleartext`,
+						Type:        `string`,
+						Description: `The value to perform a one-way hash operation on.`,
+					},
+				},
 				Function: func(input interface{}) ([]byte, error) {
 					return hashTheThing(`sha256`, input)
 				},
 			}, {
 				Name:    `sha384`,
 				Summary: `Return the SHA-384 hash of the given value.`,
+				Arguments: []funcArg{
+					{
+						Name:        `cleartext`,
+						Type:        `string`,
+						Description: `The value to perform a one-way hash operation on.`,
+					},
+				},
 				Function: func(input interface{}) ([]byte, error) {
 					return hashTheThing(`sha384`, input)
 				},
 			}, {
 				Name:    `sha512`,
 				Summary: `Return the SHA-512 hash of the given value.`,
+				Arguments: []funcArg{
+					{
+						Name:        `cleartext`,
+						Type:        `string`,
+						Description: `The value to perform a one-way hash operation on.`,
+					},
+				},
 				Function: func(input interface{}) ([]byte, error) {
 					return hashTheThing(`sha512`, input)
 				},
@@ -91,6 +133,13 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap) funcGroup {
 				Name: `random`,
 				Summary: `Return a random array of _n_ bytes. The random source used is ` +
 					`suitable for cryptographic purposes.`,
+				Arguments: []funcArg{
+					{
+						Name:        `count`,
+						Type:        `integer`,
+						Description: `The size of the output array of random bytes to return.`,
+					},
+				},
 				Function: func(count int) ([]byte, error) {
 					output := make([]byte, count)
 					if _, err := rand.Read(output); err == nil {
