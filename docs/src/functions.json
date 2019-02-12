@@ -1512,7 +1512,17 @@
         "Alias": "",
         "Summary": "Return the MD5 hash of the given value.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "cleartext",
+            "Type": "string",
+            "Description": "The value to perform a one-way hash operation on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -1520,7 +1530,17 @@
         "Alias": "",
         "Summary": "Return the SHA-1 hash of the given value.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "cleartext",
+            "Type": "string",
+            "Description": "The value to perform a one-way hash operation on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -1528,7 +1548,17 @@
         "Alias": "",
         "Summary": "Return the SHA-224 hash of the given value.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "cleartext",
+            "Type": "string",
+            "Description": "The value to perform a one-way hash operation on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -1536,7 +1566,17 @@
         "Alias": "",
         "Summary": "Return the SHA-256 hash of the given value.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "cleartext",
+            "Type": "string",
+            "Description": "The value to perform a one-way hash operation on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -1544,7 +1584,17 @@
         "Alias": "",
         "Summary": "Return the SHA-384 hash of the given value.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "cleartext",
+            "Type": "string",
+            "Description": "The value to perform a one-way hash operation on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -1552,7 +1602,17 @@
         "Alias": "",
         "Summary": "Return the SHA-512 hash of the given value.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "cleartext",
+            "Type": "string",
+            "Description": "The value to perform a one-way hash operation on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -1560,7 +1620,17 @@
         "Alias": "",
         "Summary": "Return a random array of _n_ bytes. The random source used is suitable for cryptographic purposes.",
         "Returns": "",
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "count",
+            "Type": "integer",
+            "Description": "The size of the output array of random bytes to return.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -1714,6 +1784,14 @@
         "Examples": null
       },
       {
+        "Name": "stddev",
+        "Alias": "",
+        "Summary": "Return the standard deviation of the given array of numbers.",
+        "Returns": "",
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "sum",
         "Alias": "",
         "Summary": "Return the sum of the given array of numbers.",
@@ -1757,14 +1835,6 @@
         "Name": "minimum_nz",
         "Alias": "",
         "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "stddev",
-        "Alias": "",
-        "Summary": "Return the standard deviation of the given array of numbers.",
         "Returns": "",
         "Arguments": null,
         "Examples": null
