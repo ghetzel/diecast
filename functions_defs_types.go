@@ -61,10 +61,12 @@ func loadStandardFunctionsTypes(funcs FuncMap) funcGroup {
 				Function: stringutil.Autotype,
 			}, {
 				Name:     `asStr`,
+				Aliases:  []string{`s`},
 				Summary:  `Return the *value* as a string.`,
 				Function: stringutil.ToString,
 			}, {
 				Name:    `asInt`,
+				Aliases: []string{`i`},
 				Summary: `Attempt to convert the given *value* to an integer.`,
 				Function: func(value interface{}) (int64, error) {
 					if v, err := stringutil.ConvertToFloat(value); err == nil {
@@ -75,18 +77,22 @@ func loadStandardFunctionsTypes(funcs FuncMap) funcGroup {
 				},
 			}, {
 				Name:     `asFloat`,
+				Aliases:  []string{`f`},
 				Summary:  `Attempt to convert the given *value* to a floating-point number.`,
 				Function: stringutil.ConvertToFloat,
 			}, {
 				Name:     `asBool`,
+				Aliases:  []string{`b`},
 				Summary:  `Attempt to convert the given *value* to a boolean value.`,
 				Function: stringutil.ConvertToBool,
 			}, {
 				Name:     `asTime`,
+				Aliases:  []string{`t`},
 				Summary:  `Attempt to parse the given *value* as a date/time value.`,
 				Function: stringutil.ConvertToTime,
 			}, {
 				Name:     `asDuration`,
+				Aliases:  []string{`d`},
 				Summary:  `Attempt to parse the given *value* as a time duration.`,
 				Function: timeutil.ParseDuration,
 			},
@@ -97,26 +103,32 @@ func loadStandardFunctionsTypes(funcs FuncMap) funcGroup {
 		{
 			Name:     `s`,
 			Alias:    `asStr`,
+			Hidden:   true,
 			Function: group.fn(`asStr`),
 		}, {
 			Name:     `i`,
 			Alias:    `asInt`,
+			Hidden:   true,
 			Function: group.fn(`asInt`),
 		}, {
 			Name:     `f`,
 			Alias:    `asFloat`,
+			Hidden:   true,
 			Function: group.fn(`asFloat`),
 		}, {
 			Name:     `b`,
 			Alias:    `asBool`,
+			Hidden:   true,
 			Function: group.fn(`asBool`),
 		}, {
 			Name:     `t`,
 			Alias:    `asTime`,
+			Hidden:   true,
 			Function: group.fn(`asTime`),
 		}, {
 			Name:     `d`,
 			Alias:    `asDuration`,
+			Hidden:   true,
 			Function: group.fn(`asDuration`),
 		},
 	}...)

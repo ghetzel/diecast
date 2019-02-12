@@ -9,7 +9,7 @@ import (
 )
 
 func loadStandardFunctionsHtmlProcessing(funcs FuncMap) funcGroup {
-	return funcGroup{
+	group := funcGroup{
 		Name:        `HTML Processing`,
 		Description: `Used to parse and modify HTML documents.`,
 		Functions: []funcDef{
@@ -24,7 +24,10 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap) funcGroup {
 					return stripped
 				},
 			}, {
-				Name:    `htmlquery`,
+				Name: `htmlQuery`,
+				Aliases: []string{
+					`htmlquery`,
+				},
 				Summary: `Parse a given HTML document and return details about all elements matching a CSS selector.`,
 				Arguments: []funcArg{
 					{
@@ -127,4 +130,15 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap) funcGroup {
 			},
 		},
 	}
+
+	group.Functions = append(group.Functions, []funcDef{
+		{
+			Name:     `htmlquery`,
+			Alias:    `htmlQuery`,
+			Function: group.fn(`htmlQuery`),
+			Hidden:   true,
+		},
+	}...)
+
+	return group
 }

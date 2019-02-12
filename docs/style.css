@@ -56,6 +56,10 @@ h3 {
   background-color: #333333 !important;
 }
 
+.bg-diecast a {
+  color: #EEEEEE;
+}
+
 .bg-diecast-dark {
   background-color: #1A1A1A !important;
   color: #EEEEEE;

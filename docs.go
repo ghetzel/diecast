@@ -1,8 +1,9 @@
 package diecast
 
 type funcExample struct {
-	Code   string
-	Return interface{}
+	Code        string
+	Description string
+	Return      interface{}
 }
 
 type funcArg struct {
@@ -18,8 +19,10 @@ type funcArg struct {
 type funcDef struct {
 	Name      string
 	Alias     string
+	Aliases   []string
 	Summary   string
 	Returns   string
+	Hidden    bool
 	Arguments []funcArg
 	Examples  []funcExample
 	Function  interface{} `json:"-"`

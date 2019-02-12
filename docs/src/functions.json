@@ -6,8 +6,10 @@
       {
         "Name": "contains",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return true of the given string contains another string.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -31,6 +33,7 @@
         "Examples": [
           {
             "Code": "contains \"Alice met Bob at the store.\" \"store\"",
+            "Description": "",
             "Return": "true"
           }
         ]
@@ -38,8 +41,10 @@
       {
         "Name": "lower",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Reformat the given string by changing it into lower case capitalization.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "in",
@@ -54,6 +59,7 @@
         "Examples": [
           {
             "Code": "lower \"This is a thing\"",
+            "Description": "",
             "Return": "this is a thing"
           }
         ]
@@ -61,8 +67,10 @@
       {
         "Name": "ltrim",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the given string with any leading whitespace removed.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "in",
@@ -77,6 +85,7 @@
         "Examples": [
           {
             "Code": "trim \" Hello   World  \"",
+            "Description": "",
             "Return": "Hello  World  "
           }
         ]
@@ -84,8 +93,10 @@
       {
         "Name": "replace",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Replace occurrences of one substring with another string in a given input string.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "wholestring",
@@ -127,10 +138,12 @@
         "Examples": [
           {
             "Code": "replace \"oink oink oink\" \"oink\" \"moo\" -1",
+            "Description": "",
             "Return": "moo moo moo"
           },
           {
             "Code": "replace \"cheese\" \"e\" \"o\" 2",
+            "Description": "",
             "Return": "choose"
           }
         ]
@@ -138,8 +151,10 @@
       {
         "Name": "rxreplace",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the given string with all substrings matching the given regular expression replaced with another string.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "wholestring",
@@ -172,6 +187,7 @@
         "Examples": [
           {
             "Code": "rxreplace \"\u003cb\u003eHello \u003ci\u003eWorld\u003c/i\u003e\u003c/b\u003e\" \"\u003c/?[bi]\u003e\" \"*\"",
+            "Description": "",
             "Return": "*Hello *World**"
           }
         ]
@@ -179,8 +195,10 @@
       {
         "Name": "concat",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the string that results in stringifying and joining all of the given arguments.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "values",
@@ -195,6 +213,7 @@
         "Examples": [
           {
             "Code": "concat \"There are \" 5 \" apples, yes it's \" true",
+            "Description": "",
             "Return": "There are 5 apples, yes it's true."
           }
         ]
@@ -202,8 +221,10 @@
       {
         "Name": "rtrim",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the given string with any trailing whitespace removed.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "in",
@@ -218,6 +239,7 @@
         "Examples": [
           {
             "Code": "trim \" Hello   World  \"",
+            "Description": "",
             "Return": " Hello  World"
           }
         ]
@@ -225,8 +247,10 @@
       {
         "Name": "split",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Split a given string into an array of strings by a given separator.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "in",
@@ -250,6 +274,7 @@
         "Examples": [
           {
             "Code": "split \"this is a sentence.\"",
+            "Description": "",
             "Return": [
               "this",
               "is",
@@ -262,8 +287,10 @@
       {
         "Name": "join",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Stringify the given array of values and join them together into a string, separated by a given separator string.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -289,24 +316,30 @@
       {
         "Name": "strcount",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Count counts the number of non-overlapping instances of a substring. If the given substring is empty, then this returns the length of the string plus one.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "titleize",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Reformat the given string by changing it into Title Case capitalization.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "camelize",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Reformat the given string by changing it into camelCase capitalization.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "in",
@@ -321,6 +354,7 @@
         "Examples": [
           {
             "Code": "camelize \"This is a thing\"",
+            "Description": "",
             "Return": "thisIsAThing"
           }
         ]
@@ -328,8 +362,10 @@
       {
         "Name": "pascalize",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Reformat the given string by changing it into PascalCase capitalization.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "in",
@@ -344,6 +380,7 @@
         "Examples": [
           {
             "Code": "pascalize \"This is a thing\"",
+            "Description": "",
             "Return": "ThisIsAThing"
           }
         ]
@@ -351,8 +388,10 @@
       {
         "Name": "underscore",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Reformat the given string by changing it into \\_underscorecase\\_ capitalization (also known as snake\\_case).",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "in",
@@ -367,6 +406,7 @@
         "Examples": [
           {
             "Code": "underscore \"This is a thing\"",
+            "Description": "",
             "Return": "this_is_a_thing"
           }
         ]
@@ -374,8 +414,10 @@
       {
         "Name": "hyphenate",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Reformat the given string by changing it into hyphen-case capitalization.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "in",
@@ -390,6 +432,7 @@
         "Examples": [
           {
             "Code": "hyphenate \"This is a thing\"",
+            "Description": "",
             "Return": "this-is-a-thing"
           }
         ]
@@ -397,8 +440,10 @@
       {
         "Name": "trim",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the given string with any leading and trailing whitespace removed.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "in",
@@ -413,6 +458,7 @@
         "Examples": [
           {
             "Code": "trim \" Hello   World  \"",
+            "Description": "",
             "Return": "Hello  World"
           }
         ]
@@ -420,8 +466,10 @@
       {
         "Name": "upper",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Reformat the given string by changing it into UPPER CASE capitalization.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "in",
@@ -436,6 +484,7 @@
         "Examples": [
           {
             "Code": "upper \"This is a thing",
+            "Description": "",
             "Return": "THIS IS A THING"
           }
         ]
@@ -443,8 +492,10 @@
       {
         "Name": "hasPrefix",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return true if the given string begins with the given prefix.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "in",
@@ -470,8 +521,10 @@
       {
         "Name": "hasSuffix",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return true if the given string ends with the given suffix.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "in",
@@ -497,8 +550,10 @@
       {
         "Name": "surroundedBy",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given string is begins with a specific prefix _and_ ends with a specific suffix.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -531,6 +586,7 @@
         "Examples": [
           {
             "Code": "surroundedBy \"\u003ctable\u003e\" \"\u003c\" \"\u003e\"",
+            "Description": "",
             "Return": true
           }
         ]
@@ -538,8 +594,10 @@
       {
         "Name": "percent",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Takes an integer or decimal value and returns it formatted as a percentage.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "value",
@@ -572,14 +630,17 @@
         "Examples": [
           {
             "Code": "percent 99",
+            "Description": "",
             "Return": "99"
           },
           {
             "Code": "percent 3.3 10",
+            "Description": "",
             "Return": "33"
           },
           {
             "Code": "percent 3.33 10 \"%.3f\"",
+            "Description": "",
             "Return": "33.300"
           }
         ]
@@ -587,8 +648,10 @@
       {
         "Name": "autobyte",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Attempt to convert the given number to a string representation of the value interpreted as bytes. The unit will be automatically determined as the closest one that produces a value less than 1024 in that unit. The second argument is a printf-style format string that is used when the converted number is being stringified. By specifying precision and leading digit values to the %f format token, you can control how many decimal places are in the resulting output.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "bytes",
@@ -612,6 +675,7 @@
         "Examples": [
           {
             "Code": "autobyte 2490368 \"%.2f\"",
+            "Description": "",
             "Return": "2.38MB"
           }
         ]
@@ -619,24 +683,30 @@
       {
         "Name": "thousandify",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Take a number and reformat it to be more readable by adding a separator between every three successive places.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "splitWords",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Detect word boundaries in a given string and split that string into an array where each element is a word.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "elideWords",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Takes an input string and counts the number of words in it. If that number exceeds a given count, the string will be truncated to be equal to that number of words.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -660,10 +730,12 @@
         "Examples": [
           {
             "Code": "elideWords \"This is a sentence that contains eight words.\" 5",
+            "Description": "",
             "Return": "This is a sentence that"
           },
           {
             "Code": "elideWords \"Hello world\" 10",
+            "Description": "",
             "Return": "Hello world"
           }
         ]
@@ -671,8 +743,10 @@
       {
         "Name": "elide",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Takes an input string and ensures it is no longer than a given number of characters.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -696,10 +770,12 @@
         "Examples": [
           {
             "Code": "elide \"This is a sentence that contains fifty characters.\" 18",
+            "Description": "",
             "Return": "This is a sentence"
           },
           {
             "Code": "elide \"hello.\" 16",
+            "Description": "",
             "Return": "hello."
           }
         ]
@@ -713,8 +789,10 @@
       {
         "Name": "basename",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the filename component of the given path.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "path",
@@ -729,6 +807,7 @@
         "Examples": [
           {
             "Code": "basename \"/this/is/my/file.jpg\"",
+            "Description": "",
             "Return": "file.jpg"
           }
         ]
@@ -736,8 +815,10 @@
       {
         "Name": "extname",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the extension component of the given path (always prefixed with a dot [.]).",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "path",
@@ -752,6 +833,7 @@
         "Examples": [
           {
             "Code": "extname \"file.jpg\"",
+            "Description": "",
             "Return": ".jpg"
           }
         ]
@@ -759,8 +841,10 @@
       {
         "Name": "dirname",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the directory path component of the given path.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "path",
@@ -775,6 +859,7 @@
         "Examples": [
           {
             "Code": "dirname \"/this/is/my/file.jpg\"",
+            "Description": "",
             "Return": "/this/is/my"
           }
         ]
@@ -782,8 +867,10 @@
       {
         "Name": "pathjoin",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return a string of all given path components joined together using the system path separator.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "parts",
@@ -798,6 +885,7 @@
         "Examples": [
           {
             "Code": "pathjoin \"/this\" \"is/my\" \"file.jpg\"",
+            "Description": "",
             "Return": "/this/is/my/file.jpg"
           }
         ]
@@ -805,16 +893,20 @@
       {
         "Name": "pwd",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the present working directory.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "dir",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return a list of files and directories in *path*, or in the current directory if not specified.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "path",
@@ -829,6 +921,7 @@
         "Examples": [
           {
             "Code": "dir",
+            "Description": "",
             "Return": [
               {
                 "directory": false,
@@ -860,8 +953,10 @@
       {
         "Name": "mimetype",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Returns a best guess at the MIME type for the given filename.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "filename",
@@ -876,10 +971,12 @@
         "Examples": [
           {
             "Code": "mimetype \"file.jpg\"",
+            "Description": "",
             "Return": "image/jpeg"
           },
           {
             "Code": "mimetype \"index.html\"",
+            "Description": "",
             "Return": "text/html"
           }
         ]
@@ -887,8 +984,10 @@
       {
         "Name": "mimeparams",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Returns the parameters portion of the MIME type of the given filename.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "filename",
@@ -903,10 +1002,12 @@
         "Examples": [
           {
             "Code": "mimetype \"file.jpg\"",
+            "Description": "",
             "Return": {}
           },
           {
             "Code": "mimetype \"index.html\"",
+            "Description": "",
             "Return": {
               "charset": "utf-8"
             }
@@ -922,8 +1023,10 @@
       {
         "Name": "jsonify",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Encode the given argument as a JSON document.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "data",
@@ -949,8 +1052,10 @@
       {
         "Name": "markdown",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Parse the given string as a Markdown document and return it represented as HTML.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "document",
@@ -1130,8 +1235,10 @@
       {
         "Name": "csv",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Encode the given data as a comma-separated values document.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "columns",
@@ -1157,8 +1264,10 @@
       {
         "Name": "tsv",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Encode the given data as a tab-separated values document.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "columns",
@@ -1184,8 +1293,10 @@
       {
         "Name": "unsafe",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return an unescaped raw HTML segment for direct inclusion in the rendered template output.This function bypasses the built-in HTML escaping and sanitization security features, and you almost certainly want to use [sanitize](#fn-sanitize) instead.  This is a common antipattern that leads to all kinds of security issues from poorly-constrained implementations, so you are forced to acknowledge this by typing \"unsafe\".",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "document",
@@ -1202,8 +1313,10 @@
       {
         "Name": "sanitize",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Takes a raw HTML string and santizes it, removing attributes and elements that can be used to evaluate scripts, but leaving the rest. Useful for preparing user-generated HTML for display.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "",
@@ -1226,176 +1339,232 @@
       {
         "Name": "isBool",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given *value* is a boolean type.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isInt",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given *value* is an integer type.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isFloat",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given *value* is a floating-point type.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isZero",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given *value* is an zero-valued variable.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isEmpty",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given *value* is empty.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isArray",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given *value* is an iterable array or slice.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isMap",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given *value* is a key-value map type.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isTime",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given *value* is parsable as a date/time value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isDuration",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given *value* is parsable as a duration.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "autotype",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Attempt to automatically determine the type if *value* and return the converted output.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "asStr",
         "Alias": "",
+        "Aliases": [
+          "s"
+        ],
         "Summary": "Return the *value* as a string.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "asInt",
         "Alias": "",
+        "Aliases": [
+          "i"
+        ],
         "Summary": "Attempt to convert the given *value* to an integer.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "asFloat",
         "Alias": "",
+        "Aliases": [
+          "f"
+        ],
         "Summary": "Attempt to convert the given *value* to a floating-point number.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "asBool",
         "Alias": "",
+        "Aliases": [
+          "b"
+        ],
         "Summary": "Attempt to convert the given *value* to a boolean value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "asTime",
         "Alias": "",
+        "Aliases": [
+          "t"
+        ],
         "Summary": "Attempt to parse the given *value* as a date/time value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "asDuration",
         "Alias": "",
+        "Aliases": [
+          "d"
+        ],
         "Summary": "Attempt to parse the given *value* as a time duration.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "s",
         "Alias": "asStr",
+        "Aliases": null,
         "Summary": "",
         "Returns": "",
+        "Hidden": true,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "i",
         "Alias": "asInt",
+        "Aliases": null,
         "Summary": "",
         "Returns": "",
+        "Hidden": true,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "f",
         "Alias": "asFloat",
+        "Aliases": null,
         "Summary": "",
         "Returns": "",
+        "Hidden": true,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "b",
         "Alias": "asBool",
+        "Aliases": null,
         "Summary": "",
         "Returns": "",
+        "Hidden": true,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "t",
         "Alias": "asTime",
+        "Aliases": null,
         "Summary": "",
         "Returns": "",
+        "Hidden": true,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "d",
         "Alias": "asDuration",
+        "Aliases": null,
         "Summary": "",
         "Returns": "",
+        "Hidden": true,
         "Arguments": null,
         "Examples": null
       }
@@ -1408,96 +1577,222 @@
       {
         "Name": "time",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the given time formatted using a given format.  See [Time Formats](#time-formats) for acceptable formats.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "time",
+            "Type": "string, integer",
+            "Description": "The time you want to format.  Parsing is extremely flexible, and can handle dates represented as RFC3339,  RFC822, RFC1123, epoch, or epoch nanoseconds.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "time \"01 May 10 13:04 -0500\" \"rfc3339\"",
+            "Description": "",
+            "Return": "2010-05-01T13:04:00-05:00"
+          },
+          {
+            "Code": "time 1136239445 \"ansic\"",
+            "Description": "",
+            "Return": "Mon Jan  2 22:04:05 2006"
+          }
+        ]
       },
       {
         "Name": "now",
         "Alias": "",
-        "Summary": "Return the current time, optionally formatted using the given *format*.  See [Time Formats](#time-formats) for",
+        "Aliases": null,
+        "Summary": "Return the current time, optionally formatted using the given format.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "format",
+            "Type": "string",
+            "Description": "How to format the time output. See [Time Formats](#time-formats) for how to use format strings.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "now",
+            "Description": "",
+            "Return": "2010-05-01T13:04:00-05:00"
+          },
+          {
+            "Code": "now \"ansic\"",
+            "Description": "",
+            "Return": "Mon Jan  2 22:04:05 2006"
+          }
+        ]
       },
       {
         "Name": "addTime",
         "Alias": "",
-        "Summary": "Return a time with with given duration added to it.  Can specify time *at* to apply the change to. Defaults to the current time.",
+        "Aliases": null,
+        "Summary": "Return a time with with given duration added to it.  Can specify time at to apply the change to. Defaults to the current time.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "duration",
+            "Type": "string",
+            "Description": "The duration to add to the time (can be negative to subtract a duration). See [Time Durations](#time-durations) for how to specify durations.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "from",
+            "Type": "string",
+            "Description": "If specified, this time will be parsed and modified instead of the current time.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "addTime \"2h30m\"",
+            "Description": "",
+            "Return": "2010-05-01T15:34:00-05:00"
+          },
+          {
+            "Code": "addTime \"-14d\" \"2011-10-21T12:00:00-08:00\"",
+            "Description": "",
+            "Return": "2011-10-07T12:00:00-08:00"
+          }
+        ]
       },
       {
         "Name": "ago",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return a new time subtracted by the given duration.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "since",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the amount of time that has elapsed since the given time, optionally rounded to the nearest time interval.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "from",
+            "Type": "string",
+            "Description": "The time to use when determining the duration that time has elapsed from.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "interval",
+            "Type": "string",
+            "Description": "If specified, the resulting time duration will be rounded to the nearest interval of this unit.  Can be one of: \"second\", \"sec\", \"s\" (nearest second), \"minute\", \"min\", \"m\" (nearest minute), \"hour\", \"hr\", \"h\" (nearest hour), or \"day\", \"d\" (nearest day).",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "since \"2010-05-01T13:04:15-05:00",
+            "Description": "",
+            "Return": ""
+          },
+          {
+            "Code": "since \"-14d\" \"2011-10-21T12:00:00-08:00\"",
+            "Description": "",
+            "Return": "2011-10-07T12:00:00-08:00"
+          }
+        ]
       },
       {
         "Name": "duration",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Convert the given value from a duration (specified with the given unit) into the given time format.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isBefore",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the first time occurs before the second one.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isAfter",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the first time occurs after the second one.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isBetweenTimes",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the current time is between two times [first, second).",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "extractTime",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Attempt to extract a time value from the given string.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "sunrise",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the time of apparent sunrise at the given coordinates, optionally for a given time.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "sunset",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the time of apparent sunset at the given coordinates, optionally for a given time.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       }
@@ -1510,8 +1805,10 @@
       {
         "Name": "md5",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the MD5 hash of the given value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "cleartext",
@@ -1528,8 +1825,10 @@
       {
         "Name": "sha1",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the SHA-1 hash of the given value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "cleartext",
@@ -1546,8 +1845,10 @@
       {
         "Name": "sha224",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the SHA-224 hash of the given value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "cleartext",
@@ -1564,8 +1865,10 @@
       {
         "Name": "sha256",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the SHA-256 hash of the given value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "cleartext",
@@ -1582,8 +1885,10 @@
       {
         "Name": "sha384",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the SHA-384 hash of the given value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "cleartext",
@@ -1600,8 +1905,10 @@
       {
         "Name": "sha512",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the SHA-512 hash of the given value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "cleartext",
@@ -1618,8 +1925,10 @@
       {
         "Name": "random",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return a random array of _n_ bytes. The random source used is suitable for cryptographic purposes.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "count",
@@ -1636,48 +1945,60 @@
       {
         "Name": "uuid",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Generate a new Version 4 UUID as a string.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "uuidRaw",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Generate the raw bytes of a new Version 4 UUID value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "base32",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Encode the *input* bytes with the Base32 encoding scheme.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "base58",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Encode the *input* bytes with the Base58 (Bitcoin alphabet) encoding scheme.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "base64",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Encode the *input* bytes with the Base64 encoding scheme.  Optionally specify the encoding mode: one of \"padded\", \"url\", \"url-padded\", or empty (unpadded, default).",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "murmur3",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Hash the given data using the Murmur 3 algorithm.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       }
@@ -1690,152 +2011,190 @@
       {
         "Name": "calc",
         "Alias": "",
+        "Aliases": null,
         "Summary": "",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "add",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the sum of all of the given values.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "subtract",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Sequentially subtract all of the given values.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "multiply",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the product of all of the given values.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "divide",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Sequentially divide all of the given values in the order given.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "mod",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the modulus of all of the given values.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "pow",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Sequentially exponentiate of all of the given *values*.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "sequence",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return an array of integers representing a sequence from [0, _n_).",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "round",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Round a number to the nearest _n_ places.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "negate",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the given number multiplied by -1.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isEven",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given number is even.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "isOdd",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given number is odd.",
         "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "stddev",
-        "Alias": "",
-        "Summary": "Return the standard deviation of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "sum",
-        "Alias": "",
-        "Summary": "Return the sum of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "maximum",
-        "Alias": "",
-        "Summary": "Return the maximum of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "mean",
-        "Alias": "",
-        "Summary": "Return the mean of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "median",
-        "Alias": "",
-        "Summary": "Return the median of the given array of numbers.",
-        "Returns": "",
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "minimum",
-        "Alias": "",
-        "Summary": "Return the minimum of the given array of numbers.",
-        "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "minimum_nz",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
         "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "stddev",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the standard deviation of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the sum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "maximum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the maximum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "mean",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the mean of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "median",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the median of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "minimum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the minimum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       }
@@ -1848,8 +2207,10 @@
       {
         "Name": "append",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Append one or more values to the given array.  If the array given is not in fact an array, it will be converted into one, with the exception of null values, which will create an empty array.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "array",
@@ -1873,6 +2234,7 @@
         "Examples": [
           {
             "Code": "append [\"a\", \"b\"] \"c\" \"d\"",
+            "Description": "",
             "Return": [
               "a",
               "b",
@@ -1885,8 +2247,10 @@
       {
         "Name": "page",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Returns an integer representing an offset used for accessing paginated values when given a page number and number of results per page.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "pagenum",
@@ -1910,18 +2274,22 @@
         "Examples": [
           {
             "Code": "page 1 25",
+            "Description": "",
             "Return": 0
           },
           {
             "Code": "page 2 25",
+            "Description": "",
             "Return": 25
           },
           {
             "Code": "page 3 25",
+            "Description": "",
             "Return": 50
           },
           {
             "Code": "page 2 10",
+            "Description": "",
             "Return": 10
           }
         ]
@@ -1929,8 +2297,10 @@
       {
         "Name": "reverse",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the given array in reverse order.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "array",
@@ -1945,6 +2315,7 @@
         "Examples": [
           {
             "Code": "reverse [1,2,3]",
+            "Description": "",
             "Return": [
               3,
               2,
@@ -1956,8 +2327,10 @@
       {
         "Name": "filter",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the given array with only elements where expression evaluates to a truthy value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "array",
@@ -1981,6 +2354,7 @@
         "Examples": [
           {
             "Code": "filter [1, 2, 3, 4, 5] \"{{ isOdd . }}\"",
+            "Description": "",
             "Return": [
               1,
               3,
@@ -1989,6 +2363,7 @@
           },
           {
             "Code": "filter [{\"active\": true, \"a\": 1}, {\"b\": 2}, {\"active\": true, \"c\": 3}] \"{{ .active }}\"",
+            "Description": "",
             "Return": [
               {
                 "a": 1,
@@ -2005,8 +2380,10 @@
       {
         "Name": "filterByKey",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return a subset of the elements in the given array whose values are objects that contain the given key.  Optionally, the values at the key for each object in the array can be passed to a template expression.  If that expression produces a truthy value, the object will be included in the output.  Otherwise it will not.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "array",
@@ -2039,6 +2416,7 @@
         "Examples": [
           {
             "Code": "filterByKey [{\"id\": \"a\", \"value\": 1}, {\"id\": \"b\", \"value\": 1}, {\"id\": \"c\", \"value\": 2}] 1",
+            "Description": "",
             "Return": [
               {
                 "id": "a",
@@ -2055,8 +2433,10 @@
       {
         "Name": "firstByKey",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Identical to [filterByKey](#fn-filterByKey), except it returns only the first object in the resulting array instead of the whole array.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "array",
@@ -2089,6 +2469,7 @@
         "Examples": [
           {
             "Code": "firstByKey [{\"id\": \"a\", \"value\": 1}, {\"id\": \"b\", \"value\": 1}, {\"id\": \"c\", \"value\": 2}] 1",
+            "Description": "",
             "Return": {
               "id": "a",
               "value": 1
@@ -2099,8 +2480,10 @@
       {
         "Name": "transformValues",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return all elements of the given array of objects with the value at a key transformed by the given expression.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "array",
@@ -2132,7 +2515,8 @@
         ],
         "Examples": [
           {
-            "Code": "transformValues [{\"name\": \"alice\"}, {\"name\": \"mallory\"}, {\"name\": \"bob\"}] \"name\" \"{{ . | uppercase }}\"",
+            "Code": "transformValues [{\"name\": \"alice\"}, {\"name\": \"mallory\"}, {\"name\": \"bob\"}] \"name\" \"{{ upper . }}\"",
+            "Description": "",
             "Return": [
               {
                 "name": "ALICE"
@@ -2150,8 +2534,10 @@
       {
         "Name": "uniqByKey",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return an array of objects containing only unique entries in the given array of objects. Uniqueness is determined by comparing the values at the given key for each object.  The first time a value is encountered, that value's parent object is included in the output.  All subsequent objects with the same value at that key will be discarded.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "array",
@@ -2184,6 +2570,7 @@
         "Examples": [
           {
             "Code": "uniqueByKey [{\"id\": \"a\", \"value\": 1}, {\"id\": \"b\", \"value\": 1}, {\"id\": \"c\", \"value\": 2}] \"value\"",
+            "Description": "",
             "Return": [
               {
                 "id": "a",
@@ -2194,14 +2581,26 @@
                 "value": 2
               }
             ]
+          },
+          {
+            "Code": "uniqueByKey [{\"name\": \"bob\", \"i\": 1}, {\"name\": \"BOB\", \"i\": 2}, {\"name\": \"Bob\", \"i\": 3}] \"name\" \"{{ upper . }}\"",
+            "Description": "Here we provide an expression that will normalize the value of the \"name\" field before performing the unique operation.",
+            "Return": [
+              {
+                "i": 1,
+                "name": "BOB"
+              }
+            ]
           }
         ]
       },
       {
         "Name": "uniqByKeyLast",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Identical to [uniqByKey](#fn-uniqByKey), except the _last_ of a set of objects grouped by key is included in the output, not the first.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "array",
@@ -2234,6 +2633,7 @@
         "Examples": [
           {
             "Code": "uniqByKeyLast [{\"id\": \"a\", \"value\": 1}, {\"id\": \"b\", \"value\": 1}, {\"id\": \"c\", \"value\": 2}] \"value\"",
+            "Description": "",
             "Return": [
               {
                 "id": "b",
@@ -2244,14 +2644,26 @@
                 "value": 2
               }
             ]
+          },
+          {
+            "Code": "uniqueByKey [{\"name\": \"bob\", \"i\": 1}, {\"name\": \"BOB\", \"i\": 2}, {\"name\": \"Bob\", \"i\": 3}] \"name\" \"{{ upper . }}\"",
+            "Description": "Here we provide an expression that will normalize the value of the \"name\" field before performing the unique operation.",
+            "Return": [
+              {
+                "i": 3,
+                "name": "BOB"
+              }
+            ]
           }
         ]
       },
       {
         "Name": "sortByKey",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Sort the given array of objects by comparing the values of the given key for all objects.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "array",
@@ -2284,6 +2696,7 @@
         "Examples": [
           {
             "Code": "sortByKey [{\"name\": \"Bob\"}, {\"name\": \"Mallory\"}, {\"name\": \"Alice\"}] \"name\"",
+            "Description": "",
             "Return": [
               {
                 "name": "Alice"
@@ -2301,8 +2714,10 @@
       {
         "Name": "pluck",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Retrieve a value at the given key from each object in a given array of objects.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "array",
@@ -2335,6 +2750,7 @@
         "Examples": [
           {
             "Code": "pluck [{\"name\": \"Bob\"}, {\"name\": \"Mallory\"}, {\"name\": \"Alice\"}] \"name\"",
+            "Description": "",
             "Return": [
               "Bob",
               "Mallory",
@@ -2346,8 +2762,10 @@
       {
         "Name": "keys",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return an array of key names specifying all the keys of the given object.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "object",
@@ -2362,6 +2780,7 @@
         "Examples": [
           {
             "Code": "keys {\"id\": \"a\", \"value\": 1}",
+            "Description": "",
             "Return": [
               "id",
               "value"
@@ -2372,8 +2791,10 @@
       {
         "Name": "values",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return an array of values from the given object.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "object",
@@ -2388,6 +2809,7 @@
         "Examples": [
           {
             "Code": "values {\"id\": \"a\", \"value\": 1}",
+            "Description": "",
             "Return": [
               "a",
               1
@@ -2398,8 +2820,10 @@
       {
         "Name": "get",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Retrieve a value from a given object.  Key can be specified as a dot.separated.list string or array of keys that describes a path from the given object, through any intermediate nested objects, down to the object containing the desired value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "object",
@@ -2432,22 +2856,27 @@
         "Examples": [
           {
             "Code": "get {\"name: \"Bob\"} \"name\"",
+            "Description": "",
             "Return": "Bob"
           },
           {
             "Code": "get {\"properties\": {\"info\": {\"name: \"Bob\"}}} \"properties.info.name\"",
+            "Description": "",
             "Return": "Bob"
           },
           {
             "Code": "get {\"properties\": {\"info\": {\"name: \"Bob\"}}} \"properties.info.age\"",
+            "Description": "",
             "Return": null
           },
           {
             "Code": "get {\"properties\": {\"info\": {\"name: \"Bob\"}}} \"properties.info.age\" 42",
+            "Description": "",
             "Return": 42
           },
           {
             "Code": "get {\"properties\": {\"info.name\": \"Bob\"}} [\"properties\", \"info.name\"]",
+            "Description": "",
             "Return": "Bob"
           }
         ]
@@ -2455,8 +2884,10 @@
       {
         "Name": "set",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Set a key on a given object to a value. Key can be specified as a dot.separated.list string or array of keys that describes a path in the given object, through any intermediate nested objects, down to the object where the given value will go.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "object",
@@ -2491,8 +2922,12 @@
       {
         "Name": "findKey",
         "Alias": "",
+        "Aliases": [
+          "findkey"
+        ],
         "Summary": "Recursively scans the given array or object and returns all values of the given key.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2516,6 +2951,7 @@
         "Examples": [
           {
             "Code": "findKey [{\"id\": 1, \"children\": [{\"id\": 3}, {\"id\": 5}, {\"id\": 8}]} \"id\"",
+            "Description": "",
             "Return": [
               1,
               3,
@@ -2528,8 +2964,10 @@
       {
         "Name": "has",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether a specific element is in an array.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "wanted",
@@ -2553,22 +2991,27 @@
         "Examples": [
           {
             "Code": "has \"e\" [\"a\", \"e\", \"i\", \"o\", \"u\"]",
+            "Description": "",
             "Return": true
           },
           {
             "Code": "has \"y\" [\"a\", \"e\", \"i\", \"o\", \"u\"]",
+            "Description": "",
             "Return": false
           },
           {
             "Code": "has \"13\" [\"3\", \"5\", \"8\", \"13\"]",
+            "Description": "",
             "Return": true
           },
           {
             "Code": "has 13 [\"3\", \"5\", \"8\", \"13\"]",
+            "Description": "",
             "Return": true
           },
           {
             "Code": "has 14 [\"3\", \"5\", \"8\", \"13\"]",
+            "Description": "",
             "Return": false
           }
         ]
@@ -2576,8 +3019,10 @@
       {
         "Name": "any",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether an array contains any of a set of desired items.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2601,10 +3046,12 @@
         "Examples": [
           {
             "Code": "any [\"a\", \"e\", \"i\", \"o\", \"u\"] \"e\" \"y\" \"x\"",
+            "Description": "",
             "Return": true
           },
           {
             "Code": "any [\"r\", \"s\", \"t\", \"l\", \"n\", \"e\"] \"f\" \"m\" \"w\" \"o\"",
+            "Description": "",
             "Return": false
           }
         ]
@@ -2612,8 +3059,10 @@
       {
         "Name": "indexOf",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Iterate through an array and return the index of a given value, or -1 if not present.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2637,10 +3086,12 @@
         "Examples": [
           {
             "Code": "indexOf [\"a\", \"e\", \"i\", \"o\", \"u\"] \"e\"",
+            "Description": "",
             "Return": 1
           },
           {
             "Code": "indexOf [\"a\", \"e\", \"i\", \"o\", \"u\"] \"y\"",
+            "Description": "",
             "Return": -1
           }
         ]
@@ -2648,8 +3099,10 @@
       {
         "Name": "slice",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return a subset of the given array.  Items in an array are counted starting from zero.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2682,6 +3135,7 @@
         "Examples": [
           {
             "Code": "slice [\"a\", \"e\", \"i\", \"o\", \"u\"] 0 -1",
+            "Description": "",
             "Return": [
               "a",
               "e",
@@ -2692,6 +3146,7 @@
           },
           {
             "Code": "slice [\"a\", \"e\", \"i\", \"o\", \"u\"] 2 -1",
+            "Description": "",
             "Return": [
               "i",
               "o",
@@ -2700,6 +3155,7 @@
           },
           {
             "Code": "slice [\"a\", \"e\", \"i\", \"o\", \"u\"] -3 -1",
+            "Description": "",
             "Return": [
               "i",
               "o",
@@ -2708,6 +3164,7 @@
           },
           {
             "Code": "slice [\"a\", \"e\", \"i\", \"o\", \"u\"] 1 1",
+            "Description": "",
             "Return": [
               "e"
             ]
@@ -2717,16 +3174,20 @@
       {
         "Name": "sslice",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Identical to [slice](#fn-slice), but returns an array of strings.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "uniq",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return an array containing only unique values from the given array.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2741,6 +3202,7 @@
         "Examples": [
           {
             "Code": "uniq [\"a\", \"a\", \"b\", \"b\", \"b\", \"c\"]",
+            "Description": "",
             "Return": [
               "a",
               "b",
@@ -2752,8 +3214,10 @@
       {
         "Name": "flatten",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return an array of values with all nested arrays collapsed down to a single, flat array.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2768,6 +3232,7 @@
         "Examples": [
           {
             "Code": "flatten [\"a\", [\"a\", \"b\"], [\"b\", \"b\", [\"c\"]]]",
+            "Description": "",
             "Return": [
               "a",
               "a",
@@ -2782,8 +3247,10 @@
       {
         "Name": "compact",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return an copy of given array with all empty, null, and zero elements removed.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2798,6 +3265,7 @@
         "Examples": [
           {
             "Code": "uniq [\"a\", null, \"b\", 0, false, \"c\"]",
+            "Description": "",
             "Return": [
               "a",
               "b",
@@ -2809,8 +3277,10 @@
       {
         "Name": "first",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the first value from the given array, or null if the array is empty.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2825,6 +3295,7 @@
         "Examples": [
           {
             "Code": "first [\"a\", \"b\", \"c\", \"d\"]",
+            "Description": "",
             "Return": "a"
           }
         ]
@@ -2832,8 +3303,10 @@
       {
         "Name": "rest",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return all but the first value from the given array, or an empty array of the given array's length is \u003c= 1.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2848,6 +3321,7 @@
         "Examples": [
           {
             "Code": "rest [\"a\", \"b\", \"c\", \"d\"]",
+            "Description": "",
             "Return": [
               "b",
               "c",
@@ -2856,6 +3330,7 @@
           },
           {
             "Code": "rest [\"a\"]",
+            "Description": "",
             "Return": []
           }
         ]
@@ -2863,8 +3338,10 @@
       {
         "Name": "last",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the last value from the given array, or null if the array is empty.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2879,6 +3356,7 @@
         "Examples": [
           {
             "Code": "last [\"a\", \"b\", \"c\", \"d\"]",
+            "Description": "",
             "Return": "d"
           }
         ]
@@ -2886,8 +3364,10 @@
       {
         "Name": "count",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Identical to the built-in \"len\" function, but is less picky about types.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2902,6 +3382,7 @@
         "Examples": [
           {
             "Code": "count [\"a\", \"b\", \"c\", \"d\"]",
+            "Description": "",
             "Return": 4
           }
         ]
@@ -2909,8 +3390,10 @@
       {
         "Name": "sort",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return an array sorted in lexical ascending order.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2925,6 +3408,7 @@
         "Examples": [
           {
             "Code": "sort [\"d\", \"a\", \"c\", \"b\"]",
+            "Description": "",
             "Return": [
               "a",
               "b",
@@ -2937,8 +3421,10 @@
       {
         "Name": "rsort",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the array sorted in lexical descending order.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2953,6 +3439,7 @@
         "Examples": [
           {
             "Code": "rsort [\"d\", \"a\", \"c\", \"b\"]",
+            "Description": "",
             "Return": [
               "d",
               "c",
@@ -2965,8 +3452,10 @@
       {
         "Name": "isort",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return an array sorted in lexical ascending order (case-insensitive.)",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -2981,6 +3470,7 @@
         "Examples": [
           {
             "Code": "isort [\"bob\", \"ALICE\", \"Mallory\"]",
+            "Description": "",
             "Return": [
               "ALICE",
               "bob",
@@ -2992,8 +3482,10 @@
       {
         "Name": "irsort",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the array sorted in lexical descending order (case-insensitive.)",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -3008,6 +3500,7 @@
         "Examples": [
           {
             "Code": "irsort [\"bob\", \"ALICE\", \"Mallory\"]",
+            "Description": "",
             "Return": [
               "Mallory",
               "bob",
@@ -3019,8 +3512,10 @@
       {
         "Name": "mostcommon",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the element in a given array that appears the most frequently.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -3035,6 +3530,7 @@
         "Examples": [
           {
             "Code": "mostcommon [\"a\", \"a\", \"b\", \"b\", \"b\", \"c\"]",
+            "Description": "",
             "Return": "b"
           }
         ]
@@ -3042,8 +3538,10 @@
       {
         "Name": "leastcommon",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the element in a given array that appears the least frequently.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -3058,6 +3556,7 @@
         "Examples": [
           {
             "Code": "leastcommon [\"a\", \"a\", \"b\", \"b\", \"b\", \"c\"]",
+            "Description": "",
             "Return": "c"
           }
         ]
@@ -3065,8 +3564,10 @@
       {
         "Name": "sliceify",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Convert the given input into an array.  If the value is already an array, this just returns that array.  Otherwise, it returns an array containing the given value as its only element.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -3081,6 +3582,7 @@
         "Examples": [
           {
             "Code": "sliceify [\"a\", \"b\", \"c\"]",
+            "Description": "",
             "Return": [
               "a",
               "b",
@@ -3089,6 +3591,7 @@
           },
           {
             "Code": "sliceify 4",
+            "Description": "",
             "Return": [
               4
             ]
@@ -3098,16 +3601,20 @@
       {
         "Name": "stringify",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Identical to [sliceify](#fn-sliceify), but converts all values to strings and returns an array of strings.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "intersect",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the intersection of two arrays.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "first",
@@ -3131,6 +3638,7 @@
         "Examples": [
           {
             "Code": "intersect [\"b\", \"a\", \"c\"] [\"c\", \"b\", \"d\"]",
+            "Description": "",
             "Return": [
               "b",
               "c"
@@ -3138,6 +3646,7 @@
           },
           {
             "Code": "intersect [\"a\", \"b\", \"c\"] [\"x\", \"y\", \"z\"]",
+            "Description": "",
             "Return": []
           }
         ]
@@ -3145,16 +3654,20 @@
       {
         "Name": "mapify",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the given value returned as a rangeable object.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
         "Name": "groupBy",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the given array of objects as a grouped object, keyed on the value of the specified group field. The field argument can be an expression that receives the value and returns a transformed version of it.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "array",
@@ -3178,6 +3691,7 @@
         "Examples": [
           {
             "Code": "groupBy [{\"name\": \"Bob\", \"title\": \"Friend\"}, {\"name\": \"Mallory\", \"title\": \"Foe\"}, {\"name\": \"Alice\", \"title\": \"Friend\"}] \"title\"",
+            "Description": "",
             "Return": {
               "Foe": [
                 {
@@ -3202,8 +3716,10 @@
       {
         "Name": "head",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the first _n_ items from an array.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -3227,6 +3743,7 @@
         "Examples": [
           {
             "Code": "head [\"a\", \"b\", \"c\", \"d\"] 2",
+            "Description": "",
             "Return": [
               "a",
               "b"
@@ -3237,8 +3754,10 @@
       {
         "Name": "tail",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the last _n_ items from an array.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -3262,6 +3781,7 @@
         "Examples": [
           {
             "Code": "tail [\"a\", \"b\", \"c\", \"d\"] 2",
+            "Description": "",
             "Return": [
               "c",
               "d"
@@ -3272,8 +3792,10 @@
       {
         "Name": "shuffle",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return the array with the elements rearranged in random order.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -3288,6 +3810,7 @@
         "Examples": [
           {
             "Code": "shuffle [\"a\", \"b\", \"c\", \"d\"]",
+            "Description": "",
             "Return": [
               "d",
               "c",
@@ -3300,8 +3823,10 @@
       {
         "Name": "apply",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Apply a function to each of the elements in the given array. Note that functions must be unary (accept one argument of type _any_).",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -3325,6 +3850,7 @@
         "Examples": [
           {
             "Code": "apply [\"a\", \"B\", \"C\", \"d\"] \"upper\"",
+            "Description": "",
             "Return": [
               "A",
               "B",
@@ -3334,6 +3860,7 @@
           },
           {
             "Code": "apply [\"a\", \"B\", \"C\", \"d\"] \"upper\" \"lower\"",
+            "Description": "",
             "Return": [
               "a",
               "b",
@@ -3346,8 +3873,10 @@
       {
         "Name": "findkey",
         "Alias": "findKey",
+        "Aliases": null,
         "Summary": "",
         "Returns": "",
+        "Hidden": true,
         "Arguments": null,
         "Examples": null
       }
@@ -3360,16 +3889,22 @@
       {
         "Name": "stripHtml",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Removes all HTML tags from a given input string, leaving behind only the textual content of the nodes. Only text nodes are preserved; attribute names and values, and comments, will be omitted.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       },
       {
-        "Name": "htmlquery",
+        "Name": "htmlQuery",
         "Alias": "",
+        "Aliases": [
+          "htmlquery"
+        ],
         "Summary": "Parse a given HTML document and return details about all elements matching a CSS selector.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "document",
@@ -3395,8 +3930,10 @@
       {
         "Name": "htmlRemove",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Parse a given HTML document and remove all elements matching a CSS selector.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "document",
@@ -3422,8 +3959,10 @@
       {
         "Name": "htmlAddClass",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Parse a given HTML document and add a CSS class to all elements matching a CSS selector.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "document",
@@ -3449,8 +3988,10 @@
       {
         "Name": "htmlRemoveClass",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Parse a given HTML document and remove a CSS class to all elements matching a CSS selector.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "document",
@@ -3476,8 +4017,10 @@
       {
         "Name": "htmlSetAttr",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Parse a given HTML document and set an attribute to a given value on all elements matching a CSS selector.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "document",
@@ -3499,6 +4042,16 @@
           }
         ],
         "Examples": null
+      },
+      {
+        "Name": "htmlquery",
+        "Alias": "htmlQuery",
+        "Aliases": null,
+        "Summary": "",
+        "Returns": "",
+        "Hidden": true,
+        "Arguments": null,
+        "Examples": null
       }
     ]
   },
@@ -3509,8 +4062,10 @@
       {
         "Name": "lighten",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Lighten the given color by a percent [0-100].",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "color",
@@ -3534,6 +4089,7 @@
         "Examples": [
           {
             "Code": "lighten \"#FF0000\" 15",
+            "Description": "",
             "Return": "#FF4D4D"
           }
         ]
@@ -3541,8 +4097,10 @@
       {
         "Name": "darken",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Darken the given color by a percent [0-100].",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "color",
@@ -3566,6 +4124,7 @@
         "Examples": [
           {
             "Code": "darken \"#FF0000\" 15",
+            "Description": "",
             "Return": "#B30000"
           }
         ]
@@ -3573,8 +4132,10 @@
       {
         "Name": "colorToHex",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Convert the given color to a hexadecimal (\"#RRGGBB\", \"#RRGGBBAA\") value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "color",
@@ -3589,6 +4150,7 @@
         "Examples": [
           {
             "Code": "colorToHex \"hsl(0, 100%, 50%)\"",
+            "Description": "",
             "Return": "#FF0000"
           }
         ]
@@ -3596,8 +4158,10 @@
       {
         "Name": "colorToRGB",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Convert the given color to an \"rgb()\" or \"rgba()\" value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "color",
@@ -3612,6 +4176,7 @@
         "Examples": [
           {
             "Code": "colorToHex \"#FF0000\"",
+            "Description": "",
             "Return": "rgb(255, 0, 0)"
           }
         ]
@@ -3619,8 +4184,10 @@
       {
         "Name": "colorToHSL",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Convert the given color to an \"hsl()\" or \"hsla()\" value.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "color",
@@ -3635,6 +4202,7 @@
         "Examples": [
           {
             "Code": "colorToHex \"#FF0000\"",
+            "Description": "",
             "Return": "hsl(0, 100%, 50%)"
           }
         ]
@@ -3642,8 +4210,10 @@
       {
         "Name": "colorFromValue",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Consistently generate the same color from a given value of any type. This can be useful for providing automatically generated colors to represent data for which a set of predefined colors may not have significant meaning (for example: user avatars and contact lists).",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "value",
@@ -3658,6 +4228,7 @@
         "Examples": [
           {
             "Code": "colorFromValue \"Alice\"",
+            "Description": "",
             "Return": "#416C69"
           }
         ]
@@ -3671,8 +4242,10 @@
       {
         "Name": "convert",
         "Alias": "",
+        "Aliases": null,
         "Summary": "A generic unit conversion function that allows for units to be specified by value as strings.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       }
@@ -3685,22 +4258,26 @@
       {
         "Name": "templateKey",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Open the given file and retrieve the key from the page object defined in its header.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": null,
         "Examples": null
       }
     ]
   },
   {
-    "Name": "Comparison and Conditionals",
+    "Name": "Comparison Functions",
     "Description": "Used for comparing two values, or for returning one of many options based on a given condition.",
     "Functions": [
       {
         "Name": "eqx",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether two values are equal (any type).",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "left",
@@ -3724,22 +4301,27 @@
         "Examples": [
           {
             "Code": "eqx \"1\" \"1\"",
+            "Description": "",
             "Return": true
           },
           {
             "Code": "eqx \"1\" \"2\"",
+            "Description": "",
             "Return": false
           },
           {
             "Code": "eqx \"1\" 1",
+            "Description": "",
             "Return": true
           },
           {
             "Code": "eqx 1 1.0",
+            "Description": "",
             "Return": true
           },
           {
             "Code": "eqx \"1\" 2",
+            "Description": "",
             "Return": false
           }
         ]
@@ -3747,8 +4329,10 @@
       {
         "Name": "nex",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether two values are not equal (any type).",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "left",
@@ -3772,22 +4356,27 @@
         "Examples": [
           {
             "Code": "nex \"1\" \"1\"",
+            "Description": "",
             "Return": false
           },
           {
             "Code": "nex \"1\" \"2\"",
+            "Description": "",
             "Return": true
           },
           {
             "Code": "nex \"1\" 1",
+            "Description": "",
             "Return": false
           },
           {
             "Code": "nex 1 1.0",
+            "Description": "",
             "Return": false
           },
           {
             "Code": "nex \"1\" 2",
+            "Description": "",
             "Return": true
           }
         ]
@@ -3795,8 +4384,10 @@
       {
         "Name": "gtx",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the first value is numerically or lexically greater than the second.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "left",
@@ -3822,8 +4413,10 @@
       {
         "Name": "gex",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the first value is numerically or lexically greater than or equal to the second.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "left",
@@ -3849,8 +4442,10 @@
       {
         "Name": "ltx",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the first value is numerically or lexically less than the second.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "left",
@@ -3876,8 +4471,10 @@
       {
         "Name": "lex",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the first value is numerically or lexically less than or equal to the second.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "left",
@@ -3903,8 +4500,10 @@
       {
         "Name": "compare",
         "Alias": "",
+        "Aliases": null,
         "Summary": "A generic comparison function. Accepts operators: \"gt\", \"ge\", \"lt\", \"le\", \"eq\", \"ne\"",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "operator",
@@ -3939,8 +4538,10 @@
       {
         "Name": "match",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Return whether the given value matches the given regular expression.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "pattern",
@@ -3966,8 +4567,10 @@
       {
         "Name": "switch",
         "Alias": "",
+        "Aliases": null,
         "Summary": "Provide a simple inline switch-case style decision mechanism.",
         "Returns": "",
+        "Hidden": false,
         "Arguments": [
           {
             "Name": "input",
@@ -4000,22 +4603,27 @@
         "Examples": [
           {
             "Code": "switch \"yellow\" \"danger\" \"yellow\" \"warning\" \"green\" \"success\" \"blue\" \"info\"",
+            "Description": "",
             "Return": "warning"
           },
           {
             "Code": "switch \"green\" \"danger\" \"yellow\" \"warning\" \"green\" \"success\" \"blue\" \"info\"",
+            "Description": "",
             "Return": "success"
           },
           {
             "Code": "switch \"blue\" \"danger\" \"yellow\" \"warning\" \"green\" \"success\" \"blue\" \"info\"",
+            "Description": "",
             "Return": "info"
           },
           {
             "Code": "switch \"red\" \"danger\" \"yellow\" \"warning\" \"green\" \"success\" \"blue\" \"info\"",
+            "Description": "",
             "Return": "danger"
           },
           {
             "Code": "switch \"potato\" \"danger\" \"yellow\" \"warning\" \"green\" \"success\" \"blue\" \"info\"",
+            "Description": "",
             "Return": "danger"
           }
         ]

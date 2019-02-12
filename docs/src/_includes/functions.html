@@ -2,9 +2,25 @@
 postprocessors:
 - trim-empty-lines
 ---
+{{ range $group := sortByKey $.bindings.functionGroups "Name" }}
+<details>
+    <summary>
+        <a href="#{{ hyphenate $group.Name }}">{{ $group.Name }}</a>
+    </summary>
+    <ul>
+        {{ range $fn := sortByKey $group.Functions "Name" }}
+        {{ if not $fn.Hidden }}
+        <li>
+            <a href="#fn-{{ $fn.Name }}">{{ $fn.Name }}</a>
+        </li>
+        {{ end }}
+        {{ end }}
+    </ul>
+</details>
+{{ end }}
 
-{{ range $group := $.bindings.functionGroups }}
-<section class="group" id="{{ hyphenate $group.Name }}"  >
+{{ range $group := sortByKey $.bindings.functionGroups "Name" }}
+<section class="group mt-4" id="{{ hyphenate $group.Name }}">
     <header>
         <h3>{{ $group.Name }}</h3>
         <p>{{ markdown $group.Description }}</p>
@@ -13,17 +29,25 @@ postprocessors:
     <h4>Functions</h4>
 
 {{   range $fn := sortByKey $group.Functions "Name" }}
+{{ if not $fn.Hidden }}
     <section class="function" id="fn-{{ $fn.Name }}">
-        <h4 class="mt-3">{{ $fn.Name }}</h4>
+        <h4 class="mt-3">
+            {{ $fn.Name }}
+            <a href="#fn-{{ $fn.Name }}" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
 
 {{     if $fn.Alias }}
         <i>Alias for </i> <a href="#fn-{{ $fn.Alias }}">{{ $fn.Alias }}</a>.
 {{     else }}
         <div class="mb-1">
-            <i>usage:</i>
-            <a href="#fn-{{ $fn.Name }}">
-                <code>{{ $fn.Name }}{{ range $arg := $fn.Arguments }} {{ if or $arg.Optional $arg.Variadic }}[{{ end }}{{ $arg.Name | underscore | upper }}{{ if $arg.Variadic }} ...{{ end }}{{ if or $arg.Optional $arg.Variadic }}]{{ end }}{{ end }}</code>
-            </a>
+            {{ if $fn.Aliases }}
+            <i>Aliases: {{ join $fn.Aliases ", " }}</i>
+            {{ end }}
+
+            <i>Usage:</i>
+            <code>{{ $fn.Name }}{{ range $arg := $fn.Arguments }} {{ if or $arg.Optional $arg.Variadic }}[{{ end }}{{ $arg.Name | underscore | upper }}{{ if $arg.Variadic }} ...{{ end }}{{ if or $arg.Optional $arg.Variadic }}]{{ end }}{{ end }}</code>
         </div>
 
 {{       if $fn.Summary }}
@@ -34,7 +58,7 @@ postprocessors:
 
 {{       if $fn.Arguments }}
         <h5>Arguments</h5>
-        <table class="table table-sm">
+        <table class="table table-sm table-responsive w-100">
             <thead>
                 <tr>
                     <th class="col-2">Name</th>
@@ -67,4 +91,5 @@ postprocessors:
     </section>
 {{   end }}
 </section>
+{{ end }}
 {{ end }}

@@ -75,6 +75,10 @@ h3 {
     background-color: $primary !important;
 }
 
+.bg-diecast a {
+    color: $darkForeground;
+}
+
 .bg-diecast-dark {
     background-color: $darkPrimary !important;
     color: $darkForeground;

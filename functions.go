@@ -190,6 +190,10 @@ func tmFmt(value interface{}, format ...string) (string, error) {
 				tmFormat = time.RFC822
 			case `rfc822z`:
 				tmFormat = time.RFC822Z
+			case `rfc1123`:
+				tmFormat = time.RFC1123
+			case `rfc1123z`:
+				tmFormat = time.RFC1123Z
 			case `epoch`:
 				return fmt.Sprintf("%d", v.Unix()), nil
 			case `epoch-ms`:
@@ -208,6 +212,18 @@ func tmFmt(value interface{}, format ...string) (string, error) {
 				tmFormat = `2006-01-02`
 			case `ruby`:
 				tmFormat = time.RubyDate
+			case `ansi`, `ansic`:
+				tmFormat = time.ANSIC
+			case `unixdate`:
+				tmFormat = time.UnixDate
+			case `stamp`:
+				tmFormat = time.Stamp
+			case `stamp-ms`:
+				tmFormat = time.StampMilli
+			case `stamp-us`:
+				tmFormat = time.StampMicro
+			case `stamp-ns`:
+				tmFormat = time.StampNano
 			default:
 				tmFormat = formatName
 			}

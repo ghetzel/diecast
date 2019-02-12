@@ -18,19 +18,73 @@ func loadStandardFunctionsTime(funcs FuncMap) funcGroup {
 			`time-oriented calculations on those values.`,
 		Functions: []funcDef{
 			{
-				Name:     `time`,
-				Summary:  `Return the given time formatted using a given format.  See [Time Formats](#time-formats) for acceptable formats.`,
+				Name:    `time`,
+				Summary: `Return the given time formatted using a given format.  See [Time Formats](#time-formats) for acceptable formats.`,
+				Arguments: []funcArg{
+					{
+						Name:        `time`,
+						Type:        `string, integer`,
+						Description: `The time you want to format.  Parsing is extremely flexible, and can handle dates represented as RFC3339,  RFC822, RFC1123, epoch, or epoch nanoseconds.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `time "01 May 10 13:04 -0500" "rfc3339"`,
+						Return: `2010-05-01T13:04:00-05:00`,
+					}, {
+						Code:   `time 1136239445 "ansic"`,
+						Return: `Mon Jan  2 22:04:05 2006`,
+					},
+				},
 				Function: tmFmt,
 			}, {
 				Name:    `now`,
-				Summary: `Return the current time, optionally formatted using the given *format*.  See [Time Formats](#time-formats) for`,
+				Summary: `Return the current time, optionally formatted using the given format.`,
+				Arguments: []funcArg{
+					{
+						Name:        `format`,
+						Type:        `string`,
+						Optional:    true,
+						Description: `How to format the time output. See [Time Formats](#time-formats) for how to use format strings.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `now`,
+						Return: `2010-05-01T13:04:00-05:00`,
+					}, {
+						Code:   `now "ansic"`,
+						Return: `Mon Jan  2 22:04:05 2006`,
+					},
+				},
 				Function: func(format ...string) (string, error) {
 					return tmFmt(time.Now(), format...)
 				},
 			}, {
 				Name: `addTime`,
-				Summary: `Return a time with with given duration added to it.  Can specify time *at* to apply the change to. ` +
+				Summary: `Return a time with with given duration added to it.  Can specify time at to apply the change to. ` +
 					`Defaults to the current time.`,
+				Arguments: []funcArg{
+					{
+						Name:        `duration`,
+						Type:        `string`,
+						Description: `The duration to add to the time (can be negative to subtract a duration). See [Time Durations](#time-durations) for how to specify durations.`,
+					}, {
+						Name:        `from`,
+						Type:        `string`,
+						Optional:    true,
+						Description: `If specified, this time will be parsed and modified instead of the current time.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `addTime "2h30m"`,
+						Return: `2010-05-01T15:34:00-05:00`,
+					}, {
+						Code:   `addTime "-14d" "2011-10-21T12:00:00-08:00"`,
+						Return: `2011-10-07T12:00:00-08:00`,
+					},
+				},
 				Function: func(durationString string, atI ...interface{}) (time.Time, error) {
 					at := time.Now()
 
@@ -68,6 +122,30 @@ func loadStandardFunctionsTime(funcs FuncMap) funcGroup {
 				Name: `since`,
 				Summary: `Return the amount of time that has elapsed since the given time, ` +
 					`optionally rounded to the nearest time interval.`,
+				Arguments: []funcArg{
+					{
+						Name:        `from`,
+						Type:        `string`,
+						Description: `The time to use when determining the duration that time has elapsed from.`,
+					}, {
+						Name:     `interval`,
+						Type:     `string`,
+						Optional: true,
+						Description: `If specified, the resulting time duration will be rounded to the nearest ` +
+							`interval of this unit.  Can be one of: "second", "sec", "s" (nearest second), ` +
+							`"minute", "min", "m" (nearest minute), "hour", "hr", "h" (nearest hour), or ` +
+							`"day", "d" (nearest day).`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `since "2010-05-01T13:04:15-05:00`,
+						Return: ``,
+					}, {
+						Code:   `since "-14d" "2011-10-21T12:00:00-08:00"`,
+						Return: `2011-10-07T12:00:00-08:00`,
+					},
+				},
 				Function: func(at interface{}, interval ...string) (time.Duration, error) {
 					if tm, err := stringutil.ConvertToTime(at); err == nil {
 						since := time.Since(tm)
@@ -80,6 +158,8 @@ func loadStandardFunctionsTime(funcs FuncMap) funcGroup {
 								since = since.Round(time.Minute)
 							case `h`, `hr`, `hour`:
 								since = since.Round(time.Hour)
+							case `d`, `day`:
+								since = since.Round(24 * time.Hour)
 							}
 						}
 

@@ -277,7 +277,7 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 				},
 				Examples: []funcExample{
 					{
-						Code: `transformValues [{"name": "alice"}, {"name": "mallory"}, {"name": "bob"}] "name" "{{ . | uppercase }}"`,
+						Code: `transformValues [{"name": "alice"}, {"name": "mallory"}, {"name": "bob"}] "name" "{{ upper . }}"`,
 						Return: []map[string]interface{}{
 							{"name": `ALICE`},
 							{"name": `MALLORY`},
@@ -349,6 +349,12 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 							{"id": "a", "value": 1},
 							{"id": "c", "value": 2},
 						},
+					}, {
+						Description: `Here we provide an expression that will normalize the value of the "name" field before performing the unique operation.`,
+						Code:        `uniqueByKey [{"name": "bob", "i": 1}, {"name": "BOB", "i": 2}, {"name": "Bob", "i": 3}] "name" "{{ upper . }}"`,
+						Return: []map[string]interface{}{
+							{"name": "BOB", "i": 1},
+						},
 					},
 				},
 				Function: func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
@@ -381,6 +387,12 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 						Return: []map[string]interface{}{
 							{"id": "b", "value": 1},
 							{"id": "c", "value": 2},
+						},
+					}, {
+						Description: `Here we provide an expression that will normalize the value of the "name" field before performing the unique operation.`,
+						Code:        `uniqueByKey [{"name": "bob", "i": 1}, {"name": "BOB", "i": 2}, {"name": "Bob", "i": 3}] "name" "{{ upper . }}"`,
+						Return: []map[string]interface{}{
+							{"name": "BOB", "i": 3},
 						},
 					},
 				},
@@ -593,7 +605,10 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 					return nil
 				},
 			}, {
-				Name:    `findKey`,
+				Name: `findKey`,
+				Aliases: []string{
+					`findkey`,
+				},
 				Summary: `Recursively scans the given array or object and returns all values of the given key.`,
 				Arguments: []funcArg{
 					{
@@ -1401,6 +1416,7 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 			Name:     `findkey`,
 			Alias:    `findKey`,
 			Function: group.fn(`findKey`),
+			Hidden:   true,
 		},
 	}...)
 
