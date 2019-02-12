@@ -2,4 +2,4 @@ all:
 	../bin/diecast -a 127.0.0.1:0
 
 local:
-	cd src && ../../bin/diecast -m /diecast/src:.
+	cd src && ../../bin/diecast -p local=true -m /diecast/src:.

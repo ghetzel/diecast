@@ -21,12 +21,17 @@ Building a site using Diecast is as easy as putting files in a folder.  When you
 
 ## Installation
 
+TODO: make this section much more detailed.
+
+```
+go get github.com/ghetzel/diecast/cmd/diecast
+```
+
+<!--
 <details>
     <summary>Golang / via `go get`</summary>
     <div>
-    ```
-    go get github.com/ghetzel/diecast/cmd/diecast
-    ```
+
     </div>
 </details>
 <details>
@@ -53,6 +58,7 @@ Building a site using Diecast is as easy as putting files in a folder.  When you
     <summary>From Source</summary>
     <div></div>
 </details>
+-->
 
 ## URL Structure
 
@@ -68,7 +74,7 @@ The first matching file from the list above will be served.
 
 ## Configuration
 
-You can configure Diecast by creating a file called `diecast.yml` in the same folder that the `diecast` command is run in, or by specifying the path to the file with the `--config` command line option.  You can use this configuration file to control how Diecast renders templates and when, as well as set options for how files are accessed and from where.  Diecast tries to use "sane defaults" whenever possible, but you can configure Diecast in many ways to suit your needs.  For more details on these defaults and to see what goes in a `diecast.yml` file, see the [Example Config File](/examples/diecast.sample.yml).
+You can configure Diecast by creating a file called `diecast.yml` in the same folder that the `diecast` command is run in, or by specifying the path to the file with the `--config` command line option.  You can use this configuration file to control how Diecast renders templates and when, as well as set options for how files are accessed and from where.  Diecast tries to use "sane defaults" whenever possible, but you can configure Diecast in many ways to suit your needs.  For more details on these defaults and to see what goes in a `diecast.yml` file, see the [Example Config File](https://github.com/ghetzel/diecast/blob/master/examples/diecast.sample.yml).
 
 ## Templating
 
@@ -262,6 +268,8 @@ The `name` and `resource` properties are required for a binding to run, but ther
 
 | Property Name          | Acceptable Values             | Default       | Description
 | ---------------------- | ----------------------------- | ------------- | -----------
+| `name`                 | String                        | -             | The name of the variable (under `$.bindings`) where the binding's data is stored.
+| `resource`             | String                        | -             | The URL to retrieve.  This can be a complete URL (e.g.: "https://...") or a relative path.  If a path is specified, the value [bindingPrefix] will be prepended to the path before making the request.
 | `body`                 | Object                        | -             | An object that will be encoded according to the value of `formatter` and used as the request body.
 | `fallback`             | Anything                      | -             | If the binding is optional and returns a non-2xx status, this value will be used instead of `null`.
 | `formatter`            | `json, form`                  | `json`        | Specify how the `body` should be serialized before performing the request.
@@ -328,46 +336,6 @@ bindings:
 ### Repeaters
 
 _TODO_
-
-### Dynamic Variables
-
-Sometimes it is useful to be able to dynamically manipulate data during template evaluation.  Diecast has a set of functions that allow for custom data to be set, retrieved, and removed at runtime.
-
-#### Runtime Variable Functions
-
-##### `var "VARNAME" [VALUE]`
-
-The `var` function declares a new variable with a given name, optionally setting it to an initial value.  If a value is not provided, the variable is set to a `nil` value.  This is also how you can clear out the value of an existing variable.
-
-The string defining the variable name is interpreted as a "dot.separated.path" that is used to set the value in a deeply-nested object.  For example, the following code:
-
-```
-var "user.auth.scheme" "basic"
-```
-
-...would produce the following object:
-
-```
-{
-    "vars": {
-        "user": {
-            "auth": {
-                "scheme": "basic"
-            }
-        }
-    }
-}
-```
-
-...and would be accessible with the code `{{ $.vars.user.auth.scheme }}`
-
-##### `push "VARNAME" VALUE`
-
-The `push` function appends the given _VALUE_ to the variable at _"VARNAME"_.  If the current value is nil, the result will be an array containing just the element `[ VALUE ]`.  If the current value is not an array, it will first be converted to one.  Then _VALUE_ will be appended to the array.
-
-##### `pop "VARNAME"`
-
-The `pop` function remove the last element from the array at variable _"VARNAME"_.  This value will be returned, or if the array is non-existent or empty, will return `nil`.
 
 ### Postprocessors
 

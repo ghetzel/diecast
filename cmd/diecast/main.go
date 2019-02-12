@@ -17,6 +17,7 @@ import (
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 func main() {
@@ -135,6 +136,34 @@ func main() {
 	app.Before = func(c *cli.Context) error {
 		if c.Bool(`help-functions`) {
 			defs, _ := diecast.GetFunctions()
+
+			for _, group := range defs {
+				if group.Description == `` {
+					log.Warningf("%v: undocumented group", group.Name)
+				}
+
+				for _, fn := range group.Functions {
+					if fn.Hidden {
+						continue
+					}
+
+					if fn.Summary == `` {
+						log.Warningf("%v: undocumented function", fn.Name)
+					} else if len(fn.Examples) == 0 {
+						log.Noticef("%v: no examples", fn.Name)
+					} else if fn.Function != nil {
+						if i, _, err := typeutil.FunctionArity(fn.Function); err == nil {
+							if l := len(fn.Arguments); l < i {
+								log.Noticef("%v: missing argdocs; have %d, expected %d", fn.Name, l, i)
+							} else if l > i {
+								log.Noticef("%v: too many argdocs; have %d, expected %d", fn.Name, l, i)
+							}
+						} else {
+							log.Errorf("%v: %v", fn.Name, err)
+						}
+					}
+				}
+			}
 
 			if data, err := json.MarshalIndent(&defs, ``, `  `); err == nil {
 				os.Stdout.Write(data)

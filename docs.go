@@ -32,6 +32,7 @@ type funcGroup struct {
 	Name        string
 	Description string
 	Functions   []funcDef
+	Skip        bool
 }
 
 func (self funcGroup) fn(name string) interface{} {
@@ -48,6 +49,10 @@ type funcGroups []funcGroup
 
 func (self funcGroups) PopulateFuncMap(funcs FuncMap) {
 	for _, group := range self {
+		if group.Skip {
+			continue
+		}
+
 		for _, fn := range group.Functions {
 			if fn.Name != `` && fn.Function != nil {
 				funcs[fn.Name] = fn.Function

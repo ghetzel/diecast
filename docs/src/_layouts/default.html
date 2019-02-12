@@ -18,8 +18,11 @@ postprocessors:
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous" type="text/css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-    <link rel="stylesheet" href="/diecast/style.css" type="text/css">
+    {{ if $.page.local }}
     <link rel="stylesheet" href="/style.scss" type="text/css">
+    {{ else }}
+    <link rel="stylesheet" href="/diecast/style.css" type="text/css">
+    {{ end }}
 </head>
 <body>
     <nav class="navbar bg-diecast justify-content-center justify-content-sm-start navbar-expand-lg">

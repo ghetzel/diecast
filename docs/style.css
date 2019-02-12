@@ -2,7 +2,7 @@ body > nav {
   height: 62px;
 }
 
-.code, pre > code, .group .function .examples dd, .group .function .examples dt {
+.code, pre > code, .group .function .examples .example code, .group .function .examples .example .returns {
   border-radius: 0.25em;
   background-color: #333333;
   color: #EEEEEE;
@@ -14,11 +14,35 @@ body > nav {
   display: block;
 }
 
+.code-unselectable {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.box-label, .group .function .examples .example code::before, .group .function .examples .example .returns::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 8pt;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-top: 0px;
+  border-left: 0px;
+  padding: 1px 3px;
+  border-bottom-right-radius: 3px;
+  min-width: 50px;
+  text-align: center;
+}
+
 code {
   color: inherit;
   background: #EEEEEE;
   padding: 0.125em;
   border-radius: 0.125em;
+}
+
+table th > p,
+table td > p {
+  margin: 0;
 }
 
 table code {
@@ -69,7 +93,7 @@ h3 {
   color: #EEEEEE;
 }
 
-.unselectable {
+.unselectable, .code-unselectable {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -78,8 +102,9 @@ h3 {
 }
 
 .group > header > h3 {
-  padding-bottom: 0.25em;
-  border-bottom: 3px solid #1A1A1A;
+  padding: 0.25em;
+  background-color: #666666;
+  color: #EEEEEE;
 }
 
 .group .function {
@@ -97,18 +122,44 @@ h3 {
   font-weight: bold;
 }
 
-.group .function .examples dd ~ dt {
+.group .function .examples .example {
   margin-bottom: 1em;
 }
 
-.group .function .examples dd {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  padding-bottom: 0.25em;
+.group .function .examples .example h6 {
+  font-weight: normal;
+  margin-top: 1.5em;
 }
 
-.group .function .examples dt {
+.group .function .examples .example code, .group .function .examples .example .returns {
+  display: flex;
+  align-items: center;
+  margin-left: 15px;
+  margin-right: 15px;
+  padding-top: 1.75em;
+  font-size: 12pt;
+}
+
+.group .function .examples .example code::before {
+  content: 'CODE';
+}
+
+.group .function .examples .example code {
+  position: relative;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  padding-bottom: 0.5em;
+  margin-bottom: 0;
+}
+
+.group .function .examples .example .returns::before {
+  content: 'OUTPUT';
+}
+
+.group .function .examples .example .returns {
+  position: relative;
+  background: #143551;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
-  padding-top: 0.25em;
+  padding-top: 1.75em;
 }

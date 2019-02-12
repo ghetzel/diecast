@@ -132,9 +132,19 @@ func loadStandardFunctionsTime(funcs FuncMap) funcGroup {
 						Type:     `string`,
 						Optional: true,
 						Description: `If specified, the resulting time duration will be rounded to the nearest ` +
-							`interval of this unit.  Can be one of: "second", "sec", "s" (nearest second), ` +
-							`"minute", "min", "m" (nearest minute), "hour", "hr", "h" (nearest hour), or ` +
-							`"day", "d" (nearest day).`,
+							`interval of this unit.  Can be one of: "second" (nearest second), "minute" ` +
+							`(nearest minute), "hour" (nearest hour), or "day" (nearest day).`,
+						Valid: []funcArg{
+							{
+								Name: `second`,
+							}, {
+								Name: `minute`,
+							}, {
+								Name: `hour`,
+							}, {
+								Name: `day`,
+							},
+						},
 					},
 				},
 				Examples: []funcExample{

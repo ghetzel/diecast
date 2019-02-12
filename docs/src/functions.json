@@ -780,7 +780,8 @@
           }
         ]
       }
-    ]
+    ],
+    "Skip": false
   },
   {
     "Name": "File Path Manipulation",
@@ -1014,7 +1015,8 @@
           }
         ]
       }
-    ]
+    ],
+    "Skip": false
   },
   {
     "Name": "Encoding and Decoding",
@@ -1330,7 +1332,8 @@
         ],
         "Examples": null
       }
-    ]
+    ],
+    "Skip": false
   },
   {
     "Name": "Type Detection and Manipulation",
@@ -1568,7 +1571,8 @@
         "Arguments": null,
         "Examples": null
       }
-    ]
+    ],
+    "Skip": false
   },
   {
     "Name": "Time Functions",
@@ -1706,11 +1710,48 @@
           {
             "Name": "interval",
             "Type": "string",
-            "Description": "If specified, the resulting time duration will be rounded to the nearest interval of this unit.  Can be one of: \"second\", \"sec\", \"s\" (nearest second), \"minute\", \"min\", \"m\" (nearest minute), \"hour\", \"hr\", \"h\" (nearest hour), or \"day\", \"d\" (nearest day).",
+            "Description": "If specified, the resulting time duration will be rounded to the nearest interval of this unit.  Can be one of: \"second\" (nearest second), \"minute\" (nearest minute), \"hour\" (nearest hour), or \"day\" (nearest day).",
             "Variadic": false,
             "Optional": true,
             "Default": null,
-            "Valid": null
+            "Valid": [
+              {
+                "Name": "second",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "minute",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "hour",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "day",
+                "Type": "",
+                "Description": "",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              }
+            ]
           }
         ],
         "Examples": [
@@ -1796,7 +1837,8 @@
         "Arguments": null,
         "Examples": null
       }
-    ]
+    ],
+    "Skip": false
   },
   {
     "Name": "Hashing and Cryptography",
@@ -1963,20 +2005,62 @@
         "Examples": null
       },
       {
+        "Name": "hex",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Encode the given value as a hexadecimal string.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string, bytes",
+            "Description": "The value to encode. If a byte array is provided, it will be encoded in hexadecimal. If a string is provided, it will converted to a byte array first, then encoded.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "hex \"hello\"",
+            "Description": "",
+            "Return": "68656c6c6f"
+          }
+        ]
+      },
+      {
         "Name": "base32",
         "Alias": "",
         "Aliases": null,
-        "Summary": "Encode the *input* bytes with the Base32 encoding scheme.",
+        "Summary": "Encode the given bytes with the Base32 encoding scheme.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string, bytes",
+            "Description": "The value to encode. If a byte array is provided, it will be encoded directly. If a string is provided, it will converted to a byte array first, then encoded.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "base32 \"hello\"",
+            "Description": "",
+            "Return": "nbswy3dp"
+          }
+        ]
       },
       {
         "Name": "base58",
         "Alias": "",
         "Aliases": null,
-        "Summary": "Encode the *input* bytes with the Base58 (Bitcoin alphabet) encoding scheme.",
+        "Summary": "Encode the given bytes with the Base58 (Bitcoin alphabet) encoding scheme.",
         "Returns": "",
         "Hidden": false,
         "Arguments": null,
@@ -1986,11 +2070,93 @@
         "Name": "base64",
         "Alias": "",
         "Aliases": null,
-        "Summary": "Encode the *input* bytes with the Base64 encoding scheme.  Optionally specify the encoding mode: one of \"padded\", \"url\", \"url-padded\", or empty (unpadded, default).",
+        "Summary": "Encode the given bytes with the Base64 encoding scheme.  Optionally specify the encoding mode: one of \"padded\", \"url\", \"url-padded\", or empty (unpadded, default).",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string, bytes",
+            "Description": "The value to encode. If a byte array is provided, it will be encoded directly. If a string is provided, it will converted to a byte array first, then encoded.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "encoding",
+            "Type": "string",
+            "Description": "Specify an encoding option for generating the Base64 representation.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": [
+              {
+                "Name": "standard",
+                "Type": "",
+                "Description": "Standard Base-64 encoding scheme, no padding.",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "padded",
+                "Type": "",
+                "Description": "Standard Base-64 encoding scheme, preserves padding.",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "url",
+                "Type": "",
+                "Description": "Encoding that can be used in URLs and filenames, no padding.",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "url-padded",
+                "Type": "",
+                "Description": "Encoding that can be used in URLs and filenames, preserves padding.",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              }
+            ]
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "base64 \"hello?yes=this\u0026is=dog#\"",
+            "Description": "",
+            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw"
+          },
+          {
+            "Code": "base64 \"hello?yes=this\u0026is=dog#\" \"standard\"",
+            "Description": "This is identical to the above example, but with the encoding explicitly specified.",
+            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw"
+          },
+          {
+            "Code": "base64 \"hello?yes=this\u0026is=dog#\" \"padded\"",
+            "Description": "",
+            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw=="
+          },
+          {
+            "Code": "base64 \"hello?yes=this\u0026is=dog#\" \"url\"",
+            "Description": "",
+            "Return": "aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw"
+          },
+          {
+            "Code": "base64 \"hello?yes=this\u0026is=dog#\" \"url-padded\"",
+            "Description": "",
+            "Return": "aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw=="
+          }
+        ]
       },
       {
         "Name": "murmur3",
@@ -2002,7 +2168,8 @@
         "Arguments": null,
         "Examples": null
       }
-    ]
+    ],
+    "Skip": false
   },
   {
     "Name": "Math and Statistics",
@@ -2129,6 +2296,26 @@
         "Examples": null
       },
       {
+        "Name": "median",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the median of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "minimum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the minimum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "minimum_nz",
         "Alias": "",
         "Aliases": null,
@@ -2177,28 +2364,9 @@
         "Hidden": false,
         "Arguments": null,
         "Examples": null
-      },
-      {
-        "Name": "median",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the median of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "minimum",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the minimum of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
       }
-    ]
+    ],
+    "Skip": false
   },
   {
     "Name": "Arrays and Objects",
@@ -3880,7 +4048,8 @@
         "Arguments": null,
         "Examples": null
       }
-    ]
+    ],
+    "Skip": false
   },
   {
     "Name": "HTML Processing",
@@ -4053,7 +4222,8 @@
         "Arguments": null,
         "Examples": null
       }
-    ]
+    ],
+    "Skip": false
   },
   {
     "Name": "Color Manipulation",
@@ -4233,7 +4403,8 @@
           }
         ]
       }
-    ]
+    ],
+    "Skip": false
   },
   {
     "Name": "Unit Conversions",
@@ -4249,7 +4420,8 @@
         "Arguments": null,
         "Examples": null
       }
-    ]
+    ],
+    "Skip": false
   },
   {
     "Name": "Introspection and Reflection",
@@ -4265,7 +4437,8 @@
         "Arguments": null,
         "Examples": null
       }
-    ]
+    ],
+    "Skip": false
   },
   {
     "Name": "Comparison Functions",
@@ -4628,6 +4801,231 @@
           }
         ]
       }
-    ]
+    ],
+    "Skip": false
+  },
+  {
+    "Name": "Dynamic Variables",
+    "Description": "A set of functions that allow for custom data to be set, retrieved, and removed at runtime; providing greater flexibility over standard template variables. All variables created or modified using these functions are accessible under the global _$.vars_ object.  For example, a variable set with \u003ccode\u003e{{ var \"test\" 123 }}\u003c/code\u003e would be retrieved with \u003ccode\u003e{{ $.vars.test }}\u003c/code\u003e, which would contain the integer value _123_.",
+    "Functions": [
+      {
+        "Name": "var",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Declare a new variable with a given name, optionally setting it to an initial value.  If a value is not provided, the variable is set to a null (empty) value. You can use this behavior to clear out the value of an existing variable. The string defining the variable name is interpreted as a \"dot.separated.path\" that can be used to set the value in a deeply-nested objects.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "name",
+            "Type": "string",
+            "Description": "The name of the variable to declare or set.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "value",
+            "Type": "any",
+            "Description": "If specified, the value at _$.vars.NAME_ will be set to the given value.  Otherwise, it will be set to _null_.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "var \"test\"",
+            "Description": "",
+            "Return": null
+          },
+          {
+            "Code": "var \"test\" \"Hello\"",
+            "Description": "",
+            "Return": "Hello"
+          },
+          {
+            "Code": "var \"this.is.a.value\" true",
+            "Description": "",
+            "Return": {
+              "this": {
+                "is": {
+                  "a": {
+                    "value": true
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "Name": "push",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Append a value to an array residing at the named variable.  If the current value is nil, or the variable does not exist, the variable will be created as an array containing the provided value.If the current value exists but is not already an array, it will first be converted to one, to which the given value will be appended.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "name",
+            "Type": "string",
+            "Description": "The name of the variable to append to.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "value",
+            "Type": "any",
+            "Description": "The value to append.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "push \"test\" 123",
+            "Description": "",
+            "Return": [
+              123
+            ]
+          },
+          {
+            "Code": "push \"test\" 456",
+            "Description": "",
+            "Return": [
+              123,
+              456
+            ]
+          },
+          {
+            "Code": "push \"users.names\" \"Bob\"",
+            "Description": "",
+            "Return": {
+              "users": {
+                "names": [
+                  "Alice",
+                  "Bob"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "Name": "pop",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "varset",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "increment",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "incrementByValue",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      }
+    ],
+    "Skip": false
+  },
+  {
+    "Name": "HTTP Request Details",
+    "Description": "These functions provide access to information contained in the original HTTP client request that led to the current template being processed.  These functions are useful for allowing user-specified data to drive how the output is generated.",
+    "Functions": [
+      {
+        "Name": "payload",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "querystrings",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "qs",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "headers",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "param",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "read",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      }
+    ],
+    "Skip": false
   }
 ]

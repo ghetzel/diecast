@@ -112,6 +112,10 @@ func GetFunctions() (funcGroups, FuncMap) {
 	// Comparators
 	groups = append(groups, loadStandardFunctionsComparisons(funcs))
 
+	// Documentation for runtime functions
+	groups = append(groups, loadRuntimeFunctionsVariables())
+	groups = append(groups, loadRuntimeFunctionsRequest())
+
 	groups.PopulateFuncMap(funcs)
 
 	return groups, funcs
@@ -681,4 +685,16 @@ func htmlModify(docI interface{}, selector string, action string, k string, v in
 	} else {
 		return ``, err
 	}
+}
+
+func toBytes(input interface{}) []byte {
+	var in []byte
+
+	if v, ok := input.([]byte); ok {
+		in = v
+	} else {
+		in = []byte(typeutil.String(input))
+	}
+
+	return in
 }

@@ -1,9 +1,11 @@
 $primary:        #333333;
+$secondary:      #666666;
 $darkPrimary:    #1A1A1A;
 $darkForeground: #EEEEEE;
 $hilite:         #162D4F;
 $codebg:         #333333;
 $inlineFg:       inherit;
+$codeReturns:    #143551;
 
 @mixin vendor-prefix($name, $value) {
     @each $vendor in ('-webkit-', '-moz-', '-ms-', '-o-', '') {
@@ -27,6 +29,26 @@ body > nav {
     display:                    block;
 }
 
+.code-unselectable {
+    @extend .unselectable;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.box-label {
+    position:                   absolute;
+    top:                        0;
+    left:                       0;
+    font-size:                  8pt;
+    background:                 rgba(255, 255, 255, 0.2);
+    border:                     1px solid rgba(255, 255, 255, 0.4);
+    border-top:                 0px;
+    border-left:                0px;
+    padding:                    1px 3px;
+    border-bottom-right-radius: 3px;
+    min-width:                  50px;
+    text-align:                 center;
+}
+
 pre > code {
     @extend .code
 }
@@ -36,6 +58,11 @@ code {
     background:    $darkForeground;
     padding:       0.125em;
     border-radius: 0.125em;
+}
+
+table th > p,
+table td > p {
+    margin: 0;
 }
 
 table code {
@@ -94,8 +121,9 @@ h3 {
 
 .group {
     > header > h3 {
-        padding-bottom:   0.25em;
-        border-bottom:    3px solid $darkPrimary;
+        padding:          0.25em;
+        background-color: $secondary;
+        color:            $darkForeground;
     }
 
     .function {
@@ -113,24 +141,50 @@ h3 {
         }
 
         .examples {
-            dd ~ dt {
+            .example {
                 margin-bottom: 1em;
-            }
 
-            dd, dt {
-                @extend .code;
-            }
+                h6 {
+                    font-weight: normal;
+                    margin-top:  1.5em;
+                }
 
-            dd {
-                border-bottom-left-radius:  0;
-                border-bottom-right-radius: 0;
-                padding-bottom:             0.25em;
-            }
+                code, .returns {
+                    @extend .code;
 
-            dt {
-                border-top-left-radius:     0;
-                border-top-right-radius:    0;
-                padding-top:                0.25em;
+                    display:      flex;
+                    align-items:  center;
+                    margin-left:  15px;
+                    margin-right: 15px;
+                    padding-top:  1.75em;
+                    font-size:    12pt;
+                }
+
+                code::before {
+                    @extend .box-label;
+                    content: 'CODE';
+                }
+
+                code {
+                    position:                   relative;
+                    border-bottom-left-radius:  0;
+                    border-bottom-right-radius: 0;
+                    padding-bottom:             0.5em;
+                    margin-bottom:              0;
+                }
+
+                .returns::before {
+                    @extend .box-label;
+                    content:     'OUTPUT';
+                }
+
+                .returns {
+                    position:                   relative;
+                    background:                 $codeReturns;
+                    border-top-left-radius:     0;
+                    border-top-right-radius:    0;
+                    padding-top:                1.75em;
+                }
             }
         }
     }
