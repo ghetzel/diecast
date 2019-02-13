@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -34,4 +35,26 @@ func TestMiscFunctions(t *testing.T) {
 	assert.Equal(`1`, fn_switch(`a`, `fallback`, `a`, `1`, `b`, `2`))
 	assert.Equal(`2`, fn_switch(`b`, `fallback`, `a`, `1`, `b`, `2`))
 	assert.Equal(`fallback`, fn_switch(`c`, `fallback`, `a`, `1`, `b`, `2`))
+
+	fn_random := fns[`random`].(func(bounds ...interface{}) int64)
+
+	for i := 0; i < 100000; i++ {
+		v := fn_random()
+		assert.True(v >= 0 && v < math.MaxInt64)
+	}
+
+	for i := 0; i < 100000; i++ {
+		v := fn_random(42)
+		assert.True(v >= 42 && v < math.MaxInt64)
+	}
+
+	for i := 0; i < 100000; i++ {
+		v := fn_random(42, 96)
+		assert.True(v >= 42 && v < 96)
+	}
+
+	for i := 0; i < 100000; i++ {
+		v := fn_random(-100, 101)
+		assert.True(v >= -100 && v < 101)
+	}
 }

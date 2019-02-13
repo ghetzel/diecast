@@ -1845,6 +1845,16 @@
     "Description": "These functions provide basic cryptographic and non-cryptographic functions, including cryptographically-secure random number generation.",
     "Functions": [
       {
+        "Name": "murmur3",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Hash the given data using the Murmur3 algorithm.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "md5",
         "Alias": "",
         "Aliases": null,
@@ -1862,7 +1872,13 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "md5 \"p@ssw0rd!\"",
+            "Description": "",
+            "Return": "d5ec75d5fe70d428685510fae36492d9"
+          }
+        ]
       },
       {
         "Name": "sha1",
@@ -1882,7 +1898,13 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "sha1 \"p@ssw0rd!\"",
+            "Description": "",
+            "Return": "ee7161e0fe1a06be63f515302806b34437563c9e"
+          }
+        ]
       },
       {
         "Name": "sha224",
@@ -1902,7 +1924,13 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "sha224 \"p@ssw0rd!\"",
+            "Description": "",
+            "Return": "2d2e8b944f53164ee0aa8b1f98d75713c1b1bc6b9dd67591ef0a29e0"
+          }
+        ]
       },
       {
         "Name": "sha256",
@@ -1922,7 +1950,13 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "sha256 \"p@ssw0rd!\"",
+            "Description": "",
+            "Return": "df2191783c6f13274b7c54330a370d0480e82a8a54069b69de73cbfa69f8ea08"
+          }
+        ]
       },
       {
         "Name": "sha384",
@@ -1942,7 +1976,13 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "sha384 \"p@ssw0rd!\"",
+            "Description": "",
+            "Return": "d6d02abf2b495a6e4350fd985075c88e5a6807f8f79634ddde8529507a6145cb832f40fe0220f2af242a8a4b451fb7fc"
+          }
+        ]
       },
       {
         "Name": "sha512",
@@ -1962,10 +2002,45 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "sha512 \"p@ssw0rd!\"",
+            "Description": "",
+            "Return": "0f8ea05dd2936700d8f23d7ceb0c7dde03e8dd2dcac714eb465c658412600457ebd143bbf8a00eed47fa0a0677cf2f2ad08f882173546a647c6802ecb19aeeb9"
+          }
+        ]
       },
       {
         "Name": "random",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Generates a random number.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "lower",
+            "Type": "integer",
+            "Description": "If specified, the number generated will be greater than or equal to this number.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "upper",
+            "Type": "integer",
+            "Description": "If specified, the number generated will be strictly less than this number.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "randomBytes",
         "Alias": "",
         "Aliases": null,
         "Summary": "Return a random array of _n_ bytes. The random source used is suitable for cryptographic purposes.",
@@ -2157,16 +2232,6 @@
             "Return": "aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw=="
           }
         ]
-      },
-      {
-        "Name": "murmur3",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Hash the given data using the Murmur 3 algorithm.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
       }
     ],
     "Skip": false
@@ -2296,6 +2361,36 @@
         "Examples": null
       },
       {
+        "Name": "sum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the sum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "maximum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the maximum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "mean",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the mean of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "median",
         "Alias": "",
         "Aliases": null,
@@ -2330,36 +2425,6 @@
         "Alias": "",
         "Aliases": null,
         "Summary": "Return the standard deviation of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "sum",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the sum of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "maximum",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the maximum of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "mean",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the mean of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
         "Arguments": null,

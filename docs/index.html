@@ -805,6 +805,9 @@ bindings:
             <a href="#fn-random">random</a>
         </li>
         <li>
+            <a href="#fn-randomBytes">randomBytes</a>
+        </li>
+        <li>
             <a href="#fn-sha1">sha1</a>
         </li>
         <li>
@@ -5234,6 +5237,13 @@ bindings:
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-md5-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>md5 &#34;p@ssw0rd!&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;d5ec75d5fe70d428685510fae36492d9&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-murmur3">
         <h4 class="mt-3">
@@ -5246,7 +5256,7 @@ bindings:
             <i>Usage:</i>
             <code>murmur3</code>
         </div>
-        <p>Hash the given data using the Murmur 3 algorithm.</p>
+        <p>Hash the given data using the Murmur3 algorithm.</p>
     </section>
     <section class="function" id="fn-random">
         <h4 class="mt-3">
@@ -5257,7 +5267,46 @@ bindings:
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>random COUNT</code>
+            <code>random [LOWER] [UPPER]</code>
+        </div>
+        <p>Generates a random number.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>LOWER</pre></th>
+                    <td>integer</td>
+                    <td>
+                        <p>If specified, the number generated will be greater than or equal to this number.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>UPPER</pre></th>
+                    <td>integer</td>
+                    <td>
+                        <p>If specified, the number generated will be strictly less than this number.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-randomBytes">
+        <h4 class="mt-3">
+            randomBytes
+            <a href="#fn-randomBytes" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>randomBytes COUNT</code>
         </div>
         <p>Return a random array of <em>n</em> bytes. The random source used is suitable for cryptographic purposes.</p>
         <h5>Arguments</h5>
@@ -5311,6 +5360,13 @@ bindings:
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-sha1-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>sha1 &#34;p@ssw0rd!&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;ee7161e0fe1a06be63f515302806b34437563c9e&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-sha224">
         <h4 class="mt-3">
@@ -5343,6 +5399,13 @@ bindings:
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-sha224-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>sha224 &#34;p@ssw0rd!&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;2d2e8b944f53164ee0aa8b1f98d75713c1b1bc6b9dd67591ef0a29e0&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-sha256">
         <h4 class="mt-3">
@@ -5375,6 +5438,13 @@ bindings:
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-sha256-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>sha256 &#34;p@ssw0rd!&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;df2191783c6f13274b7c54330a370d0480e82a8a54069b69de73cbfa69f8ea08&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-sha384">
         <h4 class="mt-3">
@@ -5407,6 +5477,13 @@ bindings:
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-sha384-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>sha384 &#34;p@ssw0rd!&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;d6d02abf2b495a6e4350fd985075c88e5a6807f8f79634ddde8529507a6145cb832f40fe0220f2af242a8a4b451fb7fc&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-sha512">
         <h4 class="mt-3">
@@ -5439,6 +5516,13 @@ bindings:
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-sha512-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>sha512 &#34;p@ssw0rd!&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;0f8ea05dd2936700d8f23d7ceb0c7dde03e8dd2dcac714eb465c658412600457ebd143bbf8a00eed47fa0a0677cf2f2ad08f882173546a647c6802ecb19aeeb9&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-uuid">
         <h4 class="mt-3">
