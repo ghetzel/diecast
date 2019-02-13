@@ -1,0 +1,21 @@
+image: ubuntu/18.04
+
+secrets:
+- f8c887f6-c0a5-4e48-9fc9-27776fb2af4c
+
+sources:
+  ppa-gophers-archive: http://ppa.launchpad.net/gophers/archive/ubuntu bionic main C73998DC9DFEA6DCF1241057308C15A29AD198E9
+
+packages:
+- golang-1.11
+
+environment:
+  PATH: '/usr/lib/go-1.11/bin:${PATH}'
+
+tasks:
+- prep: |
+    curl -sSfL 'https://github.com/github/hub/releases/download/v2.9.0/hub-linux-amd64-2.9.0.tgz' | tar xzvf - hub-linux-amd64-2.9.0
+
+- build: |
+    cd diecast
+    make
