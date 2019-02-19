@@ -122,10 +122,49 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap) funcGroup {
 						Name:        `selector`,
 						Type:        `string`,
 						Description: `A CSS selector that targets the elements that will be returned.`,
+					}, {
+						Name:        `attribute`,
+						Type:        `string`,
+						Description: `The name of the attribute to modify on matching elements.`,
+					}, {
+						Name:        `value`,
+						Type:        `any`,
+						Description: `The value to set the matching attributes to.`,
 					},
 				},
 				Function: func(docI interface{}, selector string, name string, value interface{}) (template.HTML, error) {
 					return htmlModify(docI, selector, `set-attr`, name, value)
+				},
+			}, {
+				Name: `htmlAttrFindReplace`,
+				Summary: `Parse a given HTML document and locate a set of elements. For the given attribute name, ` +
+					`perform a find and replace operation on the values.`,
+				Arguments: []funcArg{
+					{
+						Name:        `document`,
+						Type:        `string`,
+						Description: `The HTML document to parse.`,
+					}, {
+						Name:        `selector`,
+						Type:        `string`,
+						Description: `A CSS selector that targets the elements that will be modified.`,
+					}, {
+						Name:        `attribute`,
+						Type:        `string`,
+						Description: `The name of the attribute to modify on matching elements.`,
+					}, {
+						Name:        `find`,
+						Type:        `string`,
+						Description: `A regular expression that will be used to find matching text in the affected attributes.`,
+					}, {
+						Name: `replace`,
+						Type: `string`,
+						Description: `The value that will replace any found text.  Capture groups in the regular ` +
+							`expression can be referenced using a "$", e.g.: ${1}, ${2}, ${name}.`,
+					},
+				},
+				Function: func(document interface{}, selector string, attribute string, find string, replace interface{}) (template.HTML, error) {
+					return htmlModify(document, selector, `find-replace-attr`, attribute, replace, find)
 				},
 			},
 		},

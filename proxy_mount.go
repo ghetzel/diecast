@@ -170,10 +170,14 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		log.Debugf("  %v %v", newReq.Method, newReq.URL)
 
 		for k, v := range newReq.Header {
-			log.Debugf("  [H] %v=%v", k, strings.Join(v, ` `))
+			log.Debugf("  [H] %v: %v", k, strings.Join(v, ` `))
 		}
 
 		if response, err := self.Client.Do(newReq); err == nil {
+			if response.Body != nil {
+				defer response.Body.Close()
+			}
+
 			log.Debugf("  [R] %v", response.Status)
 
 			for k, v := range response.Header {
@@ -190,7 +194,6 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 
 			if response.StatusCode < 400 || self.PassthroughErrors {
 				var responseBody io.Reader
-				defer response.Body.Close()
 
 				if body, err := httputil.DecodeResponse(response); err == nil {
 					responseBody = body
@@ -214,6 +217,11 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 					return nil, err
 				}
 			} else {
+				// if data, err := ioutil.ReadAll(response.Body); err == nil {
+				// 	for _, line := range stringutil.SplitLines(data, "\n") {
+				// 		log.Debugf("  [B] %s", line)
+				// 	}
+				// }
 				// log.Debugf("  %s %s: %s", method, newReq.URL, response.Status)
 				return nil, MountHaltErr
 			}

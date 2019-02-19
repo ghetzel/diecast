@@ -737,6 +737,9 @@ bindings:
             <a href="#fn-htmlAddClass">htmlAddClass</a>
         </li>
         <li>
+            <a href="#fn-htmlAttrFindReplace">htmlAttrFindReplace</a>
+        </li>
+        <li>
             <a href="#fn-htmlQuery">htmlQuery</a>
         </li>
         <li>
@@ -4766,6 +4769,66 @@ bindings:
             </tbody>
         </table>
     </section>
+    <section class="function" id="fn-htmlAttrFindReplace">
+        <h4 class="mt-3">
+            htmlAttrFindReplace
+            <a href="#fn-htmlAttrFindReplace" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>htmlAttrFindReplace DOCUMENT SELECTOR ATTRIBUTE FIND REPLACE</code>
+        </div>
+        <p>Parse a given HTML document and locate a set of elements. For the given attribute name, perform a find and replace operation on the values.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>DOCUMENT</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The HTML document to parse.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>SELECTOR</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>A CSS selector that targets the elements that will be modified.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>ATTRIBUTE</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name of the attribute to modify on matching elements.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>FIND</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>A regular expression that will be used to find matching text in the affected attributes.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>REPLACE</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The value that will replace any found text.  Capture groups in the regular expression can be referenced using a “$”, e.g.: ${1}, ${2}, ${name}.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
     <section class="function" id="fn-htmlQuery">
         <h4 class="mt-3">
             htmlQuery
@@ -4893,7 +4956,7 @@ bindings:
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>htmlSetAttr DOCUMENT SELECTOR</code>
+            <code>htmlSetAttr DOCUMENT SELECTOR ATTRIBUTE VALUE</code>
         </div>
         <p>Parse a given HTML document and set an attribute to a given value on all elements matching a CSS selector.</p>
         <h5>Arguments</h5>
@@ -4918,6 +4981,20 @@ bindings:
                     <td>string</td>
                     <td>
                         <p>A CSS selector that targets the elements that will be returned.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>ATTRIBUTE</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name of the attribute to modify on matching elements.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>VALUE</pre></th>
+                    <td>any</td>
+                    <td>
+                        <p>The value to set the matching attributes to.</p>
                     </td>
                 </tr>
             </tbody>

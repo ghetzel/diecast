@@ -2361,6 +2361,26 @@
         "Examples": null
       },
       {
+        "Name": "minimum_nz",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "stddev",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the standard deviation of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "sum",
         "Alias": "",
         "Aliases": null,
@@ -2405,26 +2425,6 @@
         "Alias": "",
         "Aliases": null,
         "Summary": "Return the minimum of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "minimum_nz",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "stddev",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the standard deviation of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
         "Arguments": null,
@@ -4269,6 +4269,80 @@
             "Name": "selector",
             "Type": "string",
             "Description": "A CSS selector that targets the elements that will be returned.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "attribute",
+            "Type": "string",
+            "Description": "The name of the attribute to modify on matching elements.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "value",
+            "Type": "any",
+            "Description": "The value to set the matching attributes to.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "htmlAttrFindReplace",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Parse a given HTML document and locate a set of elements. For the given attribute name, perform a find and replace operation on the values.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "document",
+            "Type": "string",
+            "Description": "The HTML document to parse.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "selector",
+            "Type": "string",
+            "Description": "A CSS selector that targets the elements that will be modified.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "attribute",
+            "Type": "string",
+            "Description": "The name of the attribute to modify on matching elements.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "find",
+            "Type": "string",
+            "Description": "A regular expression that will be used to find matching text in the affected attributes.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "replace",
+            "Type": "string",
+            "Description": "The value that will replace any found text.  Capture groups in the regular expression can be referenced using a \"$\", e.g.: ${1}, ${2}, ${name}.",
             "Variadic": false,
             "Optional": false,
             "Default": null,

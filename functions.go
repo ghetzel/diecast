@@ -10,6 +10,7 @@ import (
 	"math"
 	"os"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -663,7 +664,7 @@ func htmldoc(docI interface{}) (*goquery.Document, error) {
 	}
 }
 
-func htmlModify(docI interface{}, selector string, action string, k string, v interface{}) (template.HTML, error) {
+func htmlModify(docI interface{}, selector string, action string, k string, v interface{}, extra ...interface{}) (template.HTML, error) {
 	if doc, err := htmldoc(docI); err == nil {
 		switch action {
 		case `remove`:
@@ -674,6 +675,20 @@ func htmlModify(docI interface{}, selector string, action string, k string, v in
 			doc.Find(selector).RemoveClass(sliceutil.Stringify(sliceutil.Flatten(v))...)
 		case `set-attr`:
 			doc.Find(selector).SetAttr(k, typeutil.String(v))
+		case `find-replace-attr`:
+			if len(extra) > 0 {
+				if rxFind, err := regexp.Compile(typeutil.String(extra[0])); err == nil {
+					doc.Find(selector).Each(func(i int, match *goquery.Selection) {
+						if current, ok := match.Attr(k); ok {
+							match.SetAttr(k, rxFind.ReplaceAllString(current, typeutil.String(v)))
+						}
+					})
+				} else {
+					return ``, fmt.Errorf("invalid find expression: %v", err)
+				}
+			} else {
+				return ``, fmt.Errorf("no find expression specified")
+			}
 		default:
 			return ``, fmt.Errorf("unknown HTML action %q", action)
 		}
