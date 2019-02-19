@@ -689,6 +689,29 @@ func htmlModify(docI interface{}, selector string, action string, k string, v in
 			} else {
 				return ``, fmt.Errorf("no find expression specified")
 			}
+		case `find-replace-text`:
+			if len(extra) > 0 {
+				if rxFind, err := regexp.Compile(typeutil.String(extra[0])); err == nil {
+					doc.Find(selector).Each(func(i int, match *goquery.Selection) {
+						for _, node := range match.Nodes {
+							// recursively walk the subtree from this node and apply the
+							// find/replace to all text therein
+							walkNodeTree(node, func(n *html.Node) bool {
+								switch n.Type {
+								case html.TextNode:
+									n.Data = rxFind.ReplaceAllString(n.Data, typeutil.String(v))
+								}
+
+								return true
+							})
+						}
+					})
+				} else {
+					return ``, fmt.Errorf("invalid find expression: %v", err)
+				}
+			} else {
+				return ``, fmt.Errorf("no find expression specified")
+			}
 		default:
 			return ``, fmt.Errorf("unknown HTML action %q", action)
 		}
@@ -699,6 +722,23 @@ func htmlModify(docI interface{}, selector string, action string, k string, v in
 		return template.HTML(output), err
 	} else {
 		return ``, err
+	}
+}
+
+// recursively walk a subtree starting from a given node, calling fn for each node
+// (including the entry point).
+func walkNodeTree(node *html.Node, fn func(child *html.Node) bool) {
+	if !fn(node) {
+		return
+	}
+
+	switch node.Type {
+	case html.ElementNode:
+		for child := node.FirstChild; child != nil; child = child.NextSibling {
+			if !fn(child) {
+				return
+			}
+		}
 	}
 }
 

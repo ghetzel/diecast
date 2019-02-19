@@ -2,10 +2,11 @@ package diecast
 
 import (
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	strip "github.com/grokify/html-strip-tags-go"
 	htmlmain "html"
 	"html/template"
+
+	"github.com/PuerkitoBio/goquery"
+	strip "github.com/grokify/html-strip-tags-go"
 )
 
 func loadStandardFunctionsHtmlProcessing(funcs FuncMap) funcGroup {
@@ -166,7 +167,41 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap) funcGroup {
 				Function: func(document interface{}, selector string, attribute string, find string, replace interface{}) (template.HTML, error) {
 					return htmlModify(document, selector, `find-replace-attr`, attribute, replace, find)
 				},
+			}, {
+				Name: `htmlTextFindReplace`,
+				Summary: `Parse a given HTML document and locate a set of elements. For each matched element, ` +
+					`perform a find and replace operation on the text content of the element (including all descendants).`,
+				Arguments: []funcArg{
+					{
+						Name:        `document`,
+						Type:        `string`,
+						Description: `The HTML document to parse.`,
+					}, {
+						Name:        `selector`,
+						Type:        `string`,
+						Description: `A CSS selector that targets the elements that will be modified.`,
+					}, {
+						Name:        `find`,
+						Type:        `string`,
+						Description: `A regular expression that will be used to find matching text in the affected attributes.`,
+					}, {
+						Name: `replace`,
+						Type: `string`,
+						Description: `The value that will replace any found text.  Capture groups in the regular ` +
+							`expression can be referenced using a "$", e.g.: ${1}, ${2}, ${name}.`,
+					},
+				},
+				Function: func(document interface{}, selector string, find string, replace interface{}) (template.HTML, error) {
+					return htmlModify(document, selector, `find-replace-text`, ``, replace, find)
+				},
 			},
+
+			// TODO: this needs some sort of "late binding" in which the active filesystem and server instance is provided
+			//       during initialization
+			// {
+			// 	Name:    `htmlInjectFromTemplate`,
+			// 	Summary: `Render a template and inject the output into the given document as a child of a specified element.`,
+			// },
 		},
 	}
 
