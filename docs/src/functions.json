@@ -2361,6 +2361,16 @@
         "Examples": null
       },
       {
+        "Name": "maximum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the maximum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "mean",
         "Alias": "",
         "Aliases": null,
@@ -2415,16 +2425,6 @@
         "Alias": "",
         "Aliases": null,
         "Summary": "Return the sum of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "maximum",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the maximum of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
         "Arguments": null,
@@ -4102,6 +4102,80 @@
             ]
           }
         ]
+      },
+      {
+        "Name": "diffuse",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Convert an array of objects or object representing a single-level hierarchy of items and expand it into a deeply-nested object.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "array/object",
+            "Description": "The array or object to expand into a deeply-nested object.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "joiner",
+            "Type": "string",
+            "Description": "The string used in object keys that separates levels of the hierarchy.",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "diffuse {\"properties/enabled\": true, \"properties/label\": \"items\", \"name\": \"Items\", \"properties/tasks/0\": \"do things\", \"properties/tasks/1\": \"do stuff\"} \"/\"",
+            "Description": "",
+            "Return": {
+              "name": "Items",
+              "properties": {
+                "enabled": true,
+                "label": "items",
+                "tasks": [
+                  "do things",
+                  "do stuff"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "Name": "coalesce",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Convert an array of objects or object representing a deeply-nested hierarchy of items and collapse it into a flat (not nested) object.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "array/object",
+            "Description": "The array or object to expand into a deeply-nested object.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "joiner",
+            "Type": "string",
+            "Description": "The string used in object keys that separates levels of the hierarchy.",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
       },
       {
         "Name": "findkey",
