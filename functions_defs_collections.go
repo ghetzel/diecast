@@ -1407,6 +1407,68 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 						return nil, err
 					}
 				},
+			}, {
+				Name: `diffuse`,
+				Summary: `Convert an array of objects or object representing a single-level ` +
+					`hierarchy of items and expand it into a deeply-nested object.`,
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `array/object`,
+						Description: `The array or object to expand into a deeply-nested object.`,
+					}, {
+						Name:        `joiner`,
+						Type:        `string`,
+						Variadic:    true,
+						Description: `The string used in object keys that separates levels of the hierarchy.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code: `diffuse {"properties/enabled": true, "properties/label": "items", "name": "Items", "properties/tasks/0": "do things", "properties/tasks/1": "do stuff"} "/"`,
+						Return: map[string]interface{}{
+							`name`: `Items`,
+							`properties`: map[string]interface{}{
+								`enabled`: true,
+								`label`:   `items`,
+								`tasks`: []interface{}{
+									`do things`,
+									`do stuff`,
+								},
+							},
+						},
+					},
+				},
+				Function: func(input interface{}, joiner string) (map[string]interface{}, error) {
+					if in, err := prepCoalesceDiffuseInput(input); err == nil {
+						return maputil.DiffuseMap(in, joiner)
+					} else {
+						return nil, fmt.Errorf("Can only diffuse arrays and objects, got %T", input)
+					}
+				},
+			}, {
+				Name: `coalesce`,
+				Summary: `Convert an array of objects or object representing a deeply-nested ` +
+					`hierarchy of items and collapse it into a flat (not nested) object.`,
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `array/object`,
+						Description: `The array or object to expand into a deeply-nested object.`,
+					}, {
+						Name:        `joiner`,
+						Type:        `string`,
+						Variadic:    true,
+						Description: `The string used in object keys that separates levels of the hierarchy.`,
+					},
+				},
+				Function: func(input interface{}, joiner string) (map[string]interface{}, error) {
+					if in, err := prepCoalesceDiffuseInput(input); err == nil {
+						return maputil.CoalesceMap(in, joiner)
+					} else {
+						return nil, fmt.Errorf("Can only coalesce arrays and objects, got %T", input)
+					}
+				},
 			},
 		},
 	}
@@ -1421,4 +1483,20 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 	}...)
 
 	return group
+}
+
+func prepCoalesceDiffuseInput(input interface{}) (map[string]interface{}, error) {
+	in := make(map[string]interface{})
+
+	if typeutil.IsArray(input) {
+		for i, v := range sliceutil.Stringify(input) {
+			in[typeutil.String(i)] = v
+		}
+	} else if typeutil.IsMap(input) {
+		in = typeutil.MapNative(input)
+	} else {
+		return nil, fmt.Errorf("Can only diffuse arrays and objects, got %T", input)
+	}
+
+	return in, nil
 }
