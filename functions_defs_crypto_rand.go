@@ -46,9 +46,6 @@ func hashTheThing(fn string, input interface{}) (string, error) {
 }
 
 func loadStandardFunctionsCryptoRand(funcs FuncMap) funcGroup {
-	// TODO:
-	// urlencode/urldecode
-
 	return funcGroup{
 		Name: `Hashing and Cryptography`,
 		Description: `These functions provide basic cryptographic and non-cryptographic functions, ` +

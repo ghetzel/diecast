@@ -1331,6 +1331,86 @@
           }
         ],
         "Examples": null
+      },
+      {
+        "Name": "urlencode",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Encode a given string so it can be safely placed inside a URL query.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "string",
+            "Type": "string",
+            "Description": "The string to encode.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "urldecode",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Decode a URL-encoded string.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "encoded",
+            "Type": "string",
+            "Description": "The string to decode.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "urlPathEncode",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Encode a given string so it can be safely placed inside a URL path segment.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "string",
+            "Type": "string",
+            "Description": "The string to encode.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "urlPathDecode",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Decode a URL-encoded path.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "encoded",
+            "Type": "string",
+            "Description": "The string to decode.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
       }
     ],
     "Skip": false

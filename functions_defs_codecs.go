@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"net/url"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
@@ -184,6 +185,58 @@ func loadStandardFunctionsCodecs(funcs FuncMap) funcGroup {
 				},
 				Function: func(value string) template.HTML {
 					return template.HTML(bluemonday.UGCPolicy().Sanitize(value))
+				},
+			}, {
+				Name:    `urlencode`,
+				Summary: `Encode a given string so it can be safely placed inside a URL query.`,
+				Arguments: []funcArg{
+					{
+						Name:        `string`,
+						Type:        `string`,
+						Description: `The string to encode.`,
+					},
+				},
+				Function: func(value string) string {
+					return url.QueryEscape(value)
+				},
+			}, {
+				Name:    `urldecode`,
+				Summary: `Decode a URL-encoded string.`,
+				Arguments: []funcArg{
+					{
+						Name:        `encoded`,
+						Type:        `string`,
+						Description: `The string to decode.`,
+					},
+				},
+				Function: func(value string) (string, error) {
+					return url.QueryUnescape(value)
+				},
+			}, {
+				Name:    `urlPathEncode`,
+				Summary: `Encode a given string so it can be safely placed inside a URL path segment.`,
+				Arguments: []funcArg{
+					{
+						Name:        `string`,
+						Type:        `string`,
+						Description: `The string to encode.`,
+					},
+				},
+				Function: func(value string) string {
+					return url.PathEscape(value)
+				},
+			}, {
+				Name:    `urlPathDecode`,
+				Summary: `Decode a URL-encoded path.`,
+				Arguments: []funcArg{
+					{
+						Name:        `encoded`,
+						Type:        `string`,
+						Description: `The string to decode.`,
+					},
+				},
+				Function: func(value string) (string, error) {
+					return url.PathUnescape(value)
 				},
 			},
 		},

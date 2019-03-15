@@ -701,6 +701,18 @@ bindings:
         <li>
             <a href="#fn-unsafe">unsafe</a>
         </li>
+        <li>
+            <a href="#fn-urlPathDecode">urlPathDecode</a>
+        </li>
+        <li>
+            <a href="#fn-urlPathEncode">urlPathEncode</a>
+        </li>
+        <li>
+            <a href="#fn-urldecode">urldecode</a>
+        </li>
+        <li>
+            <a href="#fn-urlencode">urlencode</a>
+        </li>
     </ul>
 </details>
 <details>
@@ -4495,6 +4507,134 @@ bindings:
                     <td>string</td>
                     <td>
                         <p>The raw HTML snippet you sneakily want to sneak past the HTML sanitizer for reasons.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-urlPathDecode">
+        <h4 class="mt-3">
+            urlPathDecode
+            <a href="#fn-urlPathDecode" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>urlPathDecode ENCODED</code>
+        </div>
+        <p>Decode a URL-encoded path.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>ENCODED</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The string to decode.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-urlPathEncode">
+        <h4 class="mt-3">
+            urlPathEncode
+            <a href="#fn-urlPathEncode" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>urlPathEncode STRING</code>
+        </div>
+        <p>Encode a given string so it can be safely placed inside a URL path segment.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>STRING</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The string to encode.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-urldecode">
+        <h4 class="mt-3">
+            urldecode
+            <a href="#fn-urldecode" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>urldecode ENCODED</code>
+        </div>
+        <p>Decode a URL-encoded string.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>ENCODED</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The string to decode.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-urlencode">
+        <h4 class="mt-3">
+            urlencode
+            <a href="#fn-urlencode" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>urlencode STRING</code>
+        </div>
+        <p>Encode a given string so it can be safely placed inside a URL query.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>STRING</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The string to encode.</p>
                     </td>
                 </tr>
             </tbody>
