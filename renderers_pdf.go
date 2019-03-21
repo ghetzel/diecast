@@ -43,7 +43,10 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 			subaddr = `127.0.0.1` + subaddr
 		}
 
+		// start a headless chromium-browser instance that we can interact with
 		env := webfriend.NewEnvironment(www)
+
+		// mangle the URL to be a strictly-localhost affair
 		suburl, _ := url.Parse(req.URL.String())
 		suburl.Scheme = `http`
 		suburl.Host = subaddr

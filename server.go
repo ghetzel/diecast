@@ -5,6 +5,7 @@ package diecast
 import (
 	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -102,12 +103,14 @@ type Server struct {
 	TryExtensions       []string               `json:"tryExtensions"`   // try these file extensions when looking for default (i.e.: "index") files
 	RendererMappings    map[string]string      `json:"rendererMapping"` // map file extensions to preferred renderers
 	AutolayoutPatterns  []string               `json:"autolayoutPatterns"`
+	TrustedRootPEMs     []string               `json:"trustedRootPEMs"`
 	router              *httprouter.Router
 	server              *negroni.Negroni
 	fs                  http.FileSystem
 	fsIsSet             bool
 	fileServer          http.Handler
 	precmd              *exec.Cmd
+	altRootCaPool       *x509.CertPool
 }
 
 func NewServer(root string, patterns ...string) *Server {
@@ -259,6 +262,29 @@ func (self *Server) Initialize() error {
 
 	if err := self.setupServer(); err != nil {
 		return err
+	}
+
+	// if we're appending additional trusted certs (for Bindings and other internal HTTP clients)
+	if len(self.TrustedRootPEMs) > 0 {
+		// get the existing system CA bundle
+		if syspool, err := x509.SystemCertPool(); err == nil {
+			// append each cert
+			for _, pemfile := range self.TrustedRootPEMs {
+				// must be a readable PEM file
+				if pem, err := fileutil.ReadAll(pemfile); err == nil {
+					if !syspool.AppendCertsFromPEM(pem) {
+						return fmt.Errorf("Failed to append certificate %s", pemfile)
+					}
+				} else {
+					return fmt.Errorf("Failed to read certificate %s: %v", pemfile, err)
+				}
+			}
+
+			// this is what http.Client.Transport.TLSClientConfig.RootCAs will become
+			self.altRootCaPool = syspool
+		} else {
+			return fmt.Errorf("Failed to retrieve system CA pool: %v", err)
+		}
 	}
 
 	return self.RunStartCommand(&self.PrestartCommand, false)

@@ -138,7 +138,6 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 	if reqUrl, err := url.Parse(resource); err == nil {
 		if bindingReq, err := http.NewRequest(method, reqUrl.String(), nil); err == nil {
-
 			// build request querystring
 			// -------------------------------------------------------------------------------------
 
@@ -266,20 +265,35 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 			log.Infof("Binding: > %s %+v ? %s", strings.ToUpper(sliceutil.OrString(method, `get`)), reqUrl.String(), reqUrl.RawQuery)
 
-			// configure a transport with the requested SSL settings
-			transport := &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: self.Insecure,
-				},
+			// big block of custom TLS override setup
+			// -------------------------------------------------------------------------------------
+			newTCC := &tls.Config{
+				InsecureSkipVerify: self.Insecure,
+				RootCAs:            self.server.altRootCaPool,
 			}
 
-			// setup caching transport (if desired)
-			BindingClient.Transport = transport
+			newTCC.BuildNameToCertificate()
+
+			if transport, ok := BindingClient.Transport.(*http.Transport); ok {
+				if tcc := transport.TLSClientConfig; tcc != nil {
+					tcc.InsecureSkipVerify = newTCC.InsecureSkipVerify
+					tcc.RootCAs = newTCC.RootCAs
+				} else {
+					transport.TLSClientConfig = newTCC
+				}
+			} else {
+				BindingClient.Transport = &http.Transport{
+					TLSClientConfig: newTCC,
+				}
+			}
 
 			if bindingReq.URL.Scheme == `https` && self.Insecure {
 				log.Noticef("SSL/TLS certificate validation is disabled for this request.")
 				log.Noticef("This is insecure as the response can be tampered with.")
 			}
+
+			// end TLS setup
+			// -------------------------------------------------------------------------------------
 
 			// tell the server we want to close the connection when done
 			bindingReq.Close = true
@@ -424,13 +438,13 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					return nil, fmt.Errorf("Failed to read response body: %v", err)
 				}
 			} else {
-				return nil, err
+				return nil, fmt.Errorf("HTTP %v", err)
 			}
 		} else {
-			return nil, err
+			return nil, fmt.Errorf("request: %v", err)
 		}
 	} else {
-		return nil, err
+		return nil, fmt.Errorf("url: %v", err)
 	}
 }
 
