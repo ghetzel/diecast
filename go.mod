@@ -11,6 +11,7 @@ require (
 	github.com/gobwas/glob v0.2.3
 	github.com/grokify/html-strip-tags-go v0.0.0-20180530080503-3f8856873ce5
 	github.com/h2non/filetype v1.0.5
+	github.com/husobee/vestigo v1.1.0
 	github.com/jbenet/go-base58 v0.0.0-20150317085156-6237cf65f3a6
 	github.com/julienschmidt/httprouter v0.0.0-20150421170007-8c199fb6259f
 	github.com/kelvins/sunrisesunset v0.0.0-20170601204625-14f1915ad4b4
@@ -33,3 +34,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
+
+replace github.com/ghetzel/go-stockutil v1.7.13 => ../go-stockutil

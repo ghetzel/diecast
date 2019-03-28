@@ -34,8 +34,8 @@ import (
 	"github.com/ghetzel/go-stockutil/timeutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/ghodss/yaml"
+	"github.com/husobee/vestigo"
 	"github.com/jbenet/go-base58"
-	"github.com/julienschmidt/httprouter"
 	"github.com/mattn/go-shellwords"
 	"github.com/urfave/negroni"
 )
@@ -104,7 +104,8 @@ type Server struct {
 	RendererMappings    map[string]string      `json:"rendererMapping"` // map file extensions to preferred renderers
 	AutolayoutPatterns  []string               `json:"autolayoutPatterns"`
 	TrustedRootPEMs     []string               `json:"trustedRootPEMs"`
-	router              *httprouter.Router
+	Actions             []*Action              `json:"actions"`
+	router              *vestigo.Router
 	server              *negroni.Negroni
 	fs                  http.FileSystem
 	fsIsSet             bool
@@ -1332,6 +1333,7 @@ func reqid(req *http.Request) string {
 
 func (self *Server) setupServer() error {
 	self.server = negroni.New()
+	self.router = vestigo.NewRouter()
 
 	// setup panic recovery handler
 	self.server.Use(negroni.NewRecovery())
@@ -1345,10 +1347,7 @@ func (self *Server) setupServer() error {
 		*req = *req.WithContext(identified)
 	})
 
-	// setup internal/metadata routes
-	mux := http.NewServeMux()
-
-	mux.HandleFunc(fmt.Sprintf("%s/_diecast", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
+	self.router.Get(fmt.Sprintf("%s/_diecast", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
 		defer req.Body.Close()
 
 		if req.Header.Get(`X-Diecast-Binding`) != `` {
@@ -1366,7 +1365,7 @@ func (self *Server) setupServer() error {
 		}
 	})
 
-	mux.HandleFunc(fmt.Sprintf("%s/_bindings", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
+	self.router.Get(fmt.Sprintf("%s/_bindings", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
 		defer req.Body.Close()
 
 		if req.Header.Get(`X-Diecast-Binding`) != `` {
@@ -1384,10 +1383,30 @@ func (self *Server) setupServer() error {
 		}
 	})
 
-	// all other routes proxy to this http.Handler
-	mux.HandleFunc(fmt.Sprintf("%s/", self.RoutePrefix), self.handleFileRequest)
+	// add action handlers
+	for i, action := range self.Actions {
+		if action.Path == `` {
+			return fmt.Errorf("Action %d: Must specify a 'path'", i)
+		}
+		methods := sliceutil.Stringify(action.Method)
 
-	self.server.UseHandler(mux)
+		if len(methods) == 0 {
+			methods = []string{
+				http.MethodGet,
+			}
+		}
+
+		for _, method := range methods {
+			method = strings.ToUpper(method)
+			self.router.Add(method, action.Path, action.ServeHTTP)
+			log.Debugf("Action handler: %s %s", method, action.Path)
+		}
+	}
+
+	// all other routes proxy to this http.Handler
+	self.router.HandleFunc(fmt.Sprintf("%s/", self.RoutePrefix), self.handleFileRequest)
+
+	self.server.UseHandler(self.router)
 
 	return nil
 }
