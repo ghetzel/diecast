@@ -160,7 +160,7 @@ func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 				for _, item := range sliceutil.Sliceify(data) {
 					if typeutil.IsScalar(item) {
 						k, v := stringutil.SplitPair(typeutil.String(item), joiner)
-						dataM[k] = typeutil.Auto(v)
+						dataM[strings.TrimLeft(k, sep)] = typeutil.Auto(v)
 					} else {
 
 					}
