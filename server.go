@@ -942,146 +942,137 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 }
 
 func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) {
-	defer req.Body.Close()
+	prefix := fmt.Sprintf("%s/", self.RoutePrefix)
 
-	log.Infof("%v %v", req.Method, req.URL)
+	if strings.HasPrefix(req.URL.Path, prefix) {
+		defer req.Body.Close()
 
-	if auth, err := self.Authenticators.Authenticator(req); err == nil {
-		if auth != nil {
-			if auth.IsCallback(req.URL) {
-				auth.Callback(w, req)
-				return
-			} else if !auth.Authenticate(w, req) {
-				return
+		log.Infof("%v %v", req.Method, req.URL)
+
+		// normalize filename from request path
+		requestPath := req.URL.Path
+
+		requestPaths := []string{
+			requestPath,
+		}
+
+		// if we're looking at a directory, throw in the index file if the path as given doesn't respond
+		if strings.HasSuffix(requestPath, `/`) {
+			requestPaths = append(requestPaths, path.Join(requestPath, self.IndexFile))
+
+			for _, ext := range self.TryExtensions {
+				base := filepath.Base(self.IndexFile)
+				base = strings.TrimSuffix(base, filepath.Ext(self.IndexFile))
+
+				requestPaths = append(requestPaths, path.Join(requestPath, fmt.Sprintf("%s.%s", base, ext)))
+			}
+
+		} else if path.Ext(requestPath) == `` {
+			// if we're requesting a path without a file extension, try an index file in a directory with that name,
+			// then try just <filename>.html
+			requestPaths = append(requestPaths, fmt.Sprintf("%s/%s", requestPath, self.IndexFile))
+
+			for _, ext := range self.TryExtensions {
+				requestPaths = append(requestPaths, fmt.Sprintf("%s.%s", requestPath, ext))
 			}
 		}
+
+		// finally, add handlers for implementing a junky form of url routing
+		if parent := path.Dir(requestPath); parent != `.` {
+			for _, ext := range self.TryExtensions {
+				requestPaths = append(requestPaths, fmt.Sprintf("%s/index__id.%s", strings.TrimSuffix(parent, `/`), ext))
+
+				if base := strings.TrimSuffix(parent, `/`); base != `` {
+					requestPaths = append(requestPaths, fmt.Sprintf("%s__id.%s", base, ext))
+				}
+			}
+		}
+
+		var triedLocal bool
+
+	PathLoop:
+		// search for the file in all of the generated request paths
+		for _, rPath := range requestPaths {
+			// remove the Route Prefix, as that's a structural part of the path but does not
+			// represent where the files are (used for embedding diecast in other services
+			// to avoid name collisions)
+			//
+			rPath = strings.TrimPrefix(rPath, self.RoutePrefix)
+			var file http.File
+			var statusCode int
+			var mimeType string
+			var redirectTo string
+			var redirectCode int
+			var headers = make(map[string]interface{})
+			var urlParams = make(map[string]interface{})
+
+			if self.TryLocalFirst && !triedLocal {
+				triedLocal = true
+
+				// attempt loading the file from the local filesystem before searching the mounts
+				if f, m, err := self.tryLocalFile(rPath, req); err == nil {
+					file = f
+					mimeType = m
+
+				} else if _, response, err := self.tryMounts(rPath, req); err == nil {
+					file = response.GetFile()
+					mimeType = response.ContentType
+					statusCode = response.StatusCode
+					headers = response.Metadata
+					redirectTo = response.RedirectTo
+					redirectCode = response.RedirectCode
+
+				} else if IsHardStop(err) {
+					break PathLoop
+				}
+			} else {
+				// search the mounts before attempting to load the file from the local filesystem
+				if _, response, err := self.tryMounts(rPath, req); err == nil && response != nil {
+					file = response.GetFile()
+					mimeType = response.ContentType
+					statusCode = response.StatusCode
+					headers = response.Metadata
+					redirectTo = response.RedirectTo
+					redirectCode = response.RedirectCode
+
+				} else if IsHardStop(err) {
+					break PathLoop
+
+				} else if f, m, err := self.tryLocalFile(rPath, req); err == nil {
+					file = f
+					mimeType = m
+				}
+			}
+
+			if redirectCode > 0 {
+				if redirectTo == `` {
+					redirectTo = fmt.Sprintf("%s/", req.URL.Path)
+				}
+
+				http.Redirect(w, req, redirectTo, redirectCode)
+				log.Debugf("  path %v redirecting to %v (HTTP %d)", rPath, redirectTo, redirectCode)
+				return
+			}
+
+			if file != nil {
+				defer file.Close()
+
+				if strings.Contains(rPath, `__id.`) {
+					urlParams[`1`] = strings.Trim(path.Base(req.URL.Path), `/`)
+					urlParams[`id`] = strings.Trim(path.Base(req.URL.Path), `/`)
+				}
+
+				if handled := self.tryToHandleFoundFile(rPath, mimeType, file, statusCode, headers, urlParams, w, req); handled {
+					return
+				}
+			}
+		}
+
+		// if we got *here*, then File Not Found
+		self.respondError(w, fmt.Errorf("File %q was not found.", requestPath), http.StatusNotFound)
 	} else {
-		self.respondError(w, err, http.StatusInternalServerError)
+		self.respondError(w, fmt.Errorf("File %q was not found.", req.URL.Path), http.StatusNotFound)
 	}
-
-	// normalize filename from request path
-	requestPath := req.URL.Path
-
-	requestPaths := []string{
-		requestPath,
-	}
-
-	// if we're looking at a directory, throw in the index file if the path as given doesn't respond
-	if strings.HasSuffix(requestPath, `/`) {
-		requestPaths = append(requestPaths, path.Join(requestPath, self.IndexFile))
-
-		for _, ext := range self.TryExtensions {
-			base := filepath.Base(self.IndexFile)
-			base = strings.TrimSuffix(base, filepath.Ext(self.IndexFile))
-
-			requestPaths = append(requestPaths, path.Join(requestPath, fmt.Sprintf("%s.%s", base, ext)))
-		}
-
-	} else if path.Ext(requestPath) == `` {
-		// if we're requesting a path without a file extension, try an index file in a directory with that name,
-		// then try just <filename>.html
-		requestPaths = append(requestPaths, fmt.Sprintf("%s/%s", requestPath, self.IndexFile))
-
-		for _, ext := range self.TryExtensions {
-			requestPaths = append(requestPaths, fmt.Sprintf("%s.%s", requestPath, ext))
-		}
-	}
-
-	// finally, add handlers for implementing a junky form of url routing
-	if parent := path.Dir(requestPath); parent != `.` {
-		for _, ext := range self.TryExtensions {
-			requestPaths = append(requestPaths, fmt.Sprintf("%s/index__id.%s", strings.TrimSuffix(parent, `/`), ext))
-
-			if base := strings.TrimSuffix(parent, `/`); base != `` {
-				requestPaths = append(requestPaths, fmt.Sprintf("%s__id.%s", base, ext))
-			}
-		}
-	}
-
-	var triedLocal bool
-
-PathLoop:
-	// search for the file in all of the generated request paths
-	for _, rPath := range requestPaths {
-		// remove the Route Prefix, as that's a structural part of the path but does not
-		// represent where the files are (used for embedding diecast in other services
-		// to avoid name collisions)
-		//
-		rPath = strings.TrimPrefix(rPath, self.RoutePrefix)
-		var file http.File
-		var statusCode int
-		var mimeType string
-		var redirectTo string
-		var redirectCode int
-		var headers = make(map[string]interface{})
-		var urlParams = make(map[string]interface{})
-
-		if self.TryLocalFirst && !triedLocal {
-			triedLocal = true
-
-			// attempt loading the file from the local filesystem before searching the mounts
-			if f, m, err := self.tryLocalFile(rPath, req); err == nil {
-				file = f
-				mimeType = m
-
-			} else if _, response, err := self.tryMounts(rPath, req); err == nil {
-				file = response.GetFile()
-				mimeType = response.ContentType
-				statusCode = response.StatusCode
-				headers = response.Metadata
-				redirectTo = response.RedirectTo
-				redirectCode = response.RedirectCode
-
-			} else if IsHardStop(err) {
-				break PathLoop
-			}
-		} else {
-			// search the mounts before attempting to load the file from the local filesystem
-			if _, response, err := self.tryMounts(rPath, req); err == nil && response != nil {
-				file = response.GetFile()
-				mimeType = response.ContentType
-				statusCode = response.StatusCode
-				headers = response.Metadata
-				redirectTo = response.RedirectTo
-				redirectCode = response.RedirectCode
-
-			} else if IsHardStop(err) {
-				break PathLoop
-
-			} else if f, m, err := self.tryLocalFile(rPath, req); err == nil {
-				file = f
-				mimeType = m
-			}
-		}
-
-		if redirectCode > 0 {
-			if redirectTo == `` {
-				redirectTo = fmt.Sprintf("%s/", req.URL.Path)
-			}
-
-			http.Redirect(w, req, redirectTo, redirectCode)
-			log.Debugf("  path %v redirecting to %v (HTTP %d)", rPath, redirectTo, redirectCode)
-			return
-		}
-
-		if file != nil {
-			defer file.Close()
-
-			if strings.Contains(rPath, `__id.`) {
-				urlParams[`1`] = strings.Trim(path.Base(req.URL.Path), `/`)
-				urlParams[`id`] = strings.Trim(path.Base(req.URL.Path), `/`)
-			}
-
-			if handled := self.tryToHandleFoundFile(rPath, mimeType, file, statusCode, headers, urlParams, w, req); handled {
-				return
-			}
-		}
-	}
-
-	// if we got *here*, then File Not Found
-	// log.Debugf("< not found")
-
-	self.respondError(w, fmt.Errorf("File %q was not found.", requestPath), http.StatusNotFound)
 }
 
 // Attempt to resolve the given path into a real file and return that file and mime type.
@@ -1341,10 +1332,27 @@ func (self *Server) setupServer() error {
 	// setup request ID generation
 	self.server.UseHandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		requestId := base58.Encode(stringutil.UUID().Bytes())
+		log.Debugf("[%s] %s %s", requestId, req.Method, req.URL.Path)
 
 		parent := req.Context()
 		identified := context.WithValue(parent, `diecast-request-id`, requestId)
 		*req = *req.WithContext(identified)
+	})
+
+	// process authenticators
+	self.server.UseHandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if auth, err := self.Authenticators.Authenticator(req); err == nil {
+			if auth != nil {
+				if auth.IsCallback(req.URL) {
+					auth.Callback(w, req)
+					return
+				} else if !auth.Authenticate(w, req) {
+					return
+				}
+			}
+		} else {
+			self.respondError(w, err, http.StatusInternalServerError)
+		}
 	})
 
 	self.router.Get(fmt.Sprintf("%s/_diecast", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
@@ -1404,7 +1412,7 @@ func (self *Server) setupServer() error {
 	}
 
 	// all other routes proxy to this http.Handler
-	self.router.HandleFunc(fmt.Sprintf("%s/", self.RoutePrefix), self.handleFileRequest)
+	vestigo.CustomNotFoundHandlerFunc(self.handleFileRequest)
 
 	self.server.UseHandler(self.router)
 

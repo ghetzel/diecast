@@ -1,0 +1,70 @@
+actions:
+-   path:     /api/system/memory
+    method:   get
+    steps:
+    -   type:   'shell'
+        data: |
+            egrep '^(MemTotal|Cached|Active):' /proc/meminfo | \
+                tr -s ' ' | \
+                cut -d' ' -f1,2 | \
+                sed -e 's/: /=/'
+
+        parser: lines
+    -   type:   process
+        data:   diffuse
+
+-   path:     /api/system/cpu
+    method:   get
+    steps:
+    -   type:   'shell'
+        data: |
+            #!/bin/bash
+            # Read /proc/stat file (for first datapoint)
+            read cpu user nice system idle iowait irq softirq steal guest< /proc/stat
+
+            # compute active and total utilizations
+            cpu_active_prev=$((user+system+nice+softirq+steal))
+            cpu_total_prev=$((user+system+nice+softirq+steal+idle+iowait))
+            cpu_user_prev=${user}
+            cpu_sys_prev=${system}
+            cpu_nice_prev=${nice}
+            cpu_io_prev=${iowait}
+            cpu_irq_prev=${irq}
+            cpu_sirq_prev=${softirq}
+            cpu_steal_prev=${steal}
+            sleep 0.05
+
+            # Read /proc/stat file (for second datapoint)
+            read cpu user nice system idle iowait irq softirq steal guest< /proc/stat
+
+            # compute active and total utilizations
+            cpu_active_cur=$((user+system+nice+softirq+steal))
+            cpu_total_cur=$((user+system+nice+softirq+steal+idle+iowait))
+            cpu_user_cur=${user}
+            cpu_sys_cur=${system}
+            cpu_nice_cur=${nice}
+            cpu_io_cur=${iowait}
+            cpu_irq_cur=${irq}
+            cpu_sirq_cur=${softirq}
+            cpu_steal_cur=${steal}
+
+            # compute CPU utilization (%)
+            cpu_util=$((100*( cpu_active_cur-cpu_active_prev ) / (cpu_total_cur-cpu_total_prev) ))
+            cpu_user=$((100*( cpu_user_cur-cpu_user_prev ) / (cpu_total_cur-cpu_total_prev) ))
+            cpu_sys=$((100*( cpu_sys_cur-cpu_sys_prev ) / (cpu_total_cur-cpu_total_prev) ))
+            cpu_nice=$((100*( cpu_nice_cur-cpu_nice_prev ) / (cpu_total_cur-cpu_total_prev) ))
+            cpu_io=$((100*( cpu_io_cur-cpu_io_prev ) / (cpu_total_cur-cpu_total_prev) ))
+            cpu_irq=$((100*( cpu_irq_cur-cpu_irq_prev ) / (cpu_total_cur-cpu_total_prev)))
+            cpu_sirq=$((100*( cpu_sirq_cur-cpu_sirq_prev ) / (cpu_total_cur-cpu_total_prev)))
+            cpu_steal=$((100*( cpu_steal_cur-cpu_steal_prev ) / (cpu_total_cur-cpu_total_prev) ))
+            echo -n '{'
+            echo   '"total": '"${cpu_util}"','
+            echo   '"user": '"${cpu_user}"','
+            echo   '"system": '"${cpu_sys}"','
+            echo   '"nice": '"${cpu_nice}"','
+            echo   '"iowait": '"${cpu_io}"','
+            echo   '"softirq": '"${cpu_sirq}"','
+            echo   '"irq": '"${cpu_irq}"','
+            echo   '"steal": '"${cpu_steal}"
+            echo '}'
+            exit 0

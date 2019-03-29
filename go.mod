@@ -5,7 +5,7 @@ require (
 	github.com/dustin/go-humanize v0.0.0-20180713052910-9f541cc9db5d
 	github.com/fatih/structs v1.0.0
 	github.com/ghetzel/cli v1.17.0
-	github.com/ghetzel/go-stockutil v1.7.13
+	github.com/ghetzel/go-stockutil v1.7.30
 	github.com/ghetzel/go-webfriend v0.9.40
 	github.com/ghodss/yaml v1.0.0
 	github.com/gobwas/glob v0.2.3
@@ -13,7 +13,6 @@ require (
 	github.com/h2non/filetype v1.0.5
 	github.com/husobee/vestigo v1.1.0
 	github.com/jbenet/go-base58 v0.0.0-20150317085156-6237cf65f3a6
-	github.com/julienschmidt/httprouter v0.0.0-20150421170007-8c199fb6259f
 	github.com/kelvins/sunrisesunset v0.0.0-20170601204625-14f1915ad4b4
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mattn/go-shellwords v1.0.3
@@ -35,4 +34,4 @@ require (
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
 
-replace github.com/ghetzel/go-stockutil v1.7.13 => ../go-stockutil
+replace github.com/ghetzel/go-stockutil v1.7.30 => ../go-stockutil

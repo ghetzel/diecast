@@ -3,15 +3,18 @@ package diecast
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/executil"
+	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/husobee/vestigo"
+	shellwords "github.com/mattn/go-shellwords"
 )
 
 // [type=shell] Return the output of a command as a response.
@@ -52,14 +55,37 @@ func (self *ShellStep) Perform(config *StepConfig, w http.ResponseWriter, req *h
 	}
 
 	// parse command line
+	var args []string
+
 	if typeutil.IsArray(command) {
-		if args := sliceutil.Stringify(command); len(args) > 0 {
-			cmd = executil.Command(args[0], args[1:]...)
-		} else {
-			return nil, fmt.Errorf("Command array cannot be empty")
-		}
+		args = sliceutil.Stringify(command)
 	} else {
-		cmd = executil.ShellCommand(typeutil.String(command))
+		script := typeutil.String(command)
+
+		// put multiline strings into a temp file and execute it as a standalone script
+		if strings.Contains(script, "\n") {
+			if shell := executil.FindShell(); shell != `` {
+				if tmpfile, err := fileutil.WriteTempFile(script, `diecast-`); err == nil {
+					config.logstep("multiline script written to %s", tmpfile)
+					defer os.Remove(tmpfile)
+					args = []string{shell, tmpfile}
+				} else {
+					return nil, fmt.Errorf("Failed write temporary file: %v", err)
+				}
+			} else {
+				return nil, fmt.Errorf("Cannot locate user shell")
+			}
+		} else if a, err := shellwords.Parse(script); err == nil {
+			args = a
+		} else {
+			return nil, fmt.Errorf("Failed to parse command line: %v", err)
+		}
+	}
+
+	if len(args) > 0 {
+		cmd = executil.Command(args[0], args[1:]...)
+	} else {
+		return nil, fmt.Errorf("Command array cannot be empty")
 	}
 
 	if cmd != nil {
@@ -157,12 +183,18 @@ func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 			dataM := make(map[string]interface{})
 
 			if typeutil.IsArray(data) {
-				for _, item := range sliceutil.Sliceify(data) {
+				for i, item := range sliceutil.Sliceify(data) {
 					if typeutil.IsScalar(item) {
 						k, v := stringutil.SplitPair(typeutil.String(item), joiner)
-						dataM[strings.TrimLeft(k, sep)] = typeutil.Auto(v)
-					} else {
+						k = strings.TrimLeft(k, sep)
 
+						if k == `` {
+							k = typeutil.String(i)
+						}
+
+						dataM[k] = typeutil.Auto(v)
+					} else {
+						dataM[typeutil.String(i)] = item
 					}
 				}
 			} else if typeutil.IsMap(data) {

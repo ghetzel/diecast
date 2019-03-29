@@ -130,6 +130,7 @@ func (self *StepConfig) logstep(format string, args ...interface{}) {
 }
 
 type Action struct {
+	Name   string        `json:"name,omitempty"`
 	Path   string        `json:"path"`
 	Method interface{}   `json:"method"`
 	Steps  []*StepConfig `json:"steps"`
@@ -140,6 +141,11 @@ type Action struct {
 // or an error will be returned if not nil.
 func (self *Action) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	started := time.Now()
+	name := self.Name
+
+	if name == `` {
+		name = fmt.Sprintf("%s %s", req.Method, req.URL.Path)
+	}
 
 	prev := &StepConfig{
 		Type:   `input`,
@@ -147,7 +153,7 @@ func (self *Action) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		index:  -1,
 	}
 
-	log.Debugf("\u256d %s %s", req.Method, req.URL.Path)
+	log.Debugf("\u256d Run action %s", name)
 
 	for i, step := range self.Steps {
 		step.index = i
