@@ -126,6 +126,7 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		Authenticators:     make([]AuthenticatorConfig, 0),
 		EnableLayouts:      true,
 		Bindings:           make([]Binding, 0),
+		RootPath:           `.`,
 		TemplatePatterns:   patterns,
 		IndexFile:          DefaultIndexFile,
 		VerifyFile:         DefaultVerifyFile,
@@ -300,6 +301,12 @@ func (self *Server) Initialize() error {
 }
 
 func (self *Server) Serve() error {
+	if self.server == nil {
+		if err := self.Initialize(); err != nil {
+			return err
+		}
+	}
+
 	go func() {
 		if err := self.RunStartCommand(&self.StartCommand, true); err != nil {
 			log.Errorf("start command failed: %v", err)
@@ -323,6 +330,14 @@ func (self *Server) ListenAndServe(address string) error {
 }
 
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if self.server == nil {
+		if err := self.Initialize(); err != nil {
+			w.Write([]byte(fmt.Sprintf("Failed to setup Diecast server: %v", err)))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
 	self.server.ServeHTTP(w, req)
 }
 
