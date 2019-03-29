@@ -113,18 +113,17 @@ type Server struct {
 	altRootCaPool       *x509.CertPool
 }
 
-func NewServer(root string, patterns ...string) *Server {
+func NewServer(root interface{}, patterns ...string) *Server {
 	if len(patterns) == 0 {
 		patterns = DefaultTemplatePatterns
 	}
 
-	return &Server{
+	server := &Server{
 		Address:            DefaultAddress,
 		RoutePrefix:        DefaultRoutePrefix,
 		DefaultPageObject:  make(map[string]interface{}),
 		OverridePageObject: make(map[string]interface{}),
 		Authenticators:     make([]AuthenticatorConfig, 0),
-		RootPath:           root,
 		EnableLayouts:      true,
 		Bindings:           make([]Binding, 0),
 		TemplatePatterns:   patterns,
@@ -135,6 +134,16 @@ func NewServer(root string, patterns ...string) *Server {
 		RendererMappings:   DefaultRendererMappings,
 		AutolayoutPatterns: DefaultAutolayoutPatterns,
 	}
+
+	if str, ok := root.(string); ok {
+		server.RootPath = str
+	} else if fs, ok := root.(http.FileSystem); ok {
+		server.SetFileSystem(fs)
+	} else {
+		panic("Diecast must be provided with a string or http.FileSystem")
+	}
+
+	return server
 }
 
 func (self *Server) ShouldReturnSource(req *http.Request) bool {

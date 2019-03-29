@@ -2441,6 +2441,26 @@
         "Examples": null
       },
       {
+        "Name": "sum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the sum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "maximum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the maximum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "mean",
         "Alias": "",
         "Aliases": null,
@@ -2485,26 +2505,6 @@
         "Alias": "",
         "Aliases": null,
         "Summary": "Return the standard deviation of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "sum",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the sum of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "maximum",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the maximum of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
         "Arguments": null,
