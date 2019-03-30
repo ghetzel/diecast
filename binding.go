@@ -389,6 +389,8 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 								self.Parser = `yaml`
 							case `text/html`:
 								self.Parser = `html`
+							case `text/xml`:
+								self.Parser = `xml`
 							}
 						}
 
@@ -421,6 +423,9 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 						case `html`:
 							return goquery.NewDocumentFromReader(bytes.NewBuffer(data))
+
+						case `xml`:
+							return xmlToMap(data)
 
 						case `text`:
 							return string(data), nil
