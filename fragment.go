@@ -57,7 +57,7 @@ func (self FragmentSet) Get(name string) (*Fragment, bool) {
 
 func (self *FragmentSet) Set(name string, header *TemplateHeader, data []byte) error {
 	if _, ok := self.Get(name); ok {
-		return fmt.Errorf("Template %q already exists in the current request", name)
+		return nil
 	}
 
 	*self = append(*self, &Fragment{
@@ -71,7 +71,7 @@ func (self *FragmentSet) Set(name string, header *TemplateHeader, data []byte) e
 
 func (self *FragmentSet) Parse(name string, source io.Reader) error {
 	if _, ok := self.Get(name); ok {
-		return fmt.Errorf("Template %q already exists in the current request", name)
+		return nil
 	}
 
 	if header, data, err := SplitTemplateHeaderContent(source); err == nil {
@@ -91,7 +91,7 @@ func (self FragmentSet) DebugOutput() []byte {
 	var out []byte
 
 	for _, frag := range self {
-		out = append(out, []byte(fmt.Sprintf("\n{{/* BEGIN FRAGMENT %q */}}", frag.Name))...)
+		out = append(out, []byte(fmt.Sprintf("\n{{/* BEGIN FRAGMENT %q */}}\n", frag.Name))...)
 		out = append(out, frag.Data...)
 		out = append(out, []byte(fmt.Sprintf("\n{{/* END FRAGMENT %q */}}\n", frag.Name))...)
 	}

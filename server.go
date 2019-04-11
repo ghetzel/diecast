@@ -360,11 +360,11 @@ func (self *Server) applyTemplate(
 				layouts = []string{header.Layout}
 			}
 		}
-	}
 
-	// prepend all includes
-	if err := self.appendIncludes(&fragments, header); err != nil {
-		return err
+		// add all includes from the current item
+		if err := self.appendIncludes(&fragments, header); err != nil {
+			return err
+		}
 	}
 
 	// get a reference to a set of standard functions that won't have a scope yet
@@ -402,6 +402,11 @@ func (self *Server) applyTemplate(
 
 	// get the merged header from all layouts, includes, and the template we're rendering
 	finalHeader := fragments.Header(self)
+
+	// add all includes
+	if err := self.appendIncludes(&fragments, &finalHeader); err != nil {
+		return err
+	}
 
 	// put any url route params in there too
 	finalHeader.UrlParams = urlParams
