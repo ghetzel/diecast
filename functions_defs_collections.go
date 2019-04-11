@@ -166,7 +166,7 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 							expr = expr + `}}`
 						}
 
-						if err := tmpl.Parse(expr); err == nil {
+						if err := tmpl.ParseString(expr); err == nil {
 							output := bytes.NewBuffer(nil)
 
 							if err := tmpl.Render(output, value, ``); err == nil {
@@ -301,7 +301,7 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 							expr = expr + `}}`
 						}
 
-						if err := tmpl.Parse(expr); err == nil {
+						if err := tmpl.ParseString(expr); err == nil {
 							output := bytes.NewBuffer(nil)
 							value := m.Auto(key)
 
@@ -1195,7 +1195,7 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 									tmpl := NewTemplate(`inline`, TextEngine)
 									tmpl.Funcs(funcs)
 
-									if err := tmpl.Parse(valueTpls[0]); err == nil {
+									if err := tmpl.ParseString(valueTpls[0]); err == nil {
 										output := bytes.NewBuffer(nil)
 
 										if err := tmpl.Render(output, value, ``); err == nil {

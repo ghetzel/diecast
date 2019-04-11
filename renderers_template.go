@@ -2,7 +2,6 @@ package diecast
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -11,21 +10,34 @@ import (
 )
 
 type TemplateRenderer struct {
-	server *Server
+	server   *Server
+	prewrite PrewriteFunc
 }
 
 func (self *TemplateRenderer) ShouldPrerender() bool {
 	return false
 }
 
+func (self *TemplateRenderer) SetPrewriteFunc(fn PrewriteFunc) {
+	self.prewrite = fn
+}
+
 func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
-	defer options.Input.Close()
+	if len(options.Fragments) == 0 {
+		return fmt.Errorf("Must specify a non-empty FragmentSet to TemplateRenderer")
+	}
 
 	// create the template and make it aware of our custom functions
 	tmpl := NewTemplate(
 		self.server.ToTemplateName(options.RequestedPath),
 		GetEngineForFile(options.RequestedPath),
 	)
+
+	if fn := self.prewrite; fn != nil {
+		tmpl.SetPrewriteFunc(func() {
+			fn(req)
+		})
+	}
 
 	tmpl.Funcs(options.FunctionSet)
 	tmpl.SetHeaderOffset(options.HeaderOffset)
@@ -38,64 +50,69 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 		return err
 	}
 
-	if data, err := ioutil.ReadAll(options.Input); err == nil {
-		if err := tmpl.Parse(string(data)); err == nil {
-			log.Debugf("Rendering %q as %v template (header offset by %d lines)", options.RequestedPath, tmpl.Engine(), options.HeaderOffset)
+	if err := tmpl.ParseFragments(options.Fragments); err == nil {
+		log.Debugf("[%s] Rendering %q as %v template", reqid(req), options.RequestedPath, tmpl.Engine())
 
-			if options.Header != nil {
-				// include any configured response headers now
-				for name, value := range options.Header.Headers {
-					w.Header().Set(name, fmt.Sprintf("%v", value))
-				}
+		if options.Header != nil {
+			// include any configured response headers now
+			for name, value := range options.Header.Headers {
+				w.Header().Set(name, fmt.Sprintf("%v", value))
+			}
+		}
+
+		if options.MimeType == `` {
+			options.MimeType = `text/html; charset=utf-8`
+		}
+
+		if self.server.ShouldReturnSource(req) {
+			w.Header().Set(`Content-Type`, `text/plain`)
+
+			if fn := self.prewrite; fn != nil {
+				fn(req)
 			}
 
-			if options.MimeType == `` {
-				options.MimeType = `text/html; charset=utf-8`
-			}
-
-			if self.server.ShouldReturnSource(req) {
-				w.Header().Set(`Content-Type`, `text/plain`)
-
-				if hdr, err := yaml.Marshal(options.Header); err == nil {
-					w.Write([]byte("{{/* BEGIN COMBINED HEADER --\n"))
-					w.Write(hdr)
-					w.Write([]byte("\n-- END COMBINED HEADER */}}\n"))
-				} else {
-					w.Write([]byte(fmt.Sprintf("{{/* COMBINED HEADER: error: %v */}}\n", err)))
-				}
-
-				if _, err := w.Write(data); err != nil {
-					return err
-				}
-
-				return nil
+			if hdr, err := yaml.Marshal(options.Header); err == nil {
+				w.Write([]byte("{{/* BEGIN COMBINED HEADER --\n"))
+				w.Write(hdr)
+				w.Write([]byte("\n-- END COMBINED HEADER */}}\n"))
 			} else {
-				w.Header().Set(`Content-Type`, options.MimeType)
-
-				if options.HasLayout {
-					return tmpl.Render(w, options.Data, `layout`)
-				} else {
-					return tmpl.Render(w, options.Data, ``)
-				}
-			}
-		} else if self.server.ShouldReturnSource(req) {
-			var tplstr string
-			lines := strings.Split(string(data), "\n")
-			lineNoSpaces := fmt.Sprintf("%d", len(fmt.Sprintf("%d", len(lines)))+1)
-
-			for i, line := range lines {
-				tplstr += fmt.Sprintf("% "+lineNoSpaces+"d | %s\n", i+1, line)
+				w.Write([]byte(fmt.Sprintf("{{/* COMBINED HEADER: error: %v */}}\n", err)))
 			}
 
-			tplstr = fmt.Sprintf("ERROR: %v\n\n", err) + tplstr
-
-			w.Header().Set(`Content-Type`, `text/plain; charset=utf-8`)
-			w.Write([]byte(tplstr))
+			if _, err := w.Write(options.Fragments.DebugOutput()); err != nil {
+				return err
+			}
 
 			return nil
 		} else {
-			return err
+			w.Header().Set(`Content-Type`, options.MimeType)
+
+			if options.Fragments.HasLayout() {
+				return tmpl.Render(w, options.Data, LayoutTemplateName)
+			} else {
+				return tmpl.Render(w, options.Data, ``)
+			}
 		}
+	} else if self.server.ShouldReturnSource(req) {
+		var tplstr string
+		lines := strings.Split(string(options.Fragments.DebugOutput()), "\n")
+		lineNoSpaces := fmt.Sprintf("%d", len(fmt.Sprintf("%d", len(lines)))+1)
+
+		for i, line := range lines {
+			tplstr += fmt.Sprintf("% "+lineNoSpaces+"d | %s\n", i+1, line)
+		}
+
+		tplstr = fmt.Sprintf("ERROR: %v\n\n", err) + tplstr
+
+		w.Header().Set(`Content-Type`, `text/plain; charset=utf-8`)
+
+		if fn := self.prewrite; fn != nil {
+			fn(req)
+		}
+
+		w.Write([]byte(tplstr))
+
+		return nil
 	} else {
 		return err
 	}

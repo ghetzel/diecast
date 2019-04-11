@@ -9,11 +9,16 @@ import (
 )
 
 type MarkdownRenderer struct {
-	server *Server
+	server   *Server
+	prewrite PrewriteFunc
 }
 
 func (self *MarkdownRenderer) ShouldPrerender() bool {
 	return true
+}
+
+func (self *MarkdownRenderer) SetPrewriteFunc(fn PrewriteFunc) {
+	self.prewrite = fn
 }
 
 func (self *MarkdownRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
@@ -27,6 +32,11 @@ func (self *MarkdownRenderer) Render(w http.ResponseWriter, req *http.Request, o
 		output = bluemonday.UGCPolicy().SanitizeBytes(output)
 
 		w.Header().Set(`Content-Type`, `text/html; charset=utf-8`)
+
+		if fn := self.prewrite; fn != nil {
+			fn(req)
+		}
+
 		_, err := w.Write(output)
 		return err
 	} else {

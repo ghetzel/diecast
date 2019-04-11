@@ -82,8 +82,8 @@ func (self *Binding) ShouldEvaluate(req *http.Request) bool {
 }
 
 func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data map[string]interface{}, funcs FuncMap) (interface{}, error) {
-
-	log.Debugf("Evaluating binding %q", self.Name)
+	id := reqid(req)
+	log.Debugf("[%s] Evaluating binding %q", id, self.Name)
 
 	if req.Header.Get(`X-Diecast-Binding`) == self.Name {
 		return nil, fmt.Errorf("Loop detected")
@@ -122,19 +122,19 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		if self.OnlyIfExpr != `` {
 			if v := EvalInline(self.OnlyIfExpr, data, funcs); typeutil.IsEmpty(v) || stringutil.IsBooleanFalse(v) {
 				self.Optional = true
-				return nil, fmt.Errorf("Binding %q not being evaluated because only_if expression was false", self.Name)
+				return nil, fmt.Errorf("[%s] Binding %q not being evaluated because only_if expression was false", id, self.Name)
 			}
 		}
 
 		if self.NotIfExpr != `` {
 			if v := EvalInline(self.NotIfExpr, data, funcs); !typeutil.IsEmpty(v) && !stringutil.IsBooleanFalse(v) {
 				self.Optional = true
-				return nil, fmt.Errorf("Binding %q not being evaluated because not_if expression was truthy", self.Name)
+				return nil, fmt.Errorf("[%s] Binding %q not being evaluated because not_if expression was truthy", id, self.Name)
 			}
 		}
 	}
 
-	log.Debugf("  binding %q: resource=%v", self.Name, resource)
+	log.Debugf("[%s]  binding %q: resource=%v", id, self.Name, resource)
 
 	if reqUrl, err := url.Parse(resource); err == nil {
 		if bindingReq, err := http.NewRequest(method, reqUrl.String(), nil); err == nil {
@@ -162,7 +162,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					vS = EvalInline(vS, data, funcs)
 				}
 
-				log.Debugf("  binding %q: param %v=%v", self.Name, k, vS)
+				log.Debugf("[%s]  binding %q: param %v=%v", id, self.Name, k, vS)
 				qs.Set(k, vS)
 			}
 
@@ -192,7 +192,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 						return nil
 					}); err == nil {
-						log.Debugf("  binding %q: bodyparam %#v", self.Name, bodyParams)
+						log.Debugf("[%s]  binding %q: bodyparam %#v", id, self.Name, bodyParams)
 					} else {
 						return nil, err
 					}
@@ -229,12 +229,12 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						bindingReq.Header.Set(`Content-Type`, `application/x-www-form-urlencoded`)
 
 					default:
-						return nil, fmt.Errorf("Unknown request formatter %q", self.Formatter)
+						return nil, fmt.Errorf("[%s] Unknown request formatter %q", id, self.Formatter)
 					}
 				}
 			} else if self.RawBody != `` {
 				payload := EvalInline(self.RawBody, data, funcs)
-				log.Debugf("  binding %q: rawbody %s", self.Name, payload)
+				log.Debugf("[%s]  binding %q: rawbody %s", id, self.Name, payload)
 
 				bindingReq.Body = ioutil.NopCloser(bytes.NewBufferString(payload))
 			}
@@ -246,7 +246,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 			if !self.SkipInheritHeaders {
 				for k, _ := range req.Header {
 					v := req.Header.Get(k)
-					log.Debugf("  binding %q: inherit %v=%v", self.Name, k, v)
+					log.Debugf("[%s]  binding %q: inherit %v=%v", id, self.Name, k, v)
 					bindingReq.Header.Set(k, v)
 				}
 			}
@@ -257,13 +257,13 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					v = EvalInline(v, data, funcs)
 				}
 
-				log.Debugf("  binding %q:  header %v=%v", self.Name, k, v)
+				log.Debugf("[%s]  binding %q:  header %v=%v", id, self.Name, k, v)
 				bindingReq.Header.Set(k, v)
 			}
 
 			bindingReq.Header.Set(`X-Diecast-Binding`, self.Name)
 
-			log.Infof("Binding: > %s %+v ? %s", strings.ToUpper(sliceutil.OrString(method, `get`)), reqUrl.String(), reqUrl.RawQuery)
+			log.Infof("[%s] Binding: > %s %+v ? %s", id, strings.ToUpper(sliceutil.OrString(method, `get`)), reqUrl.String(), reqUrl.RawQuery)
 
 			// big block of custom TLS override setup
 			// -------------------------------------------------------------------------------------
@@ -288,8 +288,8 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 			}
 
 			if bindingReq.URL.Scheme == `https` && self.Insecure {
-				log.Noticef("SSL/TLS certificate validation is disabled for this request.")
-				log.Noticef("This is insecure as the response can be tampered with.")
+				log.Noticef("[%s] SSL/TLS certificate validation is disabled for this request.", id)
+				log.Noticef("[%s] This is insecure as the response can be tampered with.", id)
 			}
 
 			// end TLS setup
@@ -303,11 +303,11 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 			if res, err := BindingClient.Do(bindingReq); err == nil {
 				defer res.Body.Close()
 
-				log.Infof("Binding: < HTTP %d (body: %d bytes)", res.StatusCode, res.ContentLength)
+				log.Infof("[%s] Binding: < HTTP %d (body: %d bytes)", id, res.StatusCode, res.ContentLength)
 
 				// debug log response headers
 				for k, v := range res.Header {
-					log.Debugf("  [H] %v: %v", k, strings.Join(v, ` `))
+					log.Debugf("[%s]  [H] %v: %v", id, k, strings.Join(v, ` `))
 				}
 
 				onError := self.OnError
@@ -330,7 +330,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 							if strings.HasPrefix(redirect, `http`) || strings.HasPrefix(redirect, `/`) {
 								return nil, RedirectTo(redirect)
 							} else {
-								return nil, fmt.Errorf("Invalid status action '%v'", redirect)
+								return nil, fmt.Errorf("[%s] Invalid status action '%v'", id, redirect)
 							}
 						}
 					}
@@ -362,7 +362,8 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 								return nil, RedirectTo(redirect)
 							} else {
 								return nil, fmt.Errorf(
-									"Request %s %v failed: %s",
+									"[%s] Request %s %v failed: %s",
+									id,
 									bindingReq.Method,
 									bindingReq.URL,
 									res.Status,
@@ -429,22 +430,22 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 							return template.HTML(string(data)), nil
 
 						default:
-							return nil, fmt.Errorf("Unknown response parser %q", self.Parser)
+							return nil, fmt.Errorf("[%s] Unknown response parser %q", id, self.Parser)
 						}
 					} else {
 						return nil, nil
 					}
 				} else {
-					return nil, fmt.Errorf("Failed to read response body: %v", err)
+					return nil, fmt.Errorf("[%s] Failed to read response body: %v", id, err)
 				}
 			} else {
-				return nil, fmt.Errorf("HTTP %v", err)
+				return nil, fmt.Errorf("[%s] HTTP %v", id, err)
 			}
 		} else {
-			return nil, fmt.Errorf("request: %v", err)
+			return nil, fmt.Errorf("[%s] request: %v", id, err)
 		}
 	} else {
-		return nil, fmt.Errorf("url: %v", err)
+		return nil, fmt.Errorf("[%s] url: %v", id, err)
 	}
 }
 
@@ -452,7 +453,7 @@ func EvalInline(input string, data map[string]interface{}, funcs FuncMap) string
 	tmpl := NewTemplate(`inline`, HtmlEngine)
 	tmpl.Funcs(funcs)
 
-	if err := tmpl.Parse(input); err == nil {
+	if err := tmpl.ParseString(input); err == nil {
 		output := bytes.NewBuffer(nil)
 
 		if err := tmpl.Render(output, data, ``); err == nil {

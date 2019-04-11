@@ -316,7 +316,7 @@ func filterByKey(funcs FuncMap, input interface{}, key string, exprs ...interfac
 				tmpl := NewTemplate(`inline`, TextEngine)
 				tmpl.Funcs(funcs)
 
-				if err := tmpl.Parse(exprStr); err == nil {
+				if err := tmpl.ParseString(exprStr); err == nil {
 					output := bytes.NewBuffer(nil)
 
 					if err := tmpl.Render(output, item.Value, ``); err == nil {
@@ -362,7 +362,7 @@ func uniqByKey(funcs FuncMap, input interface{}, key string, saveLast bool, expr
 					tmpl := NewTemplate(`inline`, TextEngine)
 					tmpl.Funcs(funcs)
 
-					if err := tmpl.Parse(exprStr); err == nil {
+					if err := tmpl.ParseString(exprStr); err == nil {
 						output := bytes.NewBuffer(nil)
 
 						if err := tmpl.Render(output, item, ``); err == nil {
