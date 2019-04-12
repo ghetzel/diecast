@@ -85,42 +85,95 @@ type StartCommand struct {
 }
 
 type Server struct {
-	BinPath             string                 `json:"-"`
-	Address             string                 `json:"address"`
-	Bindings            []Binding              `json:"bindings"`
-	BindingPrefix       string                 `json:"bindingPrefix"`
-	RootPath            string                 `json:"root"`
-	LayoutPath          string                 `json:"layouts"`
-	ErrorsPath          string                 `json:"errors"`
-	EnableDebugging     bool                   `json:"debug"`
-	EnableLayouts       bool                   `json:"enableLayouts"`
-	RoutePrefix         string                 `json:"routePrefix"`
-	TemplatePatterns    []string               `json:"patterns"`
-	AdditionalFunctions template.FuncMap       `json:"-"`
-	TryLocalFirst       bool                   `json:"localFirst"`
-	IndexFile           string                 `json:"indexFile"`
-	VerifyFile          string                 `json:"verifyFile"`
-	Mounts              []Mount                `json:"-"`
-	MountConfigs        []MountConfig          `json:"mounts"`
-	BaseHeader          *TemplateHeader        `json:"header"`
-	DefaultPageObject   map[string]interface{} `json:"-"`
-	OverridePageObject  map[string]interface{} `json:"-"`
-	PrestartCommand     StartCommand           `json:"prestart"`
-	StartCommand        StartCommand           `json:"start"`
-	Authenticators      AuthenticatorConfigs   `json:"authenticators"`
-	TryExtensions       []string               `json:"tryExtensions"`   // try these file extensions when looking for default (i.e.: "index") files
-	RendererMappings    map[string]string      `json:"rendererMapping"` // map file extensions to preferred renderers
-	AutolayoutPatterns  []string               `json:"autolayoutPatterns"`
-	TrustedRootPEMs     []string               `json:"trustedRootPEMs"`
-	Actions             []*Action              `json:"actions"`
-	router              *http.ServeMux
-	server              *negroni.Negroni
-	fs                  http.FileSystem
-	fsIsSet             bool
-	fileServer          http.Handler
-	precmd              *exec.Cmd
-	altRootCaPool       *x509.CertPool
-	initialized         bool
+	// Exposes the location of the diecast binary
+	BinPath string `json:"-"`
+
+	// The host:port address the server is listening on
+	Address string `json:"address"`
+
+	// Top-level bindings that apply to every rendered template
+	Bindings []Binding `json:"bindings"`
+
+	// Specify a string to prefix all binding resource values that start with "/"
+	BindingPrefix string `json:"bindingPrefix"`
+
+	// The filesystem location where templates and files are served from
+	RootPath string `json:"root"`
+
+	// The path to the layouts template directory
+	LayoutPath string `json:"layouts"`
+
+	// The path to the errors template directory
+	ErrorsPath string `json:"errors"`
+
+	// Enables additional options for debugging applications. Caution: can expose secrets and other sensitive data.
+	EnableDebugging bool `json:"debug"`
+
+	// Specifies whether layouts are enabled
+	EnableLayouts bool `json:"enableLayouts"`
+
+	// If specified, all requests must be prefixed with this string.
+	RoutePrefix string `json:"routePrefix"`
+
+	// A set of glob patterns specifying which files will be rendered as templates.
+	TemplatePatterns []string `json:"patterns"`
+
+	// Allow for the programmatic addition of extra functions for use in templates.
+	AdditionalFunctions template.FuncMap `json:"-"`
+
+	// Whether to attempt to locate a local file matching the requested path before attempting to find a template.
+	TryLocalFirst bool `json:"localFirst"`
+
+	// The name of the template file to use when a directory is requested.
+	IndexFile string `json:"indexFile"`
+
+	// A file that must exist and be readable before starting the server.
+	VerifyFile string `json:"verifyFile"`
+
+	// The set of all registered mounts.
+	Mounts []Mount `json:"-"`
+
+	// A list of mount configurations read from the diecast.yml config file.
+	MountConfigs []MountConfig `json:"mounts"`
+
+	// A default header that all templates will inherit from.
+	BaseHeader         *TemplateHeader        `json:"header"`
+	DefaultPageObject  map[string]interface{} `json:"-"`
+	OverridePageObject map[string]interface{} `json:"-"`
+
+	// A command that will be executed before the server is started.
+	PrestartCommand StartCommand `json:"prestart"`
+
+	// A command that will be executed after the server is confirmed running.
+	StartCommand StartCommand `json:"start"`
+
+	// A set of authenticator configurations used to protect some or all routes.
+	Authenticators AuthenticatorConfigs `json:"authenticators"`
+
+	// Try these file extensions when looking for default (i.e.: "index") files.  If IndexFile has an extension, it will be stripped first.
+	TryExtensions []string `json:"tryExtensions"`
+
+	// Map file extensions to preferred renderers for a given file type.
+	RendererMappings map[string]string `json:"rendererMapping"`
+
+	// Which types of files will automatically have layouts applied.
+	AutolayoutPatterns []string `json:"autolayoutPatterns"`
+
+	// List of filenames containing PEM-encoded X.509 TLS certificates that represent trusted authorities.
+	// Use to validate certificates signed by an internal, non-public authority.
+	TrustedRootPEMs []string `json:"trustedRootPEMs"`
+
+	// Configure routes and actions to execute when those routes are requested.
+	Actions []*Action `json:"actions"`
+
+	router        *http.ServeMux
+	server        *negroni.Negroni
+	fs            http.FileSystem
+	fsIsSet       bool
+	fileServer    http.Handler
+	precmd        *exec.Cmd
+	altRootCaPool *x509.CertPool
+	initialized   bool
 }
 
 func NewServer(root string, patterns ...string) *Server {

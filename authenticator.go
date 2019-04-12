@@ -107,6 +107,8 @@ func returnAuthenticatorFor(auth *AuthenticatorConfig) (Authenticator, error) {
 		authenticator, err = NewBasicAuthenticator(auth)
 	case `oauth2`:
 		authenticator, err = NewOauthAuthenticator(auth)
+	case `shell`:
+		authenticator, err = NewShellAuthenticator(auth)
 	default:
 		err = fmt.Errorf("unrecognized authenticator type %q", auth.Type)
 	}

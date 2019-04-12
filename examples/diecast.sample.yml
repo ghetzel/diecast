@@ -160,7 +160,7 @@ header:
 # on a Diecast site can be secured behind an authentication/authorization
 # scheme.
 authenticators:
-# Basic Authenticator: protect everything except for things in the /assets
+# Basic Authenticator: Basic HTTP authentication.
 # directory.
 - type: basic
   except:
@@ -173,12 +173,52 @@ authenticators:
     # access the protected resources.
     htpasswd: '/etc/my-app/htpasswd'
 
+# OAuth2 Authenticator: OAuth2 third-party authentication (e.g.: Google, GitHub, etc.)
 - type: oauth2
   callback: http://mydomain.example.com/auth
   options:
-    provider:  'google'
-    client_id: 'oauth_client_id_abc123'
-    secret:    'oauth_client_secret_xyz987'
+    provider:    'google'
+    client_id:   'oauth_client_id_abc123'
+    secret:      'oauth_client_secret_xyz987'
+
+    # Specify specific OAuth scopes to authorize
+    # scopes: ['user', 'email', 'other']
+
+    # Specify the name of the cookie stored in the user browser/agent
+    # cookie_name: 'DCSESSION'
+
+    # How long the session is valie for.
+    # lifetime: '30d'
+
+    # If provider is "custom", specify the authentication and token validation URLs
+    # auth_url: 'https://...'
+    # token_url: 'https://...'
+
+# Shell Authenticator: Call a script and let it do perform/validate authentication.
+- type: shell
+  options:
+    command: /usr/libexec/my-cool-authenticator
+
+    # By default, if the script exits with status 0 and has content on standard output,
+    # that content will be stored in a cookie on the user browser/agent. Subsequent requests
+    # are expected to present this cookie, whose contents will be passed as standard input to the
+    # calling script for validation.  Setting this to false explicitly disables this behavior, and
+    # the authentication script will expect credentials every time.
+    # disable_cookies: false
+
+    # Specify the parameters for the cookie stored in the user browser/agent.
+    # cookie_name: 'DCSESSION'
+    # cookie_path: ''
+    # cookie_domain: ''
+    # cookie_lifetime: ''
+    # cookie_secure: true
+    # cookie_http_only: false
+
+    # Specifies that all requests matching this path will remove an active session.
+    # deauth_path: /my-api/logout
+
+    # The path to redirect to after deauth is performed.
+    # deauth_redirect: /
 
 # It is possible to specify a command to run before Diecast begins serving
 # data, as well as after the server has started and is confirmed running.

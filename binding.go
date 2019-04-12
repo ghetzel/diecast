@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/ghetzel/go-stockutil/httputil"
@@ -35,7 +36,10 @@ const (
 	ActionIgnore                       = `ignore`
 )
 
-var BindingClient = http.DefaultClient
+var BindingClient = &http.Client{
+	Timeout: 60 * time.Second,
+}
+
 var AllowInsecureLoopbackBindings bool
 var DefaultParamJoiner = `;`
 
@@ -46,6 +50,7 @@ type Binding struct {
 	NotIfExpr          string                     `json:"not_if,omitempty"`
 	Method             string                     `json:"method,omitempty"`
 	Resource           string                     `json:"resource,omitempty"`
+	Timeout            interface{}                `json:"timeout,omitempty"`
 	Insecure           bool                       `json:"insecure,omitempty"`
 	ParamJoiner        string                     `json:"param_joiner,omitempty"`
 	Params             map[string]interface{}     `json:"params,omitempty"`
@@ -285,6 +290,19 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				BindingClient.Transport = &http.Transport{
 					TLSClientConfig: newTCC,
 				}
+			}
+
+			if timeout := typeutil.V(self.Timeout).Duration(); timeout > 0 {
+				if timeout < time.Microsecond {
+					// probably given as numeric seconds
+					timeout = timeout * time.Second
+				} else if timeout < time.Millisecond {
+					// probably given as numeric seconds
+					timeout = timeout * time.Millisecond
+				}
+
+				BindingClient.Timeout = timeout
+				log.Noticef("[%s] Binding: timeout=%v", id, BindingClient.Timeout)
 			}
 
 			if bindingReq.URL.Scheme == `https` && self.Insecure {
