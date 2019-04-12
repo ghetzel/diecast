@@ -44,6 +44,14 @@ func NewBasicAuthenticator(config *AuthenticatorConfig) (*BasicAuthenticator, er
 	return auth, nil
 }
 
+func (self *BasicAuthenticator) Name() string {
+	if self.config != nil && self.config.Name != `` {
+		return self.config.Name
+	} else {
+		return `BasicAuthenticator`
+	}
+}
+
 func (self *BasicAuthenticator) AddPasswdFile(filename string) error {
 	if htp, err := htpasswd.New(filename, htpasswd.DefaultSystems, func(err error) {
 		log.Warningf("BasicAuthenticator: %v", err)

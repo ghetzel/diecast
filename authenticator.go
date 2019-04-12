@@ -13,9 +13,11 @@ type Authenticator interface {
 	Authenticate(http.ResponseWriter, *http.Request) bool
 	IsCallback(*url.URL) bool
 	Callback(w http.ResponseWriter, req *http.Request)
+	Name() string
 }
 
 type AuthenticatorConfig struct {
+	Name         string                 `json:"name,omitempty"`
 	Type         string                 `json:"type"`
 	Paths        []string               `json:"paths"`
 	Except       []string               `json:"except"`
@@ -59,7 +61,7 @@ func (self AuthenticatorConfigs) Authenticator(req *http.Request) (Authenticator
 			}
 		}
 
-		if self.isUrlMatch(&auth, req.URL) {
+		if authIsUrlMatch(&auth, req.URL) {
 			return returnAuthenticatorFor(&auth)
 		}
 	}
@@ -67,7 +69,7 @@ func (self AuthenticatorConfigs) Authenticator(req *http.Request) (Authenticator
 	return nil, nil
 }
 
-func (self AuthenticatorConfigs) isUrlMatch(auth *AuthenticatorConfig, u *url.URL) bool {
+func authIsUrlMatch(auth *AuthenticatorConfig, u *url.URL) bool {
 	var match bool
 
 	// determine if any of our paths match the request path
@@ -109,6 +111,10 @@ func returnAuthenticatorFor(auth *AuthenticatorConfig) (Authenticator, error) {
 		authenticator, err = NewOauthAuthenticator(auth)
 	case `shell`:
 		authenticator, err = NewShellAuthenticator(auth)
+	case `always`:
+		authenticator, err = NewStaticAuthenticator(auth, true)
+	case `never`:
+		authenticator, err = NewStaticAuthenticator(auth, false)
 	default:
 		err = fmt.Errorf("unrecognized authenticator type %q", auth.Type)
 	}

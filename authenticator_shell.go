@@ -46,6 +46,14 @@ func NewShellAuthenticator(config *AuthenticatorConfig) (*ShellAuthenticator, er
 	return auth, nil
 }
 
+func (self *ShellAuthenticator) Name() string {
+	if self.config != nil && self.config.Name != `` {
+		return self.config.Name
+	} else {
+		return `ShellAuthenticator`
+	}
+}
+
 func (self *ShellAuthenticator) IsCallback(_ *url.URL) bool {
 	return false
 }
