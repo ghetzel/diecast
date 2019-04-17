@@ -24,6 +24,15 @@ func TestCollectionFunctions(t *testing.T) {
 	assert.Equal(50, page(3, 25))
 	assert.Equal(75, page(4, 25))
 	assert.Equal(100, page(5, 25))
+
+	isLastElement := fns[`isLastElement`].(func(index interface{}, array interface{}) bool)
+	arr := []string{`a`, `b`, `c`}
+
+	assert.False(isLastElement(-1, arr), arr)
+	assert.False(isLastElement(0, arr), arr)
+	assert.False(isLastElement(1, arr), arr)
+	assert.True(isLastElement(2, arr), arr)
+	assert.False(isLastElement(3, arr), arr)
 }
 
 func TestMiscFunctions(t *testing.T) {
