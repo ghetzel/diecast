@@ -424,6 +424,12 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						case `html`:
 							return goquery.NewDocumentFromReader(bytes.NewBuffer(data))
 
+						case `tsv`:
+							return xsvToArray(data, '\t')
+
+						case `csv`:
+							return xsvToArray(data, ',')
+
 						case `xml`:
 							return xmlToMap(data)
 

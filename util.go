@@ -1,6 +1,8 @@
 package diecast
 
 import (
+	"bytes"
+	"encoding/csv"
 	"encoding/xml"
 	"io"
 	"strings"
@@ -115,4 +117,40 @@ func xmlNodeToMap(node *xmlNode) map[string]interface{} {
 	}
 
 	return out
+}
+
+func xsvToArray(data []byte, delim rune) (map[string]interface{}, error) {
+	recs := make([][]interface{}, 0)
+
+	out := map[string]interface{}{
+		`headers`: make([]string, 0),
+		`records`: recs,
+	}
+
+	reader := csv.NewReader(bytes.NewBuffer(data))
+	reader.Comma = delim
+
+	if records, err := reader.ReadAll(); err == nil {
+		for i, row := range records {
+			if i == 0 {
+				out[`headers`] = row
+			} else {
+				outrec := make([]interface{}, len(row))
+
+				for j, col := range row {
+					outrec[j] = typeutil.Auto(col)
+				}
+
+				if len(outrec) > 0 {
+					recs = append(recs, outrec)
+				}
+			}
+		}
+
+		out[`records`] = recs
+
+		return out, nil
+	} else {
+		return nil, err
+	}
 }
