@@ -2,10 +2,11 @@ package diecast
 
 import (
 	"fmt"
+	"regexp"
+
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
-	"regexp"
 )
 
 func loadStandardFunctionsComparisons(funcs FuncMap) funcGroup {
@@ -187,20 +188,26 @@ func loadStandardFunctionsComparisons(funcs FuncMap) funcGroup {
 				Arguments: []funcArg{
 					{
 						Name:        `pattern`,
-						Type:        `string`,
-						Description: `The regular expression to match with.`,
+						Type:        `string, array`,
+						Description: `The regular expression to match with, or an array of regular expressions (any of which may match).`,
 					}, {
 						Name:        `value`,
 						Type:        `string`,
 						Description: `The value to match against.`,
 					},
 				},
-				Function: func(pattern string, value interface{}) (bool, error) {
-					if rx, err := regexp.Compile(pattern); err == nil {
-						return rx.MatchString(typeutil.String(value)), nil
-					} else {
-						return false, err
+				Function: func(patterns interface{}, value interface{}) (bool, error) {
+					for _, pattern := range sliceutil.Stringify(patterns) {
+						if rx, err := regexp.Compile(pattern); err == nil {
+							if rx.MatchString(typeutil.String(value)) {
+								return true, nil
+							}
+						} else {
+							return false, err
+						}
 					}
+
+					return false, nil
 				},
 			}, {
 				Name:    `switch`,

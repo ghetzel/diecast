@@ -2441,6 +2441,16 @@
         "Examples": null
       },
       {
+        "Name": "minimum_nz",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "stddev",
         "Alias": "",
         "Aliases": null,
@@ -2495,16 +2505,6 @@
         "Alias": "",
         "Aliases": null,
         "Summary": "Return the minimum of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "minimum_nz",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
         "Arguments": null,
@@ -5087,8 +5087,8 @@
         "Arguments": [
           {
             "Name": "pattern",
-            "Type": "string",
-            "Description": "The regular expression to match with.",
+            "Type": "string, array",
+            "Description": "The regular expression to match with, or an array of regular expressions (any of which may match).",
             "Variadic": false,
             "Optional": false,
             "Default": null,
