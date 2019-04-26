@@ -310,12 +310,14 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					log.Debugf("  [H] %v: %v", k, strings.Join(v, ` `))
 				}
 
-				onError := self.OnError
+				onError := BindingErrorAction(EvalInline(string(self.OnError), data, funcs))
 
 				// handle per-http-status response handlers
 				if len(self.IfStatus) > 0 {
 					// get the action for this code
 					if statusAction, ok := self.IfStatus[res.StatusCode]; ok {
+						statusAction = BindingErrorAction(EvalInline(string(statusAction), data, funcs))
+
 						switch statusAction {
 						case ActionIgnore:
 							onError = ActionIgnore
