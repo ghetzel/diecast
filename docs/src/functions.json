@@ -2441,6 +2441,26 @@
         "Examples": null
       },
       {
+        "Name": "sum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the sum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "maximum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the maximum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "mean",
         "Alias": "",
         "Aliases": null,
@@ -2485,26 +2505,6 @@
         "Alias": "",
         "Aliases": null,
         "Summary": "Return the standard deviation of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "sum",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the sum of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "maximum",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the maximum of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
         "Arguments": null,
@@ -4258,6 +4258,35 @@
         "Examples": null
       },
       {
+        "Name": "isLastElement",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Returns whether the given index in the given array is the last element in that array.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "index",
+            "Type": "integer",
+            "Description": "The current index of the item in the collection.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "array",
+            "Type": "array",
+            "Description": "The array being checked",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
         "Name": "findkey",
         "Alias": "findKey",
         "Aliases": null,
@@ -5058,8 +5087,8 @@
         "Arguments": [
           {
             "Name": "pattern",
-            "Type": "string",
-            "Description": "The regular expression to match with.",
+            "Type": "string, array",
+            "Description": "The regular expression to match with, or an array of regular expressions (any of which may match).",
             "Variadic": false,
             "Optional": false,
             "Default": null,
