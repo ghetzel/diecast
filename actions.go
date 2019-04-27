@@ -82,6 +82,20 @@ func (self *StepConfig) postprocess() {
 
 				if err := json.Unmarshal(out, &outI); err == nil {
 					self.Output = outI
+				} else if err.Error() == `invalid character '{' after top-level value` {
+					var outA []interface{}
+
+					for i, line := range strings.Split(string(out), "\n") {
+						var outM map[string]interface{}
+
+						if err := json.Unmarshal([]byte(line), &outM); err == nil {
+							outA = append(outA, outM)
+						} else {
+							self.logstep("output line=%d: err=%v", i, err)
+						}
+					}
+
+					self.Output = outA
 				} else {
 					self.Error = err
 				}
@@ -118,15 +132,13 @@ func (self *StepConfig) Perform(_ *StepConfig, w http.ResponseWriter, req *http.
 }
 
 func (self *StepConfig) logstep(format string, args ...interface{}) {
-	if !self.firstlog {
-		format = "\u2502  step %d: " + format
-		args = append([]interface{}{self.index}, args...)
-	} else {
-		format = "\u2502          " + format
-	}
+	if format != `` {
+		if !strings.HasPrefix(format, "\u2502") {
+			format = "\u2502          " + format
+		}
 
-	log.Debugf(format, args...)
-	self.firstlog = true
+		log.Debugf(format, args...)
+	}
 }
 
 type Action struct {
@@ -157,7 +169,8 @@ func (self *Action) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	for i, step := range self.Steps {
 		step.index = i
-		step.logstep("type=%v data=%T", step.Type, step.Data)
+
+		step.logstep("\u2502  step %d: type=%v data=%T", i, step.Type, step.Data)
 		out, err := step.Perform(step, w, req, prev)
 
 		prev = step

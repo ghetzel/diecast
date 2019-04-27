@@ -1,12 +1,14 @@
 package diecast
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	htpasswd "github.com/tg123/go-htpasswd"
 )
 
 func musturl(in string) *url.URL {
@@ -56,7 +58,48 @@ func TestAuthenticatorConfigs(t *testing.T) {
 	assert.Nil(auth)
 }
 
-// func TestBasicAuthenticator(t *testing.T) {
-// 	assert := require.New(t)
-// 	auth, err := NewBasicAuthenticator(&AuthenticatorConfig{})
-// }
+func TestBasicAuthenticator(t *testing.T) {
+	assert := require.New(t)
+	auth, err := NewBasicAuthenticator(&AuthenticatorConfig{
+		Options: map[string]interface{}{
+			`credentials`: map[string]interface{}{
+				`tester01`: `{SHA}u3/Rg4+2cdohm4CmQtP9Qq45HX0=`,
+			},
+		},
+	})
+
+	htp, err := htpasswd.AcceptSha(`{SHA}u3/Rg4+2cdohm4CmQtP9Qq45HX0=`)
+	assert.NoError(err)
+	assert.NotNil(htp)
+	assert.True(htp.MatchesPassword(`t3st`))
+
+	req := httptest.NewRequest(`GET`, `/`, nil)
+	req.Header.Set(`Authorization`, `Basic `+base64.StdEncoding.EncodeToString(
+		[]byte(url.UserPassword(`tester01`, `t3st`).String()),
+	))
+
+	assert.True(auth.Authenticate(
+		httptest.NewRecorder(),
+		req,
+	))
+
+	req = httptest.NewRequest(`GET`, `/`, nil)
+	req.Header.Set(`Authorization`, `Basic `+base64.StdEncoding.EncodeToString(
+		[]byte(url.UserPassword(`tester01`, `WRONGPASSWORD`).String()),
+	))
+
+	assert.False(auth.Authenticate(
+		httptest.NewRecorder(),
+		req,
+	))
+
+	req = httptest.NewRequest(`GET`, `/`, nil)
+	req.Header.Set(`Authorization`, `Basic `+base64.StdEncoding.EncodeToString(
+		[]byte(url.UserPassword(`wrongUser`, `t3st`).String()),
+	))
+
+	assert.False(auth.Authenticate(
+		httptest.NewRecorder(),
+		req,
+	))
+}

@@ -10,13 +10,15 @@ import (
 	"github.com/ghetzel/go-stockutil/pathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 	htpasswd "github.com/tg123/go-htpasswd"
 )
 
 type BasicAuthenticator struct {
-	config   *AuthenticatorConfig
-	htpasswd []*htpasswd.HtpasswdFile
-	realm    string
+	config      *AuthenticatorConfig
+	htpasswd    []*htpasswd.File
+	credentials map[string]interface{}
+	realm       string
 }
 
 func NewBasicAuthenticator(config *AuthenticatorConfig) (*BasicAuthenticator, error) {
@@ -27,9 +29,7 @@ func NewBasicAuthenticator(config *AuthenticatorConfig) (*BasicAuthenticator, er
 
 	htpasswds := sliceutil.Stringify(sliceutil.Compact(config.O(`htpasswd`).Value))
 
-	if len(htpasswds) == 0 {
-		return nil, fmt.Errorf("Must specify at least one user database via the 'htpasswd' option")
-	} else {
+	if len(htpasswds) > 0 {
 		for _, filename := range htpasswds {
 			if ex, err := pathutil.ExpandUser(filename); err == nil {
 				if err := auth.AddPasswdFile(ex); err != nil {
@@ -41,7 +41,13 @@ func NewBasicAuthenticator(config *AuthenticatorConfig) (*BasicAuthenticator, er
 		}
 	}
 
-	return auth, nil
+	auth.credentials = config.O(`credentials`).MapNative()
+
+	if len(auth.htpasswd) == 0 && len(auth.credentials) == 0 {
+		return nil, fmt.Errorf("Must specify at least one user database via the 'htpasswd' option")
+	} else {
+		return auth, nil
+	}
 }
 
 func (self *BasicAuthenticator) Name() string {
@@ -76,9 +82,27 @@ func (self *BasicAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 		if decoded, err := base64.StdEncoding.DecodeString(uppair); err == nil {
 			username, password := stringutil.SplitPair(string(decoded), `:`)
 
+			// match against any loaded htpasswd files
 			for _, htp := range self.htpasswd {
 				if htp.Match(username, password) {
 					return true
+				}
+			}
+
+			// match against statically-configured user:passhash pairs
+			for authUser, passhash := range self.credentials {
+				if username == authUser {
+					ph := typeutil.String(passhash)
+
+					if enc, err := htpasswd.AcceptBcrypt(ph); err == nil && enc != nil {
+						return enc.MatchesPassword(password)
+					} else if enc, err := htpasswd.AcceptMd5(ph); err == nil && enc != nil {
+						return enc.MatchesPassword(password)
+					} else if enc, err := htpasswd.AcceptSha(ph); err == nil && enc != nil {
+						return enc.MatchesPassword(password)
+					} else if enc, err := htpasswd.AcceptSsha(ph); err == nil && enc != nil {
+						return enc.MatchesPassword(password)
+					}
 				}
 			}
 		} else {

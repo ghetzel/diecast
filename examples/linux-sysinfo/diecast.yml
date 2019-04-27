@@ -13,12 +13,34 @@ actions:
     -   type:   process
         data:   diffuse
 
+
+-   path:     /api/system/storage
+    method:   get
+    steps:
+    -   type: 'shell'
+        data: |
+            #!/usr/bin/env bash
+            df | while read fs blk used avail perc mount; do
+                if [ "${fs}" == "Filesystem" ]; then
+                    continue
+                else
+                    echo -n '{'
+                    echo -n '"remote": "'${fs}'",'
+                    echo -n '"size": '$(( ${blk} * 1024 ))','
+                    echo -n '"used": '$(( ${used} * 1024 ))','
+                    echo -n '"free": '$(( ${avail} * 1024 ))','
+                    echo -n '"use":  '${perc//%/}','
+                    echo -n '"mount": "'${mount}'"'
+                    echo '}'
+                fi
+            done
+
 -   path:     /api/system/cpu
     method:   get
     steps:
     -   type:   'shell'
         data: |
-            #!/bin/bash
+            #!/usr/bin/env bash
             # Read /proc/stat file (for first datapoint)
             read cpu user nice system idle iowait irq softirq steal guest< /proc/stat
 

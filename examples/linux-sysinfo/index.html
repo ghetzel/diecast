@@ -84,7 +84,7 @@
                 <div class="card-header">
                     Storage
                 </div>
-                <div class="card-body">
+                <div class="card-body" id="storage">
 
                 </div>
             </div>
@@ -172,6 +172,24 @@
                             rest,
                         ],
                     });
+                });
+            }, 1000);
+
+            setInterval(function(){
+                $.get('/api/system/storage').then(function(res){
+                    var table = $('<table></table>');
+                    table.addClass('table table-sm')
+
+                    $.each(res, function(i, disk) {
+                        var row = $('<tr></tr>');
+
+                        row.append($('<th></th>').text(disk.mount))
+                        row.append($('<td></td>').text(disk.use.toString() + '%'));
+
+                        table.append(row);
+                    });
+
+                    $('#storage').replaceWith(table);
                 });
             }, 1000);
         });

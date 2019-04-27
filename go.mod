@@ -5,7 +5,7 @@ require (
 	github.com/dustin/go-humanize v0.0.0-20180713052910-9f541cc9db5d
 	github.com/fatih/structs v1.0.0
 	github.com/ghetzel/cli v1.17.0
-	github.com/ghetzel/go-stockutil v1.7.36
+	github.com/ghetzel/go-stockutil v1.7.39
 	github.com/ghetzel/go-webfriend v0.9.40
 	github.com/ghodss/yaml v1.0.0
 	github.com/gobwas/glob v0.2.3
@@ -24,7 +24,7 @@ require (
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/spaolacci/murmur3 v0.0.0-20170819071325-9f5d223c6079
 	github.com/stretchr/testify v1.2.2
-	github.com/tg123/go-htpasswd v0.0.0-20150618065153-49fe3fd1681b
+	github.com/tg123/go-htpasswd v0.0.0-20190305225429-d38e564730bf
 	github.com/urfave/negroni v1.0.0
 	github.com/wellington/go-libsass v0.9.3-0.20190110124256-dc056fc24fcf
 	github.com/wellington/sass v0.0.0-20160911051022-cab90b3986d6
@@ -33,5 +33,3 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
-
-replace github.com/ghetzel/go-stockutil v1.7.30 => ../go-stockutil

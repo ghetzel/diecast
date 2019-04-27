@@ -1403,6 +1403,8 @@ func (self *Server) setupServer() error {
 
 	// add action handlers
 	for i, action := range self.Actions {
+		hndPath := filepath.Join(self.rp(), action.Path)
+
 		if executil.IsRoot() && !executil.EnvBool(`DIECAST_ALLOW_ROOT_ACTIONS`) {
 			return fmt.Errorf("Refusing to start as root with actions specified.  Override with the environment variable DIECAST_ALLOW_ROOT_ACTIONS=true")
 		}
@@ -1411,11 +1413,15 @@ func (self *Server) setupServer() error {
 			return fmt.Errorf("Action %d: Must specify a 'path'", i)
 		}
 
-		self.router.HandleFunc(fmt.Sprintf("%s/%s", self.rp(), action.Path), func(w http.ResponseWriter, req *http.Request) {
+		self.router.HandleFunc(hndPath, func(w http.ResponseWriter, req *http.Request) {
 			if handler := self.actionForRequest(req); handler != nil {
 				handler(w, req)
+			} else {
+				http.Error(w, fmt.Sprintf("cannot find handler for action"), http.StatusInternalServerError)
 			}
 		})
+
+		log.Debugf("[actions] Registered %s", hndPath)
 	}
 
 	self.server.UseHandler(self.router)
@@ -1455,7 +1461,7 @@ func (self *Server) actionForRequest(req *http.Request) http.HandlerFunc {
 	route := req.URL.Path
 
 	for _, action := range self.Actions {
-		actionPath := fmt.Sprintf("%s/%s", self.rp(), action.Path)
+		actionPath := filepath.Join(self.rp(), action.Path)
 
 		if actionPath == route {
 			methods := sliceutil.Stringify(action.Method)
