@@ -36,12 +36,6 @@ func (self Engine) String() string {
 
 type FuncMap map[string]interface{}
 
-type Templated interface {
-	Parse(text string) error
-	Funcs(FuncMap)
-	Render(io.Writer, interface{}, string) error
-}
-
 type Template struct {
 	name           string
 	engine         Engine
@@ -52,6 +46,7 @@ type Template struct {
 	postprocessors []PostprocessorFunc
 	delimOpen      string
 	delimClose     string
+	prewrite       func()
 }
 
 func GetEngineForFile(filename string) Engine {
@@ -68,6 +63,10 @@ func NewTemplate(name string, engine Engine) *Template {
 		name:   name,
 		engine: engine,
 	}
+}
+
+func (self *Template) SetPrewriteFunc(fn func()) {
+	self.prewrite = fn
 }
 
 func (self *Template) SetHeaderOffset(offset int) {
@@ -101,13 +100,13 @@ func (self *Template) Engine() Engine {
 
 func (self *Template) ParseFrom(r io.Reader) error {
 	if data, err := ioutil.ReadAll(r); err == nil {
-		return self.Parse(string(data))
+		return self.ParseString(string(data))
 	} else {
 		return err
 	}
 }
 
-func (self *Template) Parse(input string) error {
+func (self *Template) ParseString(input string) error {
 	// determine the line that the "content" template starts on
 	for i, line := range strings.Split(input, "\n") {
 		if i > 0 && strings.Contains(line, `{{ define "content" }}`) {
@@ -151,10 +150,62 @@ func (self *Template) Parse(input string) error {
 		return fmt.Errorf("Unknown template engine")
 	}
 
-	return self.preprocessTemplate()
+	return nil
 }
 
-func (self *Template) preprocessTemplate() error {
+func (self *Template) ParseFragments(fragments FragmentSet) error {
+	hasLayout := fragments.HasLayout()
+
+	switch self.engine {
+	case TextEngine:
+		tmpl := text.New(self.name)
+
+		if self.funcs != nil {
+			tmpl.Funcs(text.FuncMap(self.funcs))
+		}
+
+		for _, fragment := range fragments {
+			var t *text.Template
+
+			if !hasLayout && fragment.Name == ContentTemplateName {
+				t = tmpl
+			} else {
+				t = tmpl.New(fragment.Name)
+			}
+
+			if _, err := t.Parse(string(fragment.Data)); err != nil {
+				return fmt.Errorf("error parsing fragment %s: %v", fragment.Name, err)
+			}
+		}
+
+		self.tmpl = tmpl
+
+	case HtmlEngine:
+		tmpl := html.New(self.name)
+
+		if self.funcs != nil {
+			tmpl.Funcs(html.FuncMap(self.funcs))
+		}
+
+		for _, fragment := range fragments {
+			var t *html.Template
+
+			if !hasLayout && fragment.Name == ContentTemplateName {
+				t = tmpl
+			} else {
+				t = tmpl.New(fragment.Name)
+			}
+
+			if _, err := t.Parse(string(fragment.Data)); err != nil {
+				return fmt.Errorf("error parsing fragment %s: %v", fragment.Name, err)
+			}
+		}
+
+		self.tmpl = tmpl
+
+	default:
+		return fmt.Errorf("Unknown template engine")
+	}
 
 	return nil
 }
@@ -253,6 +304,10 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 					fmt.Errorf("Postprocessor %d: %v", n, err),
 				)
 			}
+		}
+
+		if fn := self.prewrite; fn != nil {
+			fn()
 		}
 
 		_, werr := w.Write([]byte(outstr))

@@ -140,10 +140,20 @@ mounts:
 # server via HTTP(S).
 - mount: https://ajax.googleapis.com/ajax/libs/
   to:    /assets/js/
+  options:
+    # Include all headers sent from the client when proxying the request.
+    passthrough_requests: true
+
+    # Pass any errors the remote server sends directly to the client.
+    passthrough_errors:   true
 
 - mount: https://ajax.googleapis.com/ajax/libs/
   to:    /assets/css/
-
+  options:
+    # Include these headers in every request to the proxy resource.
+    headers:
+      X-From-Application: diecast
+      Authorization: 'Token abc123'
 
 # Specify default values for the header (i.e. Front Matter) for all
 # templates and layouts.  This is useful for seeding site-wide variables
@@ -160,7 +170,7 @@ header:
 # on a Diecast site can be secured behind an authentication/authorization
 # scheme.
 authenticators:
-# Basic Authenticator: protect everything except for things in the /assets
+# Basic Authenticator: Basic HTTP authentication.
 # directory.
 - type: basic
   except:
@@ -173,12 +183,52 @@ authenticators:
     # access the protected resources.
     htpasswd: '/etc/my-app/htpasswd'
 
+# OAuth2 Authenticator: OAuth2 third-party authentication (e.g.: Google, GitHub, etc.)
 - type: oauth2
   callback: http://mydomain.example.com/auth
   options:
-    provider:  'google'
-    client_id: 'oauth_client_id_abc123'
-    secret:    'oauth_client_secret_xyz987'
+    provider:    'google'
+    client_id:   'oauth_client_id_abc123'
+    secret:      'oauth_client_secret_xyz987'
+
+    # Specify specific OAuth scopes to authorize
+    # scopes: ['user', 'email', 'other']
+
+    # Specify the name of the cookie stored in the user browser/agent
+    # cookie_name: 'DCSESSION'
+
+    # How long the session is valie for.
+    # lifetime: '30d'
+
+    # If provider is "custom", specify the authentication and token validation URLs
+    # auth_url: 'https://...'
+    # token_url: 'https://...'
+
+# Shell Authenticator: Call a script and let it do perform/validate authentication.
+- type: shell
+  options:
+    command: /usr/libexec/my-cool-authenticator
+
+    # By default, if the script exits with status 0 and has content on standard output,
+    # that content will be stored in a cookie on the user browser/agent. Subsequent requests
+    # are expected to present this cookie, whose contents will be passed as standard input to the
+    # calling script for validation.  Setting this to false explicitly disables this behavior, and
+    # the authentication script will expect credentials every time.
+    # disable_cookies: false
+
+    # Specify the parameters for the cookie stored in the user browser/agent.
+    # cookie_name: 'DCSESSION'
+    # cookie_path: ''
+    # cookie_domain: ''
+    # cookie_lifetime: ''
+    # cookie_secure: true
+    # cookie_http_only: false
+
+    # Specifies that all requests matching this path will remove an active session.
+    # deauth_path: /my-api/logout
+
+    # The path to redirect to after deauth is performed.
+    # deauth_redirect: /
 
 # It is possible to specify a command to run before Diecast begins serving
 # data, as well as after the server has started and is confirmed running.
@@ -217,3 +267,76 @@ start:
     # DIECAST_PATH_ERRORS:    /my/root/path/_errors
     # DIECAST_BINDING_PREFIX: ''
     # DIECAST_ROUTE_PREFIX:   ''
+
+
+# Actions provide a mechanism to act as a very simple RESTful API service.
+#   You specify actions as one or more configuration objects, specifying the
+#   URL path and HTTP method(s) the action will be invoked by, as well as a
+#   series of steps to perform in fulfilling the request.
+#
+actions:
+# Configure an action to return the system's current uptime (in seconds).
+- path:     /api/system/uptime
+  method:   get
+  steps:
+  # Shell out to read the /proc/uptime file.
+  - type:   'shell'
+    data:   'cat /proc/uptime'
+
+# Configure a more complex action that executes a script and returns the output.
+- path:     /api/system/cpu
+  method:   get
+  steps:
+  - type:   'shell'
+    data: |
+      #!/bin/bash
+      # Read /proc/stat file (for first datapoint)
+      read cpu user nice system idle iowait irq softirq steal guest< /proc/stat
+
+      # compute active and total utilizations
+      cpu_active_prev=$((user+system+nice+softirq+steal))
+      cpu_total_prev=$((user+system+nice+softirq+steal+idle+iowait))
+      cpu_user_prev=${user}
+      cpu_sys_prev=${system}
+      cpu_nice_prev=${nice}
+      cpu_io_prev=${iowait}
+      cpu_irq_prev=${irq}
+      cpu_sirq_prev=${softirq}
+      cpu_steal_prev=${steal}
+      sleep 0.05
+
+      # Read /proc/stat file (for second datapoint)
+      read cpu user nice system idle iowait irq softirq steal guest< /proc/stat
+
+      # compute active and total utilizations
+      cpu_active_cur=$((user+system+nice+softirq+steal))
+      cpu_total_cur=$((user+system+nice+softirq+steal+idle+iowait))
+      cpu_user_cur=${user}
+      cpu_sys_cur=${system}
+      cpu_nice_cur=${nice}
+      cpu_io_cur=${iowait}
+      cpu_irq_cur=${irq}
+      cpu_sirq_cur=${softirq}
+      cpu_steal_cur=${steal}
+
+      # compute CPU utilization (%)
+      cpu_util=$((100*( cpu_active_cur-cpu_active_prev ) / (cpu_total_cur-cpu_total_prev) ))
+      cpu_user=$((100*( cpu_user_cur-cpu_user_prev ) / (cpu_total_cur-cpu_total_prev) ))
+      cpu_sys=$((100*( cpu_sys_cur-cpu_sys_prev ) / (cpu_total_cur-cpu_total_prev) ))
+      cpu_nice=$((100*( cpu_nice_cur-cpu_nice_prev ) / (cpu_total_cur-cpu_total_prev) ))
+      cpu_io=$((100*( cpu_io_cur-cpu_io_prev ) / (cpu_total_cur-cpu_total_prev) ))
+      cpu_irq=$((100*( cpu_irq_cur-cpu_irq_prev ) / (cpu_total_cur-cpu_total_prev)))
+      cpu_sirq=$((100*( cpu_sirq_cur-cpu_sirq_prev ) / (cpu_total_cur-cpu_total_prev)))
+      cpu_steal=$((100*( cpu_steal_cur-cpu_steal_prev ) / (cpu_total_cur-cpu_total_prev) ))
+
+      echo -n '{'
+      echo   '"total": '"${cpu_util}"','
+      echo   '"user": '"${cpu_user}"','
+      echo   '"system": '"${cpu_sys}"','
+      echo   '"nice": '"${cpu_nice}"','
+      echo   '"iowait": '"${cpu_io}"','
+      echo   '"softirq": '"${cpu_sirq}"','
+      echo   '"irq": '"${cpu_irq}"','
+      echo   '"steal": '"${cpu_steal}"
+      echo '}'
+      exit 0

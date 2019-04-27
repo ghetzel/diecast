@@ -20,9 +20,9 @@ func doTestServerRequest(s *Server, method string, path string, tester func(*htt
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, req)
 
-	if w.Code >= 400 {
-		log.Errorf("Response %d: %s", w.Code, w.Body.String())
-	}
+	// if w.Code >= 400 {
+	// 	log.Errorf("Response %d: %s", w.Code, w.Body.String())
+	// }
 
 	tester(w)
 }
@@ -80,6 +80,7 @@ func TestStaticServer(t *testing.T) {
 }
 
 func TestStaticServerWithRoutePrefix(t *testing.T) {
+	log.SetLevelString(`debug`)
 	assert := require.New(t)
 	server := NewServer(`./tests/hello`)
 	server.RoutePrefix = `/ui`
@@ -315,7 +316,7 @@ func TestLayoutsDefault(t *testing.T) {
 	fn := func(w *httptest.ResponseRecorder) {
 		assert.Equal(200, w.Code)
 		data := strings.TrimSpace(w.Body.String())
-		assert.True(strings.HasPrefix(data, "<h1>\n<b>GET</b>"))
+		assert.True(strings.HasPrefix(data, "<h1><b>GET</b>"))
 	}
 
 	doTestServerRequest(server, `GET`, `/`, fn)
@@ -337,7 +338,7 @@ func TestLayoutsDefault(t *testing.T) {
 	doTestServerRequest(server, `GET`, `/h2layout`, func(w *httptest.ResponseRecorder) {
 		assert.Equal(200, w.Code)
 		data := strings.TrimSpace(w.Body.String())
-		assert.Equal("<h2>\n\n<b>GET</b>\n\n</h2>", data)
+		assert.Equal("<h2>\n<b>GET</b>\n</h2>", data)
 	})
 
 	doTestServerRequest(server, `GET`, `/h2-nolayout`, func(w *httptest.ResponseRecorder) {
@@ -356,6 +357,6 @@ func TestIncludes(t *testing.T) {
 	doTestServerRequest(server, `GET`, `/include-base.html`, func(w *httptest.ResponseRecorder) {
 		assert.Equal(200, w.Code)
 		data := strings.TrimSpace(w.Body.String())
-		assert.Equal("<b>GET</b>\n\n<i>GET</i>\n\n\n\n<u>GET</u>", data)
+		assert.Equal("<b>GET</b>\n<i>GET</i>\n\n<u>GET</u>", data)
 	})
 }

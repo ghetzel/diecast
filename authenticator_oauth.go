@@ -100,6 +100,14 @@ func NewOauthAuthenticator(config *AuthenticatorConfig) (*OauthAuthenticator, er
 	return auth, nil
 }
 
+func (self *OauthAuthenticator) Name() string {
+	if self.config != nil && self.config.Name != `` {
+		return self.config.Name
+	} else {
+		return `OauthAuthenticator`
+	}
+}
+
 func (self *OauthAuthenticator) IsCallback(u *url.URL) bool {
 	if self.config != nil {
 		if cb, err := url.Parse(self.config.CallbackPath); err == nil {

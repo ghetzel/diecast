@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/fatih/structs"
+	"github.com/ghetzel/go-stockutil/executil"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
@@ -35,14 +36,21 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/ghodss/yaml"
 	"github.com/jbenet/go-base58"
-	"github.com/julienschmidt/httprouter"
 	"github.com/mattn/go-shellwords"
 	"github.com/urfave/negroni"
 )
 
+var ITotallyUnderstandRunningArbitraryCommandsAsRootIsRealRealBad = false
+
 const DefaultAddress = `127.0.0.1:28419`
 const DefaultRoutePrefix = `/`
 const DefaultConfigFile = `diecast.yml`
+const DefaultLayoutsPath = `/_layouts`
+const DefaultErrorsPath = `/_errors`
+const DebuggingQuerystringParam = `__viewsource`
+const LayoutTemplateName = `layout`
+const ContentTemplateName = `content`
+const ContextRequestKey = `diecast-request-id`
 
 var HeaderSeparator = []byte{'-', '-', '-'}
 var DefaultIndexFile = `index.html`
@@ -77,40 +85,93 @@ type StartCommand struct {
 }
 
 type Server struct {
-	BinPath             string                 `json:"-"`
-	Address             string                 `json:"address"`
-	Bindings            []Binding              `json:"bindings"`
-	BindingPrefix       string                 `json:"bindingPrefix"`
-	RootPath            string                 `json:"root"`
-	LayoutPath          string                 `json:"layouts"`
-	ErrorsPath          string                 `json:"errors"`
-	EnableDebugging     bool                   `json:"debug"`
-	EnableLayouts       bool                   `json:"enableLayouts"`
-	RoutePrefix         string                 `json:"routePrefix"`
-	TemplatePatterns    []string               `json:"patterns"`
-	AdditionalFunctions template.FuncMap       `json:"-"`
-	TryLocalFirst       bool                   `json:"localFirst"`
-	IndexFile           string                 `json:"indexFile"`
-	VerifyFile          string                 `json:"verifyFile"`
-	Mounts              []Mount                `json:"-"`
-	MountConfigs        []MountConfig          `json:"mounts"`
-	BaseHeader          *TemplateHeader        `json:"header"`
-	DefaultPageObject   map[string]interface{} `json:"-"`
-	OverridePageObject  map[string]interface{} `json:"-"`
-	PrestartCommand     StartCommand           `json:"prestart"`
-	StartCommand        StartCommand           `json:"start"`
-	Authenticators      AuthenticatorConfigs   `json:"authenticators"`
-	TryExtensions       []string               `json:"tryExtensions"`   // try these file extensions when looking for default (i.e.: "index") files
-	RendererMappings    map[string]string      `json:"rendererMapping"` // map file extensions to preferred renderers
-	AutolayoutPatterns  []string               `json:"autolayoutPatterns"`
-	TrustedRootPEMs     []string               `json:"trustedRootPEMs"`
-	router              *httprouter.Router
-	server              *negroni.Negroni
-	fs                  http.FileSystem
-	fsIsSet             bool
-	fileServer          http.Handler
-	precmd              *exec.Cmd
-	altRootCaPool       *x509.CertPool
+	// Exposes the location of the diecast binary
+	BinPath string `json:"-"`
+
+	// The host:port address the server is listening on
+	Address string `json:"address"`
+
+	// Top-level bindings that apply to every rendered template
+	Bindings []Binding `json:"bindings"`
+
+	// Specify a string to prefix all binding resource values that start with "/"
+	BindingPrefix string `json:"bindingPrefix"`
+
+	// The filesystem location where templates and files are served from
+	RootPath string `json:"root"`
+
+	// The path to the layouts template directory
+	LayoutPath string `json:"layouts"`
+
+	// The path to the errors template directory
+	ErrorsPath string `json:"errors"`
+
+	// Enables additional options for debugging applications. Caution: can expose secrets and other sensitive data.
+	EnableDebugging bool `json:"debug"`
+
+	// Specifies whether layouts are enabled
+	EnableLayouts bool `json:"enableLayouts"`
+
+	// If specified, all requests must be prefixed with this string.
+	RoutePrefix string `json:"routePrefix"`
+
+	// A set of glob patterns specifying which files will be rendered as templates.
+	TemplatePatterns []string `json:"patterns"`
+
+	// Allow for the programmatic addition of extra functions for use in templates.
+	AdditionalFunctions template.FuncMap `json:"-"`
+
+	// Whether to attempt to locate a local file matching the requested path before attempting to find a template.
+	TryLocalFirst bool `json:"localFirst"`
+
+	// The name of the template file to use when a directory is requested.
+	IndexFile string `json:"indexFile"`
+
+	// A file that must exist and be readable before starting the server.
+	VerifyFile string `json:"verifyFile"`
+
+	// The set of all registered mounts.
+	Mounts []Mount `json:"-"`
+
+	// A list of mount configurations read from the diecast.yml config file.
+	MountConfigs []MountConfig `json:"mounts"`
+
+	// A default header that all templates will inherit from.
+	BaseHeader         *TemplateHeader        `json:"header"`
+	DefaultPageObject  map[string]interface{} `json:"-"`
+	OverridePageObject map[string]interface{} `json:"-"`
+
+	// A command that will be executed before the server is started.
+	PrestartCommand StartCommand `json:"prestart"`
+
+	// A command that will be executed after the server is confirmed running.
+	StartCommand StartCommand `json:"start"`
+
+	// A set of authenticator configurations used to protect some or all routes.
+	Authenticators AuthenticatorConfigs `json:"authenticators"`
+
+	// Try these file extensions when looking for default (i.e.: "index") files.  If IndexFile has an extension, it will be stripped first.
+	TryExtensions []string `json:"tryExtensions"`
+
+	// Map file extensions to preferred renderers for a given file type.
+	RendererMappings map[string]string `json:"rendererMapping"`
+
+	// Which types of files will automatically have layouts applied.
+	AutolayoutPatterns []string `json:"autolayoutPatterns"`
+
+	// List of filenames containing PEM-encoded X.509 TLS certificates that represent trusted authorities.
+	// Use to validate certificates signed by an internal, non-public authority.
+	TrustedRootPEMs []string `json:"trustedRootPEMs"`
+
+	// Configure routes and actions to execute when those routes are requested.
+	Actions []*Action `json:"actions"`
+
+	router        *http.ServeMux
+	server        *negroni.Negroni
+	fs            http.FileSystem
+	precmd        *exec.Cmd
+	altRootCaPool *x509.CertPool
+	initialized   bool
 }
 
 func NewServer(root interface{}, patterns ...string) *Server {
@@ -118,22 +179,26 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		patterns = DefaultTemplatePatterns
 	}
 
+	describeTimer(`tpl`, `Diecast Template Rendering`)
+
 	server := &Server{
 		Address:            DefaultAddress,
-		RoutePrefix:        DefaultRoutePrefix,
-		DefaultPageObject:  make(map[string]interface{}),
-		OverridePageObject: make(map[string]interface{}),
 		Authenticators:     make([]AuthenticatorConfig, 0),
-		EnableLayouts:      true,
-		Bindings:           make([]Binding, 0),
-		RootPath:           `.`,
-		TemplatePatterns:   patterns,
-		IndexFile:          DefaultIndexFile,
-		VerifyFile:         DefaultVerifyFile,
-		Mounts:             make([]Mount, 0),
-		TryExtensions:      DefaultTryExtensions,
-		RendererMappings:   DefaultRendererMappings,
 		AutolayoutPatterns: DefaultAutolayoutPatterns,
+		Bindings:           make([]Binding, 0),
+		DefaultPageObject:  make(map[string]interface{}),
+		EnableLayouts:      true,
+		ErrorsPath:         DefaultErrorsPath,
+		IndexFile:          DefaultIndexFile,
+		LayoutPath:         DefaultLayoutsPath,
+		Mounts:             make([]Mount, 0),
+		OverridePageObject: make(map[string]interface{}),
+		RendererMappings:   DefaultRendererMappings,
+		RootPath:           `.`,
+		RoutePrefix:        DefaultRoutePrefix,
+		TemplatePatterns:   patterns,
+		TryExtensions:      DefaultTryExtensions,
+		VerifyFile:         DefaultVerifyFile,
 	}
 
 	if str, ok := root.(string); ok {
@@ -144,12 +209,16 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		panic("Diecast must be provided with a string or http.FileSystem")
 	}
 
+	mux := http.NewServeMux()
+	mux.HandleFunc(server.rp()+`/`, server.handleRequest)
+	server.router = mux
+
 	return server
 }
 
 func (self *Server) ShouldReturnSource(req *http.Request) bool {
 	if self.EnableDebugging {
-		if httputil.QBool(req, `__viewsource`) {
+		if httputil.QBool(req, DebuggingQuerystringParam) {
 			return true
 		}
 	}
@@ -200,6 +269,7 @@ func (self *Server) LoadConfig(filename string) error {
 	return nil
 }
 
+// Append the specified mounts to the current server.
 func (self *Server) SetMounts(mounts []Mount) {
 	if len(self.Mounts) > 0 {
 		self.Mounts = append(self.Mounts, mounts...)
@@ -213,35 +283,20 @@ func (self *Server) SetFileSystem(fs http.FileSystem) {
 }
 
 func (self *Server) Initialize() error {
-	// always make sure the root path is absolute
+	if v, err := fileutil.ExpandUser(self.RootPath); err == nil {
+		self.RootPath = v
+	}
+
 	if v, err := filepath.Abs(self.RootPath); err == nil {
-		cwd, err := os.Getwd()
-
-		if v == `./` && err == nil {
-			self.RootPath = cwd
-		} else {
-			self.RootPath = v
-		}
+		self.RootPath = v
 	} else {
-		return err
+		return fmt.Errorf("root path: %v", err)
 	}
-
-	if self.LayoutPath == `` {
-		self.LayoutPath = path.Join(`/`, `_layouts`)
-	}
-
-	if self.ErrorsPath == `` {
-		self.ErrorsPath = path.Join(`/`, `_errors`)
-	}
-
-	self.RoutePrefix = strings.TrimSuffix(self.RoutePrefix, `/`)
 
 	// if we haven't explicitly set a filesystem, create it
 	if self.fs == nil {
 		self.SetFileSystem(http.Dir(self.RootPath))
 	}
-
-	self.fileServer = http.FileServer(self.fs)
 
 	// allocate ephemeral address if we're supposed to
 	if addr, port, err := net.SplitHostPort(self.Address); err == nil {
@@ -254,6 +309,7 @@ func (self *Server) Initialize() error {
 		}
 	}
 
+	// if configured, this path must exist (relative to RootPath or the root filesystem) or Diecast will refuse to start
 	if self.VerifyFile != `` {
 		if verify, err := self.fs.Open(self.VerifyFile); err == nil {
 			verify.Close()
@@ -262,41 +318,11 @@ func (self *Server) Initialize() error {
 		}
 	}
 
-	if self.BindingPrefix != `` {
-		log.Debugf("Binding prefix is %v", self.BindingPrefix)
-	}
-
-	for _, binding := range self.Bindings {
-		binding.server = self
-	}
-
 	if err := self.setupServer(); err != nil {
 		return err
 	}
 
-	// if we're appending additional trusted certs (for Bindings and other internal HTTP clients)
-	if len(self.TrustedRootPEMs) > 0 {
-		// get the existing system CA bundle
-		if syspool, err := x509.SystemCertPool(); err == nil {
-			// append each cert
-			for _, pemfile := range self.TrustedRootPEMs {
-				// must be a readable PEM file
-				if pem, err := fileutil.ReadAll(pemfile); err == nil {
-					if !syspool.AppendCertsFromPEM(pem) {
-						return fmt.Errorf("Failed to append certificate %s", pemfile)
-					}
-				} else {
-					return fmt.Errorf("Failed to read certificate %s: %v", pemfile, err)
-				}
-			}
-
-			// this is what http.Client.Transport.TLSClientConfig.RootCAs will become
-			self.altRootCaPool = syspool
-		} else {
-			return fmt.Errorf("Failed to retrieve system CA pool: %v", err)
-		}
-	}
-
+	self.initialized = true
 	return self.RunStartCommand(&self.PrestartCommand, false)
 }
 
@@ -325,8 +351,8 @@ func (self *Server) Serve() error {
 }
 
 func (self *Server) ListenAndServe(address string) error {
-	self.Serve()
-	return nil
+	self.Address = address
+	return self.Serve()
 }
 
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -341,6 +367,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	self.server.ServeHTTP(w, req)
 }
 
+// return whether the request path matches any of the configured TemplatePatterns.
 func (self *Server) shouldApplyTemplate(requestPath string) bool {
 	baseName := filepath.Base(requestPath)
 
@@ -359,6 +386,7 @@ func (self *Server) shouldApplyTemplate(requestPath string) bool {
 	return false
 }
 
+// return whether the request path should automatically have layouts applied
 func (self *Server) shouldApplyLayout(requestPath string) bool {
 	baseName := filepath.Base(requestPath)
 
@@ -377,33 +405,39 @@ func (self *Server) shouldApplyLayout(requestPath string) bool {
 	return false
 }
 
-func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requestPath string, reader io.Reader, header *TemplateHeader, urlParams map[string]interface{}, mimeType string) error {
-	finalTemplate := bytes.NewBuffer(nil)
-	hasLayout := false
+// render a template, write the output to the given ResponseWriter
+func (self *Server) applyTemplate(
+	w http.ResponseWriter,
+	req *http.Request,
+	requestPath string,
+	data []byte,
+	header *TemplateHeader,
+	urlParams map[string]interface{},
+	mimeType string,
+) error {
+	fragments := make(FragmentSet, 0)
 	forceSkipLayout := false
-	headerOffset := 0
-	headers := make([]*TemplateHeader, 0)
 	layouts := make([]string, 0)
 
+	// get the content template in place right away
+	if err := fragments.Set(ContentTemplateName, header, data); err != nil {
+		return err
+	}
+
+	// start building headers stack and calculate line offsets (for error reporting)
 	if header != nil {
-		headers = append(headers, header)
-
-		if header.lines > 0 {
-			headerOffset = header.lines
-		}
-
 		if header.Layout != `` {
 			if header.Layout == `false` || header.Layout == `none` {
 				forceSkipLayout = true
 			} else {
-				layouts = append([]string{header.Layout}, layouts...)
+				layouts = []string{header.Layout}
 			}
 		}
-	}
 
-	// add in includes first
-	if err := self.InjectIncludes(finalTemplate, header); err != nil {
-		return err
+		// add all includes from the current item
+		if err := self.appendIncludes(&fragments, header); err != nil {
+			return err
+		}
 	}
 
 	// get a reference to a set of standard functions that won't have a scope yet
@@ -425,57 +459,34 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 					layoutName = EvalInline(layoutName, nil, earlyFuncs)
 
 					if layoutFile, err := self.LoadLayout(layoutName); err == nil {
-						if layoutHeader, layoutData, err := SplitTemplateHeaderContent(layoutFile); err == nil {
-							if layoutHeader != nil {
-								headers = append([]*TemplateHeader{layoutHeader}, headers...)
-
-								// add in layout includes
-								if err := self.InjectIncludes(finalTemplate, layoutHeader); err != nil {
-									return err
-								}
-							}
-
-							finalTemplate.WriteString("{{/* BEGIN LAYOUT '" + layoutName + "' */}}\n")
-							appendTemplate(finalTemplate, bytes.NewBuffer(layoutData), `layout`, true)
-							finalTemplate.WriteString("{{/* END LAYOUT '" + layoutName + "' */}}\n\n")
-						} else {
+						if err := fragments.Parse(LayoutTemplateName, layoutFile); err != nil {
 							return err
 						}
 
-						hasLayout = true
-					} else {
+						break
+					} else if layoutName != `default` {
 						// we don't care if the default layout is missing
-						if layoutName != `default` {
-							return err
-						}
+						return err
 					}
 				}
 			}
 		}
 	}
 
-	var baseHeader TemplateHeader
+	// get the merged header from all layouts, includes, and the template we're rendering
+	finalHeader := fragments.Header(self)
 
-	if self.BaseHeader != nil {
-		baseHeader = *self.BaseHeader
+	// add all includes
+	if err := self.appendIncludes(&fragments, &finalHeader); err != nil {
+		return err
 	}
 
-	finalHeader := &baseHeader
+	// put any url route params in there too
+	finalHeader.UrlParams = urlParams
 
-	for _, templateHeader := range headers {
-		if fh, err := finalHeader.Merge(templateHeader); err == nil {
-			finalHeader = fh
-		} else {
-			return err
-		}
-	}
+	if funcs, data, err := self.GetTemplateData(req, &finalHeader); err == nil {
+		start := time.Now()
 
-	if finalHeader != nil {
-		// and put any url route params in there too
-		finalHeader.UrlParams = urlParams
-	}
-
-	if funcs, data, err := self.GetTemplateData(req, finalHeader); err == nil {
 		// switches allow the template processing to be hijacked/redirected mid-evaluation
 		// based on data already evaluated
 		if len(finalHeader.Switch) > 0 {
@@ -497,14 +508,14 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 							finalHeader.Switch[i] = nil
 
 							if fh, err := finalHeader.Merge(swHeader); err == nil {
-								log.Debugf("Switch case %d matched, switching to template %v", i, swcase.UsePath)
+								log.Debugf("[%s] Switch case %d matched, switching to template %v", reqid(req), i, swcase.UsePath)
 								// log.Dump(fh)
 
 								return self.applyTemplate(
 									w,
 									req,
 									requestPath,
-									bytes.NewBuffer(swData),
+									swData,
 									fh,
 									urlParams,
 									mimeType,
@@ -522,41 +533,29 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 			}
 		}
 
-		// append the template to the final output (which at this point may or may not
-		// include the layout and explicitly-included subtemplates/snippets)
-		if err := appendTemplate(finalTemplate, reader, `content`, hasLayout); err != nil {
-			return err
-		}
-
 		var postTemplateRenderer Renderer
 		var renderOpts = RenderOptions{
-			FunctionSet:  funcs,
-			HasLayout:    hasLayout,
-			Header:       finalHeader,
-			HeaderOffset: headerOffset,
-			Input: ioutil.NopCloser(
-				bytes.NewReader(finalTemplate.Bytes()),
-			),
+			FunctionSet:   funcs,
+			Header:        &finalHeader,
+			Fragments:     fragments,
 			Data:          data,
 			MimeType:      mimeType,
 			RequestedPath: requestPath,
 		}
 
 		// if specified, get the FINAL renderer that the template output will be passed to
-		if finalHeader != nil {
-			finalHeader.Renderer = EvalInline(finalHeader.Renderer, data, funcs)
+		finalHeader.Renderer = EvalInline(finalHeader.Renderer, data, funcs)
 
-			switch finalHeader.Renderer {
-			case ``, `html`:
-				if r, ok := GetRendererForFilename(requestPath, self); ok {
-					postTemplateRenderer = r
-				}
-			default:
-				if r, err := GetRenderer(finalHeader.Renderer, self); err == nil {
-					postTemplateRenderer = r
-				} else {
-					return err
-				}
+		switch finalHeader.Renderer {
+		case ``, `html`:
+			if r, ok := GetRendererForFilename(requestPath, self); ok {
+				postTemplateRenderer = r
+			}
+		default:
+			if r, err := GetRenderer(finalHeader.Renderer, self); err == nil {
+				postTemplateRenderer = r
+			} else {
+				return err
 			}
 		}
 
@@ -580,20 +579,33 @@ func (self *Server) applyTemplate(w http.ResponseWriter, req *http.Request, requ
 
 				if err == nil {
 					// run the final template render and return
-					log.Debugf("Rendering using %T", postTemplateRenderer)
+					log.Debugf("[%s] Rendering using %T", reqid(req), postTemplateRenderer)
+
+					postTemplateRenderer.SetPrewriteFunc(func(r *http.Request) {
+						reqtime(r, `tpl`, time.Since(start))
+						writeRequestTimerHeaders(w, r)
+					})
+
 					return postTemplateRenderer.Render(w, req, renderOpts)
 				} else {
 					return err
 				}
 			} else {
 				// just render the base template directly to the response and return
+
+				baseRenderer.SetPrewriteFunc(func(r *http.Request) {
+					reqtime(r, `tpl`, time.Since(start))
+					writeRequestTimerHeaders(w, r)
+				})
+
 				return baseRenderer.Render(w, req, renderOpts)
 			}
 		} else {
 			return err
 		}
 	} else if redir, ok := err.(RedirectTo); ok {
-		log.Infof("Performing 307 Temporary Redirect to %v due to binding response handler.", redir)
+		log.Infof("[%s] Performing 307 Temporary Redirect to %v due to binding response handler.", reqid(req), redir)
+		writeRequestTimerHeaders(w, req)
 		http.Redirect(w, req, redir.Error(), http.StatusTemporaryRedirect)
 		return nil
 	} else {
@@ -808,8 +820,6 @@ func (self *Server) LoadLayout(name string) (io.Reader, error) {
 }
 
 func (self *Server) ToTemplateName(requestPath string) string {
-	requestPath = strings.Replace(requestPath, `/`, `-`, -1)
-
 	return requestPath
 }
 
@@ -820,7 +830,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 
 	data[`diecast`] = map[string]interface{}{
 		`binding_prefix`:    self.BindingPrefix,
-		`route_prefix`:      self.RoutePrefix,
+		`route_prefix`:      self.rp(),
 		`template_patterns`: self.TemplatePatterns,
 		`try_local_first`:   self.TryLocalFirst,
 		`index_file`:        self.IndexFile,
@@ -882,11 +892,16 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	for _, binding := range bindingsToEval {
 		binding.server = self
 
+		start := time.Now()
+		describeTimer(fmt.Sprintf("binding-%s", binding.Name), fmt.Sprintf("Diecast Bindings: %s", binding.Name))
+
 		if binding.Repeat == `` {
 			bindings[binding.Name] = binding.Fallback
 			data[`bindings`] = bindings
 
-			if v, err := binding.Evaluate(req, header, data, funcs); err == nil && v != nil {
+			v, err := binding.Evaluate(req, header, data, funcs)
+
+			if err == nil && v != nil {
 				bindings[binding.Name] = v
 				data[`bindings`] = bindings
 			} else if redir, ok := err.(RedirectTo); ok {
@@ -919,7 +934,9 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 				binding.Repeat = ``
 				bindings[binding.Name] = binding.Fallback
 
-				if v, err := binding.Evaluate(req, header, data, funcs); err == nil {
+				v, err := binding.Evaluate(req, header, data, funcs)
+
+				if err == nil {
 					results = append(results, v)
 					bindings[binding.Name] = results
 					data[`bindings`] = bindings
@@ -939,7 +956,10 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 
 				data[`bindings`] = bindings
 			}
+
 		}
+
+		reqtime(req, fmt.Sprintf("binding-%s", binding.Name), time.Since(start))
 	}
 
 	data[`bindings`] = bindings
@@ -964,147 +984,140 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	return funcs, data, nil
 }
 
-func (self *Server) handleFileRequest(w http.ResponseWriter, req *http.Request) {
-	defer req.Body.Close()
+func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
+	id := reqid(req)
+	prefix := fmt.Sprintf("%s/", self.rp())
 
-	log.Infof("%v %v", req.Method, req.URL)
+	if strings.HasPrefix(req.URL.Path, prefix) {
+		defer req.Body.Close()
 
-	if auth, err := self.Authenticators.Authenticator(req); err == nil {
-		if auth != nil {
-			if auth.IsCallback(req.URL) {
-				auth.Callback(w, req)
-				return
-			} else if !auth.Authenticate(w, req) {
-				return
+		log.Infof("[%s] %v %v", id, req.Method, req.URL)
+
+		// normalize filename from request path
+		requestPath := req.URL.Path
+
+		requestPaths := []string{
+			requestPath,
+		}
+
+		// if we're looking at a directory, throw in the index file if the path as given doesn't respond
+		if strings.HasSuffix(requestPath, `/`) {
+			requestPaths = append(requestPaths, path.Join(requestPath, self.IndexFile))
+
+			for _, ext := range self.TryExtensions {
+				base := filepath.Base(self.IndexFile)
+				base = strings.TrimSuffix(base, filepath.Ext(self.IndexFile))
+
+				requestPaths = append(requestPaths, path.Join(requestPath, fmt.Sprintf("%s.%s", base, ext)))
+			}
+
+		} else if path.Ext(requestPath) == `` {
+			// if we're requesting a path without a file extension, try an index file in a directory with that name,
+			// then try just <filename>.html
+			requestPaths = append(requestPaths, fmt.Sprintf("%s/%s", requestPath, self.IndexFile))
+
+			for _, ext := range self.TryExtensions {
+				requestPaths = append(requestPaths, fmt.Sprintf("%s.%s", requestPath, ext))
 			}
 		}
+
+		// finally, add handlers for implementing a junky form of url routing
+		if parent := path.Dir(requestPath); parent != `.` {
+			for _, ext := range self.TryExtensions {
+				requestPaths = append(requestPaths, fmt.Sprintf("%s/index__id.%s", strings.TrimSuffix(parent, `/`), ext))
+
+				if base := strings.TrimSuffix(parent, `/`); base != `` {
+					requestPaths = append(requestPaths, fmt.Sprintf("%s__id.%s", base, ext))
+				}
+			}
+		}
+
+		var triedLocal bool
+
+	PathLoop:
+		// search for the file in all of the generated request paths
+		for _, rPath := range requestPaths {
+			// remove the Route Prefix, as that's a structural part of the path but does not
+			// represent where the files are (used for embedding diecast in other services
+			// to avoid name collisions)
+			//
+			rPath = strings.TrimPrefix(rPath, self.rp())
+
+			var file http.File
+			var statusCode int
+			var mimeType string
+			var redirectTo string
+			var redirectCode int
+			var headers = make(map[string]interface{})
+			var urlParams = make(map[string]interface{})
+
+			if self.TryLocalFirst && !triedLocal {
+				triedLocal = true
+
+				// attempt loading the file from the local filesystem before searching the mounts
+				if f, m, err := self.tryLocalFile(rPath, req); err == nil {
+					file = f
+					mimeType = m
+
+				} else if _, response, err := self.tryMounts(rPath, req); err == nil {
+					file = response.GetFile()
+					mimeType = response.ContentType
+					statusCode = response.StatusCode
+					headers = response.Metadata
+					redirectTo = response.RedirectTo
+					redirectCode = response.RedirectCode
+
+				} else if IsHardStop(err) {
+					break PathLoop
+				}
+			} else {
+				// search the mounts before attempting to load the file from the local filesystem
+				if _, response, err := self.tryMounts(rPath, req); err == nil && response != nil {
+					file = response.GetFile()
+					mimeType = response.ContentType
+					statusCode = response.StatusCode
+					headers = response.Metadata
+					redirectTo = response.RedirectTo
+					redirectCode = response.RedirectCode
+
+				} else if IsHardStop(err) {
+					break PathLoop
+
+				} else if f, m, err := self.tryLocalFile(rPath, req); err == nil {
+					file = f
+					mimeType = m
+				}
+			}
+
+			if redirectCode > 0 {
+				if redirectTo == `` {
+					redirectTo = fmt.Sprintf("%s/", req.URL.Path)
+				}
+
+				http.Redirect(w, req, redirectTo, redirectCode)
+				log.Debugf("[%s]  path %v redirecting to %v (HTTP %d)", id, rPath, redirectTo, redirectCode)
+				return
+			}
+
+			if file != nil {
+				defer file.Close()
+
+				if strings.Contains(rPath, `__id.`) {
+					urlParams[`1`] = strings.Trim(path.Base(req.URL.Path), `/`)
+					urlParams[`id`] = strings.Trim(path.Base(req.URL.Path), `/`)
+				}
+
+				if handled := self.tryToHandleFoundFile(rPath, mimeType, file, statusCode, headers, urlParams, w, req); handled {
+					return
+				}
+			}
+		}
+
+		// if we got *here*, then File Not Found
+		self.respondError(w, fmt.Errorf("[%s] File %q was not found.", id, requestPath), http.StatusNotFound)
 	} else {
-		self.respondError(w, err, http.StatusInternalServerError)
+		self.respondError(w, fmt.Errorf("[%s] Route %q was not found.", id, req.URL.Path), http.StatusNotFound)
 	}
-
-	// normalize filename from request path
-	requestPath := req.URL.Path
-
-	requestPaths := []string{
-		requestPath,
-	}
-
-	// if we're looking at a directory, throw in the index file if the path as given doesn't respond
-	if strings.HasSuffix(requestPath, `/`) {
-		requestPaths = append(requestPaths, path.Join(requestPath, self.IndexFile))
-
-		for _, ext := range self.TryExtensions {
-			base := filepath.Base(self.IndexFile)
-			base = strings.TrimSuffix(base, filepath.Ext(self.IndexFile))
-
-			requestPaths = append(requestPaths, path.Join(requestPath, fmt.Sprintf("%s.%s", base, ext)))
-		}
-
-	} else if path.Ext(requestPath) == `` {
-		// if we're requesting a path without a file extension, try an index file in a directory with that name,
-		// then try just <filename>.html
-		requestPaths = append(requestPaths, fmt.Sprintf("%s/%s", requestPath, self.IndexFile))
-
-		for _, ext := range self.TryExtensions {
-			requestPaths = append(requestPaths, fmt.Sprintf("%s.%s", requestPath, ext))
-		}
-	}
-
-	// finally, add handlers for implementing a junky form of url routing
-	if parent := path.Dir(requestPath); parent != `.` {
-		for _, ext := range self.TryExtensions {
-			requestPaths = append(requestPaths, fmt.Sprintf("%s/index__id.%s", strings.TrimSuffix(parent, `/`), ext))
-
-			if base := strings.TrimSuffix(parent, `/`); base != `` {
-				requestPaths = append(requestPaths, fmt.Sprintf("%s__id.%s", base, ext))
-			}
-		}
-	}
-
-	var triedLocal bool
-
-PathLoop:
-	// search for the file in all of the generated request paths
-	for _, rPath := range requestPaths {
-		// remove the Route Prefix, as that's a structural part of the path but does not
-		// represent where the files are (used for embedding diecast in other services
-		// to avoid name collisions)
-		//
-		rPath = strings.TrimPrefix(rPath, self.RoutePrefix)
-		var file http.File
-		var statusCode int
-		var mimeType string
-		var redirectTo string
-		var redirectCode int
-		var headers = make(map[string]interface{})
-		var urlParams = make(map[string]interface{})
-
-		if self.TryLocalFirst && !triedLocal {
-			triedLocal = true
-
-			// attempt loading the file from the local filesystem before searching the mounts
-			if f, m, err := self.tryLocalFile(rPath, req); err == nil {
-				file = f
-				mimeType = m
-
-			} else if _, response, err := self.tryMounts(rPath, req); err == nil {
-				file = response.GetFile()
-				mimeType = response.ContentType
-				statusCode = response.StatusCode
-				headers = response.Metadata
-				redirectTo = response.RedirectTo
-				redirectCode = response.RedirectCode
-
-			} else if IsHardStop(err) {
-				break PathLoop
-			}
-		} else {
-			// search the mounts before attempting to load the file from the local filesystem
-			if _, response, err := self.tryMounts(rPath, req); err == nil && response != nil {
-				file = response.GetFile()
-				mimeType = response.ContentType
-				statusCode = response.StatusCode
-				headers = response.Metadata
-				redirectTo = response.RedirectTo
-				redirectCode = response.RedirectCode
-
-			} else if IsHardStop(err) {
-				break PathLoop
-
-			} else if f, m, err := self.tryLocalFile(rPath, req); err == nil {
-				file = f
-				mimeType = m
-			}
-		}
-
-		if redirectCode > 0 {
-			if redirectTo == `` {
-				redirectTo = fmt.Sprintf("%s/", req.URL.Path)
-			}
-
-			http.Redirect(w, req, redirectTo, redirectCode)
-			log.Debugf("  path %v redirecting to %v (HTTP %d)", rPath, redirectTo, redirectCode)
-			return
-		}
-
-		if file != nil {
-			defer file.Close()
-
-			if strings.Contains(rPath, `__id.`) {
-				urlParams[`1`] = strings.Trim(path.Base(req.URL.Path), `/`)
-				urlParams[`id`] = strings.Trim(path.Base(req.URL.Path), `/`)
-			}
-
-			if handled := self.tryToHandleFoundFile(rPath, mimeType, file, statusCode, headers, urlParams, w, req); handled {
-				return
-			}
-		}
-	}
-
-	// if we got *here*, then File Not Found
-	// log.Debugf("< not found")
-
-	self.respondError(w, fmt.Errorf("File %q was not found.", requestPath), http.StatusNotFound)
 }
 
 // Attempt to resolve the given path into a real file and return that file and mime type.
@@ -1204,7 +1217,7 @@ func (self *Server) tryToHandleFoundFile(requestPath string, mimeType string, fi
 			}
 
 			// render the final template and write it out
-			if err := self.applyTemplate(w, req, requestPath, bytes.NewBuffer(templateData), header, urlParams, mimeType); err != nil {
+			if err := self.applyTemplate(w, req, requestPath, templateData, header, urlParams, mimeType); err != nil {
 				self.respondError(w, err, http.StatusInternalServerError)
 			}
 		} else {
@@ -1239,9 +1252,9 @@ func (self *Server) respondError(w http.ResponseWriter, resErr error, code int) 
 	tmpl := NewTemplate(`error`, HtmlEngine)
 
 	if code >= 400 && code < 500 {
-		log.Warningf("ERR %v (HTTP %d)", resErr, code)
+		log.Warningf("%v (HTTP %d)", resErr, code)
 	} else {
-		log.Errorf("ERR %v (HTTP %d)", resErr, code)
+		log.Errorf("%v (HTTP %d)", resErr, code)
 	}
 
 	if resErr == nil {
@@ -1299,55 +1312,25 @@ func SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, erro
 	}
 }
 
-func (self *Server) InjectIncludes(w io.Writer, header *TemplateHeader) error {
-	includes := make(map[string]string)
-
+func (self *Server) appendIncludes(fragments *FragmentSet, header *TemplateHeader) error {
 	if header != nil {
 		for name, includePath := range header.Includes {
-			includes[name] = includePath
-		}
-	}
-
-	if len(includes) > 0 {
-		for name, includePath := range includes {
 			if includeFile, err := self.fs.Open(includePath); err == nil {
 				defer includeFile.Close()
 
-				if includeHeader, includeData, err := SplitTemplateHeaderContent(includeFile); err == nil {
-					if stat, err := includeFile.Stat(); err == nil {
-						log.Debugf("Injecting included template %q from file %s", name, stat.Name())
-
-						// merge in included header
-						if includeHeader != nil {
-							if newHeader, err := header.Merge(includeHeader); err == nil {
-								*header = *newHeader
-							} else {
-								return fmt.Errorf("include %v: %v", name, err)
-							}
-						}
-
-						w.Write([]byte("{{/* BEGIN INCLUDE '" + includePath + "' */}}\n"))
-						appendTemplate(w, bytes.NewBuffer(includeData), name, true)
-						w.Write([]byte("{{/* END INCLUDE '" + includePath + "' */}}\n\n"))
-					} else {
-						return err
-					}
-				} else {
-					return err
-				}
+				log.Debugf("Include template %q from file %s", name, includePath)
+				fragments.Parse(name, includeFile)
 			} else {
-				log.Debugf("Failed to open %q: %v", includePath, err)
+				return err
 			}
 		}
-
-		return nil
 	}
 
 	return nil
 }
 
 func reqid(req *http.Request) string {
-	if id := req.Context().Value(`diecast-request-id`); id != nil {
+	if id := req.Context().Value(ContextRequestKey); id != nil {
 		return fmt.Sprintf("%v", id)
 	} else {
 		return ``
@@ -1363,57 +1346,165 @@ func (self *Server) setupServer() error {
 	// setup request ID generation
 	self.server.UseHandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		requestId := base58.Encode(stringutil.UUID().Bytes())
+		log.Debugf("[%s] %s %s", requestId, req.Method, req.URL.Path)
 
 		parent := req.Context()
-		identified := context.WithValue(parent, `diecast-request-id`, requestId)
+		identified := context.WithValue(parent, ContextRequestKey, requestId)
 		*req = *req.WithContext(identified)
+
+		// setup request tracing info
+		startRequestTimer(req)
 	})
 
-	// setup internal/metadata routes
-	mux := http.NewServeMux()
+	// process authenticators
+	self.server.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+		if auth, err := self.Authenticators.Authenticator(req); err == nil {
+			if auth != nil {
+				if auth.IsCallback(req.URL) {
+					auth.Callback(w, req)
+					return
+				} else if !auth.Authenticate(w, req) {
+					return
+				}
+			}
+		} else {
+			self.respondError(w, err, http.StatusInternalServerError)
+		}
 
-	mux.HandleFunc(fmt.Sprintf("%s/_diecast", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
-		defer req.Body.Close()
+		// fallback to proceeding down the middleware chain
+		next(w, req)
+	})
 
-		if req.Header.Get(`X-Diecast-Binding`) != `` {
-			if data, err := json.Marshal(self); err == nil {
-				w.Header().Set(`Content-Type`, `application/json`)
+	self.router.HandleFunc(fmt.Sprintf("%s/_diecast", self.rp()), func(w http.ResponseWriter, req *http.Request) {
+		switch req.Method {
+		case http.MethodGet:
+			defer req.Body.Close()
 
-				if _, err := w.Write(data); err != nil {
+			if req.Header.Get(`X-Diecast-Binding`) != `` {
+				if data, err := json.Marshal(self); err == nil {
+					w.Header().Set(`Content-Type`, `application/json`)
+
+					if _, err := w.Write(data); err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+					}
+				} else {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 				}
 			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("File %q was not found.", req.URL.Path), http.StatusNotFound)
 			}
-		} else {
-			http.Error(w, fmt.Sprintf("File %q was not found.", req.URL.Path), http.StatusNotFound)
+		default:
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
-	mux.HandleFunc(fmt.Sprintf("%s/_bindings", self.RoutePrefix), func(w http.ResponseWriter, req *http.Request) {
-		defer req.Body.Close()
+	self.router.HandleFunc(fmt.Sprintf("%s/_bindings", self.rp()), func(w http.ResponseWriter, req *http.Request) {
+		switch req.Method {
+		case http.MethodGet:
+			defer req.Body.Close()
 
-		if req.Header.Get(`X-Diecast-Binding`) != `` {
-			if data, err := json.Marshal(self.Bindings); err == nil {
-				w.Header().Set(`Content-Type`, `application/json`)
+			if req.Header.Get(`X-Diecast-Binding`) != `` {
+				if data, err := json.Marshal(self.Bindings); err == nil {
+					w.Header().Set(`Content-Type`, `application/json`)
 
-				if _, err := w.Write(data); err != nil {
+					if _, err := w.Write(data); err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+					}
+				} else {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 				}
 			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("File %q was not found.", req.URL.Path), http.StatusNotFound)
 			}
-		} else {
-			http.Error(w, fmt.Sprintf("File %q was not found.", req.URL.Path), http.StatusNotFound)
+		default:
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
-	// all other routes proxy to this http.Handler
-	mux.HandleFunc(fmt.Sprintf("%s/", self.RoutePrefix), self.handleFileRequest)
+	// add action handlers
+	for i, action := range self.Actions {
+		hndPath := filepath.Join(self.rp(), action.Path)
 
-	self.server.UseHandler(mux)
+		if executil.IsRoot() && !executil.EnvBool(`DIECAST_ALLOW_ROOT_ACTIONS`) {
+			return fmt.Errorf("Refusing to start as root with actions specified.  Override with the environment variable DIECAST_ALLOW_ROOT_ACTIONS=true")
+		}
+
+		if action.Path == `` {
+			return fmt.Errorf("Action %d: Must specify a 'path'", i)
+		}
+
+		self.router.HandleFunc(hndPath, func(w http.ResponseWriter, req *http.Request) {
+			if handler := self.actionForRequest(req); handler != nil {
+				handler(w, req)
+			} else {
+				http.Error(w, fmt.Sprintf("cannot find handler for action"), http.StatusInternalServerError)
+			}
+		})
+
+		log.Debugf("[actions] Registered %s", hndPath)
+	}
+
+	self.server.UseHandler(self.router)
+
+	// cleanup request tracing info
+	self.server.UseHandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		removeRequestTimer(req)
+	})
+
+	// if we're appending additional trusted certs (for Bindings and other internal HTTP clients)
+	if len(self.TrustedRootPEMs) > 0 {
+		// get the existing system CA bundle
+		if syspool, err := x509.SystemCertPool(); err == nil {
+			// append each cert
+			for _, pemfile := range self.TrustedRootPEMs {
+				// must be a readable PEM file
+				if pem, err := fileutil.ReadAll(pemfile); err == nil {
+					if !syspool.AppendCertsFromPEM(pem) {
+						return fmt.Errorf("Failed to append certificate %s", pemfile)
+					}
+				} else {
+					return fmt.Errorf("Failed to read certificate %s: %v", pemfile, err)
+				}
+			}
+
+			// this is what http.Client.Transport.TLSClientConfig.RootCAs will become
+			self.altRootCaPool = syspool
+		} else {
+			return fmt.Errorf("Failed to retrieve system CA pool: %v", err)
+		}
+	}
 
 	return nil
+}
+
+func (self *Server) actionForRequest(req *http.Request) http.HandlerFunc {
+	route := req.URL.Path
+
+	for _, action := range self.Actions {
+		actionPath := filepath.Join(self.rp(), action.Path)
+
+		if actionPath == route {
+			methods := sliceutil.Stringify(action.Method)
+
+			if len(methods) == 0 && req.Method == http.MethodGet {
+				log.Debugf("Action handler: %s %s", http.MethodGet, action.Path)
+				return action.ServeHTTP
+			} else {
+				for _, method := range methods {
+					if req.Method == strings.ToUpper(method) {
+						log.Debugf("Action handler: %s %s", req.Method, action.Path)
+						return action.ServeHTTP
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (self *Server) rp() string {
+	return strings.TrimSuffix(self.RoutePrefix, `/`)
 }
 
 func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]interface{} {
@@ -1440,21 +1531,31 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 	// ------------------------------------------------------------------------
 	if header != nil {
 		for dK, dV := range header.DefaultHeaders {
+			dK = stringutil.Underscore(strings.ToLower(dK))
 			hdr[dK] = stringutil.Autotype(dV)
 		}
 	}
 
 	for k, v := range req.Header {
 		if vv := strings.Join(v, `, `); !typeutil.IsZero(vv) {
+			k = stringutil.Underscore(strings.ToLower(k))
 			hdr[k] = stringutil.Autotype(vv)
 		}
 	}
 
+	request[`id`] = reqid(req)
+	request[`timestamp`] = time.Now().UnixNano()
 	request[`method`] = req.Method
 	request[`protocol`] = req.Proto
 	request[`headers`] = hdr
 	request[`length`] = req.ContentLength
-	request[`encoding`] = req.TransferEncoding
+
+	if te := req.TransferEncoding; te == nil {
+		request[`encoding`] = []string{`identity`}
+	} else {
+		request[`encoding`] = te
+	}
+
 	request[`remote_address`] = req.RemoteAddr
 	request[`host`] = req.Host
 
@@ -1470,6 +1571,8 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 
 	if header != nil {
 		url[`params`] = header.UrlParams
+	} else {
+		url[`params`] = make(map[string]interface{})
 	}
 
 	request[`url`] = url
@@ -1516,7 +1619,7 @@ func (self *Server) RunStartCommand(scmd *StartCommand, waitForCommand bool) err
 			env[`DIECAST_PATH_LAYOUTS`] = self.LayoutPath
 			env[`DIECAST_PATH_ERRORS`] = self.ErrorsPath
 			env[`DIECAST_BINDING_PREFIX`] = self.BindingPrefix
-			env[`DIECAST_ROUTE_PREFIX`] = self.RoutePrefix
+			env[`DIECAST_ROUTE_PREFIX`] = self.rp()
 
 			for key, value := range env {
 				scmd.cmd.Env = append(scmd.cmd.Env, fmt.Sprintf("%v=%v", key, value))

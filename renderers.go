@@ -14,14 +14,17 @@ type RenderOptions struct {
 	HeaderOffset  int
 	FunctionSet   FuncMap
 	Input         io.ReadCloser
+	Fragments     FragmentSet
 	Data          map[string]interface{}
 	MimeType      string
 	RequestedPath string
-	HasLayout     bool
 	Timeout       time.Duration
 }
 
+type PrewriteFunc func(*http.Request)
+
 type Renderer interface {
+	SetPrewriteFunc(PrewriteFunc)
 	Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error
 	ShouldPrerender() bool
 }

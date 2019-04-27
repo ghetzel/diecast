@@ -19,17 +19,26 @@ import (
 )
 
 type PdfRenderer struct {
-	server *Server
+	server   *Server
+	prewrite PrewriteFunc
 }
 
 func (self *PdfRenderer) ShouldPrerender() bool {
 	return false
 }
 
+func (self *PdfRenderer) SetPrewriteFunc(fn PrewriteFunc) {
+	self.prewrite = fn
+}
+
 func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
 	defer options.Input.Close()
 
 	if httputil.QBool(req, `__subrender`) {
+		if fn := self.prewrite; fn != nil {
+			fn(req)
+		}
+
 		_, err := io.Copy(w, options.Input)
 		return err
 
@@ -85,6 +94,10 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 			) + `.pdf`
 
 			w.Header().Set(`Content-Disposition`, fmt.Sprintf("inline; filename=%q", rewrittenFilename))
+
+			if fn := self.prewrite; fn != nil {
+				fn(req)
+			}
 
 			_, err := io.Copy(w, &buffer)
 
