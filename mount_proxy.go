@@ -129,6 +129,11 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 					newReq.Header.Set(name, value)
 				}
 			}
+
+			if req.Host != `` {
+				newReq.Header.Set(`Host`, req.Host)
+				newReq.Host = req.Host
+			}
 		}
 
 		// add explicit headers to new request

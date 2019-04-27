@@ -169,14 +169,12 @@ type Server struct {
 	router        *http.ServeMux
 	server        *negroni.Negroni
 	fs            http.FileSystem
-	fsIsSet       bool
-	fileServer    http.Handler
 	precmd        *exec.Cmd
 	altRootCaPool *x509.CertPool
 	initialized   bool
 }
 
-func NewServer(root string, patterns ...string) *Server {
+func NewServer(root interface{}, patterns ...string) *Server {
 	if len(patterns) == 0 {
 		patterns = DefaultTemplatePatterns
 	}
@@ -196,11 +194,19 @@ func NewServer(root string, patterns ...string) *Server {
 		Mounts:             make([]Mount, 0),
 		OverridePageObject: make(map[string]interface{}),
 		RendererMappings:   DefaultRendererMappings,
-		RootPath:           root,
+		RootPath:           `.`,
 		RoutePrefix:        DefaultRoutePrefix,
 		TemplatePatterns:   patterns,
 		TryExtensions:      DefaultTryExtensions,
 		VerifyFile:         DefaultVerifyFile,
+	}
+
+	if str, ok := root.(string); ok {
+		server.RootPath = str
+	} else if fs, ok := root.(http.FileSystem); ok {
+		server.SetFileSystem(fs)
+	} else {
+		panic("Diecast must be provided with a string or http.FileSystem")
 	}
 
 	mux := http.NewServeMux()
@@ -277,12 +283,20 @@ func (self *Server) SetFileSystem(fs http.FileSystem) {
 }
 
 func (self *Server) Initialize() error {
+	if v, err := fileutil.ExpandUser(self.RootPath); err == nil {
+		self.RootPath = v
+	}
+
+	if v, err := filepath.Abs(self.RootPath); err == nil {
+		self.RootPath = v
+	} else {
+		return fmt.Errorf("root path: %v", err)
+	}
+
 	// if we haven't explicitly set a filesystem, create it
 	if self.fs == nil {
 		self.SetFileSystem(http.Dir(self.RootPath))
 	}
-
-	self.fileServer = http.FileServer(self.fs)
 
 	// allocate ephemeral address if we're supposed to
 	if addr, port, err := net.SplitHostPort(self.Address); err == nil {
@@ -313,8 +327,10 @@ func (self *Server) Initialize() error {
 }
 
 func (self *Server) Serve() error {
-	if !self.initialized {
-		panic("diecast: Initialize() not called")
+	if self.server == nil {
+		if err := self.Initialize(); err != nil {
+			return err
+		}
 	}
 
 	go func() {
@@ -340,8 +356,12 @@ func (self *Server) ListenAndServe(address string) error {
 }
 
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	if !self.initialized {
-		panic("diecast: Initialize() not called")
+	if self.server == nil {
+		if err := self.Initialize(); err != nil {
+			w.Write([]byte(fmt.Sprintf("Failed to setup Diecast server: %v", err)))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	self.server.ServeHTTP(w, req)

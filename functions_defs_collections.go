@@ -1469,6 +1469,26 @@ func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
 						return nil, fmt.Errorf("Can only coalesce arrays and objects, got %T", input)
 					}
 				},
+			}, {
+				Name:    `isLastElement`,
+				Summary: `Returns whether the given index in the given array is the last element in that array.`,
+				Arguments: []funcArg{
+					{
+						Name:        `index`,
+						Type:        `integer`,
+						Description: `The current index of the item in the collection.`,
+					}, {
+						Name:        `array`,
+						Type:        `array`,
+						Description: `The array being checked`,
+					},
+				},
+				Function: func(index interface{}, array interface{}) bool {
+					i := typeutil.Int(index)
+					arr := sliceutil.Sliceify(array)
+
+					return (int(i) == (len(arr) - 1))
+				},
 			},
 		},
 	}

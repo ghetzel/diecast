@@ -328,12 +328,14 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					log.Debugf("[%s]  [H] %v: %v", id, k, strings.Join(v, ` `))
 				}
 
-				onError := self.OnError
+				onError := BindingErrorAction(EvalInline(string(self.OnError), data, funcs))
 
 				// handle per-http-status response handlers
 				if len(self.IfStatus) > 0 {
 					// get the action for this code
 					if statusAction, ok := self.IfStatus[res.StatusCode]; ok {
+						statusAction = BindingErrorAction(EvalInline(string(statusAction), data, funcs))
+
 						switch statusAction {
 						case ActionIgnore:
 							onError = ActionIgnore
@@ -408,6 +410,8 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 								self.Parser = `yaml`
 							case `text/html`:
 								self.Parser = `html`
+							case `text/xml`:
+								self.Parser = `xml`
 							}
 						}
 
@@ -440,6 +444,15 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 						case `html`:
 							return goquery.NewDocumentFromReader(bytes.NewBuffer(data))
+
+						case `tsv`:
+							return xsvToArray(data, '\t')
+
+						case `csv`:
+							return xsvToArray(data, ',')
+
+						case `xml`:
+							return xmlToMap(data)
 
 						case `text`:
 							return string(data), nil
