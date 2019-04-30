@@ -2441,6 +2441,36 @@
         "Examples": null
       },
       {
+        "Name": "minimum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the minimum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "minimum_nz",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "stddev",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the standard deviation of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "sum",
         "Alias": "",
         "Aliases": null,
@@ -2475,36 +2505,6 @@
         "Alias": "",
         "Aliases": null,
         "Summary": "Return the median of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "minimum",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the minimum of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "minimum_nz",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "stddev",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the standard deviation of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
         "Arguments": null,

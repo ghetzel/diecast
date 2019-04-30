@@ -419,11 +419,6 @@ func (self *Server) applyTemplate(
 	forceSkipLayout := false
 	layouts := make([]string, 0)
 
-	// get the content template in place right away
-	if err := fragments.Set(ContentTemplateName, header, data); err != nil {
-		return err
-	}
-
 	// start building headers stack and calculate line offsets (for error reporting)
 	if header != nil {
 		if header.Layout != `` {
@@ -471,6 +466,13 @@ func (self *Server) applyTemplate(
 				}
 			}
 		}
+	}
+
+	// get the content template in place
+	// NOTE: make SURE this happens after the layout is loaded. this ensures that the layout data
+	//       and bindings are evaluated first, then are overridden/appended by the content data/bindings
+	if err := fragments.Set(ContentTemplateName, header, data); err != nil {
+		return err
 	}
 
 	// get the merged header from all layouts, includes, and the template we're rendering
