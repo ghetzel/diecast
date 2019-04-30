@@ -9,6 +9,7 @@ require (
 	github.com/ghetzel/go-webfriend v0.9.40
 	github.com/ghodss/yaml v1.0.0
 	github.com/gobwas/glob v0.2.3
+	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/grokify/html-strip-tags-go v0.0.0-20180530080503-3f8856873ce5
 	github.com/h2non/filetype v1.0.5
 	github.com/husobee/vestigo v1.1.0
