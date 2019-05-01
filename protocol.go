@@ -15,8 +15,18 @@ type Protocol interface {
 
 type ProtocolConfig map[string]interface{}
 
-func (self ProtocolConfig) Get(key string) typeutil.Variant {
-	return maputil.M(self).Get(key)
+func (self ProtocolConfig) Get(key string, fallbacks ...interface{}) typeutil.Variant {
+	v := maputil.M(self).Get(key)
+
+	if v.IsNil() {
+		if len(fallbacks) > 0 {
+			return typeutil.V(fallbacks[0])
+		} else {
+			return typeutil.V(nil)
+		}
+	} else {
+		return v
+	}
 }
 
 type ProtocolRequest struct {
@@ -39,18 +49,22 @@ func (self *ProtocolRequest) Template(input interface{}) typeutil.Variant {
 	}
 }
 
-func (self *ProtocolRequest) Conf(proto string, key string) typeutil.Variant {
+func (self *ProtocolRequest) Conf(proto string, key string, fallbacks ...interface{}) typeutil.Variant {
 	if self.Binding != nil {
 		if self.Binding.server != nil {
-			if len(self.Binding.server.ProtocolConfig) > 0 {
-				if cnf, ok := self.Binding.server.ProtocolConfig[proto]; ok {
-					return cnf.Get(key)
+			if len(self.Binding.server.Protocols) > 0 {
+				if cnf, ok := self.Binding.server.Protocols[proto]; ok {
+					return cnf.Get(key, fallbacks...)
 				}
 			}
 		}
 	}
 
-	return typeutil.V(nil)
+	if len(fallbacks) > 0 {
+		return typeutil.V(fallbacks[0])
+	} else {
+		return typeutil.V(nil)
+	}
 }
 
 type ProtocolResponse struct {
