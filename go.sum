@@ -176,8 +176,6 @@ github.com/russross/blackfriday/v2 v2.0.1 h1:lPqVAte+HuHNfhJ/0LC98ESWRz8afy9tM/0
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/sergi/go-diff v0.0.0-20140808132932-97b2266dfe4b h1:iXZ3pgSI2g9Qo7LVrJVU7UQQuqQxrtEyRO/p/eMkU48=
 github.com/sergi/go-diff v0.0.0-20140808132932-97b2266dfe4b/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
-github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 h1:pntxY8Ary0t43dCZ5dqY4YTJCObLY1kIXl0uzMv+7DE=
-github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24/go.mod h1:M+9NzErvs504Cn4c5DxATwIqPbtswREoFCre64PpcG4=
 github.com/shurcooL/sanitized_anchor_name v1.0.0 h1:PdmoCO6wvbs+7yrJyMORt4/BmY5IYyJwS/kOiWx8mHo=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=
 github.com/spaolacci/murmur3 v0.0.0-20170819071325-9f5d223c6079 h1:lDiM+yMjW7Ork8mhl0YN0qO1Z02qGoe1vwzGc1gP/8U=
@@ -192,10 +190,8 @@ github.com/tg123/go-htpasswd v0.0.0-20190305225429-d38e564730bf h1:lemWpSGw+Yz0k
 github.com/tg123/go-htpasswd v0.0.0-20190305225429-d38e564730bf/go.mod h1:rFFqmvZbM9kVmDDVpeVr8VJ+8nRWwuXR/uvvjJ/3aJo=
 github.com/urfave/negroni v1.0.0 h1:kIimOitoypq34K7TG7DUaJ9kq/N4Ofuwi1sjz0KipXc=
 github.com/urfave/negroni v1.0.0/go.mod h1:Meg73S6kFm/4PpbYdq35yYWoCZ9mS/YSx+lKnmiohz4=
-github.com/wellington/go-libsass v0.9.3-0.20190110124256-dc056fc24fcf h1:HCLFQbPG1Uh7uoAIrhKSYWdTfpKMIxU+3BWcmpsMkwY=
-github.com/wellington/go-libsass v0.9.3-0.20190110124256-dc056fc24fcf/go.mod h1:mxgxgam0N0E+NAUMHLcu20Ccfc3mVpDkyrLDayqfiTs=
-github.com/wellington/sass v0.0.0-20160911051022-cab90b3986d6 h1:qPS12y9iMXyKr2flmOG7RgiyUGkQxQibp1hx7uug9IQ=
-github.com/wellington/sass v0.0.0-20160911051022-cab90b3986d6/go.mod h1:ncYBwTYUjmb7N+sZbf8WJYynLivoqFL+U2f8uOX2Yzk=
+github.com/wellington/go-libsass v0.9.3-0.20190212124126-f870eaa15594 h1:Cm9ttMJaq5IYZW9RzserHlaibyWSwDJGt5upuKABoKs=
+github.com/wellington/go-libsass v0.9.3-0.20190212124126-f870eaa15594/go.mod h1:mxgxgam0N0E+NAUMHLcu20Ccfc3mVpDkyrLDayqfiTs=
 github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8 h1:OlIHDBRrlQk8fHa662oG2gzOO/ixBRU9sLht/M9kzK0=
 github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8/go.mod h1:+ccdNT0xMY1dtc5XBxumbYfOUhmduiGudqaDgD2rVRE=
 github.com/yudai/gojsondiff v0.0.0-20170107030110-7b1b7adf999d h1:yJIizrfO599ot2kQ6Af1enICnwBD3XoxgX3MrMwot2M=

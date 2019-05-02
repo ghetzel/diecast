@@ -1,6 +1,12 @@
-// +build !nocgo
+// +build linux,cgo darwin,cgo
 
 package diecast
+
+// #cgo CPPFLAGS: -DUSE_LIBSASS -I/usr/include/sass -I/usr/local/include/sass
+// #cgo LDFLAGS: -lsass
+// #include <poppler.h>
+// #include <glib.h>
+import "C"
 
 import (
 	"io/ioutil"
