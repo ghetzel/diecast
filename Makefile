@@ -3,7 +3,7 @@
 
 GO111MODULE ?= on
 LOCALS      := $(shell find . -type f -name '*.go')
-BIN         ?= diecast-$(shell go env GOOS)-$(go env GOARCH)
+BIN         ?= diecast-$(shell go env GOOS)-$(shell go env GOARCH)
 
 all: deps test build docs
 
@@ -21,8 +21,8 @@ test:
 
 build: fmt
 	GOOS=linux  go build -o bin/diecast-linux-amd64 cmd/diecast/main.go
-	GOOS=darwin go build -o bin/diecast-darwin-amd64 cmd/diecast/main.go
-	which diecast && cp -v bin/diecast-$(BIN) $(shell which diecast) || true
+	#GOOS=darwin go build -o bin/diecast-darwin-amd64 cmd/diecast/main.go
+	which diecast && cp -v bin/$(BIN) $(shell which diecast) || true
 
 docs:
 	cd docs && make

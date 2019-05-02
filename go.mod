@@ -5,7 +5,7 @@ require (
 	github.com/dustin/go-humanize v0.0.0-20180713052910-9f541cc9db5d
 	github.com/fatih/structs v1.0.0
 	github.com/ghetzel/cli v1.17.0
-	github.com/ghetzel/go-stockutil v1.7.39
+	github.com/ghetzel/go-stockutil v1.7.40
 	github.com/ghetzel/go-webfriend v0.9.40
 	github.com/ghodss/yaml v1.0.0
 	github.com/gobwas/glob v0.2.3
@@ -25,7 +25,6 @@ require (
 	github.com/stretchr/testify v1.2.2
 	github.com/tg123/go-htpasswd v0.0.0-20190305225429-d38e564730bf
 	github.com/urfave/negroni v1.0.0
-	github.com/wellington/go-libsass v0.9.2
 	github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8
 	golang.org/x/net v0.0.0-20190328230028-74de082e2cca
 	golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1
