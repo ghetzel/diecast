@@ -9,7 +9,7 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
-func loadStandardFunctionsComparisons(funcs FuncMap) funcGroup {
+func loadStandardFunctionsComparisons(funcs FuncMap, server *Server) funcGroup {
 	return funcGroup{
 		Name:        `Comparison Functions`,
 		Description: `Used for comparing two values, or for returning one of many options based on a given condition.`,

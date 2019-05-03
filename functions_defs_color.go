@@ -9,7 +9,7 @@ import (
 	"github.com/spaolacci/murmur3"
 )
 
-func loadStandardFunctionsColor(funcs FuncMap) funcGroup {
+func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 	return funcGroup{
 		Name:        `Color Manipulation`,
 		Description: `Used to parse, manipulate, and adjust string representations of visible colors.`,

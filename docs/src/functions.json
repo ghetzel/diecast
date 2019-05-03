@@ -952,6 +952,26 @@
         ]
       },
       {
+        "Name": "pathInRoot",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Returns whether the given path falls within the Diecast serving root path.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "path",
+            "Type": "string",
+            "Description": "The path to check.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
         "Name": "mimetype",
         "Alias": "",
         "Aliases": null,

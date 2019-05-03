@@ -1,4 +1,6 @@
+<!DOCTYPE html>
 <html>
+    <meta charset="UTF-8">
     <head>
         <style type="text/css">
             html, body {
@@ -16,9 +18,9 @@
         </style>
     </head>
     <body>
-        {{ $p := (qs `p` pwd) }}
+        {{ $p := (qs `p` `.`) }}
 
-        <h1>{{ $p }}</h1>
+        <h1>{{ if eqx $p `.` }}/{{ else }}/{{ $p }}{{ end }}</h1>
 
         <hr />
 
@@ -32,6 +34,7 @@
                 </tr>
             </thead>
             <tbody>
+                {{ if and $p (nex $p `.`) }}
                 <tr>
                     <td>
                         <a href="?p={{ dirname $p }}">..</a>
@@ -40,25 +43,28 @@
                     <td class="size"></td>
                     <td></td>
                 </tr>
+                {{ end }}
 
-            {{ range filter (dir $p) `.IsDir` }}
+                {{ range $entry := filter (dir $p) `.IsDir` }}
                 <tr>
                     <td>
-                        <a href="?p={{ pathjoin $p .Name }}">{{ .Name }}</a>
+                        <a href="?p={{ pathjoin $p $entry.Name }}">{{ $entry.Name }}</a>
                     </td>
-                    <td>{{ if .IsDir }}directory{{ else }}{{ mimetype .Name }}{{ end }}</td>
+                    <td>{{ if $entry.IsDir }}directory{{ else }}{{ mimetype $entry.Name }}{{ end }}</td>
                     <td class="size"></td>
-                    <td>{{ time .ModTime `rfc822` }}</td>
+                    <td>{{ time $entry.ModTime `rfc822` }}</td>
                 </tr>
-            {{ end }}
-            {{ range filter (dir $p) `not .IsDir` }}
+                {{ end }}
+                {{ range $entry := filter (dir $p) `not .IsDir` }}
                 <tr>
-                    <td>{{ .Name }}</td>
-                    <td>{{ if .IsDir }}directory{{ else }}{{ mimetype .Name }}{{ end }}</td>
-                    <td class="size">{{ rtrim (rtrim (autobyte .Size "%.1f") `B`) `.0` }}</td>
-                    <td>{{ time .ModTime `rfc822` }}</td>
+                    <td>
+                        <a href="{{ pathjoin $p $entry.Name }}">{{ $entry.Name }}</a>
+                    </td>
+                    <td>{{ if $entry.IsDir }}directory{{ else }}{{ mimetype $entry.Name }}{{ end }}</td>
+                    <td class="size">{{ rtrim (rtrim (autobyte $entry.Size "%.1f") `B`) `.0` }}</td>
+                    <td>{{ time $entry.ModTime `rfc822` }}</td>
                 </tr>
-            {{ end }}
+                {{ end }}
             </tbody>
         </table>
     </body>

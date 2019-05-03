@@ -11,7 +11,7 @@ import (
 	"github.com/montanaflynn/stats"
 )
 
-func loadStandardFunctionsMath(funcs FuncMap) funcGroup {
+func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 	group := funcGroup{
 		Name:        `Math and Statistics`,
 		Description: `These functions implement basic mathematical and statistical operations on numbers.`,

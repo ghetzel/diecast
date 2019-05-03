@@ -128,6 +128,10 @@ func main() {
 			Usage: `Allow template debugging by appending the "?__viewsource=true" query string parameter.`,
 		},
 		cli.BoolFlag{
+			Name:  `autoindex, A`,
+			Usage: `Allow directory listings to be automatically generated in the absence of an index file.`,
+		},
+		cli.BoolFlag{
 			Name:  `help-functions`,
 			Usage: `Generate documentation on all supported functions.`,
 		},
@@ -135,7 +139,7 @@ func main() {
 
 	app.Before = func(c *cli.Context) error {
 		if c.Bool(`help-functions`) {
-			defs, _ := diecast.GetFunctions()
+			defs, _ := diecast.GetFunctions(nil)
 
 			for _, group := range defs {
 				if group.Description == `` {
@@ -190,6 +194,7 @@ func main() {
 		server.TryLocalFirst = c.Bool(`local-first`)
 		server.VerifyFile = c.String(`verify-file`)
 		server.IndexFile = c.String(`index-file`)
+		server.Autoindex = c.Bool(`autoindex`)
 
 		if cmdline := c.String(`prestart-command`); cmdline != `` {
 			server.PrestartCommand.Command = cmdline
@@ -245,7 +250,7 @@ func main() {
 		}
 
 		if err := server.Initialize(); err == nil {
-			log.Infof("Starting HTTP server at http://%s", server.Address)
+			log.Infof("diecast v%v listening at http://%s", diecast.ApplicationVersion, server.Address)
 
 			go func() {
 				if err := server.Serve(); err != nil {

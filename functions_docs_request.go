@@ -1,6 +1,6 @@
 package diecast
 
-func loadRuntimeFunctionsRequest() funcGroup {
+func loadRuntimeFunctionsRequest(server *Server) funcGroup {
 	return funcGroup{
 		Name: `HTTP Request Details`,
 		Description: `These functions provide access to information contained in the original HTTP client request that ` +
