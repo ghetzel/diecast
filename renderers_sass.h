@@ -8,7 +8,6 @@
 struct Sass_Compiler;
 struct Sass_Importer_Entry;
 
-bool hasPrefix(const char *str, const char *pre);
 Sass_Import_List diecast_sass_importer(const char* url, Sass_Importer_Entry cb, struct Sass_Compiler *compiler);
 
 #endif

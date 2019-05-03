@@ -120,11 +120,14 @@ func go_retrievePath(cookie unsafe.Pointer, url *C.char, output **C.char) C.int 
 			if renderer, ok := v.(*SassRenderer); ok {
 				candidates := []string{path}
 
+				// if the requested import path does not have a file extension, in addition to the
+				// path given, also try with the .scss and .css extensions.
 				if filepath.Ext(path) == `` {
 					candidates = append(candidates, fmt.Sprintf("%s.scss", path))
 					candidates = append(candidates, fmt.Sprintf("%s.css", path))
 				}
 
+				// try all candidate paths, first one wins
 				for _, candidate := range candidates {
 					if file, err := renderer.server.fs.Open(candidate); err == nil {
 						defer file.Close()
@@ -141,7 +144,6 @@ func go_retrievePath(cookie unsafe.Pointer, url *C.char, output **C.char) C.int 
 						mesg = fmt.Sprintf("Cannot open %v: %v", candidate, err)
 						code = -4
 					}
-
 				}
 			} else {
 				mesg = fmt.Sprintf("invalid callback mapping: expected SassRenderer, got %T", v)

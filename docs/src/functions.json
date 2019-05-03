@@ -2441,6 +2441,36 @@
         "Examples": null
       },
       {
+        "Name": "maximum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the maximum of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "mean",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the mean of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "median",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the median of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "minimum",
         "Alias": "",
         "Aliases": null,
@@ -2475,36 +2505,6 @@
         "Alias": "",
         "Aliases": null,
         "Summary": "Return the sum of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "maximum",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the maximum of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "mean",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the mean of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "median",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the median of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
         "Arguments": null,

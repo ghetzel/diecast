@@ -1,7 +1,5 @@
 package diecast
 
-import "C"
-
 import (
 	"bytes"
 	"encoding/csv"
@@ -155,9 +153,4 @@ func xsvToArray(data []byte, delim rune) (map[string]interface{}, error) {
 	} else {
 		return nil, err
 	}
-}
-
-//export go_log
-func go_log(level *C.char, message *C.char) {
-	log.Log(log.GetLevel(C.GoString(level)), C.GoString(message))
 }
