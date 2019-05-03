@@ -24,7 +24,7 @@ func TestSassRenderer(t *testing.T) {
 	request := httptest.NewRequest(`GET`, `/css/for-sass.scss`, nil)
 	recorder := httptest.NewRecorder()
 
-	testsass := `.parent { td { color: red; } tr { color: blue }}; @import '/css/for-sass';`
+	testsass := `$c1: red; $c2: blue; .parent { td { color: $c1; } tr { color: $c2 }}; @import '/css/for-sass';`
 
 	assert.NoError(renderer.Render(recorder, request, RenderOptions{
 		Input: ioutil.NopCloser(bytes.NewBufferString(testsass)),
