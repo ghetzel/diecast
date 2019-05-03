@@ -58,7 +58,12 @@ func (self *fileInfo) String() string {
 	return path.Join(self.Parent, self.Name())
 }
 
-type statsUnary func(stats.Float64Data) (float64, error)
+type statsUnaryFn func(stats.Float64Data) (float64, error)
+
+type statsUnary struct {
+	Name     string
+	Function statsUnaryFn
+}
 
 func MinNonZero(data stats.Float64Data) (float64, error) {
 	for i, v := range data {
