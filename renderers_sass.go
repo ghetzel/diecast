@@ -1,8 +1,10 @@
 package diecast
 
-// #cgo CPPFLAGS: -DUSE_LIBSASS -I/usr/include/sass -I/usr/local/include/sass
+// #cgo CFLAGS: -Wno-error=implicit-function-declaration
+// #cgo CPPFLAGS: -I/usr/include/sass -I/usr/local/include/sass
 // #cgo LDFLAGS: -lsass
 // #include <sass/context.h>
+// #include "renderers_sass.h"
 import "C"
 
 import (
@@ -10,9 +12,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
+	"sync"
+	"unsafe"
 
 	"github.com/ghetzel/go-stockutil/log"
 )
+
+var SassIndentString = `    `
+var callbackMap sync.Map
 
 type SassRenderer struct {
 	server   *Server
@@ -46,7 +54,23 @@ func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, optio
 
 		// set compile options
 		C.sass_option_set_precision(opt, C.int(10))
-		C.sass_option_set_source_comments(opt, C.bool(true))
+		C.sass_option_set_source_comments(opt, C.bool(false))
+		C.sass_option_set_indent(opt, C.CString(SassIndentString))
+
+		// C.SASS_STYLE_NESTED
+		// C.SASS_STYLE_EXPANDED
+		// C.SASS_STYLE_COMPACT
+		// C.SASS_STYLE_COMPRESSED
+		C.sass_option_set_output_style(opt, C.SASS_STYLE_EXPANDED)
+
+		implist := C.sass_make_importer_list(C.ulong(1))
+		importer := C.sass_make_importer((C.Sass_Importer_Fn)(C.diecast_sass_importer), C.double(0), nil)
+		cookie := C.sass_importer_get_cookie(importer)
+		callbackMap.Store(cookie, self)
+		defer callbackMap.Delete(cookie)
+
+		C.sass_importer_set_list_entry(implist, C.ulong(0), importer)
+		C.sass_option_set_c_importers(opt, implist)
 
 		// write options back to the data context
 		C.sass_data_context_set_options(dctx, opt)
@@ -84,4 +108,54 @@ func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, optio
 
 	// 	return ``, ``, false
 	// })
+}
+
+//export go_retrievePath
+func go_retrievePath(cookie unsafe.Pointer, url *C.char, output **C.char) C.int {
+	var mesg string
+	var code int
+
+	if path := C.GoString(url); path != `` {
+		if v, ok := callbackMap.Load(cookie); ok {
+			if renderer, ok := v.(*SassRenderer); ok {
+				candidates := []string{path}
+
+				if filepath.Ext(path) == `` {
+					candidates = append(candidates, fmt.Sprintf("%s.scss", path))
+					candidates = append(candidates, fmt.Sprintf("%s.css", path))
+				}
+
+				for _, candidate := range candidates {
+					if file, err := renderer.server.fs.Open(candidate); err == nil {
+						defer file.Close()
+
+						if data, err := ioutil.ReadAll(file); err == nil {
+							mesg = string(data)
+							code = len(data)
+							break
+						} else {
+							mesg = fmt.Sprintf("Cannot read %v: %v", candidate, err)
+							code = -5
+						}
+					} else {
+						mesg = fmt.Sprintf("Cannot open %v: %v", candidate, err)
+						code = -4
+					}
+
+				}
+			} else {
+				mesg = fmt.Sprintf("invalid callback mapping: expected SassRenderer, got %T", v)
+				code = -3
+			}
+		} else {
+			mesg = fmt.Sprintf("invalid callback mapping")
+			code = -2
+		}
+	} else {
+		mesg = fmt.Sprintf("no path specified")
+		code = -1
+	}
+
+	*output = C.CString(mesg)
+	return C.int(code)
 }

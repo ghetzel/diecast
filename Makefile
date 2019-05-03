@@ -20,8 +20,8 @@ test:
 	go test -count=1 ./...
 
 build: fmt
-	GOOS=linux  go build -o bin/diecast-linux-amd64 cmd/diecast/main.go
-	#GOOS=darwin go build -o bin/diecast-darwin-amd64 cmd/diecast/main.go
+	GOOS=linux go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/diecast-linux-amd64 cmd/diecast/main.go
+	#GOOS=darwin go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/diecast-darwin-amd64 cmd/diecast/main.go
 	which diecast && cp -v bin/$(BIN) $(shell which diecast) || true
 
 docs:

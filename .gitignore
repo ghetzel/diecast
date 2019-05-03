@@ -9,3 +9,5 @@
 /*.deb
 /*.rpm
 /pkg
+/rkt
+/.vscode
