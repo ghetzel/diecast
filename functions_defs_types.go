@@ -8,7 +8,7 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
-func loadStandardFunctionsTypes(funcs FuncMap) funcGroup {
+func loadStandardFunctionsTypes(funcs FuncMap, server *Server) funcGroup {
 	group := funcGroup{
 		Name:        `Type Detection and Manipulation`,
 		Description: `Used to detect and convert discrete values into different data types.`,

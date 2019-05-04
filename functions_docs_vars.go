@@ -1,6 +1,6 @@
 package diecast
 
-func loadRuntimeFunctionsVariables() funcGroup {
+func loadRuntimeFunctionsVariables(server *Server) funcGroup {
 	return funcGroup{
 		Name: `Dynamic Variables`,
 		Description: `A set of functions that allow for custom data to be set, retrieved, and removed at runtime; ` +

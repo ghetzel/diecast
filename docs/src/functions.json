@@ -952,6 +952,26 @@
         ]
       },
       {
+        "Name": "pathInRoot",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Returns whether the given path falls within the Diecast serving root path.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "path",
+            "Type": "string",
+            "Description": "The path to check.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
         "Name": "mimetype",
         "Alias": "",
         "Aliases": null,
@@ -2441,16 +2461,6 @@
         "Examples": null
       },
       {
-        "Name": "sum",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Return the sum of the given array of numbers.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
         "Name": "maximum",
         "Alias": "",
         "Aliases": null,
@@ -2505,6 +2515,16 @@
         "Alias": "",
         "Aliases": null,
         "Summary": "Return the standard deviation of the given array of numbers.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the sum of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
         "Arguments": null,

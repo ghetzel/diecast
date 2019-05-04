@@ -2,15 +2,16 @@ package diecast
 
 import (
 	"fmt"
+	"math"
+
 	"github.com/ghetzel/go-stockutil/mathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/montanaflynn/stats"
-	"math"
 )
 
-func loadStandardFunctionsMath(funcs FuncMap) funcGroup {
+func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 	group := funcGroup{
 		Name:        `Math and Statistics`,
 		Description: `These functions implement basic mathematical and statistical operations on numbers.`,
@@ -118,16 +119,31 @@ func loadStandardFunctionsMath(funcs FuncMap) funcGroup {
 
 	// Numeric Aggregation Functions
 	// ---------------------------------------------------------------------------------------------
-	for fnName, fn := range map[string]statsUnary{
-		`maximum`:    stats.Max,
-		`mean`:       stats.Mean,
-		`median`:     stats.Median,
-		`minimum`:    stats.Min,
-		`minimum_nz`: MinNonZero,
-		`stddev`:     stats.StandardDeviation,
-		`sum`:        stats.Sum,
+	for _, obj := range []statsUnary{
+		{
+			Name:     `maximum`,
+			Function: stats.Max,
+		}, {
+			Name:     `mean`,
+			Function: stats.Mean,
+		}, {
+			Name:     `median`,
+			Function: stats.Median,
+		}, {
+			Name:     `minimum`,
+			Function: stats.Min,
+		}, {
+			Name:     `minimum_nz`,
+			Function: MinNonZero,
+		}, {
+			Name:     `stddev`,
+			Function: stats.StandardDeviation,
+		}, {
+			Name:     `sum`,
+			Function: stats.Sum,
+		},
 	} {
-		docName := fnName
+		docName := obj.Name
 
 		switch docName {
 		case `minimum_nz`:
@@ -137,9 +153,9 @@ func loadStandardFunctionsMath(funcs FuncMap) funcGroup {
 		}
 
 		group.Functions = append(group.Functions, funcDef{
-			Name:    fnName,
+			Name:    obj.Name,
 			Summary: fmt.Sprintf("Return the %s of the given array of numbers.", docName),
-			Function: func(statsFn statsUnary) statsTplFunc {
+			Function: func(statsFn statsUnaryFn) statsTplFunc {
 				return func(in interface{}) (float64, error) {
 					var input []float64
 
@@ -161,7 +177,7 @@ func loadStandardFunctionsMath(funcs FuncMap) funcGroup {
 						return 0, err
 					}
 				}
-			}(fn),
+			}(obj.Function),
 		})
 	}
 

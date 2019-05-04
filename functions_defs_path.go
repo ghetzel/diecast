@@ -14,7 +14,7 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 )
 
-func loadStandardFunctionsPath(funcs FuncMap) funcGroup {
+func loadStandardFunctionsPath(funcs FuncMap, server *Server) funcGroup {
 	return funcGroup{
 		Name:        `File Path Manipulation`,
 		Description: `Used to parse and extract data from strings representing paths in a filesystem or tree hierarchy.`,
@@ -143,14 +143,21 @@ func loadStandardFunctionsPath(funcs FuncMap) funcGroup {
 					var dir string
 					entries := make([]*fileInfo, 0)
 
-					if len(dirs) == 0 || dirs[0] == `` {
-						if wd, err := os.Getwd(); err == nil {
+					if len(dirs) == 0 || dirs[0] == `` || dirs[0] == `.` || dirs[0] == `/` {
+						if server != nil {
+							dir = server.RootPath
+						} else if wd, err := os.Getwd(); err == nil {
 							dir = wd
 						} else {
 							return nil, err
 						}
 					} else {
 						dir = dirs[0]
+					}
+
+					// lock everything into the server rootpath
+					if server != nil && dir != server.RootPath {
+						dir = filepath.Join(server.RootPath, dir)
 					}
 
 					if d, err := pathutil.ExpandUser(dir); err == nil {
@@ -160,6 +167,10 @@ func loadStandardFunctionsPath(funcs FuncMap) funcGroup {
 					}
 
 					dir = path.Clean(dir)
+
+					if server != nil && !server.IsInRootPath(dir) {
+						return nil, fmt.Errorf("permission denied")
+					}
 
 					if pathutil.DirExists(dir) {
 						dir = path.Join(dir, `*`)
@@ -183,6 +194,23 @@ func loadStandardFunctionsPath(funcs FuncMap) funcGroup {
 						return entries, nil
 					} else {
 						return nil, err
+					}
+				},
+			}, {
+				Name:    `pathInRoot`,
+				Summary: `Returns whether the given path falls within the Diecast serving root path.`,
+				Arguments: []funcArg{
+					{
+						Name:        `path`,
+						Type:        `string`,
+						Description: `The path to check.`,
+					},
+				},
+				Function: func(path string) bool {
+					if server != nil {
+						return server.IsInRootPath(path)
+					} else {
+						return true
 					}
 				},
 			}, {

@@ -154,7 +154,7 @@ func main() {
 	}
 
 	var docs functionDocSet
-	var standardFuncs = diecast.GetStandardFunctions()
+	var standardFuncs = diecast.GetStandardFunctions(nil)
 
 	if funcFiles, err := filepath.Glob(`functions_defs_*.go`); err == nil {
 		for _, funcdefs := range funcFiles {

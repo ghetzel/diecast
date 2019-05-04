@@ -9,7 +9,7 @@ import (
 
 func TestCollectionFunctions(t *testing.T) {
 	assert := require.New(t)
-	fns := GetStandardFunctions()
+	fns := GetStandardFunctions(nil)
 
 	page := fns[`page`].(func(interface{}, interface{}) int)
 
@@ -37,7 +37,7 @@ func TestCollectionFunctions(t *testing.T) {
 
 func TestMiscFunctions(t *testing.T) {
 	assert := require.New(t)
-	fns := GetStandardFunctions()
+	fns := GetStandardFunctions(nil)
 
 	fn_switch := fns[`switch`].(func(input interface{}, fallback interface{}, pairs ...interface{}) interface{})
 

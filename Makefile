@@ -3,15 +3,16 @@
 
 GO111MODULE ?= on
 LOCALS      := $(shell find . -type f -name '*.go')
+BIN         ?= diecast-$(shell go env GOOS)-$(shell go env GOARCH)
 
 all: deps test build docs
 
 deps:
 	go get ./...
 	-go mod tidy
-	go generate -x ./...
 
 fmt:
+	go generate -x ./...
 	gofmt -w $(LOCALS)
 	go vet ./...
 
@@ -19,8 +20,9 @@ test:
 	go test -count=1 ./...
 
 build: fmt
-	test -d diecast && go build -o bin/diecast cmd/diecast/main.go
-	which diecast && cp -v bin/diecast `which diecast` || true
+	GOOS=linux go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/diecast-linux-amd64 cmd/diecast/main.go
+	#GOOS=darwin go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/diecast-darwin-amd64 cmd/diecast/main.go
+	which diecast && cp -v bin/$(BIN) $(shell which diecast) || true
 
 docs:
 	cd docs && make
@@ -28,7 +30,7 @@ docs:
 package:
 	-rm -rf pkg
 	mkdir -p pkg/usr/bin
-	cp bin/diecast pkg/usr/bin/diecast
+	cp bin/$(BIN) pkg/usr/bin/diecast
 	fpm \
 		--input-type  dir \
 		--output-type deb \

@@ -10,7 +10,7 @@ import (
 	"github.com/ghetzel/go-stockutil/timeutil"
 )
 
-func loadStandardFunctionsTime(funcs FuncMap) funcGroup {
+func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 	return funcGroup{
 		Name: `Time Functions`,
 		Description: `Used for working with time and duration values. Among this collection are ` +

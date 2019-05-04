@@ -10,7 +10,7 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 )
 
-func loadStandardFunctionsIntrospection(funcs FuncMap) funcGroup {
+func loadStandardFunctionsIntrospection(funcs FuncMap, server *Server) funcGroup {
 	return funcGroup{
 		Name:        `Introspection and Reflection`,
 		Description: `Functions for inspecting runtime information about templates and Diecast itself.`,

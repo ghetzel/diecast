@@ -16,7 +16,7 @@ import (
 
 var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
 
-func loadStandardFunctionsCollections(funcs FuncMap) funcGroup {
+func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 	group := funcGroup{
 		Name: `Arrays and Objects`,
 		Description: `For converting, modifying, and filtering arrays, objects, and arrays of ` +

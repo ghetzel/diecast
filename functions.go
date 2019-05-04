@@ -58,7 +58,12 @@ func (self *fileInfo) String() string {
 	return path.Join(self.Parent, self.Name())
 }
 
-type statsUnary func(stats.Float64Data) (float64, error)
+type statsUnaryFn func(stats.Float64Data) (float64, error)
+
+type statsUnary struct {
+	Name     string
+	Function statsUnaryFn
+}
 
 func MinNonZero(data stats.Float64Data) (float64, error) {
 	for i, v := range data {
@@ -70,60 +75,60 @@ func MinNonZero(data stats.Float64Data) (float64, error) {
 	return stats.Min(data)
 }
 
-func GetFunctions() (funcGroups, FuncMap) {
+func GetFunctions(server *Server) (funcGroups, FuncMap) {
 	funcs := make(FuncMap)
 	groups := make(funcGroups, 0)
 
 	// String Processing
-	groups = append(groups, loadStandardFunctionsString(funcs))
+	groups = append(groups, loadStandardFunctionsString(funcs, server))
 
 	// File Pathname Handling
-	groups = append(groups, loadStandardFunctionsPath(funcs))
+	groups = append(groups, loadStandardFunctionsPath(funcs, server))
 
 	// Encoding / Decoding
-	groups = append(groups, loadStandardFunctionsCodecs(funcs))
+	groups = append(groups, loadStandardFunctionsCodecs(funcs, server))
 
 	// Type Handling and Conversion
-	groups = append(groups, loadStandardFunctionsTypes(funcs))
+	groups = append(groups, loadStandardFunctionsTypes(funcs, server))
 
 	// Time and Date Formatting
-	groups = append(groups, loadStandardFunctionsTime(funcs))
+	groups = append(groups, loadStandardFunctionsTime(funcs, server))
 
 	// Random Numbers and Encoding
-	groups = append(groups, loadStandardFunctionsCryptoRand(funcs))
+	groups = append(groups, loadStandardFunctionsCryptoRand(funcs, server))
 
 	// Numeric/Math Functions
-	groups = append(groups, loadStandardFunctionsMath(funcs))
+	groups = append(groups, loadStandardFunctionsMath(funcs, server))
 
 	// Collections
-	groups = append(groups, loadStandardFunctionsCollections(funcs))
+	groups = append(groups, loadStandardFunctionsCollections(funcs, server))
 
 	// HTML processing
-	groups = append(groups, loadStandardFunctionsHtmlProcessing(funcs))
+	groups = append(groups, loadStandardFunctionsHtmlProcessing(funcs, server))
 
 	// Colors
-	groups = append(groups, loadStandardFunctionsColor(funcs))
+	groups = append(groups, loadStandardFunctionsColor(funcs, server))
 
 	// Unit Conversions
-	groups = append(groups, loadStandardFunctionsConvert(funcs))
+	groups = append(groups, loadStandardFunctionsConvert(funcs, server))
 
 	// Template Introspection functions
-	groups = append(groups, loadStandardFunctionsIntrospection(funcs))
+	groups = append(groups, loadStandardFunctionsIntrospection(funcs, server))
 
 	// Comparators
-	groups = append(groups, loadStandardFunctionsComparisons(funcs))
+	groups = append(groups, loadStandardFunctionsComparisons(funcs, server))
 
 	// Documentation for runtime functions
-	groups = append(groups, loadRuntimeFunctionsVariables())
-	groups = append(groups, loadRuntimeFunctionsRequest())
+	groups = append(groups, loadRuntimeFunctionsVariables(server))
+	groups = append(groups, loadRuntimeFunctionsRequest(server))
 
 	groups.PopulateFuncMap(funcs)
 
 	return groups, funcs
 }
 
-func GetStandardFunctions() FuncMap {
-	_, funcs := GetFunctions()
+func GetStandardFunctions(server *Server) FuncMap {
+	_, funcs := GetFunctions(server)
 	return funcs
 }
 

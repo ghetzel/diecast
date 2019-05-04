@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -42,6 +43,12 @@ import (
 
 var ITotallyUnderstandRunningArbitraryCommandsAsRootIsRealRealBad = false
 
+var DirectoryErr = errors.New(`is a directory`)
+
+func IsDirectoryErr(err error) bool {
+	return (err == DirectoryErr)
+}
+
 const DefaultAddress = `127.0.0.1:28419`
 const DefaultRoutePrefix = `/`
 const DefaultConfigFile = `diecast.yml`
@@ -57,6 +64,7 @@ var DefaultIndexFile = `index.html`
 var DefaultVerifyFile = `/` + DefaultIndexFile
 var DefaultTemplatePatterns = []string{`*.html`, `*.md`, `*.scss`}
 var DefaultTryExtensions = []string{`html`, `md`}
+var DefaultAutoindexFilename = `/autoindex.html`
 
 var DefaultAutolayoutPatterns = []string{
 	`*.html`,
@@ -169,6 +177,13 @@ type Server struct {
 	// Configure routes and actions to execute when those routes are requested.
 	Actions []*Action `json:"actions"`
 
+	// Specify that requests that terminate at a filesystem directory should automatically generate an index
+	// listing of that directory.
+	Autoindex bool `json:"autoindex"`
+
+	// If Autoindex is enabled, this allows the template used to generate the index page to be customized.
+	AutoindexTemplate string `json:"autoindex_template"`
+
 	// Setup global configuration details for Binding Protocols
 	Protocols map[string]ProtocolConfig `json:"protocols"`
 
@@ -205,6 +220,7 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		TemplatePatterns:   patterns,
 		TryExtensions:      DefaultTryExtensions,
 		VerifyFile:         DefaultVerifyFile,
+		AutoindexTemplate:  DefaultAutoindexFilename,
 	}
 
 	if str, ok := root.(string); ok {
@@ -286,6 +302,21 @@ func (self *Server) SetMounts(mounts []Mount) {
 
 func (self *Server) SetFileSystem(fs http.FileSystem) {
 	self.fs = fs
+}
+
+func (self *Server) IsInRootPath(path string) bool {
+	if absR, err := filepath.Abs(self.RootPath); err == nil {
+		if absP, err := filepath.Abs(path); err == nil {
+			absR, _ := filepath.EvalSymlinks(absR)
+			absP, _ := filepath.EvalSymlinks(absP)
+
+			if absP == absR || strings.HasPrefix(absP, absR) {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func (self *Server) Initialize() error {
@@ -626,7 +657,7 @@ func (self *Server) applyTemplate(
 func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 	funcs := make(FuncMap)
 
-	for k, v := range GetStandardFunctions() {
+	for k, v := range GetStandardFunctions(self) {
 		funcs[k] = v
 	}
 
@@ -1029,7 +1060,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-		// finally, add handlers for implementing a junky form of url routing
+		// finally, add handlers for implementing routing
 		if parent := path.Dir(requestPath); parent != `.` {
 			for _, ext := range self.TryExtensions {
 				requestPaths = append(requestPaths, fmt.Sprintf("%s/index__id.%s", strings.TrimSuffix(parent, `/`), ext))
@@ -1044,7 +1075,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 
 	PathLoop:
 		// search for the file in all of the generated request paths
-		for _, rPath := range requestPaths {
+		for _, rPath := range sliceutil.UniqueStrings(requestPaths) {
 			// remove the Route Prefix, as that's a structural part of the path but does not
 			// represent where the files are (used for embedding diecast in other services
 			// to avoid name collisions)
@@ -1058,6 +1089,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 			var redirectCode int
 			var headers = make(map[string]interface{})
 			var urlParams = make(map[string]interface{})
+			var forceTemplate bool
 
 			if self.TryLocalFirst && !triedLocal {
 				triedLocal = true
@@ -1067,6 +1099,15 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 					file = f
 					mimeType = m
 
+				} else if IsDirectoryErr(err) && self.Autoindex {
+					if f, m, ok := self.tryAutoindex(); ok {
+						file = f
+						mimeType = m
+						forceTemplate = true
+					} else {
+						log.Warningf("[%s] failed to load autoindex template", id)
+						continue
+					}
 				} else if _, response, err := self.tryMounts(rPath, req); err == nil {
 					file = response.GetFile()
 					mimeType = response.ContentType
@@ -1094,6 +1135,15 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 				} else if f, m, err := self.tryLocalFile(rPath, req); err == nil {
 					file = f
 					mimeType = m
+				} else if IsDirectoryErr(err) && self.Autoindex {
+					if f, m, ok := self.tryAutoindex(); ok {
+						file = f
+						mimeType = m
+						forceTemplate = true
+					} else {
+						log.Warningf("[%s] failed to load autoindex template", id)
+						continue
+					}
 				}
 			}
 
@@ -1115,7 +1165,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 					urlParams[`id`] = strings.Trim(path.Base(req.URL.Path), `/`)
 				}
 
-				if handled := self.tryToHandleFoundFile(rPath, mimeType, file, statusCode, headers, urlParams, w, req); handled {
+				if handled := self.tryToHandleFoundFile(rPath, mimeType, file, statusCode, headers, urlParams, w, req, forceTemplate); handled {
 					return
 				}
 			}
@@ -1125,6 +1175,16 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 		self.respondError(w, fmt.Errorf("[%s] File %q was not found.", id, requestPath), http.StatusNotFound)
 	} else {
 		self.respondError(w, fmt.Errorf("[%s] Route %q was not found.", id, req.URL.Path), http.StatusNotFound)
+	}
+}
+
+func (self *Server) tryAutoindex() (http.File, string, bool) {
+	if autoindex, err := self.fs.Open(self.AutoindexTemplate); err == nil {
+		return autoindex, `text/html`, true
+	} else if autoindex, err := FS(false).Open(self.AutoindexTemplate); err == nil {
+		return autoindex, `text/html`, true
+	} else {
+		return nil, ``, false
 	}
 }
 
@@ -1143,7 +1203,7 @@ func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.Fi
 					return file, ``, err
 				}
 			} else {
-				return nil, ``, fmt.Errorf("is a directory")
+				return nil, ``, DirectoryErr
 			}
 		} else {
 			return nil, ``, fmt.Errorf("failed to stat file %v: %v", requestPath, err)
@@ -1191,7 +1251,17 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 	return nil, nil, fmt.Errorf("%q not found", requestPath)
 }
 
-func (self *Server) tryToHandleFoundFile(requestPath string, mimeType string, file http.File, statusCode int, headers map[string]interface{}, urlParams map[string]interface{}, w http.ResponseWriter, req *http.Request) bool {
+func (self *Server) tryToHandleFoundFile(
+	requestPath string,
+	mimeType string,
+	file http.File,
+	statusCode int,
+	headers map[string]interface{},
+	urlParams map[string]interface{},
+	w http.ResponseWriter,
+	req *http.Request,
+	forceTemplate bool,
+) bool {
 	// add in any metadata as response headers
 	for k, v := range headers {
 		w.Header().Set(k, fmt.Sprintf("%v", v))
@@ -1207,7 +1277,7 @@ func (self *Server) tryToHandleFoundFile(requestPath string, mimeType string, fi
 	}
 
 	// we got a real actual file here, figure out if we're templating it or not
-	if self.shouldApplyTemplate(requestPath) {
+	if self.shouldApplyTemplate(requestPath) || forceTemplate {
 		// tease the template header out of the file
 		if header, templateData, err := SplitTemplateHeaderContent(file); err == nil {
 			if header != nil {

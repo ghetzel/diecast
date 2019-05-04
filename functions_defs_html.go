@@ -9,7 +9,7 @@ import (
 	strip "github.com/grokify/html-strip-tags-go"
 )
 
-func loadStandardFunctionsHtmlProcessing(funcs FuncMap) funcGroup {
+func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGroup {
 	group := funcGroup{
 		Name:        `HTML Processing`,
 		Description: `Used to parse and modify HTML documents.`,
