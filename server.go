@@ -928,7 +928,11 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		bindingsToEval = append(bindingsToEval, header.Bindings...)
 	}
 
-	for _, binding := range bindingsToEval {
+	for i, binding := range bindingsToEval {
+		if strings.TrimSpace(binding.Name) == `` {
+			binding.Name = fmt.Sprintf("binding%d", i)
+		}
+
 		binding.server = self
 
 		start := time.Now()
@@ -1634,6 +1638,10 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 		request[`encoding`] = te
 	}
 
+	addr, port := stringutil.SplitPairRight(req.RemoteAddr, `:`)
+
+	request[`remote_ip`] = addr
+	request[`remote_port`] = int(typeutil.Int(port))
 	request[`remote_address`] = req.RemoteAddr
 	request[`host`] = req.Host
 

@@ -1,13 +1,18 @@
 package diecast
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/ghetzel/go-stockutil/log"
+	"github.com/ghetzel/go-stockutil/sliceutil"
+	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/gomodule/redigo/redis"
 )
@@ -16,7 +21,72 @@ var redisConnectionPool sync.Map
 var redisPoolMaxIdle = 10
 var redisPoolIdleTimeout = 120 * time.Second
 var redisPoolMaxLifetime = 10 * time.Minute
+var redisBlacklistedCommands = []string{
+	`AUTH`,
+	`BGREWRITEAOF`,
+	`BGSAVE`,
+	`CLIENT`,
+	`CLUSTER`,
+	`COMMAND`,
+	`DBSIZE`,
+	`DEBUG`,
+	`DUMP`,
+	`ECHO`,
+	`EVALSHA`,
+	`EVAL`,
+	`FLUSHALL`,
+	`FLUSHALL`,
+	`FLUSHDB`,
+	`INFO`,
+	`KEYS`,
+	`MEMORY`,
+	`MIGRATE`,
+	`MONITOR`,
+	`OBJECT`,
+	`PING`,
+	`PSUBSCRIBE`,
+	`PUBLISH`,
+	`PUBSUB`,
+	`PUNSUBSCRIBE`,
+	`QUIT`,
+	`RANDOMKEY`,
+	`REPLICAOF`,
+	`RESTORE`,
+	`ROLE`,
+	`SAVE`,
+	`SCAN`,
+	`SCRIPT`,
+	`SELECT`,
+	`SHUTDOWN`,
+	`SLAVEOF`,
+	`SLOWLOG`,
+	`SUBSCRIBE`,
+	`SWAPDB`,
+	`SYNC`,
+	`TYPE`,
+	`UNSUBSCRIBE`,
+	`UNWATCH`,
+	`WAIT`,
+	`WATCH`,
+}
 
+// The Redis binding protocol is used to retrieve or modify items in a Redis server.
+// It is specified with URLs that use the redis://[host[:port]]/db/key scheme.
+//
+// Protocol Options
+//
+// - redis.default_host (localhost:6379)
+//   Specifies the hostname:port to use if a resource URI does not specify one.
+//
+// - redis.max_idle (10)
+//   The maximum number of idle connections to maintain in a connection pool.
+//
+// - redis.idle_timeout (120s)
+//   The maximum idle time of a connection before it is closed.
+//
+// - redis.max_lifetime (10m)
+//   The maximum amount of time a connection can remain open before being recycled.
+//
 type RedisProtocol struct {
 }
 
@@ -31,6 +101,10 @@ func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, err
 		rr.Verb = `GET`
 	} else {
 		rr.Verb = strings.ToUpper(rr.Verb)
+	}
+
+	if first, _ := stringutil.SplitPair(rr.Verb, ` `); sliceutil.ContainsString(redisBlacklistedCommands, first) {
+		return nil, fmt.Errorf("The %q command is not permitted", rr.Verb)
 	}
 
 	var pool *redis.Pool
@@ -68,8 +142,65 @@ func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, err
 	if conn, err := pool.GetContext(ctx); err == nil {
 		defer conn.Close()
 
-		// conn.Do(commandName string, args ...interface{}) (reply interface{}, err error)
-		return nil, fmt.Errorf("Not Implemented")
+		args := strings.Split(strings.TrimPrefix(rr.URL.Path, `/`), `/`)
+		args = sliceutil.CompactString(args)
+
+		if reply, err := conn.Do(rr.Verb, sliceutil.Sliceify(args)...); err == nil {
+			buf := bytes.NewBuffer(nil)
+			response := &ProtocolResponse{
+				Raw:        reply,
+				StatusCode: 200,
+				data:       ioutil.NopCloser(buf),
+			}
+
+			switch reply.(type) {
+			case error:
+				return response, reply.(error)
+			case int64, string, []byte:
+				response.MimeType = `text/plain; charset=utf-8`
+				buf.Write([]byte(typeutil.String(reply)))
+
+			case []interface{}:
+				response.MimeType = `application/json; charset=utf-8`
+
+				// handles H-series replies (maps represented as arrays of alternating keys, values)
+				if strings.HasPrefix(rr.Verb, `H`) {
+					obj := make(map[string]interface{})
+					values := sliceutil.Stringify(reply)
+
+					for i, value := range values {
+						if i%2 == 0 {
+							if (i + 1) < len(values) {
+								obj[value] = values[i+1]
+							} else {
+								obj[value] = nil
+							}
+						}
+					}
+
+					reply = obj
+				} else {
+					values := reply.([]interface{})
+
+					switch rr.Verb {
+					case `TIME`:
+						reply = time.Unix(typeutil.Int(values[0]), typeutil.Int(values[1]))
+					default:
+						reply = sliceutil.Autotype(values)
+					}
+				}
+
+				if err := json.NewEncoder(buf).Encode(reply); err != nil {
+					return response, err
+				}
+			default:
+				return nil, fmt.Errorf("Unsupported response type %T", reply)
+			}
+
+			return response, nil
+		} else {
+			return nil, err
+		}
 	} else {
 		return nil, fmt.Errorf("Cannot obtain Redis connection: %v", err)
 	}

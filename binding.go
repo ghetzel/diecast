@@ -7,6 +7,7 @@ import (
 	"html"
 	"html/template"
 	"io/ioutil"
+	"mime"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -212,10 +213,16 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					}
 				}
 
+				mimeType, _, _ := mime.ParseMediaType(response.MimeType)
+
+				if mimeType == `` {
+					mimeType, _ = stringutil.SplitPair(response.MimeType, `;`)
+				}
+
 				// only do response body processing if there is data to process
 				if len(data) > 0 {
 					if self.Parser == `` {
-						switch response.MimeType {
+						switch mimeType {
 						case `application/json`:
 							self.Parser = `json`
 						case `application/x-yaml`, `application/yaml`, `text/yaml`:
@@ -234,7 +241,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						//
 						// If you're certain the response actually is JSON, then explicitly set Parser==`json`
 						//
-						if self.Parser == `` && response.MimeType != `application/json` {
+						if self.Parser == `` && mimeType != `application/json` {
 							return string(data), nil
 						} else {
 							var rv interface{}
