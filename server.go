@@ -117,6 +117,9 @@ type Server struct {
 	// Enables additional options for debugging applications. Caution: can expose secrets and other sensitive data.
 	EnableDebugging bool `json:"debug"`
 
+	// Disable emitting per-request Server-Timing headers to aid in tracing bottlenecks and performance issues.
+	DisableTimings bool `json:"disableTimings"`
+
 	// Specifies whether layouts are enabled
 	EnableLayouts bool `json:"enableLayouts"`
 
@@ -180,6 +183,9 @@ type Server struct {
 
 	// If Autoindex is enabled, this allows the template used to generate the index page to be customized.
 	AutoindexTemplate string `json:"autoindex_template"`
+
+	// Setup global configuration details for Binding Protocols
+	Protocols map[string]ProtocolConfig `json:"protocols"`
 
 	router        *http.ServeMux
 	server        *negroni.Negroni
@@ -616,7 +622,7 @@ func (self *Server) applyTemplate(
 
 					postTemplateRenderer.SetPrewriteFunc(func(r *http.Request) {
 						reqtime(r, `tpl`, time.Since(start))
-						writeRequestTimerHeaders(w, r)
+						writeRequestTimerHeaders(self, w, r)
 					})
 
 					return postTemplateRenderer.Render(w, req, renderOpts)
@@ -628,7 +634,7 @@ func (self *Server) applyTemplate(
 
 				baseRenderer.SetPrewriteFunc(func(r *http.Request) {
 					reqtime(r, `tpl`, time.Since(start))
-					writeRequestTimerHeaders(w, r)
+					writeRequestTimerHeaders(self, w, r)
 				})
 
 				return baseRenderer.Render(w, req, renderOpts)
@@ -638,7 +644,7 @@ func (self *Server) applyTemplate(
 		}
 	} else if redir, ok := err.(RedirectTo); ok {
 		log.Infof("[%s] Performing 307 Temporary Redirect to %v due to binding response handler.", reqid(req), redir)
-		writeRequestTimerHeaders(w, req)
+		writeRequestTimerHeaders(self, w, req)
 		http.Redirect(w, req, redir.Error(), http.StatusTemporaryRedirect)
 		return nil
 	} else {
@@ -922,7 +928,11 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		bindingsToEval = append(bindingsToEval, header.Bindings...)
 	}
 
-	for _, binding := range bindingsToEval {
+	for i, binding := range bindingsToEval {
+		if strings.TrimSpace(binding.Name) == `` {
+			binding.Name = fmt.Sprintf("binding%d", i)
+		}
+
 		binding.server = self
 
 		start := time.Now()
@@ -1628,6 +1638,10 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 		request[`encoding`] = te
 	}
 
+	addr, port := stringutil.SplitPairRight(req.RemoteAddr, `:`)
+
+	request[`remote_ip`] = addr
+	request[`remote_port`] = int(typeutil.Int(port))
 	request[`remote_address`] = req.RemoteAddr
 	request[`host`] = req.Host
 

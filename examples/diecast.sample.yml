@@ -25,6 +25,13 @@ bindings:
 bindingPrefix: 'http://localhost:28419'
 
 
+# Disable emission of the "Server-Timing" header when requesting resources from Diecast.
+# This header is useful for debugging performance issues in templates, but also exposes
+# Binding names to the client.  If these names are considered private and secure, set
+# this to true.
+#
+# disableTimings: true
+
 # The root of the working directory that templates and files will be served
 # from. If left blank, the directory `diecast` was started in will be used.
 root: '.'

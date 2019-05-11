@@ -45,7 +45,11 @@ func reqtime(req *http.Request, key string, took time.Duration) {
 	}
 }
 
-func writeRequestTimerHeaders(w http.ResponseWriter, req *http.Request) {
+func writeRequestTimerHeaders(server *Server, w http.ResponseWriter, req *http.Request) {
+	if server.DisableTimings {
+		return
+	}
+
 	timings := make([]string, 0)
 
 	if id := reqid(req); id != `` {
