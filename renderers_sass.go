@@ -2,7 +2,7 @@ package diecast
 
 // #cgo CFLAGS: -Wno-error=implicit-function-declaration
 // #cgo CPPFLAGS: -I/usr/include -I/usr/local/include
-// #cgo LDFLAGS: -lsass
+// #cgo LDFLAGS: -L/usr/lib -L/usr/local/lib -lsass
 // #include <sass/context.h>
 // #include "renderers_sass.h"
 import "C"
