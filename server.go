@@ -231,8 +231,6 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		server.RootPath = str
 	} else if fs, ok := root.(http.FileSystem); ok {
 		server.SetFileSystem(fs)
-	} else {
-		panic("Diecast must be provided with a string or http.FileSystem")
 	}
 
 	server.router.HandleFunc(server.rp()+`/`, server.handleRequest)
