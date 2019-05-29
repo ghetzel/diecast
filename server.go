@@ -195,6 +195,7 @@ type Server struct {
 	precmd        *exec.Cmd
 	altRootCaPool *x509.CertPool
 	initialized   bool
+	hasUserRoutes bool
 }
 
 func NewServer(root interface{}, patterns ...string) *Server {
@@ -301,10 +302,13 @@ func (self *Server) HandleFunc(route string, handler http.HandlerFunc) {
 
 // Add a handler function for an endpoint (any HTTP method.)
 func (self *Server) Handle(route string, handler http.Handler) {
+	self.hasUserRoutes = true
 	self.userRouter.Handle(route, handler)
 }
 
 func (self *Server) addHandler(verb string, route string, handler http.HandlerFunc) {
+	self.hasUserRoutes = true
+
 	switch verb {
 	case http.MethodGet:
 		self.userRouter.Get(route, handler)
@@ -1134,37 +1138,31 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 		defer req.Body.Close()
 
 		log.Infof("[%s] %v %v", id, req.Method, req.URL)
-
-		// normalize filename from request path
-		requestPath := req.URL.Path
-
-		requestPaths := []string{
-			requestPath,
-		}
+		requestPaths := []string{req.URL.Path}
 
 		// if we're looking at a directory, throw in the index file if the path as given doesn't respond
-		if strings.HasSuffix(requestPath, `/`) {
-			requestPaths = append(requestPaths, path.Join(requestPath, self.IndexFile))
+		if strings.HasSuffix(req.URL.Path, `/`) {
+			requestPaths = append(requestPaths, path.Join(req.URL.Path, self.IndexFile))
 
 			for _, ext := range self.TryExtensions {
 				base := filepath.Base(self.IndexFile)
 				base = strings.TrimSuffix(base, filepath.Ext(self.IndexFile))
 
-				requestPaths = append(requestPaths, path.Join(requestPath, fmt.Sprintf("%s.%s", base, ext)))
+				requestPaths = append(requestPaths, path.Join(req.URL.Path, fmt.Sprintf("%s.%s", base, ext)))
 			}
 
-		} else if path.Ext(requestPath) == `` {
+		} else if path.Ext(req.URL.Path) == `` {
 			// if we're requesting a path without a file extension, try an index file in a directory with that name,
 			// then try just <filename>.html
-			requestPaths = append(requestPaths, fmt.Sprintf("%s/%s", requestPath, self.IndexFile))
+			requestPaths = append(requestPaths, fmt.Sprintf("%s/%s", req.URL.Path, self.IndexFile))
 
 			for _, ext := range self.TryExtensions {
-				requestPaths = append(requestPaths, fmt.Sprintf("%s.%s", requestPath, ext))
+				requestPaths = append(requestPaths, fmt.Sprintf("%s.%s", req.URL.Path, ext))
 			}
 		}
 
 		// finally, add handlers for implementing routing
-		if parent := path.Dir(requestPath); parent != `.` {
+		if parent := path.Dir(req.URL.Path); parent != `.` {
 			for _, ext := range self.TryExtensions {
 				requestPaths = append(requestPaths, fmt.Sprintf("%s/index__id.%s", strings.TrimSuffix(parent, `/`), ext))
 
@@ -1273,11 +1271,13 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 				}
 			}
 		}
+	}
 
-		// if we got *here*, then File Not Found
-		self.respondError(w, fmt.Errorf("[%s] File %q was not found.", id, requestPath), http.StatusNotFound)
-	} else {
+	if self.hasUserRoutes {
 		self.userRouter.ServeHTTP(w, req)
+	} else {
+		// if we got *here*, then File Not Found
+		self.respondError(w, fmt.Errorf("[%s] File %q was not found.", id, req.URL.Path), http.StatusNotFound)
 	}
 }
 
