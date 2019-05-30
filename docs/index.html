@@ -618,7 +618,22 @@ bindings:
             <a href="#fn-darken">darken</a>
         </li>
         <li>
+            <a href="#fn-definePalette">definePalette</a>
+        </li>
+        <li>
+            <a href="#fn-desaturate">desaturate</a>
+        </li>
+        <li>
             <a href="#fn-lighten">lighten</a>
+        </li>
+        <li>
+            <a href="#fn-mix">mix</a>
+        </li>
+        <li>
+            <a href="#fn-palette">palette</a>
+        </li>
+        <li>
+            <a href="#fn-saturate">saturate</a>
         </li>
     </ul>
 </details>
@@ -3586,6 +3601,97 @@ bindings:
             </div>
         </div>
     </section>
+    <section class="function" id="fn-definePalette">
+        <h4 class="mt-3">
+            definePalette
+            <a href="#fn-definePalette" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>definePalette NAME [COLORS ...]</code>
+        </div>
+        <p>Define a new named color palette.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>NAME</pre></th>
+                    <td>string</td>
+                    <td>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>COLORS</pre></th>
+                    <td> (1+)</td>
+                    <td>
+                        <p>A sequence of colors to add to the palette.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-definePalette-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>definePalette &#34;rgb&#34; &#34;#FF0000&#34; &#34;#00FF00&#34; &#34;#0000FF&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">null</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-desaturate">
+        <h4 class="mt-3">
+            desaturate
+            <a href="#fn-desaturate" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>desaturate COLOR PERCENT</code>
+        </div>
+        <p>Desaturate the given color by a percent [0-100].</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>COLOR</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The base color to operate on.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), “#RRGGBB”, or “#RRGGBBAA”.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>PERCENT</pre></th>
+                    <td>number</td>
+                    <td>
+                        <p>A how much less saturation the color should have.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-desaturate-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>desaturate &#34;#ad4038&#34; 20<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;#96544f&#34;</p>
+            </div>
+        </div>
+    </section>
     <section class="function" id="fn-lighten">
         <h4 class="mt-3">
             lighten
@@ -3629,6 +3735,155 @@ bindings:
             <div class="example" id="fn-lighten-example-0">
                 <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>lighten &#34;#FF0000&#34; 15<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">&#34;#FF4D4D&#34;</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-mix">
+        <h4 class="mt-3">
+            mix
+            <a href="#fn-mix" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>mix FIRST SECOND [WEIGHT]</code>
+        </div>
+        <p>Mix two colors together, producing a third.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>FIRST</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The first color to operate on.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), “#RRGGBB”, or “#RRGGBBAA”.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>SECOND</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The second color to operate on.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), “#RRGGBB”, or “#RRGGBBAA”.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>WEIGHT</pre></th>
+                    <td>number</td>
+                    <td>
+                        <p>A weight value [0.0, 1.0] specifying how much of the first color to include in the mix.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-mix-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>mix &#34;#ad4038&#34; &#34;#0000ff&#34; 0.8<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;#8A3360&#34;</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-palette">
+        <h4 class="mt-3">
+            palette
+            <a href="#fn-palette" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>palette INDEX [PALETTE]</code>
+        </div>
+        <p>Retrieve a color from a named color palette based on index.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>INDEX</pre></th>
+                    <td>integer</td>
+                    <td>
+                        <p>The index to retrieve. If the index is larger than the number of colors in the palette, it will wrap-around to the beginning.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>PALETTE</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name of the palette to use.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-palette-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>palette 4<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;#330099&#34;</p>
+            </div>
+            <div class="example" id="fn-palette-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>palette -1<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;#999900&#34;</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-saturate">
+        <h4 class="mt-3">
+            saturate
+            <a href="#fn-saturate" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>saturate COLOR PERCENT</code>
+        </div>
+        <p>Saturate the given color by a percent [0-100].</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>COLOR</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The base color to operate on.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), “#RRGGBB”, or “#RRGGBBAA”.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>PERCENT</pre></th>
+                    <td>number</td>
+                    <td>
+                        <p>A how much more saturation the color should have.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-saturate-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>saturate &#34;#ad4038&#34; 20<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;#c42b21&#34;</p>
             </div>
         </div>
     </section>

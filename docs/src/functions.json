@@ -4689,6 +4689,120 @@
         ]
       },
       {
+        "Name": "saturate",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Saturate the given color by a percent [0-100].",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "color",
+            "Type": "string",
+            "Description": "The base color to operate on.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), \"#RRGGBB\", or \"#RRGGBBAA\".",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "percent",
+            "Type": "number",
+            "Description": "A how much more saturation the color should have.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "saturate \"#ad4038\" 20",
+            "Description": "",
+            "Return": "#c42b21"
+          }
+        ]
+      },
+      {
+        "Name": "desaturate",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Desaturate the given color by a percent [0-100].",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "color",
+            "Type": "string",
+            "Description": "The base color to operate on.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), \"#RRGGBB\", or \"#RRGGBBAA\".",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "percent",
+            "Type": "number",
+            "Description": "A how much less saturation the color should have.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "desaturate \"#ad4038\" 20",
+            "Description": "",
+            "Return": "#96544f"
+          }
+        ]
+      },
+      {
+        "Name": "mix",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Mix two colors together, producing a third.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "first",
+            "Type": "string",
+            "Description": "The first color to operate on.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), \"#RRGGBB\", or \"#RRGGBBAA\".",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "second",
+            "Type": "string",
+            "Description": "The second color to operate on.  Can be specified as rgb(), rgba(), hsl(), hsla(), hsv(), hsva(), \"#RRGGBB\", or \"#RRGGBBAA\".",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "weight",
+            "Type": "number",
+            "Description": "A weight value [0.0, 1.0] specifying how much of the first color to include in the mix.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "mix \"#ad4038\" \"#0000ff\" 0.8",
+            "Description": "",
+            "Return": "#8A3360"
+          }
+        ]
+      },
+      {
         "Name": "colorToHex",
         "Alias": "",
         "Aliases": null,
@@ -4789,6 +4903,81 @@
             "Code": "colorFromValue \"Alice\"",
             "Description": "",
             "Return": "#416C69"
+          }
+        ]
+      },
+      {
+        "Name": "palette",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Retrieve a color from a named color palette based on index.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "index",
+            "Type": "integer",
+            "Description": "The index to retrieve. If the index is larger than the number of colors in the palette, it will wrap-around to the beginning.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "palette",
+            "Type": "string",
+            "Description": "The name of the palette to use.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": "munin",
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "palette 4",
+            "Description": "",
+            "Return": "#330099"
+          },
+          {
+            "Code": "palette -1",
+            "Description": "",
+            "Return": "#999900"
+          }
+        ]
+      },
+      {
+        "Name": "definePalette",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Define a new named color palette.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "name",
+            "Type": "string",
+            "Description": "",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "colors",
+            "Type": "",
+            "Description": "A sequence of colors to add to the palette.",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "definePalette \"rgb\" \"#FF0000\" \"#00FF00\" \"#0000FF\"",
+            "Description": "",
+            "Return": null
           }
         ]
       }

@@ -5,7 +5,7 @@ Sass_Import_List diecast_sass_importer(const char *url, Sass_Importer_Entry cb, 
     void* cookie = sass_importer_get_cookie(cb);
     Sass_Import_List list = sass_make_import_list(1);
 
-    const char* data;
+    char* data;
 
     // get the file contents
     if (go_retrievePath(cookie, url, &data) >= 0) {
