@@ -779,6 +779,9 @@ bindings:
             <a href="#fn-htmlAttrFindReplace">htmlAttrFindReplace</a>
         </li>
         <li>
+            <a href="#fn-htmlInner">htmlInner</a>
+        </li>
+        <li>
             <a href="#fn-htmlQuery">htmlQuery</a>
         </li>
         <li>
@@ -971,6 +974,9 @@ bindings:
         </li>
         <li>
             <a href="#fn-elideWords">elideWords</a>
+        </li>
+        <li>
+            <a href="#fn-emoji">emoji</a>
         </li>
         <li>
             <a href="#fn-hasPrefix">hasPrefix</a>
@@ -5405,6 +5411,45 @@ bindings:
             </tbody>
         </table>
     </section>
+    <section class="function" id="fn-htmlInner">
+        <h4 class="mt-3">
+            htmlInner
+            <a href="#fn-htmlInner" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>htmlInner DOCUMENT SELECTOR</code>
+        </div>
+        <p>Parse a given HTML document and return the HTML content of the first element matching the given CSS selector.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>DOCUMENT</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The HTML document to parse.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>SELECTOR</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>A CSS selector that targets the element whose contents will be returned.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
     <section class="function" id="fn-htmlQuery">
         <h4 class="mt-3">
             htmlQuery
@@ -6804,6 +6849,56 @@ bindings:
             <div class="example" id="fn-elideWords-example-1">
                 <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>elideWords &#34;Hello world&#34; 10<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">&#34;Hello world&#34;</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-emoji">
+        <h4 class="mt-3">
+            emoji
+            <a href="#fn-emoji" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>emoji EMOJI FALLBACK</code>
+        </div>
+        <p>Expand the given named emoji into its literal Unicode character.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>EMOJI</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The common name of the emoji to return, with or without surrounding colons (:).</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>FALLBACK</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>What to return if the named emoji is not found.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-emoji-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>emoji &#34;:thinking_face:&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;🤔&#34;</p>
+            </div>
+            <div class="example" id="fn-emoji-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>emoji &#34;:not_a_real_emoji:&#34; &#34;nope&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;nope&#34;</p>
             </div>
         </div>
     </section>

@@ -2,10 +2,10 @@ package diecast
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"net/url"
 
+	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 )
@@ -112,14 +112,24 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(value interface{}, extensions ...string) (template.HTML, error) {
-					input := fmt.Sprintf("%v", value)
+					input := typeutil.String(value)
 					output := blackfriday.Run(
 						[]byte(input),
 						blackfriday.WithExtensions(toMarkdownExt(extensions...)),
 					)
 					output = bluemonday.UGCPolicy().SanitizeBytes(output)
 
-					return template.HTML(output[:]), nil
+					return template.HTML(output), nil
+
+					// if doc, err := htmldoc(string(output)); err == nil {
+					// 	if contents, err := doc.Find(`body`).Html(); err == nil {
+					// 		return template.HTML(contents), nil
+					// 	} else {
+					// 		return ``, err
+					// 	}
+					// } else {
+					// 	return ``, err
+					// }
 				},
 			}, {
 				Name:    `csv`,

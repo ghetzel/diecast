@@ -779,6 +779,46 @@
             "Return": "hello."
           }
         ]
+      },
+      {
+        "Name": "emoji",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Expand the given named emoji into its literal Unicode character.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "emoji",
+            "Type": "string",
+            "Description": "The common name of the emoji to return, with or without surrounding colons (:).",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "fallback",
+            "Type": "string",
+            "Description": "What to return if the named emoji is not found.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "emoji \":thinking_face:\"",
+            "Description": "",
+            "Return": "🤔"
+          },
+          {
+            "Code": "emoji \":not_a_real_emoji:\" \"nope\"",
+            "Description": "",
+            "Return": "nope"
+          }
+        ]
       }
     ],
     "Skip": false
@@ -4593,6 +4633,35 @@
             "Name": "replace",
             "Type": "string",
             "Description": "The value that will replace any found text.  Capture groups in the regular expression can be referenced using a \"$\", e.g.: ${1}, ${2}, ${name}.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "htmlInner",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Parse a given HTML document and return the HTML content of the first element matching the given CSS selector.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "document",
+            "Type": "string",
+            "Description": "The HTML document to parse.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "selector",
+            "Type": "string",
+            "Description": "A CSS selector that targets the element whose contents will be returned.",
             "Variadic": false,
             "Optional": false,
             "Default": null,

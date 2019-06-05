@@ -613,48 +613,54 @@ func cmp(op string, first interface{}, second interface{}) (bool, error) {
 }
 
 func toMarkdownExt(extensions ...string) blackfriday.Extensions {
-	var ext blackfriday.Extensions
 
-	for _, x := range extensions {
-		switch stringutil.Hyphenate(x) {
-		case `no-intra-emphasis`:
-			ext |= blackfriday.NoIntraEmphasis
-		case `tables`:
-			ext |= blackfriday.Tables
-		case `fenced-code`:
-			ext |= blackfriday.FencedCode
-		case `autolink`:
-			ext |= blackfriday.Autolink
-		case `strikethrough`:
-			ext |= blackfriday.Strikethrough
-		case `lax-html-blocks`:
-			ext |= blackfriday.LaxHTMLBlocks
-		case `space-headings`:
-			ext |= blackfriday.SpaceHeadings
-		case `hard-line-break`:
-			ext |= blackfriday.HardLineBreak
-		case `tab-size-eight`:
-			ext |= blackfriday.TabSizeEight
-		case `footnotes`:
-			ext |= blackfriday.Footnotes
-		case `no-empty-line-before-block`:
-			ext |= blackfriday.NoEmptyLineBeforeBlock
-		case `heading-ids`:
-			ext |= blackfriday.HeadingIDs
-		case `titleblock`:
-			ext |= blackfriday.Titleblock
-		case `auto-heading-ids`:
-			ext |= blackfriday.AutoHeadingIDs
-		case `backslash-line-break`:
-			ext |= blackfriday.BackslashLineBreak
-		case `definition-lists`:
-			ext |= blackfriday.DefinitionLists
-		case `common`:
-			ext |= blackfriday.CommonExtensions
+	if len(extensions) > 0 {
+		var ext blackfriday.Extensions
+
+		for _, x := range extensions {
+			switch stringutil.Hyphenate(x) {
+			case `no-intra-emphasis`:
+				ext |= blackfriday.NoIntraEmphasis
+			case `tables`:
+				ext |= blackfriday.Tables
+			case `fenced-code`:
+				ext |= blackfriday.FencedCode
+			case `autolink`:
+				ext |= blackfriday.Autolink
+			case `strikethrough`:
+				ext |= blackfriday.Strikethrough
+			case `lax-html-blocks`:
+				ext |= blackfriday.LaxHTMLBlocks
+			case `space-headings`:
+				ext |= blackfriday.SpaceHeadings
+			case `hard-line-break`:
+				ext |= blackfriday.HardLineBreak
+			case `tab-size-eight`:
+				ext |= blackfriday.TabSizeEight
+			case `footnotes`:
+				ext |= blackfriday.Footnotes
+			case `no-empty-line-before-block`:
+				ext |= blackfriday.NoEmptyLineBeforeBlock
+			case `heading-ids`:
+				ext |= blackfriday.HeadingIDs
+			case `titleblock`:
+				ext |= blackfriday.Titleblock
+			case `auto-heading-ids`:
+				ext |= blackfriday.AutoHeadingIDs
+			case `backslash-line-break`:
+				ext |= blackfriday.BackslashLineBreak
+			case `definition-lists`:
+				ext |= blackfriday.DefinitionLists
+			case `common`:
+				ext |= blackfriday.CommonExtensions
+			}
 		}
+
+		return ext
+	} else {
+		return blackfriday.CommonExtensions
 	}
 
-	return ext
 }
 
 func htmldoc(docI interface{}) (*goquery.Document, error) {

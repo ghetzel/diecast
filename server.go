@@ -159,6 +159,9 @@ type Server struct {
 	// A command that will be executed after the server is confirmed running.
 	StartCommand StartCommand `json:"start"`
 
+	// Disable the execution of PrestartCommand and StartCommand .
+	DisableCommands bool `json:"disable_commands"`
+
 	// A set of authenticator configurations used to protect some or all routes.
 	Authenticators AuthenticatorConfigs `json:"authenticators"`
 
@@ -463,7 +466,14 @@ func (self *Server) Initialize() error {
 	}
 
 	self.initialized = true
-	return self.RunStartCommand(&self.PrestartCommand, false)
+
+	if self.DisableCommands {
+		log.Noticef("Not executing PrestartCommand because DisableCommands is set")
+		return nil
+	} else {
+		return self.RunStartCommand(&self.PrestartCommand, false)
+	}
+
 }
 
 func (self *Server) Serve() error {
@@ -474,6 +484,11 @@ func (self *Server) Serve() error {
 	}
 
 	go func() {
+		if self.DisableCommands {
+			log.Noticef("Not executing StartCommand because DisableCommands is set")
+			return
+		}
+
 		if err := self.RunStartCommand(&self.StartCommand, true); err != nil {
 			log.Errorf("start command failed: %v", err)
 
@@ -1345,8 +1360,6 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 				return mount, mountResponse, nil
 			} else if IsHardStop(err) {
 				return nil, nil, err
-			} else {
-				log.Warningf("%v", err)
 			}
 		}
 	}

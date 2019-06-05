@@ -194,6 +194,31 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 				Function: func(document interface{}, selector string, find string, replace interface{}) (template.HTML, error) {
 					return htmlModify(document, selector, `find-replace-text`, ``, replace, find)
 				},
+			}, {
+				Name:    `htmlInner`,
+				Summary: `Parse a given HTML document and return the HTML content of the first element matching the given CSS selector.`,
+				Arguments: []funcArg{
+					{
+						Name:        `document`,
+						Type:        `string`,
+						Description: `The HTML document to parse.`,
+					}, {
+						Name:        `selector`,
+						Type:        `string`,
+						Description: `A CSS selector that targets the element whose contents will be returned.`,
+					},
+				},
+				Function: func(docI interface{}, selector string) (template.HTML, error) {
+					if doc, err := htmldoc(docI); err == nil {
+						if contents, err := doc.Find(selector).Html(); err == nil {
+							return template.HTML(contents), nil
+						} else {
+							return ``, err
+						}
+					} else {
+						return ``, err
+					}
+				},
 			},
 
 			// TODO: this needs some sort of "late binding" in which the active filesystem and server instance is provided

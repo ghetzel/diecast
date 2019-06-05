@@ -111,6 +111,10 @@ func main() {
 			Name:  `prestart-command-wait`,
 			Usage: `Wait this amount of time after starting the command before proceeding.`,
 		},
+		cli.BoolFlag{
+			Name:  `disable-commands`,
+			Usage: `Set this flag to disable processing of prestart and start commands.`,
+		},
 		cli.StringFlag{
 			Name:  `start-command`,
 			Usage: `Execute a command before immediately after starting the built-in web server.`,
@@ -195,6 +199,7 @@ func main() {
 		server.VerifyFile = c.String(`verify-file`)
 		server.IndexFile = c.String(`index-file`)
 		server.Autoindex = c.Bool(`autoindex`)
+		server.DisableCommands = c.Bool(`disable-commands`)
 
 		if cmdline := c.String(`prestart-command`); cmdline != `` {
 			server.PrestartCommand.Command = cmdline

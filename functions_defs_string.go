@@ -9,7 +9,11 @@ import (
 	"github.com/ghetzel/go-stockutil/rxutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/kyokomi/emoji"
 )
+
+var emojiCodeMap = emoji.CodeMap()
 
 func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 	return funcGroup{
@@ -580,6 +584,44 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 					}, {
 						Code:   `elide "hello." 16`,
 						Return: `hello.`,
+					},
+				},
+			}, {
+				Name:    `emoji`,
+				Summary: `Expand the given named emoji into its literal Unicode character.`,
+				Arguments: []funcArg{
+					{
+						Name:        `emoji`,
+						Type:        `string`,
+						Description: `The common name of the emoji to return, with or without surrounding colons (:).`,
+					}, {
+						Name:        `fallback`,
+						Type:        `string`,
+						Description: `What to return if the named emoji is not found.`,
+					},
+				},
+				Function: func(in interface{}, fallbacks ...string) string {
+					name := typeutil.String(in)
+					name = strings.TrimPrefix(name, `:`)
+					name = strings.TrimSuffix(name, `:`)
+					name = `:` + stringutil.Underscore(name) + `:`
+					name = strings.ToLower(name)
+
+					if emj, ok := emojiCodeMap[name]; ok {
+						return emj
+					} else if len(fallbacks) > 0 {
+						return fallbacks[0]
+					} else {
+						return ``
+					}
+				},
+				Examples: []funcExample{
+					{
+						Code:   `emoji ":thinking_face:"`,
+						Return: "\U0001f914",
+					}, {
+						Code:   `emoji ":not_a_real_emoji:" "nope"`,
+						Return: `nope`,
 					},
 				},
 			},
