@@ -242,7 +242,7 @@ authenticators:
 
 # Command to run before the API server is started.
 prestart:
-  command:          '/usr/bin/my-command prestart'
+- command:          '/usr/bin/my-command prestart'
   directory:        '/tmp'
   delay:            '2s'
   timeout:          '10s'
@@ -261,7 +261,7 @@ prestart:
 
 # Command to run after the API server has started.
 start:
-  command:          'bash -c "/usr/bin/curl ${DIECAST_ADDRESS}/things"'
+- command:          'bash -c "/usr/bin/curl ${DIECAST_ADDRESS}/things"'
   delay:            '5s'
   exitOnCompletion: true
   env:

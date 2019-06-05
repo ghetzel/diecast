@@ -154,12 +154,12 @@ type Server struct {
 	OverridePageObject map[string]interface{} `json:"-"`
 
 	// A command that will be executed before the server is started.
-	PrestartCommand StartCommand `json:"prestart"`
+	PrestartCommands []*StartCommand `json:"prestart"`
 
 	// A command that will be executed after the server is confirmed running.
-	StartCommand StartCommand `json:"start"`
+	StartCommands []*StartCommand `json:"start"`
 
-	// Disable the execution of PrestartCommand and StartCommand .
+	// Disable the execution of PrestartCommands and StartCommand .
 	DisableCommands bool `json:"disable_commands"`
 
 	// A set of authenticator configurations used to protect some or all routes.
@@ -470,10 +470,11 @@ func (self *Server) Initialize() error {
 	if self.DisableCommands {
 		log.Noticef("Not executing PrestartCommand because DisableCommands is set")
 		return nil
+	} else if _, err := self.RunStartCommand(self.PrestartCommands, false); err != nil {
+		return err
 	} else {
-		return self.RunStartCommand(&self.PrestartCommand, false)
+		return nil
 	}
-
 }
 
 func (self *Server) Serve() error {
@@ -489,16 +490,17 @@ func (self *Server) Serve() error {
 			return
 		}
 
-		if err := self.RunStartCommand(&self.StartCommand, true); err != nil {
-			log.Errorf("start command failed: %v", err)
+		eoc, err := self.RunStartCommand(self.StartCommands, true)
 
-			if self.StartCommand.ExitOnCompletion {
+		if eoc {
+			defer func() {
 				self.cleanupCommands()
-				os.Exit(1)
-			}
-		} else if self.StartCommand.ExitOnCompletion {
-			self.cleanupCommands()
-			os.Exit(0)
+				os.Exit(0)
+			}()
+		}
+
+		if err != nil {
+			log.Errorf("start command failed: %v", err)
 		}
 	}()
 
@@ -1790,92 +1792,102 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 	return rv
 }
 
-func (self *Server) RunStartCommand(scmd *StartCommand, waitForCommand bool) error {
-	if cmdline := scmd.Command; cmdline != `` {
-		if tokens, err := shellwords.Parse(cmdline); err == nil {
-			scmd.cmd = exec.Command(tokens[0], tokens[1:]...)
-			scmd.cmd.SysProcAttr = &syscall.SysProcAttr{
-				Setpgid: true,
-			}
+func (self *Server) RunStartCommand(scmds []*StartCommand, waitForCommand bool) (bool, error) {
+	for _, scmd := range scmds {
+		if cmdline := scmd.Command; cmdline != `` {
+			if tokens, err := shellwords.Parse(cmdline); err == nil {
+				scmd.cmd = exec.Command(tokens[0], tokens[1:]...)
+				scmd.cmd.SysProcAttr = &syscall.SysProcAttr{
+					Setpgid: true,
+				}
 
-			env := make(map[string]interface{})
+				env := make(map[string]interface{})
 
-			for _, pair := range os.Environ() {
-				key, value := stringutil.SplitPair(pair, `=`)
-				env[key] = value
-			}
+				for _, pair := range os.Environ() {
+					key, value := stringutil.SplitPair(pair, `=`)
+					env[key] = value
+				}
 
-			for key, value := range scmd.Environment {
-				env[key] = value
-			}
+				for key, value := range scmd.Environment {
+					env[key] = value
+				}
 
-			env[`DIECAST`] = true
-			env[`DIECAST_BIN`] = self.BinPath
-			env[`DIECAST_DEBUG`] = self.EnableDebugging
-			env[`DIECAST_ADDRESS`] = self.Address
-			env[`DIECAST_ROOT`] = self.RootPath
-			env[`DIECAST_PATH_LAYOUTS`] = self.LayoutPath
-			env[`DIECAST_PATH_ERRORS`] = self.ErrorsPath
-			env[`DIECAST_BINDING_PREFIX`] = self.BindingPrefix
-			env[`DIECAST_ROUTE_PREFIX`] = self.rp()
+				env[`DIECAST`] = true
+				env[`DIECAST_BIN`] = self.BinPath
+				env[`DIECAST_DEBUG`] = self.EnableDebugging
+				env[`DIECAST_ADDRESS`] = self.Address
+				env[`DIECAST_ROOT`] = self.RootPath
+				env[`DIECAST_PATH_LAYOUTS`] = self.LayoutPath
+				env[`DIECAST_PATH_ERRORS`] = self.ErrorsPath
+				env[`DIECAST_BINDING_PREFIX`] = self.BindingPrefix
+				env[`DIECAST_ROUTE_PREFIX`] = self.rp()
 
-			for key, value := range env {
-				scmd.cmd.Env = append(scmd.cmd.Env, fmt.Sprintf("%v=%v", key, value))
-			}
+				for key, value := range env {
+					scmd.cmd.Env = append(scmd.cmd.Env, fmt.Sprintf("%v=%v", key, value))
+				}
 
-			if dir := scmd.Directory; dir != `` {
-				if xdir, err := pathutil.ExpandUser(dir); err == nil {
-					if absdir, err := filepath.Abs(xdir); err == nil {
-						scmd.cmd.Dir = absdir
+				if dir := scmd.Directory; dir != `` {
+					if xdir, err := pathutil.ExpandUser(dir); err == nil {
+						if absdir, err := filepath.Abs(xdir); err == nil {
+							scmd.cmd.Dir = absdir
+						} else {
+							return false, err
+						}
 					} else {
-						return err
+						return false, err
+					}
+				}
+
+				if prewait, err := timeutil.ParseDuration(scmd.WaitBefore); err == nil && prewait > 0 {
+					log.Infof("Waiting %v before running command", prewait)
+					time.Sleep(prewait)
+				}
+
+				if wait, err := timeutil.ParseDuration(scmd.Wait); err == nil {
+					waitchan := make(chan error)
+
+					go func() {
+						log.Infof("Executing command: %v", strings.Join(scmd.cmd.Args, ` `))
+						waitchan <- scmd.cmd.Run()
+					}()
+
+					time.Sleep(wait)
+
+					var xerr error
+
+					if waitForCommand {
+						xerr = <-waitchan
+					}
+
+					if xerr != nil || scmd.ExitOnCompletion {
+						return scmd.ExitOnCompletion, xerr
 					}
 				} else {
-					return err
-				}
-			}
-
-			if prewait, err := timeutil.ParseDuration(scmd.WaitBefore); err == nil && prewait > 0 {
-				log.Infof("Waiting %v before running command", prewait)
-				time.Sleep(prewait)
-			}
-
-			if wait, err := timeutil.ParseDuration(scmd.Wait); err == nil {
-				waitchan := make(chan error)
-
-				go func() {
-					log.Infof("Executing command: %v", strings.Join(scmd.cmd.Args, ` `))
-					waitchan <- scmd.cmd.Run()
-				}()
-
-				time.Sleep(wait)
-
-				if waitForCommand {
-					return <-waitchan
-				} else {
-					return nil
+					return false, err
 				}
 			} else {
-				return err
+				return false, fmt.Errorf("invalid command: %v", err)
 			}
-		} else {
-			return fmt.Errorf("invalid command: %v", err)
 		}
-	} else {
-		return nil
 	}
+
+	return false, nil
 }
 
 func (self *Server) cleanupCommands() {
-	if self.PrestartCommand.cmd != nil {
-		if proc := self.PrestartCommand.cmd.Process; proc != nil {
-			proc.Kill()
+	for _, psc := range self.PrestartCommands {
+		if psc.cmd != nil {
+			if proc := psc.cmd.Process; proc != nil {
+				proc.Kill()
+			}
 		}
 	}
 
-	if self.StartCommand.cmd != nil {
-		if proc := self.StartCommand.cmd.Process; proc != nil {
-			proc.Kill()
+	for _, sc := range self.StartCommands {
+		if sc.cmd != nil {
+			if proc := sc.cmd.Process; proc != nil {
+				proc.Kill()
+			}
 		}
 	}
 }

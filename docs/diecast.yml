@@ -1,9 +1,13 @@
 root: src
 
 prestart:
-  command: 'bash -c "${DIECAST_BIN} --help-functions > src/functions.json"'
+- command: 'bash -c "${DIECAST_BIN} --help-functions > src/functions.json"'
 
 start:
-  command:          'bash -c "curl -o index.html ${DIECAST_ADDRESS}/ && curl -o style.css ${DIECAST_ADDRESS}/style.scss"'
+- command:          'bash -c "curl -o index.html ${DIECAST_ADDRESS}/"'
   delay:            '250ms'
+
+- command:          'bash -c "curl -o style.css ${DIECAST_ADDRESS}/style.scss"'
   exitOnCompletion: true
+
+

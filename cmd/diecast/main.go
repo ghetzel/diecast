@@ -99,33 +99,17 @@ func main() {
 			Usage: `The destination directory to put files in when rendering a static site.`,
 			Value: `./_site`,
 		},
-		cli.StringFlag{
-			Name:  `prestart-command`,
-			Usage: `Execute a command before starting the built-in web server.`,
-		},
-		cli.StringFlag{
-			Name:  `prestart-command-dir`,
-			Usage: `The directory to change to when starting the prestart-command.`,
-		},
-		cli.DurationFlag{
-			Name:  `prestart-command-wait`,
-			Usage: `Wait this amount of time after starting the command before proceeding.`,
-		},
 		cli.BoolFlag{
 			Name:  `disable-commands`,
 			Usage: `Set this flag to disable processing of prestart and start commands.`,
 		},
-		cli.StringFlag{
+		cli.StringSliceFlag{
+			Name:  `prestart-command`,
+			Usage: `Execute a command before starting the built-in web server.`,
+		},
+		cli.StringSliceFlag{
 			Name:  `start-command`,
 			Usage: `Execute a command before immediately after starting the built-in web server.`,
-		},
-		cli.DurationFlag{
-			Name:  `start-command-delay`,
-			Usage: `Wait this amount of time before starting the command.`,
-		},
-		cli.StringFlag{
-			Name:  `start-command-dir`,
-			Usage: `The directory to change to when starting the start-command.`,
 		},
 		cli.BoolFlag{
 			Name:  `debug, D`,
@@ -201,15 +185,20 @@ func main() {
 		server.Autoindex = c.Bool(`autoindex`)
 		server.DisableCommands = c.Bool(`disable-commands`)
 
-		if cmdline := c.String(`prestart-command`); cmdline != `` {
-			server.PrestartCommand.Command = cmdline
-			server.PrestartCommand.Directory = c.String(`prestart-command-dir`)
+		for _, cmdline := range c.StringSlice(`prestart-command`) {
+			if cmdline != `` {
+				server.PrestartCommands = append(server.PrestartCommands, &diecast.StartCommand{
+					Command: cmdline,
+				})
+			}
 		}
 
-		if cmdline := c.String(`start-command`); cmdline != `` {
-			server.StartCommand.Command = cmdline
-			server.StartCommand.Directory = c.String(`start-command-dir`)
-			server.StartCommand.WaitBefore = c.Duration(`start-command-delay`).String()
+		for _, cmdline := range c.StringSlice(`start-command`) {
+			if cmdline != `` {
+				server.StartCommands = append(server.StartCommands, &diecast.StartCommand{
+					Command: cmdline,
+				})
+			}
 		}
 
 		populateFlags(server.DefaultPageObject, c.StringSlice(`page`))
