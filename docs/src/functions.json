@@ -4025,6 +4025,52 @@
         ]
       },
       {
+        "Name": "difference",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the first array with common elements from the second removed.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "first",
+            "Type": "array",
+            "Description": "The first array.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "second",
+            "Type": "array",
+            "Description": "The second array.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "difference [\"b\", \"a\", \"c\"] [\"c\", \"b\", \"d\"]",
+            "Description": "",
+            "Return": [
+              "a"
+            ]
+          },
+          {
+            "Code": "difference [\"a\", \"b\", \"c\"] [\"x\", \"y\", \"z\"]",
+            "Description": "",
+            "Return": [
+              "a",
+              "b",
+              "c"
+            ]
+          }
+        ]
+      },
+      {
         "Name": "mapify",
         "Alias": "",
         "Aliases": null,

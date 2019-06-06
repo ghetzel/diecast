@@ -1130,6 +1130,33 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 					return sliceutil.Intersect(first, second)
 				},
 			}, {
+				Name:    `difference`,
+				Summary: `Return the first array with common elements from the second removed.`,
+				Arguments: []funcArg{
+					{
+						Name:        `first`,
+						Type:        `array`,
+						Description: `The first array.`,
+					}, {
+						Name:        `second`,
+						Type:        `array`,
+						Description: `The second array.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `difference ["b", "a", "c"] ["c", "b", "d"]`,
+						Return: []string{`a`},
+					},
+					{
+						Code:   `difference ["a", "b", "c"] ["x", "y", "z"]`,
+						Return: []string{`a`, `b`, `c`},
+					},
+				},
+				Function: func(first interface{}, second interface{}) []interface{} {
+					return sliceutil.Difference(first, second)
+				},
+			}, {
 				Name:    `mapify`,
 				Summary: `Return the given value returned as a rangeable object.`,
 				Function: func(input interface{}) map[string]interface{} {

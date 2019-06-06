@@ -476,6 +476,9 @@ bindings:
             <a href="#fn-count">count</a>
         </li>
         <li>
+            <a href="#fn-difference">difference</a>
+        </li>
+        <li>
             <a href="#fn-diffuse">diffuse</a>
         </li>
         <li>
@@ -1433,6 +1436,62 @@ bindings:
             <div class="example" id="fn-count-example-0">
                 <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>count [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;, &#34;d&#34;]<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">4</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-difference">
+        <h4 class="mt-3">
+            difference
+            <a href="#fn-difference" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>difference FIRST SECOND</code>
+        </div>
+        <p>Return the first array with common elements from the second removed.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>FIRST</pre></th>
+                    <td>array</td>
+                    <td>
+                        <p>The first array.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>SECOND</pre></th>
+                    <td>array</td>
+                    <td>
+                        <p>The second array.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-difference-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>difference [&#34;b&#34;, &#34;a&#34;, &#34;c&#34;] [&#34;c&#34;, &#34;b&#34;, &#34;d&#34;]<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">[
+  &#34;a&#34;
+]</p>
+            </div>
+            <div class="example" id="fn-difference-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>difference [&#34;a&#34;, &#34;b&#34;, &#34;c&#34;] [&#34;x&#34;, &#34;y&#34;, &#34;z&#34;]<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">[
+  &#34;a&#34;,
+  &#34;b&#34;,
+  &#34;c&#34;
+]</p>
             </div>
         </div>
     </section>
