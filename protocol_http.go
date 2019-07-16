@@ -151,7 +151,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 			}
 
 			log.Debugf("[%s]  binding %q:  header %v=%v", id, rr.Binding.Name, k, v)
-			request.Header.Set(k, v)
+			request.Header.Add(k, v)
 		}
 
 		request.Header.Set(`X-Diecast-Binding`, rr.Binding.Name)

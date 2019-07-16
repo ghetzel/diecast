@@ -22,6 +22,18 @@ import (
 	"github.com/ghodss/yaml"
 )
 
+var registeredProtocols = map[string]Protocol{
+	``:      new(HttpProtocol),
+	`http`:  new(HttpProtocol),
+	`https`: new(HttpProtocol),
+	`redis`: new(RedisProtocol),
+}
+
+// Register a new protocol handler that will handle URLs with the given scheme.
+func RegisterProtocol(scheme string, protocol Protocol) {
+	registeredProtocols[scheme] = protocol
+}
+
 type BindingErrorAction string
 
 const (
@@ -40,30 +52,80 @@ var AllowInsecureLoopbackBindings bool
 var DefaultParamJoiner = `;`
 
 type Binding struct {
-	Name               string                     `json:"name,omitempty"`
-	Restrict           []string                   `json:"restrict,omitempty"`
-	OnlyIfExpr         string                     `json:"only_if,omitempty"`
-	NotIfExpr          string                     `json:"not_if,omitempty"`
-	Method             string                     `json:"method,omitempty"`
-	Resource           string                     `json:"resource,omitempty"`
-	Timeout            interface{}                `json:"timeout,omitempty"`
-	Insecure           bool                       `json:"insecure,omitempty"`
-	ParamJoiner        string                     `json:"param_joiner,omitempty"`
-	Params             map[string]interface{}     `json:"params,omitempty"`
-	Headers            map[string]string          `json:"headers,omitempty"`
-	BodyParams         map[string]interface{}     `json:"body,omitempty"`
-	RawBody            string                     `json:"rawbody,omitempty"`
-	Formatter          string                     `json:"formatter,omitempty"`
-	Parser             string                     `json:"parser,omitempty"`
-	NoTemplate         bool                       `json:"no_template,omitempty"`
-	Optional           bool                       `json:"optional,omitempty"`
-	Fallback           interface{}                `json:"fallback,omitempty"`
-	OnError            BindingErrorAction         `json:"on_error,omitempty"`
-	IfStatus           map[int]BindingErrorAction `json:"if_status,omitempty"`
-	Repeat             string                     `json:"repeat,omitempty"`
-	SkipInheritHeaders bool                       `json:"skip_inherit_headers,omitempty"`
-	DisableCache       bool                       `json:"disable_cache,omitempty"`
-	server             *Server
+	// The name of the key in the $.bindings template variable.
+	Name string `json:"name,omitempty"`
+
+	// Only evaluate the template on request URL paths matching one of the regular expressions in this array.
+	Restrict []string `json:"restrict,omitempty"`
+
+	// Only evaluate the binding if this expression yields a truthy value.
+	OnlyIfExpr string `json:"only_if,omitempty"`
+
+	// Do not evaluate the binding if this expression yields a truthy value.
+	NotIfExpr string `json:"not_if,omitempty"`
+
+	// The protocol-specific method to perform the request with.
+	Method string `json:"method,omitempty"`
+
+	// The URL that specifies the protocol and resource to retrieve.
+	Resource string `json:"resource,omitempty"`
+
+	// A duration specifying the timeout for the request.
+	Timeout interface{} `json:"timeout,omitempty"`
+
+	// If the protocol supports an insecure request mode (e.g.: HTTPS), permit it in this case.
+	Insecure bool `json:"insecure,omitempty"`
+
+	// A set of additional parameters to include in the request (e.g.: HTTP query string parameters)
+	Params map[string]interface{} `json:"params,omitempty"`
+
+	// If a parameter is provided as an array, but must be a string in the request, how shall the array elements be joined.
+	ParamJoiner string `json:"param_joiner,omitempty"`
+
+	// Additional headers to include in the request.
+	Headers map[string]string `json:"headers,omitempty"`
+
+	// If the request receives an open-ended body, this will allow structured data to be passed in.
+	BodyParams map[string]interface{} `json:"body,omitempty"`
+
+	// If the request receives an open-ended body, this will allow raw data to be passed in as-is.
+	RawBody string `json:"rawbody,omitempty"`
+
+	// How to serialize BodyParams into a string before the request is made.
+	Formatter string `json:"formatter,omitempty"`
+
+	// How to parse the response content from the request.
+	Parser string `json:"parser,omitempty"`
+
+	// Disable templating of variables in this binding.
+	NoTemplate bool `json:"no_template,omitempty"`
+
+	// Whether the request failing will cause a page-wide error or be ignored.
+	Optional bool `json:"optional,omitempty"`
+
+	// The value to place in $.bindings if the request fails.
+	Fallback interface{} `json:"fallback,omitempty"`
+
+	// Actions to take if the request fails.
+	OnError BindingErrorAction `json:"on_error,omitempty"`
+
+	// Actions to take in response to specific numeric response status codes.
+	IfStatus map[int]BindingErrorAction `json:"if_status,omitempty"`
+
+	// A templated value that yields an array.  The binding request will be performed once for each array element, wherein
+	// the Resource value is passed into a template that includes the $index and $item variables, which represent the repeat
+	// array item's position and value, respectively.
+	Repeat string `json:"repeat,omitempty"`
+
+	// Do not passthrough the headers that were sent to the template from the client's browser, even if Passthrough mode is enabled.
+	SkipInheritHeaders bool `json:"skip_inherit_headers,omitempty"`
+
+	// Reserved for future use.
+	DisableCache bool `json:"disable_cache,omitempty"`
+
+	// An open-ended set of options that are available for protocol implementations to use.
+	ProtocolOptions map[string]interface{} `json:"protocol,omitempty"`
+	server          *Server
 }
 
 func (self *Binding) ShouldEvaluate(req *http.Request) bool {
@@ -137,12 +199,9 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	if reqUrl, err := url.Parse(uri); err == nil {
 		var protocol Protocol
 
-		switch reqUrl.Scheme {
-		case `http`, `https`, ``:
-			protocol = new(HttpProtocol)
-		case `redis`:
-			protocol = new(RedisProtocol)
-		default:
+		if p, ok := registeredProtocols[reqUrl.Scheme]; ok && p != nil {
+			protocol = p
+		} else {
 			return nil, fmt.Errorf("Cannot evaluate binding %v: invalid protocol scheme %q", self.Name, reqUrl.Scheme)
 		}
 
