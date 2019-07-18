@@ -192,7 +192,7 @@ type Server struct {
 	Protocols map[string]ProtocolConfig `json:"protocols"`
 
 	// A function that can be used to intercept handlers being added to the server.
-	OnAddHandler AddHandlerFunc
+	OnAddHandler AddHandlerFunc `json:"-"`
 
 	router        *http.ServeMux
 	userRouter    *vestigo.Router

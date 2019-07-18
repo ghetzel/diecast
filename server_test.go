@@ -113,7 +113,7 @@ func TestStaticServerWithRoutePrefix(t *testing.T) {
 	// paths with RoutePrefix should succeed
 	doTestServerRequest(server, `GET`, `/ui/_diecast`,
 		func(w *httptest.ResponseRecorder) {
-			assert.Equal(200, w.Code)
+			assert.Equal(200, w.Code, string(w.Body.Bytes()))
 
 			data := make(map[string]interface{})
 			err := json.Unmarshal(w.Body.Bytes(), &data)
