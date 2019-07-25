@@ -170,7 +170,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if d, err := GenerateFunctionDocs(new(diecast.Server).GetTemplateFunctions(nil), `server.go`); err == nil {
+	if d, err := GenerateFunctionDocs(new(diecast.Server).GetTemplateFunctions(nil, nil), `server.go`); err == nil {
 		docs = append(docs, d...)
 	} else {
 		fmt.Printf("err: %v\n", err)

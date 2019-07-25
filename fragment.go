@@ -18,6 +18,8 @@ func (self FragmentSet) Header(server *Server) TemplateHeader {
 
 	if server != nil && server.BaseHeader != nil {
 		baseHeader = *server.BaseHeader
+		baseHeader.Locale = server.Locale
+		baseHeader.Translations = server.Translations
 	}
 
 	finalHeader := &baseHeader

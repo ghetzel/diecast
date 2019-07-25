@@ -43,7 +43,6 @@ import (
 )
 
 var ITotallyUnderstandRunningArbitraryCommandsAsRootIsRealRealBad = false
-
 var DirectoryErr = errors.New(`is a directory`)
 
 func IsDirectoryErr(err error) bool {
@@ -194,6 +193,12 @@ type Server struct {
 	// A function that can be used to intercept handlers being added to the server.
 	OnAddHandler AddHandlerFunc `json:"-"`
 
+	// Stores translations for use with the i18n and l10n functions.  Keys values represent the
+	Translations map[string]interface{} `json:"translations,omitempty"`
+
+	// Specify the default locale for pages being served.
+	Locale Locale `json:"locale"`
+
 	router        *http.ServeMux
 	userRouter    *vestigo.Router
 	server        *negroni.Negroni
@@ -230,6 +235,7 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		TryExtensions:      DefaultTryExtensions,
 		VerifyFile:         DefaultVerifyFile,
 		AutoindexTemplate:  DefaultAutoindexFilename,
+		Locale:             DefaultLocale,
 		router:             http.NewServeMux(),
 		userRouter:         vestigo.NewRouter(),
 	}
@@ -493,8 +499,10 @@ func (self *Server) applyTemplate(
 		}
 	}
 
+	earlyData := requestToEvalData(req, header)
+
 	// get a reference to a set of standard functions that won't have a scope yet
-	earlyFuncs := self.GetTemplateFunctions(requestToEvalData(req, header))
+	earlyFuncs := self.GetTemplateFunctions(earlyData, header)
 
 	// only process layouts if we're supposed to
 	if self.EnableLayouts && !forceSkipLayout && self.shouldApplyLayout(requestPath) {
@@ -543,6 +551,9 @@ func (self *Server) applyTemplate(
 
 	// put any url route params in there too
 	finalHeader.UrlParams = urlParams
+
+	// render locale from template
+	finalHeader.Locale = Locale(EvalInline(string(finalHeader.Locale), earlyData, earlyFuncs))
 
 	if funcs, data, err := self.GetTemplateData(req, &finalHeader); err == nil {
 		start := time.Now()
@@ -675,7 +686,7 @@ func (self *Server) applyTemplate(
 
 // Retrieves the set of standard template functions, as well as functions for working
 // with data in the current request.
-func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
+func (self *Server) GetTemplateFunctions(data interface{}, header *TemplateHeader) FuncMap {
 	funcs := make(FuncMap)
 
 	for k, v := range GetStandardFunctions(self) {
@@ -863,6 +874,61 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 		}
 	}
 
+	// fn i18n: Return the translated text corresponding to the given key.
+	funcs[`i18n`] = func(key string, locales ...string) (string, error) {
+		key = strings.Join(strings.Split(key, `.`), `.`)
+		kparts := strings.Split(key, `.`)
+
+		if header != nil {
+			// header locale and country
+			locales = append(locales, string(header.Locale))
+			locales = append(locales, string(header.Locale.Country()))
+		}
+
+		// add user-preferred languages via Accept-Language header
+		if al := typeutil.String(maputil.DeepGet(data, []string{
+			`request`,
+			`headers`,
+			`accept_language`,
+		}, ``)); al != `` {
+			for _, langspec := range strings.Split(al, `,`) {
+				langspec = strings.TrimSpace(langspec)
+				lang, _ := stringutil.SplitPair(langspec, `;`)
+				lang = strings.TrimSpace(lang)
+				lang = strings.ToLower(lang)
+
+				locales = append(locales, lang)
+				locales = append(locales, string(Locale(lang).Country()))
+			}
+		}
+
+		// add server global preferred locale and country
+		locales = append(locales, string(self.Locale))
+		locales = append(locales, string(self.Locale.Country()))
+
+		// add default locale and country
+		locales = append(locales, string(DefaultLocale))
+		locales = append(locales, string(DefaultLocale.Country()))
+
+		locales = sliceutil.CompactString(locales)
+		locales = sliceutil.UniqueStrings(locales)
+
+		log.Dump(locales)
+
+		for _, translations := range []map[string]interface{}{
+			header.Translations,
+			self.Translations,
+		} {
+			for _, l := range locales {
+				if t, ok := translations[string(l)]; ok {
+					return typeutil.String(maputil.DeepGet(t, kparts, ``)), nil
+				}
+			}
+		}
+
+		return ``, fmt.Errorf("no translations available")
+	}
+
 	return funcs
 }
 
@@ -898,7 +964,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	}
 
 	// these are the functions that will be available to every part of the rendering process
-	funcs := self.GetTemplateFunctions(data)
+	funcs := self.GetTemplateFunctions(data, header)
 
 	// Evaluate "page" data: this data is templatized, but does not have access
 	//                       to the output of bindings

@@ -53,6 +53,13 @@ type TemplateHeader struct {
 	// The built-in renderer to use when generating the page.
 	Renderer string `json:"renderer,omitempty"`
 
+	// Stores translations for use with the i18n and l10n functions.  Keys values represent the
+	Translations map[string]interface{} `json:"translations,omitempty"`
+
+	// Stores the locale used for this page.  If Locale is set on multiple levels of rendering,
+	// the last evaluated value is used.
+	Locale Locale `json:"locale"`
+
 	lines int
 }
 
@@ -67,6 +74,13 @@ func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error
 		Renderer:       sliceutil.OrString(other.Renderer, self.Renderer),    // prefer other, fallback to ours
 		Postprocessors: append(self.Postprocessors, other.Postprocessors...), // ours first, then other's
 		Switch:         append(self.Switch, other.Switch...),                 // ours first, then other's
+	}
+
+	// locale: latest non-empty locale wins
+	if other.Locale != `` {
+		newHeader.Locale = other.Locale
+	} else {
+		newHeader.Locale = self.Locale
 	}
 
 	// Redirect: prefer other, fallback to ours
@@ -108,6 +122,12 @@ func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error
 
 	if v, err := maputil.Merge(self.Includes, other.Includes); err == nil {
 		newHeader.Includes = maputil.Stringify(v)
+	} else {
+		return nil, err
+	}
+
+	if v, err := maputil.Merge(self.Translations, other.Translations); err == nil {
+		newHeader.Translations = v
 	} else {
 		return nil, err
 	}
