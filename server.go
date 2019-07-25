@@ -875,6 +875,13 @@ func (self *Server) GetTemplateFunctions(data interface{}, header *TemplateHeade
 	}
 
 	// fn i18n: Return the translated text corresponding to the given key.
+	//	Order of Preference:
+	//	- Explicitly requested locale via the second argument to this function
+	//  - Locale specified in the template header or parent headers
+	//	- specified via the Accept-Language HTTP request header
+	//	- Global server config (via diecast.yml "locale" setting)
+	//	- Values of the LC_ALL, LANG, and LANGUAGE environment variables
+	//	- compile-time default locale
 	funcs[`i18n`] = func(key string, locales ...string) (string, error) {
 		key = strings.Join(strings.Split(key, `.`), `.`)
 		kparts := strings.Split(key, `.`)
@@ -909,6 +916,22 @@ func (self *Server) GetTemplateFunctions(data interface{}, header *TemplateHeade
 		// add default locale and country
 		locales = append(locales, string(DefaultLocale))
 		locales = append(locales, string(DefaultLocale.Country()))
+
+		// add values from environment variables
+		for _, v := range []string{
+			os.Getenv(`LC_ALL`),
+			os.Getenv(`LANG`),
+			os.Getenv(`LANGUAGE`),
+		} {
+			if v != `` {
+				for _, localeEncodingPair := range strings.Split(v, `:`) {
+					locale, _ := stringutil.SplitPair(localeEncodingPair, `.`)
+
+					locales = append(locales, locale)
+					locales = append(locales, string(Locale(locale).Country()))
+				}
+			}
+		}
 
 		locales = sliceutil.CompactString(locales)
 		locales = sliceutil.UniqueStrings(locales)
