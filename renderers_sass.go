@@ -15,8 +15,6 @@ import (
 	"path/filepath"
 	"sync"
 	"unsafe"
-
-	"github.com/ghetzel/go-stockutil/log"
 )
 
 var SassIndentString = `    `
@@ -39,8 +37,7 @@ func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, optio
 	defer options.Input.Close()
 
 	if data, err := ioutil.ReadAll(options.Input); err == nil {
-		version := C.GoString(C.libsass_version())
-		log.Debugf("%T: libsass v%v", self, version)
+		// log.Debugf("%T: libsass v%v", self, C.GoString(C.libsass_version())
 
 		// setup Sass_Data_Context with the file contents we've been given
 		dctx := C.sass_make_data_context(C.CString(string(data)))

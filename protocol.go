@@ -1,7 +1,9 @@
 package diecast
 
 import (
+	"bytes"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -72,6 +74,17 @@ type ProtocolResponse struct {
 	StatusCode int
 	Raw        interface{}
 	data       io.ReadCloser
+}
+
+func (self *ProtocolResponse) PeekLen() (int64, error) {
+	buf := bytes.NewBuffer(nil)
+
+	if n, err := io.Copy(buf, self.data); err == nil {
+		self.data = ioutil.NopCloser(buf)
+		return n, nil
+	} else {
+		return 0, err
+	}
 }
 
 func (self *ProtocolResponse) Read(b []byte) (int, error) {

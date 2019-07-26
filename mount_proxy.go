@@ -31,6 +31,7 @@ type ProxyMount struct {
 	PassthroughRequests bool                   `json:"passthrough_requests"`
 	PassthroughErrors   bool                   `json:"passthrough_errors"`
 	StripPathPrefix     string                 `json:"strip_path_prefix"`
+	AppendPathPrefix    string                 `json:"append_path_prefix"`
 	Insecure            bool                   `json:"insecure"`
 	Client              *http.Client
 	urlRewriteFrom      string
@@ -124,6 +125,10 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			newReq.URL.Path = strings.TrimPrefix(newReq.URL.Path, pp)
 		}
 
+		if pp := self.AppendPathPrefix; pp != `` {
+			newReq.URL.Path = pp + newReq.URL.Path
+		}
+
 		if req != nil && self.PassthroughRequests {
 			for name, values := range req.Header {
 				for _, value := range values {
@@ -208,6 +213,8 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 
 				if body, err := httputil.DecodeResponse(response); err == nil {
 					responseBody = body
+
+					// whatever the encoding was before, it's definitely "identity" now
 					response.Header.Set(`Content-Encoding`, `identity`)
 				} else {
 					return nil, err
@@ -215,6 +222,11 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 
 				if data, err := ioutil.ReadAll(responseBody); err == nil {
 					payload := bytes.NewReader(data)
+
+					// correct the length, which is now potentially decompressed and longer
+					// than the original response claims
+					response.Header.Set(`Content-Length`, typeutil.String(payload.Size()))
+
 					mountResponse := NewMountResponse(name, payload.Size(), payload)
 					mountResponse.StatusCode = response.StatusCode
 					mountResponse.ContentType = response.Header.Get(`Content-Type`)
@@ -225,7 +237,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 
 					return mountResponse, nil
 				} else {
-					return nil, err
+					return nil, fmt.Errorf("proxy response: %v", err)
 				}
 			} else {
 				// if data, err := ioutil.ReadAll(response.Body); err == nil {

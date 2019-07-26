@@ -247,31 +247,37 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				}
 			}
 
-			if data, err := ioutil.ReadAll(response); err == nil {
-				if response.StatusCode >= 400 {
-					switch onError {
-					case ActionPrint:
-						return nil, fmt.Errorf("%v", string(data[:]))
-					case ActionIgnore:
-						break
-					default:
-						redirect := string(onError)
+			data, err := ioutil.ReadAll(response)
 
-						// if a url or path was specified, redirect the parent request to it
-						if strings.HasPrefix(redirect, `http`) || strings.HasPrefix(redirect, `/`) {
-							return nil, RedirectTo(redirect)
-						} else {
-							return nil, fmt.Errorf(
-								"[%s] Request %s %v failed: %v",
-								id,
-								method,
-								reqUrl,
-								response.StatusCode,
-							)
-						}
+			if err != nil || response.StatusCode >= 400 {
+				switch onError {
+				case ActionPrint:
+					if err != nil {
+						return nil, fmt.Errorf("%v", err)
+					} else {
+						return nil, fmt.Errorf("%v", string(data[:]))
+					}
+				case ActionIgnore:
+					break
+				default:
+					redirect := string(onError)
+
+					// if a url or path was specified, redirect the parent request to it
+					if strings.HasPrefix(redirect, `http`) || strings.HasPrefix(redirect, `/`) {
+						return nil, RedirectTo(redirect)
+					} else {
+						return nil, fmt.Errorf(
+							"[%s] Request %s %v failed: %v",
+							id,
+							method,
+							reqUrl,
+							sliceutil.Or(err, response.StatusCode),
+						)
 					}
 				}
+			}
 
+			if err == nil {
 				mimeType, _, _ := mime.ParseMediaType(response.MimeType)
 
 				if mimeType == `` {
@@ -345,7 +351,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					return nil, nil
 				}
 			} else {
-				return nil, fmt.Errorf("[%s] Failed to read response body: %v", id, err)
+				return nil, fmt.Errorf("[%s] unhandled binding error: %v", id, err)
 			}
 		} else {
 			return nil, fmt.Errorf("[%s] HTTP %v", id, err)

@@ -40,6 +40,11 @@ func main() {
 			Value: diecast.DefaultConfigFile,
 		},
 		cli.StringFlag{
+			Name:   `env, e`,
+			Usage:  `The name of the environment.  This is used to load environment-specific configurations.`,
+			EnvVar: `DIECAST_ENV`,
+		},
+		cli.StringFlag{
 			Name:  `address, a`,
 			Usage: `Address the HTTP server should listen on`,
 			Value: diecast.DefaultAddress,
@@ -176,6 +181,7 @@ func main() {
 
 		server.BinPath, _ = filepath.Abs(os.Args[0])
 		server.Address = c.String(`address`)
+		server.Environment = c.String(`env`)
 		server.EnableDebugging = c.Bool(`debug`)
 		server.BindingPrefix = c.String(`binding-prefix`)
 		server.RoutePrefix = c.String(`route-prefix`)

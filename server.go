@@ -201,6 +201,9 @@ type Server struct {
 	// Specify the default locale for pages being served.
 	Locale string `json:"locale"`
 
+	// Specify the environment for loading environment-specific configuration files in the form "diecast.env.yml"
+	Environment string `json:"environment"`
+
 	router        *http.ServeMux
 	userRouter    *vestigo.Router
 	server        *negroni.Negroni
@@ -267,9 +270,32 @@ func (self *Server) LoadConfig(filename string) error {
 		if file, err := os.Open(filename); err == nil {
 			if data, err := ioutil.ReadAll(file); err == nil && len(data) > 0 {
 				if err := yaml.Unmarshal(data, self); err == nil {
+					// apply environment-specific overrides
+					if self.Environment != `` {
+						eDir, eFile := filepath.Split(filename)
+						base := strings.TrimSuffix(eFile, filepath.Ext(eFile))
+						ext := filepath.Ext(eFile)
+						eFile = fmt.Sprintf("%s.%s%s", base, self.Environment, ext)
+						envPath := filepath.Join(eDir, eFile)
+
+						if fileutil.IsNonemptyFile(envPath) {
+							if err := self.LoadConfig(envPath); err != nil {
+								return fmt.Errorf("failed to load %s: %v", eFile, err)
+							}
+						}
+					}
+
 					// process mount configs into mount instances
+				MountConfigLoop:
 					for i, config := range self.MountConfigs {
 						if mount, err := NewMountFromSpec(fmt.Sprintf("%s:%s", config.Mount, config.To)); err == nil {
+							for _, existing := range self.Mounts {
+								if mount.GetMountPoint() == existing.GetMountPoint() {
+									log.Debugf("mount: mountpoint %q already configured", existing.GetMountPoint())
+									continue MountConfigLoop
+								}
+							}
+
 							mstruct := structs.New(mount)
 
 							for k, v := range config.Options {
@@ -1071,6 +1097,8 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 				data[`bindings`] = bindings
 			} else if redir, ok := err.(RedirectTo); ok {
 				return funcs, nil, redir
+			} else if v == nil && binding.Fallback != nil {
+				bindings[binding.Name] = binding.Fallback
 			} else {
 				log.Warningf("Binding %q failed: %v", binding.Name, err)
 
