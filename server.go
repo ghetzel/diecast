@@ -40,10 +40,12 @@ import (
 	"github.com/jbenet/go-base58"
 	"github.com/mattn/go-shellwords"
 	"github.com/urfave/negroni"
+	"golang.org/x/text/language"
 )
 
 var ITotallyUnderstandRunningArbitraryCommandsAsRootIsRealRealBad = false
 var DirectoryErr = errors.New(`is a directory`)
+var DefaultLocale = language.AmericanEnglish
 
 func IsDirectoryErr(err error) bool {
 	return (err == DirectoryErr)
@@ -197,7 +199,7 @@ type Server struct {
 	Translations map[string]interface{} `json:"translations,omitempty"`
 
 	// Specify the default locale for pages being served.
-	Locale Locale `json:"locale"`
+	Locale string `json:"locale"`
 
 	router        *http.ServeMux
 	userRouter    *vestigo.Router
@@ -235,7 +237,6 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		TryExtensions:      DefaultTryExtensions,
 		VerifyFile:         DefaultVerifyFile,
 		AutoindexTemplate:  DefaultAutoindexFilename,
-		Locale:             DefaultLocale,
 		router:             http.NewServeMux(),
 		userRouter:         vestigo.NewRouter(),
 	}
@@ -553,7 +554,7 @@ func (self *Server) applyTemplate(
 	finalHeader.UrlParams = urlParams
 
 	// render locale from template
-	finalHeader.Locale = Locale(EvalInline(string(finalHeader.Locale), earlyData, earlyFuncs))
+	finalHeader.Locale = EvalInline(finalHeader.Locale, earlyData, earlyFuncs)
 
 	if funcs, data, err := self.GetTemplateData(req, &finalHeader); err == nil {
 		start := time.Now()
@@ -886,10 +887,24 @@ func (self *Server) GetTemplateFunctions(data interface{}, header *TemplateHeade
 		key = strings.Join(strings.Split(key, `.`), `.`)
 		kparts := strings.Split(key, `.`)
 
-		if header != nil {
-			// header locale and country
-			locales = append(locales, string(header.Locale))
-			locales = append(locales, string(header.Locale.Country()))
+		if header != nil && header.Locale != `` {
+			if tag, err := language.Parse(header.Locale); err == nil {
+				// header locale and country
+				locales = append(locales, tag.String())
+				locales = append(locales, i18nTagBase(tag))
+			} else {
+				log.Warningf("i18n: invalid header locale %q", header.Locale)
+			}
+		}
+
+		// add server global preferred locale and country
+		if self.Locale != `` {
+			if tag, err := language.Parse(self.Locale); err == nil {
+				locales = append(locales, tag.String())
+				locales = append(locales, i18nTagBase(tag))
+			} else {
+				log.Warningf("i18n: invalid global locale %q", self.Locale)
+			}
 		}
 
 		// add user-preferred languages via Accept-Language header
@@ -898,45 +913,42 @@ func (self *Server) GetTemplateFunctions(data interface{}, header *TemplateHeade
 			`headers`,
 			`accept_language`,
 		}, ``)); al != `` {
-			for _, langspec := range strings.Split(al, `,`) {
-				langspec = strings.TrimSpace(langspec)
-				lang, _ := stringutil.SplitPair(langspec, `;`)
-				lang = strings.TrimSpace(lang)
-				lang = strings.ToLower(lang)
-
-				locales = append(locales, lang)
-				locales = append(locales, string(Locale(lang).Country()))
+			if tags, _, err := language.ParseAcceptLanguage(al); err == nil {
+				for _, tag := range tags {
+					locales = append(locales, tag.String())
+					locales = append(locales, i18nTagBase(tag))
+				}
+			} else {
+				log.Warningf("i18n: invalid Accept-Language value %q", al)
 			}
 		}
 
-		// add server global preferred locale and country
-		locales = append(locales, string(self.Locale))
-		locales = append(locales, string(self.Locale.Country()))
-
 		// add default locale and country
-		locales = append(locales, string(DefaultLocale))
-		locales = append(locales, string(DefaultLocale.Country()))
+		locales = append(locales, DefaultLocale.String())
+		locales = append(locales, i18nTagBase(DefaultLocale))
 
 		// add values from environment variables
-		for _, v := range []string{
-			os.Getenv(`LC_ALL`),
-			os.Getenv(`LANG`),
-			os.Getenv(`LANGUAGE`),
+		for _, ev := range []string{
+			`LC_ALL`,
+			`LANG`,
+			`LANGUAGE`,
 		} {
-			if v != `` {
+			if v := os.Getenv(ev); v != `` {
 				for _, localeEncodingPair := range strings.Split(v, `:`) {
 					locale, _ := stringutil.SplitPair(localeEncodingPair, `.`)
 
-					locales = append(locales, locale)
-					locales = append(locales, string(Locale(locale).Country()))
+					if tag, err := language.Parse(locale); err == nil {
+						locales = append(locales, tag.String())
+						locales = append(locales, i18nTagBase(tag))
+					} else {
+						log.Warningf("i18n: invalid locale in envvar %s", ev)
+					}
 				}
 			}
 		}
 
 		locales = sliceutil.CompactString(locales)
 		locales = sliceutil.UniqueStrings(locales)
-
-		log.Dump(locales)
 
 		for _, translations := range []map[string]interface{}{
 			header.Translations,
@@ -1896,4 +1908,12 @@ func appendTemplate(dest io.Writer, src io.Reader, name string, hasLayout bool) 
 	}
 
 	return nil
+}
+
+func i18nTagBase(tag language.Tag) string {
+	if base, c := tag.Base(); c > language.Low {
+		return base.String()
+	} else {
+		return ``
+	}
 }

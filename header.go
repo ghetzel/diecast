@@ -58,7 +58,7 @@ type TemplateHeader struct {
 
 	// Stores the locale used for this page.  If Locale is set on multiple levels of rendering,
 	// the last evaluated value is used.
-	Locale Locale `json:"locale"`
+	Locale string `json:"locale"`
 
 	lines int
 }
