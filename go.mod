@@ -33,5 +33,6 @@ require (
 	github.com/yuin/gopher-lua v0.0.0-20190206043414-8bfc7677f583 // indirect
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1
+	golang.org/x/text v0.3.0
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )

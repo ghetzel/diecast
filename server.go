@@ -40,11 +40,12 @@ import (
 	"github.com/jbenet/go-base58"
 	"github.com/mattn/go-shellwords"
 	"github.com/urfave/negroni"
+	"golang.org/x/text/language"
 )
 
 var ITotallyUnderstandRunningArbitraryCommandsAsRootIsRealRealBad = false
-
 var DirectoryErr = errors.New(`is a directory`)
+var DefaultLocale = language.AmericanEnglish
 
 func IsDirectoryErr(err error) bool {
 	return (err == DirectoryErr)
@@ -193,6 +194,12 @@ type Server struct {
 
 	// A function that can be used to intercept handlers being added to the server.
 	OnAddHandler AddHandlerFunc `json:"-"`
+
+	// Stores translations for use with the i18n and l10n functions.  Keys values represent the
+	Translations map[string]interface{} `json:"translations,omitempty"`
+
+	// Specify the default locale for pages being served.
+	Locale string `json:"locale"`
 
 	router        *http.ServeMux
 	userRouter    *vestigo.Router
@@ -493,8 +500,10 @@ func (self *Server) applyTemplate(
 		}
 	}
 
+	earlyData := requestToEvalData(req, header)
+
 	// get a reference to a set of standard functions that won't have a scope yet
-	earlyFuncs := self.GetTemplateFunctions(requestToEvalData(req, header))
+	earlyFuncs := self.GetTemplateFunctions(earlyData, header)
 
 	// only process layouts if we're supposed to
 	if self.EnableLayouts && !forceSkipLayout && self.shouldApplyLayout(requestPath) {
@@ -543,6 +552,9 @@ func (self *Server) applyTemplate(
 
 	// put any url route params in there too
 	finalHeader.UrlParams = urlParams
+
+	// render locale from template
+	finalHeader.Locale = EvalInline(finalHeader.Locale, earlyData, earlyFuncs)
 
 	if funcs, data, err := self.GetTemplateData(req, &finalHeader); err == nil {
 		start := time.Now()
@@ -675,7 +687,7 @@ func (self *Server) applyTemplate(
 
 // Retrieves the set of standard template functions, as well as functions for working
 // with data in the current request.
-func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
+func (self *Server) GetTemplateFunctions(data interface{}, header *TemplateHeader) FuncMap {
 	funcs := make(FuncMap)
 
 	for k, v := range GetStandardFunctions(self) {
@@ -863,6 +875,95 @@ func (self *Server) GetTemplateFunctions(data interface{}) FuncMap {
 		}
 	}
 
+	// fn i18n: Return the translated text corresponding to the given key.
+	//	Order of Preference:
+	//	- Explicitly requested locale via the second argument to this function
+	//  - Locale specified in the template header or parent headers
+	//	- specified via the Accept-Language HTTP request header
+	//	- Global server config (via diecast.yml "locale" setting)
+	//	- Values of the LC_ALL, LANG, and LANGUAGE environment variables
+	//	- compile-time default locale
+	funcs[`i18n`] = func(key string, locales ...string) (string, error) {
+		key = strings.Join(strings.Split(key, `.`), `.`)
+		kparts := strings.Split(key, `.`)
+
+		if header != nil && header.Locale != `` {
+			if tag, err := language.Parse(header.Locale); err == nil {
+				// header locale and country
+				locales = append(locales, tag.String())
+				locales = append(locales, i18nTagBase(tag))
+			} else {
+				log.Warningf("i18n: invalid header locale %q", header.Locale)
+			}
+		}
+
+		// add server global preferred locale and country
+		if self.Locale != `` {
+			if tag, err := language.Parse(self.Locale); err == nil {
+				locales = append(locales, tag.String())
+				locales = append(locales, i18nTagBase(tag))
+			} else {
+				log.Warningf("i18n: invalid global locale %q", self.Locale)
+			}
+		}
+
+		// add user-preferred languages via Accept-Language header
+		if al := typeutil.String(maputil.DeepGet(data, []string{
+			`request`,
+			`headers`,
+			`accept_language`,
+		}, ``)); al != `` {
+			if tags, _, err := language.ParseAcceptLanguage(al); err == nil {
+				for _, tag := range tags {
+					locales = append(locales, tag.String())
+					locales = append(locales, i18nTagBase(tag))
+				}
+			} else {
+				log.Warningf("i18n: invalid Accept-Language value %q", al)
+			}
+		}
+
+		// add default locale and country
+		locales = append(locales, DefaultLocale.String())
+		locales = append(locales, i18nTagBase(DefaultLocale))
+
+		// add values from environment variables
+		for _, ev := range []string{
+			`LC_ALL`,
+			`LANG`,
+			`LANGUAGE`,
+		} {
+			if v := os.Getenv(ev); v != `` {
+				for _, localeEncodingPair := range strings.Split(v, `:`) {
+					locale, _ := stringutil.SplitPair(localeEncodingPair, `.`)
+
+					if tag, err := language.Parse(locale); err == nil {
+						locales = append(locales, tag.String())
+						locales = append(locales, i18nTagBase(tag))
+					} else {
+						log.Warningf("i18n: invalid locale in envvar %s", ev)
+					}
+				}
+			}
+		}
+
+		locales = sliceutil.CompactString(locales)
+		locales = sliceutil.UniqueStrings(locales)
+
+		for _, translations := range []map[string]interface{}{
+			header.Translations,
+			self.Translations,
+		} {
+			for _, l := range locales {
+				if t, ok := translations[string(l)]; ok {
+					return typeutil.String(maputil.DeepGet(t, kparts, ``)), nil
+				}
+			}
+		}
+
+		return ``, fmt.Errorf("no translations available")
+	}
+
 	return funcs
 }
 
@@ -898,7 +999,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	}
 
 	// these are the functions that will be available to every part of the rendering process
-	funcs := self.GetTemplateFunctions(data)
+	funcs := self.GetTemplateFunctions(data, header)
 
 	// Evaluate "page" data: this data is templatized, but does not have access
 	//                       to the output of bindings
@@ -1807,4 +1908,12 @@ func appendTemplate(dest io.Writer, src io.Reader, name string, hasLayout bool) 
 	}
 
 	return nil
+}
+
+func i18nTagBase(tag language.Tag) string {
+	if base, c := tag.Base(); c > language.Low {
+		return base.String()
+	} else {
+		return ``
+	}
 }

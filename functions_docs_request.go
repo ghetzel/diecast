@@ -10,15 +10,22 @@ func loadRuntimeFunctionsRequest(server *Server) funcGroup {
 			{
 				Name: `payload`,
 			}, {
-				Name: `querystrings`,
+				Name:    `querystrings`,
+				Summary: `Returns an object containing all querystrings in the request URL.`,
 			}, {
-				Name: `qs`,
+				Name:    `qs`,
+				Summary: `Returns a single querystring value from the request URL.`,
 			}, {
-				Name: `headers`,
+				Name:    `headers`,
+				Summary: `Returns an object containing all HTTP headers in the originating request.`,
 			}, {
-				Name: `param`,
+				Name:    `param`,
+				Summary: `Returns a URL parameter from the request URL.`,
 			}, {
 				Name: `read`,
+			}, {
+				Name:    `i18n`,
+				Summary: `Return the translation text corresponding to the page's current locale, or from an explicitly-provided locale.`,
 			},
 		},
 	}

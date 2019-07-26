@@ -1,0 +1,8 @@
+---
+translations:
+  en:
+    hello: Hello
+  es:
+    hello: ¡Hola
+  ru:
+    hello: Привет

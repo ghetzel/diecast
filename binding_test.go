@@ -18,7 +18,7 @@ func TestBindingHttp(t *testing.T) {
 	assert := require.New(t)
 	mux := http.NewServeMux()
 	dc := NewServer(`./tests/hello`)
-	funcs := dc.GetTemplateFunctions(make(map[string]interface{}))
+	funcs := dc.GetTemplateFunctions(make(map[string]interface{}), nil)
 
 	mux.HandleFunc(`/test/thing.json`, func(w http.ResponseWriter, req *http.Request) {
 		httputil.RespondJSON(w, map[string]interface{}{
@@ -68,7 +68,7 @@ func TestBindingRedis(t *testing.T) {
 	defer redis.Close()
 
 	dc := NewServer(`./tests/hello`)
-	funcs := dc.GetTemplateFunctions(make(map[string]interface{}))
+	funcs := dc.GetTemplateFunctions(make(map[string]interface{}), nil)
 
 	redis.Set(`key.1`, `foo`)
 	redis.Set(`key.2`, `bar`)
