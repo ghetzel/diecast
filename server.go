@@ -314,7 +314,7 @@ func (self *Server) LoadConfig(filename string) error {
 							}
 
 							if mountOverwriteIndex >= 0 {
-								log.Infof("mount: overwriting mountpoint %v with new configuration", mount.GetMountPoint())
+								log.Debugf("mount: overwriting mountpoint with new configuration: %v", mount)
 								self.Mounts[mountOverwriteIndex] = mount
 							} else {
 								self.Mounts = append(self.Mounts, mount)
