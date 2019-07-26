@@ -5725,8 +5725,43 @@
         "Summary": "Return the translation text corresponding to the page's current locale, or from an explicitly-provided locale.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "key",
+            "Type": "string",
+            "Description": "The key corresponding to a translated text string in the `translations` section of `diecast.yml` or the page's front matter.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "locale",
+            "Type": "string",
+            "Description": "Explicitly retrieve a value for the named locale.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "i18n \"homepage.greeting\"",
+            "Description": "",
+            "Return": "Hello"
+          },
+          {
+            "Code": "i18n \"homepage.greeting\" \"ru\"",
+            "Description": "",
+            "Return": "Привет"
+          },
+          {
+            "Code": "i18n \"homepage.greeting\" # browser set to es-EC",
+            "Description": "",
+            "Return": "Hola"
+          }
+        ]
       }
     ],
     "Skip": false

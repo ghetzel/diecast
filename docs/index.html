@@ -5778,9 +5778,50 @@ bindings:
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>i18n</code>
+            <code>i18n KEY [LOCALE]</code>
         </div>
         <p>Return the translation text corresponding to the page’s current locale, or from an explicitly-provided locale.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>KEY</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The key corresponding to a translated text string in the <code>translations</code> section of <code>diecast.yml</code> or the page’s front matter.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>LOCALE</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>Explicitly retrieve a value for the named locale.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-i18n-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>i18n &#34;homepage.greeting&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;Hello&#34;</p>
+            </div>
+            <div class="example" id="fn-i18n-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>i18n &#34;homepage.greeting&#34; &#34;ru&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;Привет&#34;</p>
+            </div>
+            <div class="example" id="fn-i18n-example-2">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>i18n &#34;homepage.greeting&#34; # browser set to es-EC<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;Hola&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-param">
         <h4 class="mt-3">

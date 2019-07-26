@@ -286,13 +286,14 @@ func (self *Server) LoadConfig(filename string) error {
 					}
 
 					// process mount configs into mount instances
-				MountConfigLoop:
 					for i, config := range self.MountConfigs {
 						if mount, err := NewMountFromSpec(fmt.Sprintf("%s:%s", config.Mount, config.To)); err == nil {
-							for _, existing := range self.Mounts {
+							mountOverwriteIndex := -1
+
+							for i, existing := range self.Mounts {
 								if mount.GetMountPoint() == existing.GetMountPoint() {
-									log.Debugf("mount: mountpoint %q already configured", existing.GetMountPoint())
-									continue MountConfigLoop
+									mountOverwriteIndex = i
+									break
 								}
 							}
 
@@ -312,7 +313,12 @@ func (self *Server) LoadConfig(filename string) error {
 								}
 							}
 
-							self.Mounts = append(self.Mounts, mount)
+							if mountOverwriteIndex >= 0 {
+								log.Infof("mount: overwriting mountpoint %v with new configuration", mount.GetMountPoint())
+								self.Mounts[mountOverwriteIndex] = mount
+							} else {
+								self.Mounts = append(self.Mounts, mount)
+							}
 						} else {
 							return fmt.Errorf("invalid mount %d: %v", i, err)
 						}
