@@ -64,7 +64,6 @@ func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, optio
 		importer := C.sass_make_importer((C.Sass_Importer_Fn)(C.diecast_sass_importer), C.double(0), nil)
 		cookie := C.sass_importer_get_cookie(importer)
 		callbackMap.Store(cookie, self)
-		defer callbackMap.Delete(cookie)
 
 		C.sass_importer_set_list_entry(implist, C.ulong(0), importer)
 		C.sass_option_set_c_importers(opt, implist)
