@@ -25,6 +25,7 @@ type ProxyMount struct {
 	URL                 string                 `json:"-"`
 	Method              string                 `json:"method,omitempty"`
 	Headers             map[string]interface{} `json:"headers,omitempty"`
+	ResponseHeaders     map[string]interface{} `json:"response_headers,omitempty"`
 	Params              map[string]interface{} `json:"params,omitempty"`
 	Timeout             time.Duration          `json:"timeout,omitempty"`
 	PassthroughRequests bool                   `json:"passthrough_requests"`
@@ -181,6 +182,11 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		if response, err := self.Client.Do(newReq); err == nil {
 			if response.Body != nil {
 				defer response.Body.Close()
+			}
+
+			// add explicit response headers to response
+			for name, value := range self.ResponseHeaders {
+				response.Header.Set(name, typeutil.String(value))
 			}
 
 			log.Debugf("  [R] %v", response.Status)
