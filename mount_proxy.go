@@ -26,6 +26,8 @@ type ProxyMount struct {
 	Method              string                 `json:"method,omitempty"`
 	Headers             map[string]interface{} `json:"headers,omitempty"`
 	ResponseHeaders     map[string]interface{} `json:"response_headers,omitempty"`
+	ResponseCode        int                    `json:"response_code"`
+	RedirectOnSuccess   string                 `json:"redirect_on_success"`
 	Params              map[string]interface{} `json:"params,omitempty"`
 	Timeout             time.Duration          `json:"timeout,omitempty"`
 	PassthroughRequests bool                   `json:"passthrough_requests"`
@@ -192,6 +194,20 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			// add explicit response headers to response
 			for name, value := range self.ResponseHeaders {
 				response.Header.Set(name, typeutil.String(value))
+			}
+
+			// override the response status code (if specified)
+			if self.ResponseCode > 0 {
+				response.StatusCode = self.ResponseCode
+			}
+
+			// provide a header redirect if so requested
+			if response.StatusCode < 400 && self.RedirectOnSuccess != `` {
+				if response.StatusCode < 300 {
+					response.StatusCode = http.StatusTemporaryRedirect
+				}
+
+				response.Header.Set(`Location`, self.RedirectOnSuccess)
 			}
 
 			log.Debugf("  [R] %v", response.Status)

@@ -17,6 +17,22 @@ body > nav {
     height: 62px;
 }
 
+.color-palette {
+    display:        flex;
+    flex-direction: row;
+    flex-wrap:      wrap;
+
+    div {
+        width: 33%;
+
+        .color {
+            display: inline-block;
+            width:   24px;
+            height:  24px;
+        }
+    }
+}
+
 .code {
     border-radius:              0.25em;
     background-color:           $codebg;

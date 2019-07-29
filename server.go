@@ -550,7 +550,7 @@ func (self *Server) applyTemplate(
 
 			if len(layouts) > 0 {
 				for _, layoutName := range layouts {
-					layoutName = EvalInline(layoutName, nil, earlyFuncs)
+					layoutName = MustEvalInline(layoutName, nil, earlyFuncs)
 
 					if layoutFile, err := self.LoadLayout(layoutName); err == nil {
 						if err := fragments.Parse(LayoutTemplateName, layoutFile); err != nil {
@@ -586,7 +586,7 @@ func (self *Server) applyTemplate(
 	finalHeader.UrlParams = urlParams
 
 	// render locale from template
-	finalHeader.Locale = EvalInline(finalHeader.Locale, earlyData, earlyFuncs)
+	finalHeader.Locale = MustEvalInline(finalHeader.Locale, earlyData, earlyFuncs)
 
 	if funcs, data, err := self.GetTemplateData(req, &finalHeader); err == nil {
 		start := time.Now()
@@ -602,7 +602,7 @@ func (self *Server) applyTemplate(
 				if swcase.UsePath != `` {
 					// if a condition is specified, it must evalutate to a truthy value to proceed
 					if swcase.Condition != `` {
-						if !typeutil.V(EvalInline(swcase.Condition, data, funcs)).Bool() {
+						if !typeutil.V(MustEvalInline(swcase.Condition, data, funcs)).Bool() {
 							continue
 						}
 					}
@@ -648,7 +648,7 @@ func (self *Server) applyTemplate(
 		}
 
 		// if specified, get the FINAL renderer that the template output will be passed to
-		finalHeader.Renderer = EvalInline(finalHeader.Renderer, data, funcs)
+		finalHeader.Renderer = MustEvalInline(finalHeader.Renderer, data, funcs)
 
 		switch finalHeader.Renderer {
 		case ``, `html`:
@@ -719,7 +719,7 @@ func (self *Server) applyTemplate(
 
 // Retrieves the set of standard template functions, as well as functions for working
 // with data in the current request.
-func (self *Server) GetTemplateFunctions(data interface{}, header *TemplateHeader) FuncMap {
+func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *TemplateHeader) FuncMap {
 	funcs := make(FuncMap)
 
 	for k, v := range GetStandardFunctions(self) {
@@ -894,14 +894,23 @@ func (self *Server) GetTemplateFunctions(data interface{}, header *TemplateHeade
 
 	// read a file from the serving path
 	funcs[`read`] = func(filename string) (string, error) {
-		if file, err := self.fs.Open(filename); err == nil {
-			defer file.Close()
+		if data, err := readFromFS(self.fs, filename); err == nil {
+			return string(data), nil
+		} else {
+			return ``, err
+		}
+	}
 
-			if data, err := ioutil.ReadAll(file); err == nil {
-				return string(data), nil
-			} else {
-				return ``, err
+	// read a file from the serving path and parse it as a template, returning the output.
+	funcs[`render`] = func(filename string, overrides ...map[string]interface{}) (string, error) {
+		if tpl, err := readFromFS(self.fs, filename); err == nil {
+			d := data
+
+			if len(overrides) > 0 && overrides[0] != nil {
+				d = overrides[0]
 			}
+
+			return EvalInline(string(tpl), d, funcs)
 		} else {
 			return ``, err
 		}
@@ -1044,7 +1053,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			if isLeaf {
 				switch value.(type) {
 				case string:
-					value = EvalInline(value.(string), data, funcs)
+					value = MustEvalInline(value.(string), data, funcs)
 					value = stringutil.Autotype(value)
 				}
 
@@ -1120,7 +1129,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			repeatExpr += "{{ end }}"
 			repeatExprOut := rxEmptyLine.ReplaceAllString(
 				strings.TrimSpace(
-					EvalInline(repeatExpr, data, funcs),
+					MustEvalInline(repeatExpr, data, funcs),
 				),
 				``,
 			)
@@ -1173,7 +1182,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			case bool:
 				flags[name] = def.(bool)
 			default:
-				flags[name] = typeutil.V(EvalInline(fmt.Sprintf("%v", def), data, funcs)).Bool()
+				flags[name] = typeutil.V(MustEvalInline(fmt.Sprintf("%v", def), data, funcs)).Bool()
 			}
 		}
 

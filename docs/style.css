@@ -2,6 +2,22 @@ body > nav {
     height: 62px;
 }
 
+.color-palette {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.color-palette div {
+    width: 33%;
+}
+
+.color-palette div .color {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+}
+
 .code, pre > code, .group .function .examples .example code, .group .function .examples .example .returns {
     border-radius: 0.25em;
     background-color: #333333;

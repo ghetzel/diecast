@@ -5025,7 +5025,7 @@
         "Name": "palette",
         "Alias": "",
         "Aliases": null,
-        "Summary": "Retrieve a color from a named color palette based on index.",
+        "Summary": "Retrieve a color from a named color palette based on index.  See [Color Palettes](#color-palettes) for a description of pre-defined palettes.",
         "Returns": "",
         "Hidden": false,
         "Arguments": [
@@ -5095,6 +5095,16 @@
             "Return": null
           }
         ]
+      },
+      {
+        "Name": "palettes",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Returns the definition of all defined palettes.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
       }
     ],
     "Skip": false

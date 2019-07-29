@@ -44,7 +44,7 @@ type ProtocolRequest struct {
 func (self *ProtocolRequest) Template(input interface{}) typeutil.Variant {
 	if len(self.TemplateFuncs) > 0 {
 		return typeutil.V(
-			EvalInline(typeutil.String(input), self.TemplateData, self.TemplateFuncs),
+			MustEvalInline(typeutil.String(input), self.TemplateData, self.TemplateFuncs),
 		)
 	} else {
 		return typeutil.V(input)

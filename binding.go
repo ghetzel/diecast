@@ -153,7 +153,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	}
 
 	method := strings.ToUpper(self.Method)
-	uri := EvalInline(self.Resource, data, funcs)
+	uri := MustEvalInline(self.Resource, data, funcs)
 
 	// bindings may specify that a request should be made to the currently server address by
 	// prefixing the URL path with a colon (":") or slash ("/").
@@ -182,14 +182,14 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 	if !self.NoTemplate {
 		if self.OnlyIfExpr != `` {
-			if v := EvalInline(self.OnlyIfExpr, data, funcs); typeutil.IsEmpty(v) || stringutil.IsBooleanFalse(v) {
+			if v := MustEvalInline(self.OnlyIfExpr, data, funcs); typeutil.IsEmpty(v) || stringutil.IsBooleanFalse(v) {
 				self.Optional = true
 				return nil, fmt.Errorf("[%s] Binding %q not being evaluated because only_if expression was false", id, self.Name)
 			}
 		}
 
 		if self.NotIfExpr != `` {
-			if v := EvalInline(self.NotIfExpr, data, funcs); !typeutil.IsEmpty(v) && !stringutil.IsBooleanFalse(v) {
+			if v := MustEvalInline(self.NotIfExpr, data, funcs); !typeutil.IsEmpty(v) && !stringutil.IsBooleanFalse(v) {
 				self.Optional = true
 				return nil, fmt.Errorf("[%s] Binding %q not being evaluated because not_if expression was truthy", id, self.Name)
 			}
@@ -219,13 +219,13 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		}); err == nil {
 			defer response.Close()
 
-			onError := BindingErrorAction(EvalInline(string(self.OnError), data, funcs))
+			onError := BindingErrorAction(MustEvalInline(string(self.OnError), data, funcs))
 
 			// handle per-http-status response handlers
 			if len(self.IfStatus) > 0 && response.StatusCode > 0 {
 				// get the action for this code
 				if statusAction, ok := self.IfStatus[response.StatusCode]; ok {
-					statusAction = BindingErrorAction(EvalInline(string(statusAction), data, funcs))
+					statusAction = BindingErrorAction(MustEvalInline(string(statusAction), data, funcs))
 
 					switch statusAction {
 					case ActionIgnore:
@@ -234,7 +234,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						redirect := string(statusAction)
 
 						if !self.NoTemplate {
-							redirect = EvalInline(redirect, data, funcs)
+							redirect = MustEvalInline(redirect, data, funcs)
 						}
 
 						// if a url or path was specified, redirect the parent request to it
@@ -361,8 +361,16 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	}
 }
 
-func EvalInline(input string, data map[string]interface{}, funcs FuncMap) string {
-	tmpl := NewTemplate(`inline`, HtmlEngine)
+func MustEvalInline(input string, data map[string]interface{}, funcs FuncMap) string {
+	if out, err := EvalInline(input, data, funcs); err == nil {
+		return out
+	} else {
+		panic(err.Error())
+	}
+}
+
+func EvalInline(input string, data map[string]interface{}, funcs FuncMap) (string, error) {
+	tmpl := NewTemplate(`inline`, TextEngine)
 	tmpl.Funcs(funcs)
 
 	if err := tmpl.ParseString(input); err == nil {
@@ -370,11 +378,11 @@ func EvalInline(input string, data map[string]interface{}, funcs FuncMap) string
 
 		if err := tmpl.Render(output, data, ``); err == nil {
 			// since this data may have been entity escaped by html/template, unescape it here
-			return html.UnescapeString(output.String())
+			return html.UnescapeString(output.String()), nil
 		} else {
-			panic(fmt.Sprintf("error evaluating %q: %v", input, err))
+			return ``, fmt.Errorf("error evaluating %q: %v", input, err)
 		}
+	} else {
+		return ``, err
 	}
-
-	return input
 }

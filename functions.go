@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"math"
+	"net/http"
 	"os"
 	"path"
 	"regexp"
@@ -24,7 +26,7 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/kelvins/sunrisesunset"
 	"github.com/montanaflynn/stats"
-	"github.com/russross/blackfriday/v2"
+	blackfriday "github.com/russross/blackfriday/v2"
 	"golang.org/x/net/html"
 )
 
@@ -763,4 +765,13 @@ func toBytes(input interface{}) []byte {
 	}
 
 	return in
+}
+
+func readFromFS(fs http.FileSystem, filename string) ([]byte, error) {
+	if file, err := fs.Open(filename); err == nil {
+		defer file.Close()
+		return ioutil.ReadAll(file)
+	} else {
+		return nil, err
+	}
 }

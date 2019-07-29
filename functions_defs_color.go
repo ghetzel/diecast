@@ -380,7 +380,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 				},
 			}, {
 				Name:    `palette`,
-				Summary: `Retrieve a color from a named color palette based on index.`,
+				Summary: `Retrieve a color from a named color palette based on index.  See [Color Palettes](#color-palettes) for a description of pre-defined palettes.`,
 				Arguments: []funcArg{
 					{
 						Name: `index`,
@@ -450,6 +450,12 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 					} else {
 						return fmt.Errorf("Must provide a name for the color palette being defined")
 					}
+				},
+			}, {
+				Name:    `palettes`,
+				Summary: `Returns the definition of all defined palettes.`,
+				Function: func() map[string][]string {
+					return palettes
 				},
 			},
 		},
