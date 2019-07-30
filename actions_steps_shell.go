@@ -90,6 +90,7 @@ func (self *ShellStep) Perform(config *StepConfig, w http.ResponseWriter, req *h
 	if cmd != nil {
 		cmd.Timeout = config.getTimeout()
 		cmd.InheritEnv = inherit
+		cmd.Stdin = prev
 
 		cmd.OnStart = func(s executil.Status) {
 			config.logstep("command started (timeout: %v)", cmd.Timeout)

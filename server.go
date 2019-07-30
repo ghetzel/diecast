@@ -204,6 +204,12 @@ type Server struct {
 	// Specify the environment for loading environment-specific configuration files in the form "diecast.env.yml"
 	Environment string `json:"environment"`
 
+	// TODO:
+	// Specifies the relative path to the file containing the /favicon.ico file.  This path can point to
+	// a Windows Icon (.ico), GIF, PNG, JPEG, or Bitmap (.bmp).  If necessary, the file will be converted
+	// and stored in memory to the ICO format.
+	// FaviconPath string `json:"favicon"`
+
 	router        *http.ServeMux
 	userRouter    *vestigo.Router
 	server        *negroni.Negroni

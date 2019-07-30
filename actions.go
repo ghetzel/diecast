@@ -1,8 +1,10 @@
 package diecast
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -45,6 +47,7 @@ type StepConfig struct {
 	Error    error       `json:"-"`
 	index    int
 	firstlog bool
+	reader   io.Reader
 }
 
 func (self *StepConfig) String() string {
@@ -83,17 +86,27 @@ func (self *StepConfig) postprocess() {
 
 				if err := json.Unmarshal(out, &outI); err == nil {
 					self.Output = outI
-				} else if err.Error() == `invalid character '{' after top-level value` {
-					var outA []interface{}
+				} else if log.ErrHasPrefix(err, `invalid character`) {
+					lines := strings.Split(string(out), "\n")
 
-					for i, line := range strings.Split(string(out), "\n") {
+					var outA []interface{}
+					var asLines bool
+
+					for i, line := range lines {
 						var outM map[string]interface{}
 
 						if err := json.Unmarshal([]byte(line), &outM); err == nil {
 							outA = append(outA, outM)
+						} else if log.ErrHasPrefix(err, `invalid character`) {
+							asLines = true
+							break
 						} else {
 							self.logstep("output line=%d: err=%v", i, err)
 						}
+					}
+
+					if asLines {
+						outA = sliceutil.Sliceify(sliceutil.CompactString(lines))
 					}
 
 					self.Output = outA
@@ -111,6 +124,32 @@ func (self *StepConfig) postprocess() {
 	default:
 		self.Error = fmt.Errorf("Unsupported step parser %q", self.Parser)
 		break
+	}
+}
+
+func (self *StepConfig) Read(b []byte) (int, error) {
+	if r, ok := self.Output.(io.Reader); ok {
+		return r.Read(b)
+	} else if self.reader == nil {
+		if data, err := json.Marshal(self.Output); err == nil {
+			self.reader = bytes.NewBuffer(data)
+		} else {
+			return 0, err
+		}
+	}
+
+	return self.reader.Read(b)
+}
+
+func (self *StepConfig) Close() error {
+	if self.reader != nil {
+		self.reader = nil
+	}
+
+	if c, ok := self.Output.(io.Closer); ok {
+		return c.Close()
+	} else {
+		return nil
 	}
 }
 
@@ -160,11 +199,29 @@ func (self *Action) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		name = fmt.Sprintf("%s %s", req.Method, req.URL.Path)
 	}
 
+	var initData interface{}
+
+	if req.ContentLength > 0 {
+		defer req.Body.Close()
+
+		var asMap map[string]interface{}
+
+		if err := httputil.ParseRequest(req, &asMap); err == nil {
+			initData = asMap
+		} else {
+			httputil.RespondJSON(w, err)
+		}
+	} else {
+		initData = req.Body
+	}
+
 	prev := &StepConfig{
 		Type:   `input`,
-		Output: req.Body,
+		Output: initData,
 		index:  -1,
 	}
+
+	prev.postprocess()
 
 	log.Debugf("\u256d Run action %s", name)
 
@@ -188,7 +245,10 @@ func (self *Action) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if prev != nil {
 		if err := prev.Error; err != nil {
-			httputil.RespondJSON(w, err)
+			httputil.RespondJSON(w, map[string]interface{}{
+				`error`:  err.Error(),
+				`output`: prev.Output,
+			}, http.StatusInternalServerError)
 		} else {
 			httputil.RespondJSON(w, prev.Output)
 		}
