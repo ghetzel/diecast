@@ -497,8 +497,9 @@ Be advised that this feature can *very easily* be misused or implemented in an i
 
 Some tips for making the most effective use of this feature:
 
-- *Use sparingly.*  The most secure code is the code that is never written.
-- *Use [Authenticators]().*
+- **Use sparingly.**  The most secure code is the code that is never written.
+- **Use [Authenticators](#authenticators).**  Protect your action endpoints with some form of authentication.
+- **Keep it simple.**  If you find your logic getting too complex or too clever, re-evaluate your needs and approach.
 
 Be careful out there.
 

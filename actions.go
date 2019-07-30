@@ -20,6 +20,7 @@ var DefaultActionStepTimeout = 10 * time.Second
 var steps = map[string]Performable{
 	`shell`:   &ShellStep{},
 	`process`: &ProcessStep{},
+	`respond`: &RespondStep{},
 }
 
 // Register a performable step type to the given type name.

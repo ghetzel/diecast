@@ -554,8 +554,9 @@ bindings:
 <p>Be advised that this feature can <em>very easily</em> be misused or implemented in an insecure way.  This feature is intended to provide extremely basic reactive capabilities in an otherwise constrained deployment environment.  Diecast will take some measures to sanitize user inputs before inserting them into shell commands, and will not allow the program to even start as the <code>root</code> user if actions are defined (unless the <code>DIECAST_ALLOW_ROOT_ACTIONS</code> environment variable is set to “true”).  However, none of this is a substitute for strictly controlling the scope and use of this feature.</p>
 <p>Some tips for making the most effective use of this feature:</p>
 <ul>
-<li><em>Use sparingly.</em>  The most secure code is the code that is never written.</li>
-<li><em>Use [Authenticators]().</em></li>
+<li><strong>Use sparingly.</strong>  The most secure code is the code that is never written.</li>
+<li><strong>Use <a href="#authenticators" rel="nofollow">Authenticators</a>.</strong>  Protect your action endpoints with some form of authentication.</li>
+<li><strong>Keep it simple.</strong>  If you find your logic getting too complex or too clever, re-evaluate your needs and approach.</li>
 </ul>
 <p>Be careful out there.</p>
 <h3 id="paths-and-steps">Paths and Steps</h3>
