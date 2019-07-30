@@ -190,6 +190,11 @@ authenticators:
     # access the protected resources.
     htpasswd: '/etc/my-app/htpasswd'
 
+    # Explicitly provided username-password hash pair that will also be accepted.
+    # username = "admin", password = "admin" (generated on Linux with the command: htpasswd -B -n admin)
+    credentials:
+        admin: '$2y$05$UO/Ugxm/FOpDjbG6gOVxqejUDOA8wGFfMskI8h0PG4KaQEBy5RYe2'
+
 # OAuth2 Authenticator: OAuth2 third-party authentication (e.g.: Google, GitHub, etc.)
 - type: oauth2
   callback: http://mydomain.example.com/auth
@@ -204,7 +209,7 @@ authenticators:
     # Specify the name of the cookie stored in the user browser/agent
     # cookie_name: 'DCSESSION'
 
-    # How long the session is valie for.
+    # How long the session is valid for.
     # lifetime: '30d'
 
     # If provider is "custom", specify the authentication and token validation URLs

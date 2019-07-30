@@ -44,3 +44,14 @@ For example, given the date 2018-03-10T16:30:00, and the custom format string "M
 that date would be displayed as "Sat, March 10, 2018".  The format was built by providing examples
 from the reference date on how to do the conversion.  The values used in the reference date have been
 carefully chosen to avoid any ambiguity when specifying custom formats.
+
+
+### Wildcard Patterns
+
+Throughout the application, certain configuration options support a way to specify wildcard patterns that match more than just a specific string.  These types of patterns are especially useful when working with URLs, where it is common to want settings to apply to all URLs that start with or otherwise contain a specific string.  Below is a description of the wildcard support Diecast implements:
+
+| Pattern | Example    | Description |
+| ------- | ---------- | ----------- |
+| `*`     | `/api/*`   | Match zero or more _non-separator_ characters (`/`). |
+| `**`    | `/api/**`  | Match zero or more characters, including separators. |
+| `?`     | `/api/?`   | Match zero or one character. |

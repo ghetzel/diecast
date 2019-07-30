@@ -413,3 +413,162 @@ mounts:
 ```
 
 In this configuration, a request to `http://localhost:28419/` will load Google's homepage, but when the browser attempts to load the logo (typically located at `/logos/...`), _that_ request will be routed to the local `/usr/share/custom-google-logos/` directory.  So if the logo for that day is at `/logos/doodles/2018/something.png`, and the file `/usr/share/custom-google-logos/doodles/2018/something.png` exists, that file will be served in lieu of the version on Google's servers.
+
+
+## Authenticators
+
+Diecast exposes the capability to add authentication and authorization to your applications through the use of configurable _authenticators_.  These are added to the `diecast.yml` configuration file, and provide a very flexible mechanism for protecting parts or all of the application using a variety of backends for verifying users and user access.
+
+### Example: Basic HTTP Authentication for the Whole Site
+
+Here is a configuration example that shows how to prompt a client for a username and password when accessing any part of the current site.  The permitted users are stored in a standard [Apache `.htaccess` file](http://www.htaccess-guide.com/), which is consulted every time a requested path matches.  If specific path patterns aren't included or excluded, all paths will be protected.
+
+```
+authenticators:
+-   type: basic
+    options:
+        realm:    'Da Secure Zone'
+        htpasswd: '/etc/my-app/htpasswd'
+```
+
+### Including and Excluding Paths
+
+It is possible to specify specific paths (or [wildcard patterns](#wildcard-patterns)) for which the authenticator must or must not be applicable to.
+
+To specify a specific set of paths, use the `path` configuration option:
+
+```
+authenticators:
+-   type: basic
+    paths:
+    - '/very/specific/secret/place'
+    - `/secure/**`
+```
+
+To specify a set of paths to exclude from authentication, use the `exclude` option:
+
+```
+authenticators:
+-   type: basic
+    exclude:
+    - '/assets/**'
+```
+
+### Authenticator Types
+
+Several authentication/authorization backends are supported.
+
+### `type: "basic"`
+
+Prompts users for credentials using [Basic access HTTP Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication), a widely-supported authentication mechanism supported by most web browsers and command-line tools.
+
+#### Supported Options
+
+| Option        | Description |
+| ------------- | ----------- |
+| `realm`       | The Realm exposed with Basic HTTP Authentication; specifies parts of the site that may share credentials. |
+| `htpasswd`    | A server-side file path to an [Apache htaccess file](http://www.htaccess-guide.com/) that contains valid usernames and password hashes. |
+| `credentials` | Similar to `htpasswd`, this option is a map that allows you to place `username: 'password-hash'` pairs directly into the configuration file. |
+
+### `type: "oauth2"`
+
+Allows for third-party authentication providers (Google, Facebook, GitHub, etc.) to be used for authenticating a user session.  This authenticator requires the `callback` configuration option, which specifies a complete URL that the third-party will send users to upon successful login using their service.
+
+#### Supported Options
+
+| Option        | Description |
+| ------------- | ----------- |
+| `provider`    | The name of a built-in OAuth2 provider, or "custom".  Built-in providers include: `amazon`, `facebook`, `github`, `gitlab`, `google`, `microsoft-live`, `slack`, `spotify`. |
+| `client_id`   | The Client ID provided by your OAuth2 provider. |
+| `secret`      | The Client Secret provided by your OAuth2 provider. |
+| `scopes`      | A list of named scopes requested from the OAuth2 provider. |
+| `cookie_name` | The name of the session cookie stored in the user's browser. |
+| `lifetime`    | How long the authenticated session will last. |
+| `auth_url`    | If provider is "custom", specifies the OAuth2 authentication URL. |
+| `token_url`   | If provider is "custom", specifies the OAuth2 validation URL. |
+
+## Actions
+
+In addition to serving file and processing templates, Diecast also includes support for performing basic server-side actions.  These actions are exposed and triggered by a RESTful web API that is implemented in the `diecast.yml` configuration file.  The data made available through these custom API endpoints is gathered by executing shell commands server-side, and as such comes with certain innate risks that need to be addressed in order to maintain a secure application environment.
+
+### WARNING: Danger Zone
+
+Be advised that this feature can *very easily* be misused or implemented in an insecure way.  This feature is intended to provide extremely basic reactive capabilities in an otherwise constrained deployment environment.  Diecast will take some measures to sanitize user inputs before inserting them into shell commands, and will not allow the program to even start as the `root` user if actions are defined (unless the `DIECAST_ALLOW_ROOT_ACTIONS` environment variable is set to "true").  However, none of this is a substitute for strictly controlling the scope and use of this feature.
+
+Some tips for making the most effective use of this feature:
+
+- *Use sparingly.*  The most secure code is the code that is never written.
+- *Use [Authenticators]().*
+
+Be careful out there.
+
+### Paths and Steps
+
+Actions are defined under the `actions` configuration key, and are an array of definitions that specify a URL path that, when requested, will execute a sequence of steps and respond with the resulting output.  In this way, data can be retrieved, manipulated, and returned to the user.  Below is a very basic example that will return the server's current time:
+
+```
+actions:
+- path:   /api/time
+  method: get
+  steps:
+  - type:   shell
+    parser: lines
+    data:   date
+```
+
+The output a user would see if they visit [http://localhost:28419/api/time] would look like this:
+
+```
+["Tue Jan 02 15:04:05 MST 2006"]
+```
+
+Steps are defined as an array of specific actions, be it executing a shell script, converting output from one format to another, or sorting and filtering data.  Steps are designed to be chained together to create composable data processing pipelines.
+
+#### Step Type `shell`
+
+The shell step is used to execute a server-side program and return the output.  A successful program will run, optionally using the environment variables provided to make use of request-specific details, and print the results to standard output (by default, a JSON-encoded document, but this can be controlled with the `parser` option).  The program should exit with a status of zero (0) to indicate success, and non-zero to indicate failure.  If the program exits with a non-zero status, the standard output is assumed to be a descriptive error.
+
+##### Shell Environment
+
+Below are the environment variables made available to the `shell` step on invocation:
+
+- *REQ_HEADER_NAME_OF_HTTP_REQUEST_HEADER*: Represents all HTTP headers supplied by the user, prefixed with `REQ_HEADER_`, with the header name upper-cased and all non-alphanumeric characters converted to an underscore (`_`).
+
+- *REQ_PARAM_NAME_OF_QUERY_STRING_PARAM*: Represents all query string parameters on the request URL, also upper-cased and underscore-separated.
+
+- *REQ_PARAM_NAME_OF_URL_PARAMETER*: Represents positional parameters in the URL, specified in the `path` configuration in the action.  For example, if `path: '/api/actions/:action-name'`, then the script will be called with the environment variable `REQ_PARAM_ACTION_NAME`.  If both a URL parameter and query string parameter have the same name, the URL parameter will overwrite the query string parameter.
+
+
+#### Step Type `process`
+
+The process step is used to manipulate the output from a previous step in some way.  This can be used to convert script output into complex nested data structures, sort lines of text, or perform other operations on the data.
+
+##### Process Operation
+
+What action to take on input data is specified in the step's `data` option.
+
+| Process Operation | Description |
+| ----------------- | ----------- |
+| `sort`            | Sort an array of strings lexically ascending order. |
+| `rsort`           | Same as `sort`, but in descending order. |
+| `diffuse`         | Takes an array of strings in the format "nested.key.name=value" and converts that into a deeply-nested map (e.g.: `{"nested": {"key": {"name": "value"}}}`).  Data types for values are automatically detected. |
+
+##### Examples
+
+Creates an endpoint at [http://localhost:28419/api/deploy] that returns an object containing the current git branch and revision of the
+Diecast runtime directory:
+
+```
+actions:
+-   path:   /api/deploy
+    method: get
+    steps:
+    -   type: shell
+        data: |
+            #!/usr/bin/env bash
+            echo "branch=$(git rev-parse --abbrev-ref HEAD)"
+            echo "revision=$(git rev-parse HEAD)"
+
+    -   type: process
+        data: diffuse
+```

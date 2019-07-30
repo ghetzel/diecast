@@ -45,6 +45,8 @@
                     <a class="nav-link" href="#configuration">Configuration</a>
                     <a class="nav-link" href="#templating">Templating</a>
                     <a class="nav-link" href="#data-bindings">Data Bindings</a>
+                    <a class="nav-link" href="#authenticators">Authenticators</a>
+                    <a class="nav-link" href="#actions">Actions</a>
                     <details>
                         <summary class="nav-link">
                             <a href="#funcref">Functions</a>
@@ -449,6 +451,177 @@ bindings:
     to:    /
 </code></pre>
 <p>In this configuration, a request to <code>http://localhost:28419/</code> will load Google’s homepage, but when the browser attempts to load the logo (typically located at <code>/logos/...</code>), <em>that</em> request will be routed to the local <code>/usr/share/custom-google-logos/</code> directory.  So if the logo for that day is at <code>/logos/doodles/2018/something.png</code>, and the file <code>/usr/share/custom-google-logos/doodles/2018/something.png</code> exists, that file will be served in lieu of the version on Google’s servers.</p>
+<h2 id="authenticators">Authenticators</h2>
+<p>Diecast exposes the capability to add authentication and authorization to your applications through the use of configurable <em>authenticators</em>.  These are added to the <code>diecast.yml</code> configuration file, and provide a very flexible mechanism for protecting parts or all of the application using a variety of backends for verifying users and user access.</p>
+<h3 id="example-basic-http-authentication-for-the-whole-site">Example: Basic HTTP Authentication for the Whole Site</h3>
+<p>Here is a configuration example that shows how to prompt a client for a username and password when accessing any part of the current site.  The permitted users are stored in a standard <a href="http://www.htaccess-guide.com/" rel="nofollow">Apache <code>.htaccess</code> file</a>, which is consulted every time a requested path matches.  If specific path patterns aren’t included or excluded, all paths will be protected.</p>
+<pre><code>authenticators:
+-   type: basic
+    options:
+        realm:    &#39;Da Secure Zone&#39;
+        htpasswd: &#39;/etc/my-app/htpasswd&#39;
+</code></pre>
+<h3 id="including-and-excluding-paths">Including and Excluding Paths</h3>
+<p>It is possible to specify specific paths (or <a href="#wildcard-patterns" rel="nofollow">wildcard patterns</a>) for which the authenticator must or must not be applicable to.</p>
+<p>To specify a specific set of paths, use the <code>path</code> configuration option:</p>
+<pre><code>authenticators:
+-   type: basic
+    paths:
+    - &#39;/very/specific/secret/place&#39;
+    - `/secure/**`
+</code></pre>
+<p>To specify a set of paths to exclude from authentication, use the <code>exclude</code> option:</p>
+<pre><code>authenticators:
+-   type: basic
+    exclude:
+    - &#39;/assets/**&#39;
+</code></pre>
+<h3 id="authenticator-types">Authenticator Types</h3>
+<p>Several authentication/authorization backends are supported.</p>
+<h3 id="type-basic"><code>type: &#34;basic&#34;</code></h3>
+<p>Prompts users for credentials using <a href="https://en.wikipedia.org/wiki/Basic_access_authentication" rel="nofollow">Basic access HTTP Authentication</a>, a widely-supported authentication mechanism supported by most web browsers and command-line tools.</p>
+<h4 id="supported-options">Supported Options</h4>
+<table class="table table-sm table-striped">
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>realm</code></td>
+<td>The Realm exposed with Basic HTTP Authentication; specifies parts of the site that may share credentials.</td>
+</tr>
+<tr>
+<td><code>htpasswd</code></td>
+<td>A server-side file path to an <a href="http://www.htaccess-guide.com/" rel="nofollow">Apache htaccess file</a> that contains valid usernames and password hashes.</td>
+</tr>
+<tr>
+<td><code>credentials</code></td>
+<td>Similar to <code>htpasswd</code>, this option is a map that allows you to place <code>username: &#39;password-hash&#39;</code> pairs directly into the configuration file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="type-oauth2"><code>type: &#34;oauth2&#34;</code></h3>
+<p>Allows for third-party authentication providers (Google, Facebook, GitHub, etc.) to be used for authenticating a user session.  This authenticator requires the <code>callback</code> configuration option, which specifies a complete URL that the third-party will send users to upon successful login using their service.</p>
+<h4 id="supported-options-1">Supported Options</h4>
+<table class="table table-sm table-striped">
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>provider</code></td>
+<td>The name of a built-in OAuth2 provider, or “custom”.  Built-in providers include: <code>amazon</code>, <code>facebook</code>, <code>github</code>, <code>gitlab</code>, <code>google</code>, <code>microsoft-live</code>, <code>slack</code>, <code>spotify</code>.</td>
+</tr>
+<tr>
+<td><code>client_id</code></td>
+<td>The Client ID provided by your OAuth2 provider.</td>
+</tr>
+<tr>
+<td><code>secret</code></td>
+<td>The Client Secret provided by your OAuth2 provider.</td>
+</tr>
+<tr>
+<td><code>scopes</code></td>
+<td>A list of named scopes requested from the OAuth2 provider.</td>
+</tr>
+<tr>
+<td><code>cookie_name</code></td>
+<td>The name of the session cookie stored in the user’s browser.</td>
+</tr>
+<tr>
+<td><code>lifetime</code></td>
+<td>How long the authenticated session will last.</td>
+</tr>
+<tr>
+<td><code>auth_url</code></td>
+<td>If provider is “custom”, specifies the OAuth2 authentication URL.</td>
+</tr>
+<tr>
+<td><code>token_url</code></td>
+<td>If provider is “custom”, specifies the OAuth2 validation URL.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="actions">Actions</h2>
+<p>In addition to serving file and processing templates, Diecast also includes support for performing basic server-side actions.  These actions are exposed and triggered by a RESTful web API that is implemented in the <code>diecast.yml</code> configuration file.  The data made available through these custom API endpoints is gathered by executing shell commands server-side, and as such comes with certain innate risks that need to be addressed in order to maintain a secure application environment.</p>
+<h3 id="warning-danger-zone">WARNING: Danger Zone</h3>
+<p>Be advised that this feature can <em>very easily</em> be misused or implemented in an insecure way.  This feature is intended to provide extremely basic reactive capabilities in an otherwise constrained deployment environment.  Diecast will take some measures to sanitize user inputs before inserting them into shell commands, and will not allow the program to even start as the <code>root</code> user if actions are defined (unless the <code>DIECAST_ALLOW_ROOT_ACTIONS</code> environment variable is set to “true”).  However, none of this is a substitute for strictly controlling the scope and use of this feature.</p>
+<p>Some tips for making the most effective use of this feature:</p>
+<ul>
+<li><em>Use sparingly.</em>  The most secure code is the code that is never written.</li>
+<li><em>Use [Authenticators]().</em></li>
+</ul>
+<p>Be careful out there.</p>
+<h3 id="paths-and-steps">Paths and Steps</h3>
+<p>Actions are defined under the <code>actions</code> configuration key, and are an array of definitions that specify a URL path that, when requested, will execute a sequence of steps and respond with the resulting output.  In this way, data can be retrieved, manipulated, and returned to the user.  Below is a very basic example that will return the server’s current time:</p>
+<pre><code>actions:
+- path:   /api/time
+  method: get
+  steps:
+  - type:   shell
+    parser: lines
+    data:   date
+</code></pre>
+<p>The output a user would see if they visit [<a href="http://localhost:28419/api/time" rel="nofollow">http://localhost:28419/api/time</a>] would look like this:</p>
+<pre><code>[&#34;Tue Jan 02 15:04:05 MST 2006&#34;]
+</code></pre>
+<p>Steps are defined as an array of specific actions, be it executing a shell script, converting output from one format to another, or sorting and filtering data.  Steps are designed to be chained together to create composable data processing pipelines.</p>
+<h4 id="step-type-shell">Step Type <code>shell</code></h4>
+<p>The shell step is used to execute a server-side program and return the output.  A successful program will run, optionally using the environment variables provided to make use of request-specific details, and print the results to standard output (by default, a JSON-encoded document, but this can be controlled with the <code>parser</code> option).  The program should exit with a status of zero (0) to indicate success, and non-zero to indicate failure.  If the program exits with a non-zero status, the standard output is assumed to be a descriptive error.</p>
+<h5 id="shell-environment">Shell Environment</h5>
+<p>Below are the environment variables made available to the <code>shell</code> step on invocation:</p>
+<ul>
+<li><p><em>REQ_HEADER_NAME_OF_HTTP_REQUEST_HEADER</em>: Represents all HTTP headers supplied by the user, prefixed with <code>REQ_HEADER_</code>, with the header name upper-cased and all non-alphanumeric characters converted to an underscore (<code>_</code>).</p></li>
+<li><p><em>REQ_PARAM_NAME_OF_QUERY_STRING_PARAM</em>: Represents all query string parameters on the request URL, also upper-cased and underscore-separated.</p></li>
+<li><p><em>REQ_PARAM_NAME_OF_URL_PARAMETER</em>: Represents positional parameters in the URL, specified in the <code>path</code> configuration in the action.  For example, if <code>path: &#39;/api/actions/:action-name&#39;</code>, then the script will be called with the environment variable <code>REQ_PARAM_ACTION_NAME</code>.  If both a URL parameter and query string parameter have the same name, the URL parameter will overwrite the query string parameter.</p></li>
+</ul>
+<h4 id="step-type-process">Step Type <code>process</code></h4>
+<p>The process step is used to manipulate the output from a previous step in some way.  This can be used to convert script output into complex nested data structures, sort lines of text, or perform other operations on the data.</p>
+<h5 id="process-operation">Process Operation</h5>
+<p>What action to take on input data is specified in the step’s <code>data</code> option.</p>
+<table class="table table-sm table-striped">
+<thead>
+<tr>
+<th>Process Operation</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sort</code></td>
+<td>Sort an array of strings lexically ascending order.</td>
+</tr>
+<tr>
+<td><code>rsort</code></td>
+<td>Same as <code>sort</code>, but in descending order.</td>
+</tr>
+<tr>
+<td><code>diffuse</code></td>
+<td>Takes an array of strings in the format “nested.key.name=value” and converts that into a deeply-nested map (e.g.: <code>{&#34;nested&#34;: {&#34;key&#34;: {&#34;name&#34;: &#34;value&#34;}}}</code>).  Data types for values are automatically detected.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="examples">Examples</h5>
+<p>Creates an endpoint at [<a href="http://localhost:28419/api/deploy" rel="nofollow">http://localhost:28419/api/deploy</a>] that returns an object containing the current git branch and revision of the
+Diecast runtime directory:</p>
+<pre><code>actions:
+-   path:   /api/deploy
+    method: get
+    steps:
+    -   type: shell
+        data: |
+            #!/usr/bin/env bash
+            echo &#34;branch=$(git rev-parse --abbrev-ref HEAD)&#34;
+            echo &#34;revision=$(git rev-parse HEAD)&#34;
+    -   type: process
+        data: diffuse
+</code></pre>
 </body></html>
 <a name="funcref"></a>
 <h2 class="mb-4">Function Reference</h2>
@@ -8476,6 +8649,34 @@ use this reference date/time, and you can refer to those formats for building yo
 that date would be displayed as “Sat, March 10, 2018”.  The format was built by providing examples
 from the reference date on how to do the conversion.  The values used in the reference date have been
 carefully chosen to avoid any ambiguity when specifying custom formats.</p>
+<h3 id="wildcard-patterns">Wildcard Patterns</h3>
+<p>Throughout the application, certain configuration options support a way to specify wildcard patterns that match more than just a specific string.  These types of patterns are especially useful when working with URLs, where it is common to want settings to apply to all URLs that start with or otherwise contain a specific string.  Below is a description of the wildcard support Diecast implements:</p>
+<table class="table table-sm table-striped">
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Example</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>*</code></td>
+<td><code>/api/*</code></td>
+<td>Match zero or more <em>non-separator</em> characters (<code>/</code>).</td>
+</tr>
+<tr>
+<td><code>**</code></td>
+<td><code>/api/**</code></td>
+<td>Match zero or more characters, including separators.</td>
+</tr>
+<tr>
+<td><code>?</code></td>
+<td><code>/api/?</code></td>
+<td>Match zero or one character.</td>
+</tr>
+</tbody>
+</table>
 </body></html>
         </div>
     </div>
