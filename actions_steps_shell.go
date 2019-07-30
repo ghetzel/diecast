@@ -128,7 +128,7 @@ func (self *ShellStep) Perform(config *StepConfig, w http.ResponseWriter, req *h
 			cmd.SetEnv(fmt.Sprintf("REQ_PARAM_%s", kName), vestigo.Param(req, k))
 		}
 
-		return cmd.Output()
+		return cmd.CombinedOutput()
 	} else {
 		return nil, fmt.Errorf("invalid shell")
 	}
