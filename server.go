@@ -1323,6 +1323,17 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 			if file != nil {
 				defer file.Close()
 
+				// TODO:
+				// filename := filepath.Base(rPath)
+				// filename = strings.TrimSuffix(filename, filepath.Ext(filepath))
+				// basepath := strings.Trim(path.Base(req.URL.Path), `/`)
+
+				// for i, part := range strings.Split(filename, `__`) {
+
+				// 	urlParams[typeutil.String(i)] =
+				// 	urlParams[part] =
+				// }
+
 				if strings.Contains(rPath, `__id.`) {
 					urlParams[`1`] = strings.Trim(path.Base(req.URL.Path), `/`)
 					urlParams[`id`] = strings.Trim(path.Base(req.URL.Path), `/`)
