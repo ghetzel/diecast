@@ -517,7 +517,7 @@ actions:
     data:   date
 ```
 
-The output a user would see if they visit (http://localhost:28419/api/time) would look like this:
+The output a user would see if they visit http://localhost:28419/api/time would look like this:
 
 ```
 ["Tue Jan 02 15:04:05 MST 2006"]
