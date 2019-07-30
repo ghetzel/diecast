@@ -85,6 +85,12 @@ table code {
     background: transparent;
 }
 
+h2 {
+    margin-top:    1em;
+    margin-bottom: 0.5em;
+    border-bottom: 2px solid $primary;
+}
+
 h3 {
     margin-bottom: 0.5em;
 }
