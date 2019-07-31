@@ -14,6 +14,19 @@ import (
 
 // [type=process] Process the output of the previous step by performing a sequence of discrete
 //                operations on the data.
+// steps:
+// - type: process
+//   data: sort
+//
+// - type: process
+//   data: rsort
+//
+// - type: process
+//   data:
+// 	   do:        'diffuse'
+// 	   separator: '.'
+// 	   joiner:    '='
+//
 // -------------------------------------------------------------------------------------------------
 type ProcessStep struct{}
 
@@ -86,6 +99,7 @@ func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 			} else {
 				return nil, err
 			}
+
 		default:
 			return nil, fmt.Errorf("Unrecognized process operation %q", otype)
 		}

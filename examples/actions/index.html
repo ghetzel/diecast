@@ -1,0 +1,19 @@
+---
+bindings:
+-   name:     todos
+    resource: https://jsonplaceholder.typicode.com/todos/
+    headers:
+        X-Application-Name: diecast
+---
+<h1>TODO List</h1>
+<ul>
+{{ range $todo := $.bindings.todos }}
+    <li
+        {{ if $todo.completed }}
+        style="text-decoration: line-through;"
+        {{ end }}
+    >
+        {{ $todo.title }}
+    </li>
+{{ end }}
+</ul>

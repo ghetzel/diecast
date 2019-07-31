@@ -1,0 +1,5 @@
+actions:
+-   path: /api/todos/
+    steps:
+    -   type: http
+        data: https://jsonplaceholder.typicode.com/todos/

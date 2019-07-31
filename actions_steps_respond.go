@@ -35,7 +35,10 @@ func (self *RespondStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 		w.WriteHeader(status)
 	}
 
-	// TODO: check for 204/205 status and empty the body out
+	switch status {
+	case http.StatusNoContent, http.StatusResetContent:
+		data = nil
+	}
 
 	return data, nil
 }

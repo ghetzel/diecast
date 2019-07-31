@@ -2,24 +2,18 @@ package diecast
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"html"
-	"html/template"
-	"io/ioutil"
-	"mime"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
-	"github.com/ghodss/yaml"
 )
 
 var registeredProtocols = map[string]Protocol{
@@ -247,9 +241,9 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				}
 			}
 
-			data, err := ioutil.ReadAll(response)
-
-			if err != nil || response.StatusCode >= 400 {
+			if rv, err := response.DecodeAs(self.Parser); err == nil {
+				return rv, nil
+			} else {
 				switch onError {
 				case ActionPrint:
 					if err != nil {
@@ -258,7 +252,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						return nil, fmt.Errorf("%v", string(data[:]))
 					}
 				case ActionIgnore:
-					break
+					return rv, nil
 				default:
 					redirect := string(onError)
 
@@ -275,83 +269,6 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						)
 					}
 				}
-			}
-
-			if err == nil {
-				mimeType, _, _ := mime.ParseMediaType(response.MimeType)
-
-				if mimeType == `` {
-					mimeType, _ = stringutil.SplitPair(response.MimeType, `;`)
-				}
-
-				// only do response body processing if there is data to process
-				if len(data) > 0 {
-					if self.Parser == `` {
-						switch mimeType {
-						case `application/json`:
-							self.Parser = `json`
-						case `application/x-yaml`, `application/yaml`, `text/yaml`:
-							self.Parser = `yaml`
-						case `text/html`:
-							self.Parser = `html`
-						case `text/xml`:
-							self.Parser = `xml`
-						}
-					}
-
-					switch self.Parser {
-					case `json`, ``:
-						// if the parser is unset, and the response type is NOT application/json, then
-						// just read the response as plain text and return it.
-						//
-						// If you're certain the response actually is JSON, then explicitly set Parser==`json`
-						//
-						if self.Parser == `` && mimeType != `application/json` {
-							return string(data), nil
-						} else {
-							var rv interface{}
-
-							if err := json.Unmarshal(data, &rv); err == nil {
-								return rv, nil
-							} else {
-								return nil, err
-							}
-						}
-
-					case `yaml`:
-						var rv interface{}
-						if err := yaml.Unmarshal(data, &rv); err == nil {
-							return rv, nil
-						} else {
-							return nil, err
-						}
-
-					case `html`:
-						return goquery.NewDocumentFromReader(bytes.NewBuffer(data))
-
-					case `tsv`:
-						return xsvToArray(data, '\t')
-
-					case `csv`:
-						return xsvToArray(data, ',')
-
-					case `xml`:
-						return xmlToMap(data)
-
-					case `text`:
-						return string(data), nil
-
-					case `raw`:
-						return template.HTML(string(data)), nil
-
-					default:
-						return nil, fmt.Errorf("[%s] Unknown response parser %q", id, self.Parser)
-					}
-				} else {
-					return nil, nil
-				}
-			} else {
-				return nil, fmt.Errorf("[%s] unhandled binding error: %v", id, err)
 			}
 		} else {
 			return nil, fmt.Errorf("[%s] HTTP %v", id, err)

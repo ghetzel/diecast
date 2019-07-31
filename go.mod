@@ -23,6 +23,7 @@ require (
 	github.com/mcuadros/go-defaults v1.1.0 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.0
 	github.com/montanaflynn/stats v0.0.0-20151014174947-eeaced052adb
+	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/spaolacci/murmur3 v0.0.0-20170819071325-9f5d223c6079
