@@ -24,7 +24,7 @@ Building a site using Diecast is as easy as putting files in a folder.  When you
 TODO: make this section much more detailed.
 
 ```
-go get github.com/ghetzel/diecast/cmd/diecast
+GO111MODULE=on go get github.com/ghetzel/diecast/cmd/diecast
 ```
 
 <!--

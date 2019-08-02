@@ -6,6 +6,11 @@
 # Specify the local address and port to listen on.
 address: '127.0.0.1:28419'
 
+# Specify the path to a favicon.  This path may be accessible via a mount, or
+# refer to a local file.  It may point to a PNG, GIF, JPEG, or ICO image file.
+# For all formats other than ICO, the image will be converted to an ICO when
+# served.
+favicon: my-website.png
 
 # An array of bindings that will be evaluated before every template.
 bindings:

@@ -91,7 +91,7 @@
 <p>Building a site using Diecast is as easy as putting files in a folder.  When you run the <code>diecast</code> command in this folder (the <em>working directory</em>), Diecast will make the contents of the folder available as a web page (by default, at <a href="http://localhost:28419" rel="nofollow"><code>http://localhost:28419</code></a>.)  Any file ending in <code>.html</code> will be treated as a template and be processed before being returned to the user.  If no other filenames or paths are requested, Diecast will look for and attempt to serve the file <code>index.html</code>.</p>
 <h2 id="installation">Installation</h2>
 <p>TODO: make this section much more detailed.</p>
-<pre><code>go get github.com/ghetzel/diecast/cmd/diecast
+<pre><code>GO111MODULE=on go get github.com/ghetzel/diecast/cmd/diecast
 </code></pre>
 <h2 id="url-structure">URL Structure</h2>
 <p>Diecast does not have a concept of URL path routing, but rather strives to enforce simple, linear hierarchies by exposing the working directory directly as routable paths.  For example, if a user visits the path <code>/users/list</code>, Diecast will look for files to serve in the following order:</p>

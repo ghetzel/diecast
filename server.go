@@ -1,6 +1,7 @@
 package diecast
 
 //go:generate esc -o static.go -pkg diecast -modtime 1500000000 -prefix ui ui
+//go:generate make favicon.go
 
 import (
 	"bytes"
@@ -10,8 +11,13 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"io/ioutil"
+
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -23,6 +29,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/biessek/golang-ico"
 	"github.com/fatih/structs"
 	"github.com/ghetzel/go-stockutil/executil"
 	"github.com/ghetzel/go-stockutil/fileutil"
@@ -204,20 +211,21 @@ type Server struct {
 	// Specify the environment for loading environment-specific configuration files in the form "diecast.env.yml"
 	Environment string `json:"environment"`
 
-	// TODO:
+	// TODO: favicon autogenerator
 	// Specifies the relative path to the file containing the /favicon.ico file.  This path can point to
 	// a Windows Icon (.ico), GIF, PNG, JPEG, or Bitmap (.bmp).  If necessary, the file will be converted
 	// and stored in memory to the ICO format.
-	// FaviconPath string `json:"favicon"`
+	FaviconPath string `json:"favicon"`
 
-	router        *http.ServeMux
-	userRouter    *vestigo.Router
-	server        *negroni.Negroni
-	fs            http.FileSystem
-	precmd        *exec.Cmd
-	altRootCaPool *x509.CertPool
-	initialized   bool
-	hasUserRoutes bool
+	router          *http.ServeMux
+	userRouter      *vestigo.Router
+	server          *negroni.Negroni
+	fs              http.FileSystem
+	precmd          *exec.Cmd
+	altRootCaPool   *x509.CertPool
+	initialized     bool
+	hasUserRoutes   bool
+	faviconImageIco []byte
 }
 
 func NewServer(root interface{}, patterns ...string) *Server {
@@ -1329,7 +1337,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 			if file != nil {
 				defer file.Close()
 
-				// TODO:
+				// TODO: better support for url parameters in filenames
 				// filename := filepath.Base(rPath)
 				// filename = strings.TrimSuffix(filename, filepath.Ext(filepath))
 				// basepath := strings.Trim(path.Base(req.URL.Path), `/`)
@@ -1596,6 +1604,7 @@ func reqid(req *http.Request) string {
 }
 
 func (self *Server) setupServer() error {
+	fileutil.InitMime()
 	self.server = negroni.New()
 
 	// setup panic recovery handler
@@ -1676,6 +1685,67 @@ func (self *Server) setupServer() error {
 			}
 		default:
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	// add favicon.ico handler (if specified)
+	faviconRoute := `/` + filepath.Join(self.rp(), `favicon.ico`)
+
+	self.router.HandleFunc(faviconRoute, func(w http.ResponseWriter, req *http.Request) {
+		switch req.Method {
+		case http.MethodGet:
+			defer req.Body.Close()
+
+			recorder := httptest.NewRecorder()
+			recorder.Body = bytes.NewBuffer(nil)
+
+			// before we do anything, make sure this file wouldn't be served
+			// through our current application
+			self.handleRequest(recorder, req)
+
+			if recorder.Code < 400 {
+				for k, vs := range recorder.HeaderMap {
+					for _, v := range vs {
+						w.Header().Add(k, v)
+					}
+				}
+
+				io.Copy(w, recorder.Body)
+			} else {
+				// no favicon cached, so we gotta decode it
+				if len(self.faviconImageIco) == 0 {
+					var icon io.ReadCloser
+
+					if self.FaviconPath != `` {
+						if file, err := self.fs.Open(self.FaviconPath); err == nil {
+							icon = file
+						}
+					}
+
+					if icon == nil {
+						w.Header().Set(`Content-Type`, `image/x-icon`)
+						w.Write(DefaultFavicon())
+						return
+					}
+
+					if img, _, err := image.Decode(icon); err == nil {
+						buf := bytes.NewBuffer(nil)
+
+						if err := ico.Encode(buf, img); err == nil {
+							self.faviconImageIco = buf.Bytes()
+						} else {
+							log.Debugf("favicon encode: %v", err)
+						}
+					} else {
+						log.Debugf("favicon decode: %v", err)
+					}
+				}
+
+				if len(self.faviconImageIco) > 0 {
+					w.Header().Set(`Content-Type`, `image/x-icon`)
+					w.Write(self.faviconImageIco)
+				}
+			}
 		}
 	})
 

@@ -220,13 +220,6 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 					}
 				},
 			},
-
-			// TODO: this needs some sort of "late binding" in which the active filesystem and server instance is provided
-			//       during initialization
-			// {
-			// 	Name:    `htmlInjectFromTemplate`,
-			// 	Summary: `Render a template and inject the output into the given document as a child of a specified element.`,
-			// },
 		},
 	}
 
