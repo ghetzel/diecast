@@ -1115,7 +1115,115 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		start := time.Now()
 		describeTimer(fmt.Sprintf("binding-%s", binding.Name), fmt.Sprintf("Diecast Bindings: %s", binding.Name))
 
-		if binding.Repeat == `` {
+		if pgConfig := binding.Paginate; pgConfig != nil {
+			results := make([]map[string]interface{}, 0)
+			proceed := true
+
+			var total int64
+			var count int64
+			var soFar int64
+
+			page := 1
+
+			lastPage := maputil.M(&ResultsPage{
+				Page:    page,
+				Counter: soFar,
+			}).MapNative(`json`)
+
+			for proceed {
+				suffix := fmt.Sprintf("binding(%s):page(%d)", binding.Name, page+1)
+
+				bindings[binding.Name] = binding.Fallback
+				data[`page`] = lastPage
+
+				if len(binding.Params) == 0 {
+					binding.Params = make(map[string]interface{})
+				}
+
+				if len(binding.Headers) == 0 {
+					binding.Headers = make(map[string]string)
+				}
+
+				// eval the URL
+				binding.Resource = MustEvalInline(binding.Resource, data, funcs, suffix)
+
+				// eval / set querystring params
+				for qsk, qsv := range pgConfig.QueryStrings {
+					binding.Params[qsk] = typeutil.Auto(MustEvalInline(qsv, data, funcs, suffix))
+				}
+
+				// eval / set request headers
+				for hk, hv := range pgConfig.Headers {
+					binding.Headers[hk] = MustEvalInline(hv, data, funcs, suffix)
+				}
+
+				v, err := binding.Evaluate(req, header, data, funcs)
+
+				if err == nil {
+					asMap := maputil.M(v)
+
+					total = typeutil.Int(MustEvalInline(pgConfig.Total, asMap.MapNative(), funcs, suffix))
+					count = typeutil.Int(MustEvalInline(pgConfig.Count, asMap.MapNative(), funcs, suffix))
+					soFar += count
+
+					log.Debugf("[%v] paginated binding %q: total=%v count=%v soFar=%v", reqid(req), binding.Name, total, count, soFar)
+
+					proceed = !typeutil.Bool(MustEvalInline(pgConfig.Done, asMap.MapNative(), funcs, suffix))
+
+					if pgConfig.Maximum > 0 && soFar >= pgConfig.Maximum {
+						proceed = false
+					}
+
+					if !proceed {
+						log.Debugf("[%v] paginated binding %q: proceed is false, this is the last loop", reqid(req), binding.Name)
+					}
+
+					thisPage := maputil.M(&ResultsPage{
+						Total:   total,
+						Page:    page,
+						Last:    !proceed,
+						Counter: soFar,
+						Range: []int64{
+							(soFar - count),
+							soFar,
+						},
+					}).MapNative(`json`)
+
+					if output, err := ApplyJPath(v, pgConfig.Data); err == nil {
+						v = output
+					} else {
+						return funcs, nil, err
+					}
+
+					thisPage[`data`] = v
+					results = append(results, thisPage)
+					data[`page`] = maputil.M(thisPage).MapNative(`json`)
+					lastPage = thisPage
+
+					bindings[binding.Name] = results
+					data[`bindings`] = bindings
+				} else if redir, ok := err.(RedirectTo); ok {
+					return funcs, nil, redir
+				} else {
+					log.Warningf("Binding %q (iteration %d) failed: %v", binding.Name, i, err)
+
+					if binding.OnError == ActionContinue {
+						continue
+					} else if binding.OnError == ActionBreak {
+						break
+					} else if !binding.Optional {
+						return funcs, nil, err
+					}
+				}
+
+				data[`bindings`] = bindings
+				page++
+			}
+
+			bindings[binding.Name] = results
+			data[`bindings`] = bindings
+
+		} else if binding.Repeat == `` {
 			bindings[binding.Name] = binding.Fallback
 			data[`bindings`] = bindings
 

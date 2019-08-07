@@ -20,6 +20,7 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/ghodss/yaml"
+	"github.com/oliveagle/jsonpath"
 )
 
 var registeredProtocols = map[string]Protocol{
@@ -50,6 +51,25 @@ var BindingClient = &http.Client{
 
 var AllowInsecureLoopbackBindings bool
 var DefaultParamJoiner = `;`
+
+type PaginatorConfig struct {
+	Total        string            `json:"total"`
+	Count        string            `json:"count"`
+	Done         string            `json:"done"`
+	Maximum      int64             `json:"max"`
+	Data         string            `json:"data"`
+	QueryStrings map[string]string `json:"params"`
+	Headers      map[string]string `json:"headers"`
+}
+
+type ResultsPage struct {
+	Page    int         `json:"page"`
+	Last    bool        `json:"last,omitempty"`
+	Range   []int64     `json:"range"`
+	Data    interface{} `json:"data"`
+	Counter int64       `json:"counter"`
+	Total   int64       `json:"total"`
+}
 
 type Binding struct {
 	// The name of the key in the $.bindings template variable.
@@ -125,7 +145,16 @@ type Binding struct {
 
 	// An open-ended set of options that are available for protocol implementations to use.
 	ProtocolOptions map[string]interface{} `json:"protocol,omitempty"`
-	server          *Server
+
+	// A specialized repeater configuration that automatically performs pagination on an upstream request, aggregating
+	// the results before returning them.
+	Paginate *PaginatorConfig `json:"paginate"`
+
+	// Specifies a JSONPath expression that can be used to transform the response data received from the binding
+	// into the data that is provided to the template.
+	Transform string `json:"transform"`
+
+	server *Server
 }
 
 func (self *Binding) ShouldEvaluate(req *http.Request) bool {
@@ -299,6 +328,8 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						}
 					}
 
+					var rv interface{}
+
 					switch self.Parser {
 					case `json`, ``:
 						// if the parser is unset, and the response type is NOT application/json, then
@@ -307,46 +338,37 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						// If you're certain the response actually is JSON, then explicitly set Parser==`json`
 						//
 						if self.Parser == `` && mimeType != `application/json` {
-							return string(data), nil
+							rv = string(data)
 						} else {
-							var rv interface{}
-
-							if err := json.Unmarshal(data, &rv); err == nil {
-								return rv, nil
-							} else {
-								return nil, err
-							}
+							err = json.Unmarshal(data, &rv)
 						}
 
 					case `yaml`:
-						var rv interface{}
-						if err := yaml.Unmarshal(data, &rv); err == nil {
-							return rv, nil
-						} else {
-							return nil, err
-						}
+						err = yaml.Unmarshal(data, &rv)
 
 					case `html`:
-						return goquery.NewDocumentFromReader(bytes.NewBuffer(data))
+						rv, err = goquery.NewDocumentFromReader(bytes.NewBuffer(data))
 
 					case `tsv`:
-						return xsvToArray(data, '\t')
+						rv, err = xsvToArray(data, '\t')
 
 					case `csv`:
-						return xsvToArray(data, ',')
+						rv, err = xsvToArray(data, ',')
 
 					case `xml`:
-						return xmlToMap(data)
+						rv, err = xmlToMap(data)
 
 					case `text`:
-						return string(data), nil
+						rv = string(data)
 
 					case `raw`:
-						return template.HTML(string(data)), nil
+						rv, err = template.HTML(string(data)), nil
 
 					default:
 						return nil, fmt.Errorf("[%s] Unknown response parser %q", id, self.Parser)
 					}
+
+					return ApplyJPath(rv, self.Transform)
 				} else {
 					return nil, nil
 				}
@@ -361,7 +383,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	}
 }
 
-func MustEvalInline(input string, data map[string]interface{}, funcs FuncMap) string {
+func MustEvalInline(input string, data map[string]interface{}, funcs FuncMap, names ...string) string {
 	if out, err := EvalInline(input, data, funcs); err == nil {
 		return out
 	} else {
@@ -369,9 +391,17 @@ func MustEvalInline(input string, data map[string]interface{}, funcs FuncMap) st
 	}
 }
 
-func EvalInline(input string, data map[string]interface{}, funcs FuncMap) (string, error) {
-	tmpl := NewTemplate(`inline`, TextEngine)
+func EvalInline(input string, data map[string]interface{}, funcs FuncMap, names ...string) (string, error) {
+	suffix := strings.Join(names, `-`)
+
+	if suffix != `` {
+		suffix = `:` + suffix
+	}
+
+	tmpl := NewTemplate(`inline`+suffix, TextEngine)
 	tmpl.Funcs(funcs)
+
+	// input = stringutil.WrapIf(input, `{{`, `}}`)
 
 	if err := tmpl.ParseString(input); err == nil {
 		output := bytes.NewBuffer(nil)
@@ -385,4 +415,26 @@ func EvalInline(input string, data map[string]interface{}, funcs FuncMap) (strin
 	} else {
 		return ``, err
 	}
+}
+
+func ApplyJPath(data interface{}, jpath string) (interface{}, error) {
+	if jpath != `` {
+		var err error
+
+		for i, line := range strings.Split(jpath, "\n") {
+			line = strings.TrimSpace(line)
+
+			if line == `` {
+				continue
+			}
+
+			data, err = jsonpath.JsonPathLookup(data, line)
+
+			if err != nil {
+				return data, fmt.Errorf("jpath line %d: %v", i+1, err)
+			}
+		}
+	}
+
+	return data, nil
 }

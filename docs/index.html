@@ -342,6 +342,12 @@ bindings:
 <td>Whether a response error causes the entire template render to fail.</td>
 </tr>
 <tr>
+<td><code>paginate</code></td>
+<td>[Paginate Config])(#pagination)</td>
+<td>-</td>
+<td>Paginates through a resultset by performing the binding request repeatedly until an edge condition is met, then returns all the results.</td>
+</tr>
+<tr>
 <td><code>param_joiner</code></td>
 <td>String</td>
 <td><code>;</code></td>
@@ -377,6 +383,12 @@ bindings:
 <td><code>false</code></td>
 <td>If true, no headers from the originating request to render the template will be included in this request, even if Header Passthrough is enabled.</td>
 </tr>
+<tr>
+<td><code>transform</code></td>
+<td>String</td>
+<td>-</td>
+<td>A <a href="#jsonpath-expressions" rel="nofollow">JSONPath</a> expression used to transform the resource response before putting it in <code>$.bindings</code>.</td>
+</tr>
 </tbody>
 </table>
 <h3 id="handling-response-codes-and-errors">Handling Response Codes and Errors</h3>
@@ -410,6 +422,31 @@ bindings:
 </code></pre>
 <h3 id="repeaters">Repeaters</h3>
 <p><em>TODO</em></p>
+<h3 id="pagination">Pagination</h3>
+<p>A binding can be configured to perform its request repeatedly, modifying the binding with data from the previous request, allowing for various API pagination access patterns to be accessed under a single binding.</p>
+<pre><code>---
+bindings:
+-   name:     pages
+    resource: http://elasticsearch:9200/my_search_index/_search
+    params:
+        q: &#39;type:customer&#39;
+    paginate:
+        total: &#39;{{ $.hits.total }}&#39;       # &#34;total number of results overall&#34;
+        count: &#39;{{ count $.hits.hits }}&#39;          # &#34;number of results on this page&#34;
+        done:  &#39;{{ eqx (count $.hits.hits) 0 }}&#39;  # this should evaluate to a truthy value when we&#39;re out hits
+        max:   10000                              # a hard cap on the number of results so we don&#39;t paginate forever
+        data:  &#39;$.hits.hits&#39;                      # a JSONPath query that will transform the data before putting it in the &#34;data&#34; key in the response
+        params:
+            size:    &#39;{{ qs &#34;limit&#34; 100 }}&#39;       # set the ?size querystring
+            from:    &#39;{{ $.page.counter }}&#39;       # set the ?from querystring to the running results counter
+---
+</code></pre>
+<h3 id="jsonpath-expressions">JSONPath Expressions</h3>
+<p>Bindings support a flexible mechanism for transforming response data as read from the binding resource.  JSONPath is similar to XPath expressions that allow for data to be selected and filtered from objects and arrays.</p>
+<ul>
+<li><a href="https://goessner.net/articles/JsonPath/" rel="nofollow">JSONPath Overview</a></li>
+<li><a href="https://jsonpath.com/" rel="nofollow">Expression Tester</a></li>
+</ul>
 <h3 id="postprocessors">Postprocessors</h3>
 <p>Postprocessors are routines that are run after the template is rendered for a request, but before the response is returned to the client.  This allows for actions to be taken on the final output, processing it in various ways.</p>
 <h4 id="prettify-html">Prettify HTML</h4>

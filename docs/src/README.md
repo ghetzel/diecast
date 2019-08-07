@@ -266,28 +266,30 @@ bindings:
 
 The `name` and `resource` properties are required for a binding to run, but there are many other optional values supported that allow you to control how the request is performed, how the response if parsed (if at all), as well as what to do if an error occurs (e.g.: connection errors, timeouts, non-2xx HTTP statuses).  These properties are as follows:
 
-| Property Name          | Acceptable Values             | Default       | Description
-| ---------------------- | ----------------------------- | ------------- | -----------
-| `name`                 | String                        | -             | The name of the variable (under `$.bindings`) where the binding's data is stored.
-| `resource`             | String                        | -             | The URL to retrieve.  This can be a complete URL (e.g.: "https://...") or a relative path.  If a path is specified, the value [bindingPrefix] will be prepended to the path before making the request.
-| `body`                 | Object                        | -             | An object that will be encoded according to the value of `formatter` and used as the request body.
-| `fallback`             | Anything                      | -             | If the binding is optional and returns a non-2xx status, this value will be used instead of `null`.
-| `formatter`            | `json, form`                  | `json`        | Specify how the `body` should be serialized before performing the request.
-| `headers`              | Object                        | -             | An object container HTTP request headers to be included in the request.
-| `if_status`            | Anything                      | -             | Actions to take when specific HTTP response codes are encountered.
-| `insecure`             | Boolean                       | `false`       | Whether SSL/TLS peer verification should be enforced.
-| `method`               | String                        | `get`         | The HTTP method to use when making the request.
-| `no_template`          | Boolean                       | `false`       | If true, inline expressions in binding values will not be honored.
-| `not_if`               | String                        | -             | If this value or expression yields a truthy value, the binding will not be evaluated.
-| `on_error`             | String                        | -             | What to do if the request fails.
-| `only_if`              | String                        | -             | Only evaluate if this value or expression yields a truthy value.
-| `optional`             | Boolean                       | `false`       | Whether a response error causes the entire template render to fail.
-| `param_joiner`         | String                        | `;`           | When a key in `params` is specified as an array, how should those array elements be joined into a single string value.
-| `params`               | Object                        | -             | An object representing the query string parameters to append to the URL in `resource`.  Keys may be any scalar value or array of scalar values.
-| `parser`               | `json, html, text, raw`       | `json`        | Specify how the response body should be parsed into the binding variable.
-| `rawbody`              | String                        | -             | The *exact* string to send as the request body.
-| `restrict`             | String (Regular Expression)   | -             | If specified, the requested path must match this [regular expression](https://github.com/google/re2/wiki/Syntax).  This is a specialized form of `only_if`.
-| `skip_inherit_headers` | Boolean                       | `false`       | If true, no headers from the originating request to render the template will be included in this request, even if Header Passthrough is enabled.
+| Property Name          | Acceptable Values                 | Default       | Description
+| ---------------------- | --------------------------------- | ------------- | -----------
+| `name`                 | String                            | -             | The name of the variable (under `$.bindings`) where the binding's data is stored.
+| `resource`             | String                            | -             | The URL to retrieve.  This can be a complete URL (e.g.: "https://...") or a relative path.  If a path is specified, the value [bindingPrefix] will be prepended to the path before making the request.
+| `body`                 | Object                            | -             | An object that will be encoded according to the value of `formatter` and used as the request body.
+| `fallback`             | Anything                          | -             | If the binding is optional and returns a non-2xx status, this value will be used instead of `null`.
+| `formatter`            | `json, form`                      | `json`        | Specify how the `body` should be serialized before performing the request.
+| `headers`              | Object                            | -             | An object container HTTP request headers to be included in the request.
+| `if_status`            | Anything                          | -             | Actions to take when specific HTTP response codes are encountered.
+| `insecure`             | Boolean                           | `false`       | Whether SSL/TLS peer verification should be enforced.
+| `method`               | String                            | `get`         | The HTTP method to use when making the request.
+| `no_template`          | Boolean                           | `false`       | If true, inline expressions in binding values will not be honored.
+| `not_if`               | String                            | -             | If this value or expression yields a truthy value, the binding will not be evaluated.
+| `on_error`             | String                            | -             | What to do if the request fails.
+| `only_if`              | String                            | -             | Only evaluate if this value or expression yields a truthy value.
+| `optional`             | Boolean                           | `false`       | Whether a response error causes the entire template render to fail.
+| `paginate`             | [Paginate Config])(#pagination)   | -             | Paginates through a resultset by performing the binding request repeatedly until an edge condition is met, then returns all the results.
+| `param_joiner`         | String                            | `;`           | When a key in `params` is specified as an array, how should those array elements be joined into a single string value.
+| `params`               | Object                            | -             | An object representing the query string parameters to append to the URL in `resource`.  Keys may be any scalar value or array of scalar values.
+| `parser`               | `json, html, text, raw`           | `json`        | Specify how the response body should be parsed into the binding variable.
+| `rawbody`              | String                            | -             | The *exact* string to send as the request body.
+| `restrict`             | String (Regular Expression)       | -             | If specified, the requested path must match this [regular expression](https://github.com/google/re2/wiki/Syntax).  This is a specialized form of `only_if`.
+| `skip_inherit_headers` | Boolean                           | `false`       | If true, no headers from the originating request to render the template will be included in this request, even if Header Passthrough is enabled.
+| `transform`            | String                            | -             | A [JSONPath](#jsonpath-expressions) expression used to transform the resource response before putting it in `$.bindings`.
 
 ### Handling Response Codes and Errors
 
@@ -336,6 +338,37 @@ bindings:
 ### Repeaters
 
 _TODO_
+
+
+### Pagination
+
+A binding can be configured to perform its request repeatedly, modifying the binding with data from the previous request, allowing for various API pagination access patterns to be accessed under a single binding.
+
+```
+---
+bindings:
+-   name:     pages
+    resource: http://elasticsearch:9200/my_search_index/_search
+    params:
+        q: 'type:customer'
+    paginate:
+        total: '{{ $.hits.total }}'       # "total number of results overall"
+        count: '{{ count $.hits.hits }}'          # "number of results on this page"
+        done:  '{{ eqx (count $.hits.hits) 0 }}'  # this should evaluate to a truthy value when we're out hits
+        max:   10000                              # a hard cap on the number of results so we don't paginate forever
+        data:  '$.hits.hits'                      # a JSONPath query that will transform the data before putting it in the "data" key in the response
+        params:
+            size:    '{{ qs "limit" 100 }}'       # set the ?size querystring
+            from:    '{{ $.page.counter }}'       # set the ?from querystring to the running results counter
+---
+```
+
+### JSONPath Expressions
+
+Bindings support a flexible mechanism for transforming response data as read from the binding resource.  JSONPath is similar to XPath expressions that allow for data to be selected and filtered from objects and arrays.
+
+* [JSONPath Overview](https://goessner.net/articles/JsonPath/)
+* [Expression Tester](https://jsonpath.com/)
 
 ### Postprocessors
 
