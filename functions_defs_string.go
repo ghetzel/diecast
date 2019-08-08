@@ -6,6 +6,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/rxutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -221,10 +222,6 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 				Name: `join`,
 				Summary: `Stringify the given array of values and join them together into a string, ` +
 					`separated by a given separator string.`,
-				Function: func(input interface{}, delimiter string) string {
-					inStr := sliceutil.Stringify(input)
-					return strings.Join(inStr, delimiter)
-				},
 				Arguments: []funcArg{
 					{
 						Name:        `input`,
@@ -234,7 +231,35 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 						Name:        `separator`,
 						Type:        `string`,
 						Description: `The string used to join all elements of the array together.`,
+					}, {
+						Name:        `outerDelimiter`,
+						Type:        `string`,
+						Optional:    true,
+						Description: `If given an object, this string will be used to join successive key-value pairs.`,
 					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `join [1, 2, 3] ","`,
+						Return: `1,2,3`,
+					}, {
+						Code:   `join {"a": 1, "b": 2, "c": 3} "=" "&"`,
+						Return: `a=1&b=2&c=3`,
+					},
+				},
+				Function: func(input interface{}, delimiter string, outerDelimiter ...string) string {
+					if typeutil.IsMap(input) {
+						od := ``
+
+						if len(outerDelimiter) > 0 {
+							od = outerDelimiter[0]
+						}
+
+						return maputil.Join(input, delimiter, od)
+					} else {
+						inStr := sliceutil.Stringify(input)
+						return strings.Join(inStr, delimiter)
+					}
 				},
 			}, {
 				Name: `strcount`,

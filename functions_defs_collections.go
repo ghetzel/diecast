@@ -1163,7 +1163,75 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 					return maputil.DeepCopy(input)
 				},
 			}, {
+				Name:    `onlyKeys`,
+				Summary: `Return the given object with only the specified keys included.`,
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `object`,
+						Description: `The object to filter.`,
+					}, {
+						Name:        `keys`,
+						Type:        `string`,
+						Description: `Zero or more keys to include in the output.`,
+						Optional:    true,
+						Variadic:    true,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code: `onlyKeys {"a": 1, "b": 2, "c": 3} "a" "c"`,
+						Return: map[string]interface{}{
+							`a`: 1,
+							`c`: 3,
+						},
+					},
+				},
+				Function: func(input interface{}, keys ...string) map[string]interface{} {
+					out := maputil.DeepCopy(input)
 
+					for k, _ := range out {
+						if !sliceutil.ContainsString(keys, k) {
+							delete(out, k)
+						}
+					}
+
+					return out
+				},
+			}, {
+				Name:    `exceptKeys`,
+				Summary: `Return the given object with the specified keys removed.`,
+				Arguments: []funcArg{
+					{
+						Name:        `in`,
+						Type:        `object`,
+						Description: `The object to filter.`,
+					}, {
+						Name:        `keys`,
+						Type:        `string`,
+						Description: `Zero or more keys to exclude from the output.`,
+						Optional:    true,
+						Variadic:    true,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code: `exceptKeys {"a": 1, "b": 2, "c": 3} "a" "c"`,
+						Return: map[string]interface{}{
+							`b`: 2,
+						},
+					},
+				},
+				Function: func(input interface{}, keys ...string) map[string]interface{} {
+					out := maputil.DeepCopy(input)
+
+					for _, key := range keys {
+						delete(out, key)
+					}
+
+					return out
+				},
+			}, {
 				Name: `groupBy`,
 				Summary: `Return the given array of objects as a grouped object, keyed on the ` +
 					`value of the specified group field. The field argument can be an ` +

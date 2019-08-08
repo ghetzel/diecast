@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/url"
 
+	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
@@ -247,6 +248,22 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 				},
 				Function: func(value string) (string, error) {
 					return url.PathUnescape(value)
+				},
+			}, {
+				Name:    `url`,
+				Summary: `Builds a URL with querystrings from the given base URL string and object.`,
+				Function: func(base string, queries ...map[string]interface{}) (string, error) {
+					if u, err := url.Parse(base); err == nil {
+						for _, qs := range queries {
+							for k, v := range qs {
+								httputil.SetQ(u, k, v)
+							}
+						}
+
+						return u.String(), nil
+					} else {
+						return ``, err
+					}
 				},
 			},
 		},
