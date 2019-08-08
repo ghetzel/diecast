@@ -696,6 +696,9 @@ Diecast runtime directory:</p>
             <a href="#fn-diffuse">diffuse</a>
         </li>
         <li>
+            <a href="#fn-exceptKeys">exceptKeys</a>
+        </li>
+        <li>
             <a href="#fn-filter">filter</a>
         </li>
         <li>
@@ -754,6 +757,9 @@ Diecast runtime directory:</p>
         </li>
         <li>
             <a href="#fn-mostcommon">mostcommon</a>
+        </li>
+        <li>
+            <a href="#fn-onlyKeys">onlyKeys</a>
         </li>
         <li>
             <a href="#fn-page">page</a>
@@ -938,6 +944,9 @@ Diecast runtime directory:</p>
         </li>
         <li>
             <a href="#fn-unsafe">unsafe</a>
+        </li>
+        <li>
+            <a href="#fn-url">url</a>
         </li>
         <li>
             <a href="#fn-urlPathDecode">urlPathDecode</a>
@@ -1767,6 +1776,54 @@ Diecast runtime directory:</p>
       &#34;do stuff&#34;
     ]
   }
+}</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-exceptKeys">
+        <h4 class="mt-3">
+            exceptKeys
+            <a href="#fn-exceptKeys" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>exceptKeys IN [KEYS ...]</code>
+        </div>
+        <p>Return the given object with the specified keys removed.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>IN</pre></th>
+                    <td>object</td>
+                    <td>
+                        <p>The object to filter.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>KEYS</pre></th>
+                    <td>string (1+)</td>
+                    <td>
+                        <p>Zero or more keys to exclude from the output.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-exceptKeys-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>exceptKeys {&#34;a&#34;: 1, &#34;b&#34;: 2, &#34;c&#34;: 3} &#34;a&#34; &#34;c&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">{
+  &#34;b&#34;: 2
 }</p>
             </div>
         </div>
@@ -2729,6 +2786,55 @@ Diecast runtime directory:</p>
             <div class="example" id="fn-mostcommon-example-0">
                 <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>mostcommon [&#34;a&#34;, &#34;a&#34;, &#34;b&#34;, &#34;b&#34;, &#34;b&#34;, &#34;c&#34;]<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">&#34;b&#34;</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-onlyKeys">
+        <h4 class="mt-3">
+            onlyKeys
+            <a href="#fn-onlyKeys" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>onlyKeys IN [KEYS ...]</code>
+        </div>
+        <p>Return the given object with only the specified keys included.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>IN</pre></th>
+                    <td>object</td>
+                    <td>
+                        <p>The object to filter.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>KEYS</pre></th>
+                    <td>string (1+)</td>
+                    <td>
+                        <p>Zero or more keys to include in the output.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-onlyKeys-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>onlyKeys {&#34;a&#34;: 1, &#34;b&#34;: 2, &#34;c&#34;: 3} &#34;a&#34; &#34;c&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">{
+  &#34;a&#34;: 1,
+  &#34;c&#34;: 3
+}</p>
             </div>
         </div>
     </section>
@@ -5110,6 +5216,19 @@ Diecast runtime directory:</p>
             </tbody>
         </table>
     </section>
+    <section class="function" id="fn-url">
+        <h4 class="mt-3">
+            url
+            <a href="#fn-url" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>url</code>
+        </div>
+        <p>Builds a URL with querystrings from the given base URL string and object.</p>
+    </section>
     <section class="function" id="fn-urlPathDecode">
         <h4 class="mt-3">
             urlPathDecode
@@ -7374,7 +7493,7 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>join INPUT SEPARATOR</code>
+            <code>join INPUT SEPARATOR [OUTER_DELIMITER]</code>
         </div>
         <p>Stringify the given array of values and join them together into a string, separated by a given separator string.</p>
         <h5>Arguments</h5>
@@ -7401,8 +7520,26 @@ Diecast runtime directory:</p>
                         <p>The string used to join all elements of the array together.</p>
                     </td>
                 </tr>
+                <tr>
+                    <th><pre>OUTERDELIMITER</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>If given an object, this string will be used to join successive key-value pairs.</p>
+                    </td>
+                </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-join-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>join [1, 2, 3] &#34;,&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;1,2,3&#34;</p>
+            </div>
+            <div class="example" id="fn-join-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>join {&#34;a&#34;: 1, &#34;b&#34;: 2, &#34;c&#34;: 3} &#34;=&#34; &#34;&amp;&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;a=1\u0026b=2\u0026c=3&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-lower">
         <h4 class="mt-3">

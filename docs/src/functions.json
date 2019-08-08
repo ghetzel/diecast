@@ -309,9 +309,29 @@
             "Optional": false,
             "Default": null,
             "Valid": null
+          },
+          {
+            "Name": "outerDelimiter",
+            "Type": "string",
+            "Description": "If given an object, this string will be used to join successive key-value pairs.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "join [1, 2, 3] \",\"",
+            "Description": "",
+            "Return": "1,2,3"
+          },
+          {
+            "Code": "join {\"a\": 1, \"b\": 2, \"c\": 3} \"=\" \"\u0026\"",
+            "Description": "",
+            "Return": "a=1\u0026b=2\u0026c=3"
+          }
+        ]
       },
       {
         "Name": "strcount",
@@ -1470,6 +1490,16 @@
             "Valid": null
           }
         ],
+        "Examples": null
+      },
+      {
+        "Name": "url",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Builds a URL with querystrings from the given base URL string and object.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
         "Examples": null
       }
     ],
@@ -4079,6 +4109,81 @@
         "Hidden": false,
         "Arguments": null,
         "Examples": null
+      },
+      {
+        "Name": "onlyKeys",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the given object with only the specified keys included.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "object",
+            "Description": "The object to filter.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "keys",
+            "Type": "string",
+            "Description": "Zero or more keys to include in the output.",
+            "Variadic": true,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "onlyKeys {\"a\": 1, \"b\": 2, \"c\": 3} \"a\" \"c\"",
+            "Description": "",
+            "Return": {
+              "a": 1,
+              "c": 3
+            }
+          }
+        ]
+      },
+      {
+        "Name": "exceptKeys",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the given object with the specified keys removed.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "in",
+            "Type": "object",
+            "Description": "The object to filter.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "keys",
+            "Type": "string",
+            "Description": "Zero or more keys to exclude from the output.",
+            "Variadic": true,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "exceptKeys {\"a\": 1, \"b\": 2, \"c\": 3} \"a\" \"c\"",
+            "Description": "",
+            "Return": {
+              "b": 2
+            }
+          }
+        ]
       },
       {
         "Name": "groupBy",
