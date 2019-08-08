@@ -368,6 +368,16 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						return nil, fmt.Errorf("[%s] Unknown response parser %q", id, self.Parser)
 					}
 
+					if self.server.EnableDebugging {
+						if typeutil.IsArray(rv) || typeutil.IsMap(rv) {
+							if debugBody, err := json.MarshalIndent(rv, ``, `  `); err == nil {
+								for _, line := range stringutil.SplitLines(debugBody, "\n") {
+									log.Debugf("[%s]  [B] %s", id, line)
+								}
+							}
+						}
+					}
+
 					return ApplyJPath(rv, self.Transform)
 				} else {
 					return nil, nil
