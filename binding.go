@@ -130,7 +130,7 @@ type Binding struct {
 	OnError BindingErrorAction `json:"on_error,omitempty"`
 
 	// Actions to take in response to specific numeric response status codes.
-	IfStatus map[int]BindingErrorAction `json:"if_status,omitempty"`
+	IfStatus map[string]BindingErrorAction `json:"if_status,omitempty"`
 
 	// A templated value that yields an array.  The binding request will be performed once for each array element, wherein
 	// the Resource value is passed into a template that includes the $index and $item variables, which represent the repeat
@@ -252,8 +252,23 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 			// handle per-http-status response handlers
 			if len(self.IfStatus) > 0 && response.StatusCode > 0 {
+				var statusAction BindingErrorAction
+				nxx := typeutil.String(response.StatusCode - (response.StatusCode % 100))
+				nxx = strings.Replace(nxx, `0`, `x`, -1)
+				nXX := strings.Replace(nxx, `0`, `X`, -1)
+
 				// get the action for this code
-				if statusAction, ok := self.IfStatus[response.StatusCode]; ok {
+				if sa, ok := self.IfStatus[typeutil.String(response.StatusCode)]; ok && sa != `` {
+					statusAction = sa
+				} else if sa, ok := self.IfStatus[nxx]; ok && sa != `` {
+					statusAction = sa
+				} else if sa, ok := self.IfStatus[nXX]; ok && sa != `` {
+					statusAction = sa
+				} else if sa, ok := self.IfStatus[`*`]; ok && sa != `` {
+					statusAction = sa
+				}
+
+				if statusAction != `` {
 					statusAction = BindingErrorAction(MustEvalInline(string(statusAction), data, funcs))
 
 					switch statusAction {
