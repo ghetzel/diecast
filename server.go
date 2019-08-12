@@ -29,7 +29,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/biessek/golang-ico"
+	ico "github.com/biessek/golang-ico"
 	"github.com/fatih/structs"
 	"github.com/ghetzel/go-stockutil/executil"
 	"github.com/ghetzel/go-stockutil/fileutil"

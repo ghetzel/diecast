@@ -14,6 +14,7 @@ import (
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/sliceutil"
+	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
@@ -35,6 +36,7 @@ type ProxyMount struct {
 	StripPathPrefix     string                 `json:"strip_path_prefix"`
 	AppendPathPrefix    string                 `json:"append_path_prefix"`
 	Insecure            bool                   `json:"insecure"`
+	Final               bool                   `json:"final"`
 	Client              *http.Client
 	urlRewriteFrom      string
 	urlRewriteTo        string
@@ -224,7 +226,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 				response.ContentLength,
 			)
 
-			if response.StatusCode < 400 || self.PassthroughErrors {
+			if !self.Final && (response.StatusCode < 400 || self.PassthroughErrors) {
 				var responseBody io.Reader
 
 				if body, err := httputil.DecodeResponse(response); err == nil {
@@ -256,12 +258,18 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 					return nil, fmt.Errorf("proxy response: %v", err)
 				}
 			} else {
-				// if data, err := ioutil.ReadAll(response.Body); err == nil {
-				// 	for _, line := range stringutil.SplitLines(data, "\n") {
-				// 		log.Debugf("  [B] %s", line)
-				// 	}
-				// }
-				// log.Debugf("  %s %s: %s", method, newReq.URL, response.Status)
+				if data, err := ioutil.ReadAll(response.Body); err == nil {
+					for _, line := range stringutil.SplitLines(data, "\n") {
+						log.Debugf("  [B] %s", line)
+					}
+				}
+
+				log.Debugf("  %s %s: %s", method, newReq.URL, response.Status)
+
+				if self.Final {
+					log.Debugf("  FINAL: mount failed and will return now")
+				}
+
 				return nil, MountHaltErr
 			}
 		} else {
