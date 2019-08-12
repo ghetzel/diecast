@@ -23,6 +23,8 @@ import (
 	"github.com/oliveagle/jsonpath"
 )
 
+var DefaultBindingTimeout = 10 * time.Second
+
 var registeredProtocols = map[string]Protocol{
 	``:      new(HttpProtocol),
 	`http`:  new(HttpProtocol),
