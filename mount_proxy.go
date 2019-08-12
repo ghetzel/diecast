@@ -36,7 +36,6 @@ type ProxyMount struct {
 	StripPathPrefix     string                 `json:"strip_path_prefix"`
 	AppendPathPrefix    string                 `json:"append_path_prefix"`
 	Insecure            bool                   `json:"insecure"`
-	Final               bool                   `json:"final"`
 	Client              *http.Client
 	urlRewriteFrom      string
 	urlRewriteTo        string
@@ -226,7 +225,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 				response.ContentLength,
 			)
 
-			if !self.Final && (response.StatusCode < 400 || self.PassthroughErrors) {
+			if response.StatusCode < 400 || self.PassthroughErrors {
 				var responseBody io.Reader
 
 				if body, err := httputil.DecodeResponse(response); err == nil {
@@ -265,10 +264,6 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 				}
 
 				log.Debugf("  %s %s: %s", method, newReq.URL, response.Status)
-
-				if self.Final {
-					log.Debugf("  FINAL: mount failed and will return now")
-				}
 
 				return nil, MountHaltErr
 			}
