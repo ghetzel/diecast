@@ -80,7 +80,6 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 			}
 
 			dV := options.Data
-			log.Dump(dV[`bindings`])
 			delete(dV, `bindings`)
 
 			if data, err := yaml.Marshal(dV); err == nil {
