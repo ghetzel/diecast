@@ -58,6 +58,8 @@ func IsDirectoryErr(err error) bool {
 	return (err == DirectoryErr)
 }
 
+const DefaultQueryJoiner = `,`
+const DefaultHeaderJoiner = `,`
 const DefaultAddress = `127.0.0.1:28419`
 const DefaultRoutePrefix = `/`
 const DefaultConfigFile = `diecast.yml`
@@ -1666,7 +1668,9 @@ func SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, erro
 			parts := bytes.SplitN(data, HeaderSeparator, 3)
 
 			if len(parts) == 3 {
-				header := TemplateHeader{}
+				header := TemplateHeader{
+					QueryJoiner: DefaultQueryJoiner,
+				}
 
 				if parts[1] != nil {
 					header.lines = len(strings.Split(string(parts[1]), "\n"))
@@ -1948,6 +1952,8 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 	request := make(map[string]interface{})
 	qs := make(map[string]interface{})
 	hdr := make(map[string]interface{})
+	qj := DefaultQueryJoiner
+	hj := DefaultHeaderJoiner
 
 	// query strings
 	// ------------------------------------------------------------------------
@@ -1955,10 +1961,18 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 		for dK, dV := range header.Defaults {
 			qs[dK] = stringutil.Autotype(dV)
 		}
+
+		if header.QueryJoiner != `` {
+			qj = header.QueryJoiner
+		}
+
+		if header.HeaderJoiner != `` {
+			hj = header.HeaderJoiner
+		}
 	}
 
 	for k, v := range req.URL.Query() {
-		if vv := strings.Join(v, `, `); !typeutil.IsZero(vv) {
+		if vv := strings.Join(v, qj); !typeutil.IsZero(vv) {
 			qs[k] = stringutil.Autotype(vv)
 		}
 	}
@@ -1973,7 +1987,7 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 	}
 
 	for k, v := range req.Header {
-		if vv := strings.Join(v, `, `); !typeutil.IsZero(vv) {
+		if vv := strings.Join(v, hj); !typeutil.IsZero(vv) {
 			k = stringutil.Underscore(strings.ToLower(k))
 			hdr[k] = stringutil.Autotype(vv)
 		}

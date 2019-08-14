@@ -440,6 +440,46 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 					return out, nil
 				},
 			}, {
+
+				Name:    `rSortByKey`,
+				Summary: `Same as sortByKey, but reversed.`,
+				Arguments: []funcArg{
+					{
+						Name:        `array`,
+						Type:        `array`,
+						Description: `The array of objects to sort.`,
+					}, {
+						Name:        `key`,
+						Type:        `string`,
+						Description: `The name of the key on each object whose values should determine the order of the output array.`,
+					}, {
+						Name:     `expression`,
+						Type:     `string`,
+						Optional: true,
+						Description: `The "{{ expression }}" to apply to the value at key from each object before determining uniqueness.  ` +
+							`Uses the same expression rules as [filter](#fn-filter)`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code: `rSortByKey [{"name": "Bob"}, {"name": "Mallory"}, {"name": "Alice"}] "name"`,
+						Return: []map[string]interface{}{
+							{"name": "Mallory"},
+							{"name": "Bob"},
+							{"name": "Alice"},
+						},
+					},
+				},
+				Function: func(input interface{}, key string) ([]interface{}, error) {
+					out := sliceutil.Sliceify(input)
+					sort.Slice(out, func(i int, j int) bool {
+						mI := maputil.M(out[i])
+						mJ := maputil.M(out[j])
+						return mI.String(key) > mJ.String(key)
+					})
+					return out, nil
+				},
+			}, {
 				Name:    `pluck`,
 				Summary: `Retrieve a value at the given key from each object in a given array of objects.`,
 				Arguments: []funcArg{

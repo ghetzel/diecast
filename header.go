@@ -60,6 +60,12 @@ type TemplateHeader struct {
 	// the last evaluated value is used.
 	Locale string `json:"locale"`
 
+	// Override the string used to join multiple values of the same query string parameter.
+	QueryJoiner string `json:"query_joiner,omitempty"`
+
+	// Override the string used to join multiple values of the same HTTP header.
+	HeaderJoiner string `json:"header_joiner,omitempty"`
+
 	lines int
 }
 
@@ -74,6 +80,22 @@ func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error
 		Renderer:       sliceutil.OrString(other.Renderer, self.Renderer),    // prefer other, fallback to ours
 		Postprocessors: append(self.Postprocessors, other.Postprocessors...), // ours first, then other's
 		Switch:         append(self.Switch, other.Switch...),                 // ours first, then other's
+	}
+
+	// locale: latest non-empty locale wins
+	if other.Locale != `` {
+		newHeader.Locale = other.Locale
+	} else {
+		newHeader.Locale = self.Locale
+	}
+
+	// joiners
+	if other.QueryJoiner != `` {
+		newHeader.QueryJoiner = other.QueryJoiner
+	}
+
+	if other.HeaderJoiner != `` {
+		newHeader.HeaderJoiner = other.HeaderJoiner
 	}
 
 	// locale: latest non-empty locale wins
