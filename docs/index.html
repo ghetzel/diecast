@@ -768,6 +768,9 @@ Diecast runtime directory:</p>
             <a href="#fn-pluck">pluck</a>
         </li>
         <li>
+            <a href="#fn-rSortByKey">rSortByKey</a>
+        </li>
+        <li>
             <a href="#fn-rest">rest</a>
         </li>
         <li>
@@ -2949,6 +2952,69 @@ Diecast runtime directory:</p>
   &#34;Bob&#34;,
   &#34;Mallory&#34;,
   &#34;Alice&#34;
+]</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-rSortByKey">
+        <h4 class="mt-3">
+            rSortByKey
+            <a href="#fn-rSortByKey" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>rSortByKey ARRAY KEY [EXPRESSION]</code>
+        </div>
+        <p>Same as sortByKey, but reversed.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>ARRAY</pre></th>
+                    <td>array</td>
+                    <td>
+                        <p>The array of objects to sort.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>KEY</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name of the key on each object whose values should determine the order of the output array.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>EXPRESSION</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The “{{ expression }}” to apply to the value at key from each object before determining uniqueness.  Uses the same expression rules as <a href="#fn-filter" rel="nofollow">filter</a></p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-rSortByKey-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>rSortByKey [{&#34;name&#34;: &#34;Bob&#34;}, {&#34;name&#34;: &#34;Mallory&#34;}, {&#34;name&#34;: &#34;Alice&#34;}] &#34;name&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">[
+  {
+    &#34;name&#34;: &#34;Mallory&#34;
+  },
+  {
+    &#34;name&#34;: &#34;Bob&#34;
+  },
+  {
+    &#34;name&#34;: &#34;Alice&#34;
+  }
 ]</p>
             </div>
         </div>
