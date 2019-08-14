@@ -61,7 +61,7 @@ func NewMountFromSpec(spec string) (Mount, error) {
 }
 
 func IsHardStop(err error) bool {
-	if err != nil && err.Error() == `mount halted` {
+	if err == MountHaltErr {
 		return true
 	}
 

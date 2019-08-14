@@ -14,6 +14,7 @@ import (
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/sliceutil"
+	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
@@ -256,12 +257,14 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 					return nil, fmt.Errorf("proxy response: %v", err)
 				}
 			} else {
-				// if data, err := ioutil.ReadAll(response.Body); err == nil {
-				// 	for _, line := range stringutil.SplitLines(data, "\n") {
-				// 		log.Debugf("  [B] %s", line)
-				// 	}
-				// }
-				// log.Debugf("  %s %s: %s", method, newReq.URL, response.Status)
+				if data, err := ioutil.ReadAll(response.Body); err == nil {
+					for _, line := range stringutil.SplitLines(data, "\n") {
+						log.Debugf("  [B] %s", line)
+					}
+				}
+
+				log.Debugf("  %s %s: %s", method, newReq.URL, response.Status)
+
 				return nil, MountHaltErr
 			}
 		} else {

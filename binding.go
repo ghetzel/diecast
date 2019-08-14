@@ -23,6 +23,8 @@ import (
 	"github.com/oliveagle/jsonpath"
 )
 
+var DefaultBindingTimeout = 10 * time.Second
+
 var registeredProtocols = map[string]Protocol{
 	``:      new(HttpProtocol),
 	`http`:  new(HttpProtocol),
@@ -148,11 +150,11 @@ type Binding struct {
 
 	// A specialized repeater configuration that automatically performs pagination on an upstream request, aggregating
 	// the results before returning them.
-	Paginate *PaginatorConfig `json:"paginate"`
+	Paginate *PaginatorConfig `json:"paginate,omitempty"`
 
 	// Specifies a JSONPath expression that can be used to transform the response data received from the binding
 	// into the data that is provided to the template.
-	Transform string `json:"transform"`
+	Transform string `json:"transform,omitempty"`
 
 	server *Server
 }

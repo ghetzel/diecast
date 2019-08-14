@@ -188,8 +188,13 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 			}
 
 			BindingClient.Timeout = timeout
-			log.Noticef("[%s] Binding: timeout=%v", id, BindingClient.Timeout)
 		}
+
+		if BindingClient.Timeout == 0 {
+			BindingClient.Timeout = DefaultBindingTimeout
+		}
+
+		log.Debugf("[%s]  binding: timeout=%v", id, BindingClient.Timeout)
 
 		if request.URL.Scheme == `https` && rr.Binding.Insecure {
 			log.Noticef("[%s] SSL/TLS certificate validation is disabled for this request.", id)
@@ -240,6 +245,12 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 
 			return response, nil
 		} else {
+			if res.StatusCode > 0 {
+				log.Warningf("[%s] Binding: < HTTP %d (body: %d bytes)", id, res.StatusCode, res.ContentLength)
+			} else {
+				log.Warningf("[%s] Binding: < error: %v", id, err)
+			}
+
 			return nil, err
 		}
 	} else {

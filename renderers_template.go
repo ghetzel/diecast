@@ -79,6 +79,17 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 				w.Write([]byte(fmt.Sprintf("{{/* COMBINED HEADER: error: %v */}}\n", err)))
 			}
 
+			dV := options.Data
+			delete(dV, `bindings`)
+
+			if data, err := yaml.Marshal(dV); err == nil {
+				w.Write([]byte("{{/* BEGIN DATA --\n"))
+				w.Write(data)
+				w.Write([]byte("\n-- END DATA */}}\n"))
+			} else {
+				w.Write([]byte(fmt.Sprintf("{{/* DATA: error: %v */}}\n", err)))
+			}
+
 			if _, err := w.Write(options.Fragments.DebugOutput()); err != nil {
 				return err
 			}
