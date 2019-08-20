@@ -1,12 +1,15 @@
 package diecast
 
 import (
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"html/template"
 	"net/url"
 
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	base58 "github.com/jbenet/go-base58"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
 )
@@ -263,6 +266,231 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						return u.String(), nil
 					} else {
 						return ``, err
+					}
+				},
+			}, {
+				Name:    `hex`,
+				Summary: `Encode the given value as a hexadecimal string.`,
+				Arguments: []funcArg{
+					{
+						Name: `input`,
+						Type: `string, bytes`,
+						Description: `The value to encode. If a byte array is provided, it will be encoded in ` +
+							`hexadecimal. If a string is provided, it will converted to a byte array first, then encoded.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `hex "hello"`,
+						Return: `68656c6c6f`,
+					},
+				},
+				Function: func(input interface{}) (string, error) {
+					return hex.EncodeToString(toBytes(input)), nil
+				},
+			}, {
+				Name:    `base32`,
+				Summary: `Encode the given bytes with the Base32 encoding scheme.`,
+				Arguments: []funcArg{
+					{
+						Name: `input`,
+						Type: `string, bytes`,
+						Description: `The value to encode. If a byte array is provided, it will be encoded directly. ` +
+							`If a string is provided, it will converted to a byte array first, then encoded.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `base32 "hello"`,
+						Return: `nbswy3dp`,
+					},
+				},
+				Function: func(input interface{}) string {
+					return Base32Alphabet.EncodeToString(toBytes(input))
+				},
+			}, {
+				Name:    `base58`,
+				Summary: `Encode the given bytes with the Base58 (Bitcoin alphabet) encoding scheme.`,
+				Function: func(input interface{}) string {
+					return base58.Encode(toBytes(input))
+				},
+			}, {
+				Name:    `base64`,
+				Summary: `Encode the given bytes with the Base64 encoding scheme.  Optionally specify the encoding mode: one of "padded", "url", "url-padded", or empty (unpadded, default).`,
+				Arguments: []funcArg{
+					{
+						Name: `input`,
+						Type: `string, bytes`,
+						Description: `The value to encode. If a byte array is provided, it will be encoded directly. ` +
+							`If a string is provided, it will converted to a byte array first, then encoded.`,
+					}, {
+						Name:        `encoding`,
+						Type:        `string`,
+						Optional:    true,
+						Description: `Specify an encoding option for generating the Base64 representation.`,
+						Valid: []funcArg{
+							{
+								Name:        `standard`,
+								Description: `Standard Base-64 encoding scheme, no padding.`,
+							}, {
+								Name:        `padded`,
+								Description: `Standard Base-64 encoding scheme, preserves padding.`,
+							}, {
+								Name:        `url`,
+								Description: `Encoding that can be used in URLs and filenames, no padding.`,
+							}, {
+								Name:        `url-padded`,
+								Description: `Encoding that can be used in URLs and filenames, preserves padding.`,
+							},
+						},
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `base64 "hello?yes=this&is=dog#"`,
+						Return: `aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw`,
+					}, {
+						Description: `This is identical to the above example, but with the encoding explicitly specified.`,
+						Code:        `base64 "hello?yes=this&is=dog#" "standard"`,
+						Return:      `aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw`,
+					}, {
+						Code:   `base64 "hello?yes=this&is=dog#" "padded"`,
+						Return: `aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==`,
+					}, {
+						Code:   `base64 "hello?yes=this&is=dog#" "url"`,
+						Return: `aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw`,
+					}, {
+						Code:   `base64 "hello?yes=this&is=dog#" "url-padded"`,
+						Return: `aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw==`,
+					},
+				},
+				Function: func(input interface{}, encoding ...string) string {
+					if len(encoding) == 0 {
+						encoding = []string{`standard`}
+					}
+
+					switch encoding[0] {
+					case `padded`:
+						return base64.StdEncoding.EncodeToString(toBytes(input))
+					case `url`:
+						return base64.RawURLEncoding.EncodeToString(toBytes(input))
+					case `url-padded`:
+						return base64.URLEncoding.EncodeToString(toBytes(input))
+					default:
+						return base64.RawStdEncoding.EncodeToString(toBytes(input))
+					}
+				},
+			},
+
+			{
+				Name:    `unhex`,
+				Summary: `Decode the given hexadecimal string into bytes.`,
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `string`,
+						Description: `The value to decode into a byte array.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `unhex "68656c6c6f"`,
+						Return: []byte{'h', 'e', 'l', 'l', 'o'},
+					},
+				},
+				Function: func(input interface{}) ([]byte, error) {
+					return hex.DecodeString(typeutil.String(input))
+				},
+			}, {
+				Name:    `unbase32`,
+				Summary: `Decode the given Base32-encoded string into bytes.`,
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `string`,
+						Description: `The string to decode.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `unbase32 "nbswy3dp"`,
+						Return: []byte{'h', 'e', 'l', 'l', 'o'},
+					},
+				},
+				Function: func(input interface{}) ([]byte, error) {
+					return Base32Alphabet.DecodeString(typeutil.String(input))
+				},
+			}, {
+				Name:    `unbase58`,
+				Summary: `Decode the given Base58-encoded string (Bitcoin alphabet) into bytes.`,
+				Function: func(input interface{}) []byte {
+					return base58.Decode(typeutil.String(input))
+				},
+			}, {
+				Name:    `unbase64`,
+				Summary: `Decode the given Base64-encoded string into bytes.`,
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `string`,
+						Description: `The string to decode.`,
+					}, {
+						Name:        `encoding`,
+						Type:        `string`,
+						Optional:    true,
+						Description: `Specify the encoding of the input string.`,
+						Valid: []funcArg{
+							{
+								Name:        `standard`,
+								Description: `Standard Base-64 encoding scheme, no padding.`,
+							}, {
+								Name:        `padded`,
+								Description: `Standard Base-64 encoding scheme, preserves padding.`,
+							}, {
+								Name:        `url`,
+								Description: `Encoding that can be used in URLs and filenames, no padding.`,
+							}, {
+								Name:        `url-padded`,
+								Description: `Encoding that can be used in URLs and filenames, preserves padding.`,
+							},
+						},
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `unbase64 "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw"`,
+						Return: []byte("hello?yes=this&is=dog#"),
+					}, {
+						Description: `This is identical to the above example, but with the encoding explicitly specified.`,
+						Code:        `unbase64 "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw" "standard"`,
+						Return:      []byte("hello?yes=this&is=dog#"),
+					}, {
+						Code:   `unbase64 "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==" "padded"`,
+						Return: []byte("hello?yes=this&is=dog#"),
+					}, {
+						Code:   `unbase64 "aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw" "url"`,
+						Return: []byte("hello?yes=this&is=dog#"),
+					}, {
+						Code:   `unbase64 "aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw==" "url-padded"`,
+						Return: []byte("hello?yes=this&is=dog#"),
+					},
+				},
+				Function: func(input interface{}, encoding ...string) ([]byte, error) {
+					if len(encoding) == 0 {
+						encoding = []string{`standard`}
+					}
+
+					s := typeutil.String(input)
+
+					switch encoding[0] {
+					case `padded`:
+						return base64.StdEncoding.DecodeString(s)
+					case `url`:
+						return base64.RawURLEncoding.DecodeString(s)
+					case `url-padded`:
+						return base64.URLEncoding.DecodeString(s)
+					default:
+						return base64.RawStdEncoding.DecodeString(s)
 					}
 				},
 			},

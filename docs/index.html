@@ -931,7 +931,19 @@ Diecast runtime directory:</p>
     </summary>
     <ul>
         <li>
+            <a href="#fn-base32">base32</a>
+        </li>
+        <li>
+            <a href="#fn-base58">base58</a>
+        </li>
+        <li>
+            <a href="#fn-base64">base64</a>
+        </li>
+        <li>
             <a href="#fn-csv">csv</a>
+        </li>
+        <li>
+            <a href="#fn-hex">hex</a>
         </li>
         <li>
             <a href="#fn-jsonify">jsonify</a>
@@ -944,6 +956,18 @@ Diecast runtime directory:</p>
         </li>
         <li>
             <a href="#fn-tsv">tsv</a>
+        </li>
+        <li>
+            <a href="#fn-unbase32">unbase32</a>
+        </li>
+        <li>
+            <a href="#fn-unbase58">unbase58</a>
+        </li>
+        <li>
+            <a href="#fn-unbase64">unbase64</a>
+        </li>
+        <li>
+            <a href="#fn-unhex">unhex</a>
         </li>
         <li>
             <a href="#fn-unsafe">unsafe</a>
@@ -1066,18 +1090,6 @@ Diecast runtime directory:</p>
         <a href="#hashing-and-cryptography">Hashing and Cryptography</a>
     </summary>
     <ul>
-        <li>
-            <a href="#fn-base32">base32</a>
-        </li>
-        <li>
-            <a href="#fn-base58">base58</a>
-        </li>
-        <li>
-            <a href="#fn-base64">base64</a>
-        </li>
-        <li>
-            <a href="#fn-hex">hex</a>
-        </li>
         <li>
             <a href="#fn-md5">md5</a>
         </li>
@@ -4992,6 +5004,145 @@ Diecast runtime directory:</p>
         <p><p>For encoding typed data and data structures into well-known formats like JSON, CSV, and TSV.</p>
 </p>
     </header>
+    <section class="function" id="fn-base32">
+        <h4 class="mt-3">
+            base32
+            <a href="#fn-base32" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>base32 INPUT</code>
+        </div>
+        <p>Encode the given bytes with the Base32 encoding scheme.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>INPUT</pre></th>
+                    <td>string, bytes</td>
+                    <td>
+                        <p>The value to encode. If a byte array is provided, it will be encoded directly. If a string is provided, it will converted to a byte array first, then encoded.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-base32-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>base32 &#34;hello&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;nbswy3dp&#34;</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-base58">
+        <h4 class="mt-3">
+            base58
+            <a href="#fn-base58" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>base58</code>
+        </div>
+        <p>Encode the given bytes with the Base58 (Bitcoin alphabet) encoding scheme.</p>
+    </section>
+    <section class="function" id="fn-base64">
+        <h4 class="mt-3">
+            base64
+            <a href="#fn-base64" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>base64 INPUT [ENCODING]</code>
+        </div>
+        <p>Encode the given bytes with the Base64 encoding scheme.  Optionally specify the encoding mode: one of “padded”, “url”, “url-padded”, or empty (unpadded, default).</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>INPUT</pre></th>
+                    <td>string, bytes</td>
+                    <td>
+                        <p>The value to encode. If a byte array is provided, it will be encoded directly. If a string is provided, it will converted to a byte array first, then encoded.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>ENCODING</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>Specify an encoding option for generating the Base64 representation.</p>
+                        <i class="d-block mt-2">Acceptable Values:</i>
+                        <table class="table table-sm mt-2">
+                            <tr>
+                                <td><code>&#34;standard&#34;</code></td>
+                                <td><p>Standard Base-64 encoding scheme, no padding.</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;padded&#34;</code></td>
+                                <td><p>Standard Base-64 encoding scheme, preserves padding.</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;url&#34;</code></td>
+                                <td><p>Encoding that can be used in URLs and filenames, no padding.</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;url-padded&#34;</code></td>
+                                <td><p>Encoding that can be used in URLs and filenames, preserves padding.</p>
+</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-base64-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>base64 &#34;hello?yes=this&amp;is=dog#&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw&#34;</p>
+            </div>
+            <div class="example" id="fn-base64-example-1">
+                <h6><p>This is identical to the above example, but with the encoding explicitly specified.</p>
+</h6>
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>base64 &#34;hello?yes=this&amp;is=dog#&#34; &#34;standard&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw&#34;</p>
+            </div>
+            <div class="example" id="fn-base64-example-2">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>base64 &#34;hello?yes=this&amp;is=dog#&#34; &#34;padded&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
+            </div>
+            <div class="example" id="fn-base64-example-3">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>base64 &#34;hello?yes=this&amp;is=dog#&#34; &#34;url&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw&#34;</p>
+            </div>
+            <div class="example" id="fn-base64-example-4">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>base64 &#34;hello?yes=this&amp;is=dog#&#34; &#34;url-padded&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
+            </div>
+        </div>
+    </section>
     <section class="function" id="fn-csv">
         <h4 class="mt-3">
             csv
@@ -5030,6 +5181,45 @@ Diecast runtime directory:</p>
                 </tr>
             </tbody>
         </table>
+    </section>
+    <section class="function" id="fn-hex">
+        <h4 class="mt-3">
+            hex
+            <a href="#fn-hex" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>hex INPUT</code>
+        </div>
+        <p>Encode the given value as a hexadecimal string.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>INPUT</pre></th>
+                    <td>string, bytes</td>
+                    <td>
+                        <p>The value to encode. If a byte array is provided, it will be encoded in hexadecimal. If a string is provided, it will converted to a byte array first, then encoded.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-hex-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>hex &#34;hello&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;68656c6c6f&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-jsonify">
         <h4 class="mt-3">
@@ -5249,6 +5439,184 @@ Diecast runtime directory:</p>
                 </tr>
             </tbody>
         </table>
+    </section>
+    <section class="function" id="fn-unbase32">
+        <h4 class="mt-3">
+            unbase32
+            <a href="#fn-unbase32" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>unbase32 INPUT</code>
+        </div>
+        <p>Decode the given Base32-encoded string into bytes.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>INPUT</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The string to decode.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-unbase32-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>unbase32 &#34;nbswy3dp&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;aGVsbG8=&#34;</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-unbase58">
+        <h4 class="mt-3">
+            unbase58
+            <a href="#fn-unbase58" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>unbase58</code>
+        </div>
+        <p>Decode the given Base58-encoded string (Bitcoin alphabet) into bytes.</p>
+    </section>
+    <section class="function" id="fn-unbase64">
+        <h4 class="mt-3">
+            unbase64
+            <a href="#fn-unbase64" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>unbase64 INPUT [ENCODING]</code>
+        </div>
+        <p>Decode the given Base64-encoded string into bytes.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>INPUT</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The string to decode.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>ENCODING</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>Specify the encoding of the input string.</p>
+                        <i class="d-block mt-2">Acceptable Values:</i>
+                        <table class="table table-sm mt-2">
+                            <tr>
+                                <td><code>&#34;standard&#34;</code></td>
+                                <td><p>Standard Base-64 encoding scheme, no padding.</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;padded&#34;</code></td>
+                                <td><p>Standard Base-64 encoding scheme, preserves padding.</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;url&#34;</code></td>
+                                <td><p>Encoding that can be used in URLs and filenames, no padding.</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;url-padded&#34;</code></td>
+                                <td><p>Encoding that can be used in URLs and filenames, preserves padding.</p>
+</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-unbase64-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>unbase64 &#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
+            </div>
+            <div class="example" id="fn-unbase64-example-1">
+                <h6><p>This is identical to the above example, but with the encoding explicitly specified.</p>
+</h6>
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>unbase64 &#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw&#34; &#34;standard&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
+            </div>
+            <div class="example" id="fn-unbase64-example-2">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>unbase64 &#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34; &#34;padded&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
+            </div>
+            <div class="example" id="fn-unbase64-example-3">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>unbase64 &#34;aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw&#34; &#34;url&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
+            </div>
+            <div class="example" id="fn-unbase64-example-4">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>unbase64 &#34;aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw==&#34; &#34;url-padded&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-unhex">
+        <h4 class="mt-3">
+            unhex
+            <a href="#fn-unhex" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>unhex INPUT</code>
+        </div>
+        <p>Decode the given hexadecimal string into bytes.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm table-responsive w-100">
+            <thead>
+                <tr>
+                    <th class="col-2">Name</th>
+                    <th class="col-2">Data Type</th>
+                    <th class="col">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>INPUT</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The value to decode into a byte array.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-unhex-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>unhex &#34;68656c6c6f&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;aGVsbG8=&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-unsafe">
         <h4 class="mt-3">
@@ -6310,184 +6678,6 @@ Diecast runtime directory:</p>
         <p><p>These functions provide basic cryptographic and non-cryptographic functions, including cryptographically-secure random number generation.</p>
 </p>
     </header>
-    <section class="function" id="fn-base32">
-        <h4 class="mt-3">
-            base32
-            <a href="#fn-base32" class="text-body ml-2">
-                <i class="fa fa-link"></i>
-            </a>
-        </h4>
-        <div class="mb-1">
-            <i>Usage:</i>
-            <code>base32 INPUT</code>
-        </div>
-        <p>Encode the given bytes with the Base32 encoding scheme.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm table-responsive w-100">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th><pre>INPUT</pre></th>
-                    <td>string, bytes</td>
-                    <td>
-                        <p>The value to encode. If a byte array is provided, it will be encoded directly. If a string is provided, it will converted to a byte array first, then encoded.</p>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <div class="examples">
-            <div class="example" id="fn-base32-example-0">
-                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>base32 &#34;hello&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
-                <p class="returns">&#34;nbswy3dp&#34;</p>
-            </div>
-        </div>
-    </section>
-    <section class="function" id="fn-base58">
-        <h4 class="mt-3">
-            base58
-            <a href="#fn-base58" class="text-body ml-2">
-                <i class="fa fa-link"></i>
-            </a>
-        </h4>
-        <div class="mb-1">
-            <i>Usage:</i>
-            <code>base58</code>
-        </div>
-        <p>Encode the given bytes with the Base58 (Bitcoin alphabet) encoding scheme.</p>
-    </section>
-    <section class="function" id="fn-base64">
-        <h4 class="mt-3">
-            base64
-            <a href="#fn-base64" class="text-body ml-2">
-                <i class="fa fa-link"></i>
-            </a>
-        </h4>
-        <div class="mb-1">
-            <i>Usage:</i>
-            <code>base64 INPUT [ENCODING]</code>
-        </div>
-        <p>Encode the given bytes with the Base64 encoding scheme.  Optionally specify the encoding mode: one of “padded”, “url”, “url-padded”, or empty (unpadded, default).</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm table-responsive w-100">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th><pre>INPUT</pre></th>
-                    <td>string, bytes</td>
-                    <td>
-                        <p>The value to encode. If a byte array is provided, it will be encoded directly. If a string is provided, it will converted to a byte array first, then encoded.</p>
-                    </td>
-                </tr>
-                <tr>
-                    <th><pre>ENCODING</pre></th>
-                    <td>string</td>
-                    <td>
-                        <p>Specify an encoding option for generating the Base64 representation.</p>
-                        <i class="d-block mt-2">Acceptable Values:</i>
-                        <table class="table table-sm mt-2">
-                            <tr>
-                                <td><code>&#34;standard&#34;</code></td>
-                                <td><p>Standard Base-64 encoding scheme, no padding.</p>
-</td>
-                            </tr>
-                            <tr>
-                                <td><code>&#34;padded&#34;</code></td>
-                                <td><p>Standard Base-64 encoding scheme, preserves padding.</p>
-</td>
-                            </tr>
-                            <tr>
-                                <td><code>&#34;url&#34;</code></td>
-                                <td><p>Encoding that can be used in URLs and filenames, no padding.</p>
-</td>
-                            </tr>
-                            <tr>
-                                <td><code>&#34;url-padded&#34;</code></td>
-                                <td><p>Encoding that can be used in URLs and filenames, preserves padding.</p>
-</td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <div class="examples">
-            <div class="example" id="fn-base64-example-0">
-                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>base64 &#34;hello?yes=this&amp;is=dog#&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
-                <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw&#34;</p>
-            </div>
-            <div class="example" id="fn-base64-example-1">
-                <h6><p>This is identical to the above example, but with the encoding explicitly specified.</p>
-</h6>
-                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>base64 &#34;hello?yes=this&amp;is=dog#&#34; &#34;standard&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
-                <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw&#34;</p>
-            </div>
-            <div class="example" id="fn-base64-example-2">
-                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>base64 &#34;hello?yes=this&amp;is=dog#&#34; &#34;padded&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
-                <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
-            </div>
-            <div class="example" id="fn-base64-example-3">
-                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>base64 &#34;hello?yes=this&amp;is=dog#&#34; &#34;url&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
-                <p class="returns">&#34;aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw&#34;</p>
-            </div>
-            <div class="example" id="fn-base64-example-4">
-                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>base64 &#34;hello?yes=this&amp;is=dog#&#34; &#34;url-padded&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
-                <p class="returns">&#34;aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
-            </div>
-        </div>
-    </section>
-    <section class="function" id="fn-hex">
-        <h4 class="mt-3">
-            hex
-            <a href="#fn-hex" class="text-body ml-2">
-                <i class="fa fa-link"></i>
-            </a>
-        </h4>
-        <div class="mb-1">
-            <i>Usage:</i>
-            <code>hex INPUT</code>
-        </div>
-        <p>Encode the given value as a hexadecimal string.</p>
-        <h5>Arguments</h5>
-        <table class="table table-sm table-responsive w-100">
-            <thead>
-                <tr>
-                    <th class="col-2">Name</th>
-                    <th class="col-2">Data Type</th>
-                    <th class="col">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th><pre>INPUT</pre></th>
-                    <td>string, bytes</td>
-                    <td>
-                        <p>The value to encode. If a byte array is provided, it will be encoded in hexadecimal. If a string is provided, it will converted to a byte array first, then encoded.</p>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <h5>Examples</h5>
-        <div class="examples">
-            <div class="example" id="fn-hex-example-0">
-                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>hex &#34;hello&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
-                <p class="returns">&#34;68656c6c6f&#34;</p>
-            </div>
-        </div>
-    </section>
     <section class="function" id="fn-md5">
         <h4 class="mt-3">
             md5

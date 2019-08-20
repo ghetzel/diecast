@@ -67,3 +67,23 @@ func TestMiscFunctions(t *testing.T) {
 		assert.True(v >= -100 && v < 101)
 	}
 }
+
+// TODO: Wanna make this idea work...
+//
+// func TestDocExamples(t *testing.T) {
+// 	assert := optassert.New(t)
+// 	docGroups, funcs := GetFunctions(nil)
+
+// 	for _, group := range docGroups {
+// 		for _, fnDoc := range group.Functions {
+// 			for _, example := range fnDoc.Examples {
+// 				name := fmt.Sprintf("test:fn(%s):%s", group.Name, fnDoc.Name)
+
+// 				tpl := NewTemplate(name, TextEngine)
+// 				tpl.Funcs(funcs)
+
+// 				assert.NoError(tpl.ParseString(`{{ `+example.Code+`}}`), name)
+// 			}
+// 		}
+// 	}
+// }

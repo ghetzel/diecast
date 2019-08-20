@@ -12,6 +12,7 @@ import (
 	"github.com/h2non/filetype"
 )
 
+// A FileMount exposes the contents of a given filesystem directory.
 type FileMount struct {
 	MountPoint  string          `json:"mount"`
 	Path        string          `json:"source"`

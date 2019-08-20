@@ -1501,6 +1501,314 @@
         "Hidden": false,
         "Arguments": null,
         "Examples": null
+      },
+      {
+        "Name": "hex",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Encode the given value as a hexadecimal string.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string, bytes",
+            "Description": "The value to encode. If a byte array is provided, it will be encoded in hexadecimal. If a string is provided, it will converted to a byte array first, then encoded.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "hex \"hello\"",
+            "Description": "",
+            "Return": "68656c6c6f"
+          }
+        ]
+      },
+      {
+        "Name": "base32",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Encode the given bytes with the Base32 encoding scheme.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string, bytes",
+            "Description": "The value to encode. If a byte array is provided, it will be encoded directly. If a string is provided, it will converted to a byte array first, then encoded.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "base32 \"hello\"",
+            "Description": "",
+            "Return": "nbswy3dp"
+          }
+        ]
+      },
+      {
+        "Name": "base58",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Encode the given bytes with the Base58 (Bitcoin alphabet) encoding scheme.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "base64",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Encode the given bytes with the Base64 encoding scheme.  Optionally specify the encoding mode: one of \"padded\", \"url\", \"url-padded\", or empty (unpadded, default).",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string, bytes",
+            "Description": "The value to encode. If a byte array is provided, it will be encoded directly. If a string is provided, it will converted to a byte array first, then encoded.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "encoding",
+            "Type": "string",
+            "Description": "Specify an encoding option for generating the Base64 representation.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": [
+              {
+                "Name": "standard",
+                "Type": "",
+                "Description": "Standard Base-64 encoding scheme, no padding.",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "padded",
+                "Type": "",
+                "Description": "Standard Base-64 encoding scheme, preserves padding.",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "url",
+                "Type": "",
+                "Description": "Encoding that can be used in URLs and filenames, no padding.",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "url-padded",
+                "Type": "",
+                "Description": "Encoding that can be used in URLs and filenames, preserves padding.",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              }
+            ]
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "base64 \"hello?yes=this\u0026is=dog#\"",
+            "Description": "",
+            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw"
+          },
+          {
+            "Code": "base64 \"hello?yes=this\u0026is=dog#\" \"standard\"",
+            "Description": "This is identical to the above example, but with the encoding explicitly specified.",
+            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw"
+          },
+          {
+            "Code": "base64 \"hello?yes=this\u0026is=dog#\" \"padded\"",
+            "Description": "",
+            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw=="
+          },
+          {
+            "Code": "base64 \"hello?yes=this\u0026is=dog#\" \"url\"",
+            "Description": "",
+            "Return": "aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw"
+          },
+          {
+            "Code": "base64 \"hello?yes=this\u0026is=dog#\" \"url-padded\"",
+            "Description": "",
+            "Return": "aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw=="
+          }
+        ]
+      },
+      {
+        "Name": "unhex",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Decode the given hexadecimal string into bytes.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string",
+            "Description": "The value to decode into a byte array.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "unhex \"68656c6c6f\"",
+            "Description": "",
+            "Return": "aGVsbG8="
+          }
+        ]
+      },
+      {
+        "Name": "unbase32",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Decode the given Base32-encoded string into bytes.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string",
+            "Description": "The string to decode.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "unbase32 \"nbswy3dp\"",
+            "Description": "",
+            "Return": "aGVsbG8="
+          }
+        ]
+      },
+      {
+        "Name": "unbase58",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Decode the given Base58-encoded string (Bitcoin alphabet) into bytes.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "unbase64",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Decode the given Base64-encoded string into bytes.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string",
+            "Description": "The string to decode.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "encoding",
+            "Type": "string",
+            "Description": "Specify the encoding of the input string.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": [
+              {
+                "Name": "standard",
+                "Type": "",
+                "Description": "Standard Base-64 encoding scheme, no padding.",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "padded",
+                "Type": "",
+                "Description": "Standard Base-64 encoding scheme, preserves padding.",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "url",
+                "Type": "",
+                "Description": "Encoding that can be used in URLs and filenames, no padding.",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "url-padded",
+                "Type": "",
+                "Description": "Encoding that can be used in URLs and filenames, preserves padding.",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              }
+            ]
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "unbase64 \"aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw\"",
+            "Description": "",
+            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw=="
+          },
+          {
+            "Code": "unbase64 \"aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw\" \"standard\"",
+            "Description": "This is identical to the above example, but with the encoding explicitly specified.",
+            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw=="
+          },
+          {
+            "Code": "unbase64 \"aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==\" \"padded\"",
+            "Description": "",
+            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw=="
+          },
+          {
+            "Code": "unbase64 \"aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw\" \"url\"",
+            "Description": "",
+            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw=="
+          },
+          {
+            "Code": "unbase64 \"aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw==\" \"url-padded\"",
+            "Description": "",
+            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw=="
+          }
+        ]
       }
     ],
     "Skip": false
@@ -2248,160 +2556,6 @@
         "Hidden": false,
         "Arguments": null,
         "Examples": null
-      },
-      {
-        "Name": "hex",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Encode the given value as a hexadecimal string.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": [
-          {
-            "Name": "input",
-            "Type": "string, bytes",
-            "Description": "The value to encode. If a byte array is provided, it will be encoded in hexadecimal. If a string is provided, it will converted to a byte array first, then encoded.",
-            "Variadic": false,
-            "Optional": false,
-            "Default": null,
-            "Valid": null
-          }
-        ],
-        "Examples": [
-          {
-            "Code": "hex \"hello\"",
-            "Description": "",
-            "Return": "68656c6c6f"
-          }
-        ]
-      },
-      {
-        "Name": "base32",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Encode the given bytes with the Base32 encoding scheme.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": [
-          {
-            "Name": "input",
-            "Type": "string, bytes",
-            "Description": "The value to encode. If a byte array is provided, it will be encoded directly. If a string is provided, it will converted to a byte array first, then encoded.",
-            "Variadic": false,
-            "Optional": false,
-            "Default": null,
-            "Valid": null
-          }
-        ],
-        "Examples": [
-          {
-            "Code": "base32 \"hello\"",
-            "Description": "",
-            "Return": "nbswy3dp"
-          }
-        ]
-      },
-      {
-        "Name": "base58",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Encode the given bytes with the Base58 (Bitcoin alphabet) encoding scheme.",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": null,
-        "Examples": null
-      },
-      {
-        "Name": "base64",
-        "Alias": "",
-        "Aliases": null,
-        "Summary": "Encode the given bytes with the Base64 encoding scheme.  Optionally specify the encoding mode: one of \"padded\", \"url\", \"url-padded\", or empty (unpadded, default).",
-        "Returns": "",
-        "Hidden": false,
-        "Arguments": [
-          {
-            "Name": "input",
-            "Type": "string, bytes",
-            "Description": "The value to encode. If a byte array is provided, it will be encoded directly. If a string is provided, it will converted to a byte array first, then encoded.",
-            "Variadic": false,
-            "Optional": false,
-            "Default": null,
-            "Valid": null
-          },
-          {
-            "Name": "encoding",
-            "Type": "string",
-            "Description": "Specify an encoding option for generating the Base64 representation.",
-            "Variadic": false,
-            "Optional": true,
-            "Default": null,
-            "Valid": [
-              {
-                "Name": "standard",
-                "Type": "",
-                "Description": "Standard Base-64 encoding scheme, no padding.",
-                "Variadic": false,
-                "Optional": false,
-                "Default": null,
-                "Valid": null
-              },
-              {
-                "Name": "padded",
-                "Type": "",
-                "Description": "Standard Base-64 encoding scheme, preserves padding.",
-                "Variadic": false,
-                "Optional": false,
-                "Default": null,
-                "Valid": null
-              },
-              {
-                "Name": "url",
-                "Type": "",
-                "Description": "Encoding that can be used in URLs and filenames, no padding.",
-                "Variadic": false,
-                "Optional": false,
-                "Default": null,
-                "Valid": null
-              },
-              {
-                "Name": "url-padded",
-                "Type": "",
-                "Description": "Encoding that can be used in URLs and filenames, preserves padding.",
-                "Variadic": false,
-                "Optional": false,
-                "Default": null,
-                "Valid": null
-              }
-            ]
-          }
-        ],
-        "Examples": [
-          {
-            "Code": "base64 \"hello?yes=this\u0026is=dog#\"",
-            "Description": "",
-            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw"
-          },
-          {
-            "Code": "base64 \"hello?yes=this\u0026is=dog#\" \"standard\"",
-            "Description": "This is identical to the above example, but with the encoding explicitly specified.",
-            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw"
-          },
-          {
-            "Code": "base64 \"hello?yes=this\u0026is=dog#\" \"padded\"",
-            "Description": "",
-            "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw=="
-          },
-          {
-            "Code": "base64 \"hello?yes=this\u0026is=dog#\" \"url\"",
-            "Description": "",
-            "Return": "aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw"
-          },
-          {
-            "Code": "base64 \"hello?yes=this\u0026is=dog#\" \"url-padded\"",
-            "Description": "",
-            "Return": "aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw=="
-          }
-        ]
       }
     ],
     "Skip": false
