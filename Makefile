@@ -1,4 +1,4 @@
-.PHONY: test deps docs favicon.go
+.PHONY: test deps docs
 .EXPORT_ALL_VARIABLES:
 
 GO111MODULE ?= on
