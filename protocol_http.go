@@ -245,7 +245,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 
 			return response, nil
 		} else {
-			if res.StatusCode > 0 {
+			if res != nil && res.StatusCode > 0 {
 				log.Warningf("[%s] Binding: < HTTP %d (body: %d bytes)", id, res.StatusCode, res.ContentLength)
 			} else {
 				log.Warningf("[%s] Binding: < error: %v", id, err)
