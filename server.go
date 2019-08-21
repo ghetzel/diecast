@@ -1320,6 +1320,8 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 	id := reqid(req)
 	prefix := fmt.Sprintf("%s/", self.rp())
 
+	var lastErr error
+
 	if strings.HasPrefix(req.URL.Path, prefix) {
 		defer req.Body.Close()
 
@@ -1404,6 +1406,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 					redirectCode = response.RedirectCode
 
 				} else if IsHardStop(err) {
+					lastErr = err
 					break PathLoop
 				}
 			} else {
@@ -1417,6 +1420,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 					redirectCode = response.RedirectCode
 
 				} else if IsHardStop(err) {
+					lastErr = err
 					break PathLoop
 
 				} else if f, m, err := self.tryLocalFile(rPath, req); err == nil {
@@ -1472,6 +1476,9 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 
 	if self.hasUserRoutes {
 		self.userRouter.ServeHTTP(w, req)
+	} else if lastErr != nil {
+		// something else went sideways
+		self.respondError(w, fmt.Errorf("[%s] an error occurred accessing %s: %v", id, req.URL.Path, lastErr), http.StatusServiceUnavailable)
 	} else {
 		// if we got *here*, then File Not Found
 		self.respondError(w, fmt.Errorf("[%s] File %q was not found.", id, req.URL.Path), http.StatusNotFound)
@@ -1529,6 +1536,8 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 		return nil, nil, err
 	}
 
+	var lastErr error
+
 	// find a mount that has this file
 	for _, mount := range self.Mounts {
 		// seek the body buffer back to the beginning
@@ -1538,7 +1547,10 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 
 		if mount.WillRespondTo(requestPath, req, body) {
 			// attempt to open the file entry
-			if mountResponse, err := mount.OpenWithType(requestPath, req, body); err == nil {
+			mountResponse, err := mount.OpenWithType(requestPath, req, body)
+			lastErr = err
+
+			if err == nil {
 				return mount, mountResponse, nil
 			} else if IsHardStop(err) {
 				return nil, nil, err
@@ -1546,7 +1558,11 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 		}
 	}
 
-	return nil, nil, fmt.Errorf("%q not found", requestPath)
+	if lastErr == nil {
+		lastErr = fmt.Errorf("%q not found", requestPath)
+	}
+
+	return nil, nil, lastErr
 }
 
 func (self *Server) tryToHandleFoundFile(

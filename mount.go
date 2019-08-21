@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/stringutil"
 )
 
@@ -62,6 +63,8 @@ func NewMountFromSpec(spec string) (Mount, error) {
 
 func IsHardStop(err error) bool {
 	if err == MountHaltErr {
+		return true
+	} else if log.ErrContains(err, `request canceled`) {
 		return true
 	}
 

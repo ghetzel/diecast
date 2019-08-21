@@ -184,6 +184,12 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	}
 
 	method := strings.ToUpper(self.Method)
+
+	if method == `` {
+		method = http.MethodGet
+	}
+
+	method = strings.ToUpper(method)
 	uri := MustEvalInline(self.Resource, data, funcs)
 
 	// bindings may specify that a request should be made to the currently server address by
@@ -295,7 +301,11 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 			data, err := ioutil.ReadAll(response)
 
-			if err != nil || response.StatusCode >= 400 {
+			if response.StatusCode >= 400 {
+				err = fmt.Errorf(string(data))
+			}
+
+			if err != nil {
 				switch onError {
 				case ActionPrint:
 					if err != nil {
@@ -311,14 +321,10 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					// if a url or path was specified, redirect the parent request to it
 					if strings.HasPrefix(redirect, `http`) || strings.HasPrefix(redirect, `/`) {
 						return nil, RedirectTo(redirect)
+					} else if log.ErrHasPrefix(err, `[`) {
+						return nil, err
 					} else {
-						return nil, fmt.Errorf(
-							"[%s] Request %s %v failed: %v",
-							id,
-							method,
-							reqUrl,
-							sliceutil.Or(err, response.StatusCode),
-						)
+						return nil, fmt.Errorf("[%s] %s %v: %v", id, method, reqUrl, err)
 					}
 				}
 			}
