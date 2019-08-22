@@ -1046,6 +1046,15 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 
 	data[`vars`] = make(map[string]interface{})
 
+	publicMountDetails := make([]map[string]interface{}, 0)
+
+	for _, mount := range self.MountConfigs {
+		publicMountDetails = append(publicMountDetails, map[string]interface{}{
+			`from`: mount.Mount,
+			`to`:   mount.To,
+		})
+	}
+
 	data[`diecast`] = map[string]interface{}{
 		`binding_prefix`:    self.BindingPrefix,
 		`route_prefix`:      self.rp(),
@@ -1053,6 +1062,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		`try_local_first`:   self.TryLocalFirst,
 		`index_file`:        self.IndexFile,
 		`verify_file`:       self.VerifyFile,
+		`mounts`:            publicMountDetails,
 	}
 
 	// these are the functions that will be available to every part of the rendering process
@@ -1316,6 +1326,17 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	return funcs, data, nil
 }
 
+// The main entry point for handling requests not otherwise intercepted by Actions or User Routes.
+//
+// The Process:
+//     1. Build a list of paths to try based on the requested path.  This is how things like
+//        expanding "/thing" -> "/thing/index.html" OR "/thing.html" works.
+//
+//     2. For each path, do the following:
+//
+//        a. try to find a local file named X in the webroot
+//        b.
+//
 func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 	id := reqid(req)
 	prefix := fmt.Sprintf("%s/", self.rp())
