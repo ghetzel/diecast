@@ -219,14 +219,14 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 	if !self.NoTemplate {
 		if self.OnlyIfExpr != `` {
-			if v := MustEvalInline(self.OnlyIfExpr, data, funcs); typeutil.IsEmpty(v) || stringutil.IsBooleanFalse(v) {
+			if v := MustEvalInline(self.OnlyIfExpr, data, funcs); !typeutil.Bool(v) {
 				self.Optional = true
 				return nil, fmt.Errorf("[%s] Binding %q not being evaluated because only_if expression was false", id, self.Name)
 			}
 		}
 
 		if self.NotIfExpr != `` {
-			if v := MustEvalInline(self.NotIfExpr, data, funcs); !typeutil.IsEmpty(v) && !stringutil.IsBooleanFalse(v) {
+			if v := MustEvalInline(self.NotIfExpr, data, funcs); typeutil.Bool(v) {
 				self.Optional = true
 				return nil, fmt.Errorf("[%s] Binding %q not being evaluated because not_if expression was truthy", id, self.Name)
 			}

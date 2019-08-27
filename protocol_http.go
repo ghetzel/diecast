@@ -10,6 +10,7 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -78,7 +79,13 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 				if err := maputil.Walk(rr.Binding.BodyParams, func(value interface{}, path []string, isLeaf bool) error {
 					if isLeaf {
 						if !rr.Binding.NoTemplate {
-							value = rr.Template(value).Auto()
+							rendered := rr.Template(value)
+
+							if typeutil.IsScalar(rendered.Value) {
+								value = rendered.Auto()
+							} else {
+								value = rendered.Value
+							}
 						}
 
 						maputil.DeepSet(bodyParams, path, stringutil.Autotype(value))
@@ -203,6 +210,26 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 
 		// end TLS setup
 		// -------------------------------------------------------------------------------------
+
+		// handle HTTP proxying
+		if transport, ok := BindingClient.Transport.(*http.Transport); ok {
+			var purl string
+
+			if url := os.Getenv(`HTTP_PROXY`); url != `` && request.URL.Scheme != `https` {
+				purl = url
+			} else if url := os.Getenv(`HTTPS_PROXY`); url != `` && request.URL.Scheme == `https` {
+				purl = url
+			}
+
+			if purl != `` {
+				if u, err := url.Parse(purl); err == nil {
+					transport.Proxy = http.ProxyURL(u)
+					log.Noticef("[%s] Proxy URL is: %v", id, u)
+				} else {
+					return nil, fmt.Errorf("invalid proxy URL: %v", err)
+				}
+			}
+		}
 
 		// tell the server we want to close the connection when done
 		request.Close = true

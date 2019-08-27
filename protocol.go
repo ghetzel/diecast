@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -42,13 +43,16 @@ type ProtocolRequest struct {
 }
 
 func (self *ProtocolRequest) Template(input interface{}) typeutil.Variant {
-	if len(self.TemplateFuncs) > 0 {
-		return typeutil.V(
-			MustEvalInline(typeutil.String(input), self.TemplateData, self.TemplateFuncs),
-		)
-	} else {
-		return typeutil.V(input)
+	// only do template evaluation if the input is a string that contains "{{" and "}}"
+	if vS := typeutil.String(input); strings.Contains(vS, `{{`) && strings.Contains(vS, `}}`) {
+		if len(self.TemplateFuncs) > 0 {
+			return typeutil.V(
+				MustEvalInline(typeutil.String(input), self.TemplateData, self.TemplateFuncs),
+			)
+		}
 	}
+
+	return typeutil.V(input)
 }
 
 func (self *ProtocolRequest) Conf(proto string, key string, fallbacks ...interface{}) typeutil.Variant {
