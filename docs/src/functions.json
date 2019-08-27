@@ -2685,6 +2685,16 @@
         "Examples": null
       },
       {
+        "Name": "abs",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the absolute value of the given number.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "maximum",
         "Alias": "",
         "Aliases": null,

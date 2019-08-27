@@ -113,6 +113,12 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 				Function: func(number interface{}) bool {
 					return (math.Mod(typeutil.Float(number), 2) != 0)
 				},
+			}, {
+				Name:    `abs`,
+				Summary: `Return the absolute value of the given number.`,
+				Function: func(number interface{}) float64 {
+					return math.Abs(typeutil.Float(number))
+				},
 			},
 		},
 	}
