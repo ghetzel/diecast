@@ -8,7 +8,7 @@ require (
 	github.com/dustin/go-humanize v0.0.0-20180713052910-9f541cc9db5d
 	github.com/fatih/structs v1.0.0
 	github.com/ghetzel/cli v1.17.0
-	github.com/ghetzel/go-stockutil v1.8.2
+	github.com/ghetzel/go-stockutil v1.8.3
 	github.com/ghetzel/go-webfriend v0.9.40
 	github.com/ghodss/yaml v1.0.0
 	github.com/gobwas/glob v0.2.3
@@ -29,7 +29,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/spaolacci/murmur3 v0.0.0-20170819071325-9f5d223c6079
-	github.com/stretchr/testify v1.2.2
+	github.com/stretchr/testify v1.4.0
 	github.com/tg123/go-htpasswd v0.0.0-20190305225429-d38e564730bf
 	github.com/urfave/negroni v1.0.0
 	github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8
