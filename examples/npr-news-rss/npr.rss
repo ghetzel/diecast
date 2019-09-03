@@ -1,0 +1,24 @@
+---
+bindings:
+-   name:     npr
+    resource: https://text.npr.org
+    parser:   html
+
+postprocessors:
+- trim-empty-lines
+---<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+    <channel>
+        <title>NPR News</title>
+        <link>https://text.npr.org</link>
+        <description>Text-only NPR News</description>
+    </channel>
+    {{ range $el := htmlQuery $.bindings.npr `a[href*="/s.php"]` }}
+    {{ if not (any $el.text "Contact Us" "Terms of Use" "Permissions" "Privacy Policy" )}}
+    <item>
+        <title>{{ $el.text }}</title>
+        <title>https://text.npr.org{{ $el.attributes.href }}</title>
+    </item>
+    {{ end }}
+    {{ end }}
+</rss>
