@@ -105,6 +105,28 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `ago`,
 				Summary: `Return a new time subtracted by the given duration.`,
+				Arguments: []funcArg{
+					{
+						Name:        `duration`,
+						Type:        `string`,
+						Description: `The duration to subtract from the starting time.`,
+					}, {
+						Name:        `from`,
+						Description: `The starting time to subtract a duration from.`,
+						Type:        `string, time`,
+						Optional:    true,
+						Default:     `(the current time)`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `ago "1d"`,
+						Return: `2006-01-01 15:04:05Z07:00`,
+					}, {
+						Code:   `ago "45d" "2020-02-15T00:00:00Z"`,
+						Return: `2020-01-01 00:00:00 +0000 UTC`,
+					},
+				},
 				Function: func(durationString string, fromTime ...time.Time) (time.Time, error) {
 					from := time.Now()
 
@@ -181,14 +203,71 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `duration`,
 				Summary: `Convert the given value from a duration (specified with the given unit) into the given time format.`,
+				Arguments: []funcArg{
+					{
+						Name:        `duration`,
+						Type:        `integer, duration`,
+						Description: `A duration of time`,
+					}, {
+						Name:        `unit`,
+						Description: `The unit of time the given duration is expressed in. If a "duration" type is given, this may be an empty string.`,
+						Type:        `string`,
+						Valid: []funcArg{
+							{
+								Name:        `ns`,
+								Description: `Nanoseconds`,
+							}, {
+								Name:        `us`,
+								Description: `Microseconds`,
+							}, {
+								Name:        `ms`,
+								Description: `Milliseconds`,
+							}, {
+								Name:        `s`,
+								Description: `Seconds`,
+							}, {
+								Name:        `m`,
+								Description: `Minutes`,
+							}, {
+								Name:        `h`,
+								Description: `Hours`,
+							}, {
+								Name:        `d`,
+								Description: `Days`,
+							}, {
+								Name:        `y`,
+								Description: `Years`,
+							},
+						},
+					}, {
+						Name:        `format`,
+						Type:        `string`,
+						Optional:    true,
+						Description: `How to format the time output. See [Time Formats](#time-formats) for how to use format strings.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `duration 127 "s"`,
+						Return: `0001-01-01 00:02:07 +0000 UTC`,
+					}, {
+						Code:   `duration 127 "s" "kitchen"`,
+						Return: `12:02AM`,
+					}, {
+						Code:   `duration 127 "s" "15:04:05"`,
+						Return: `00:02:07`,
+					}, {
+						Code:   `duration 127 "s" "timer"`,
+						Return: `02:07`,
+					},
+				},
 				Function: func(value interface{}, unit string, formats ...string) (string, error) {
-					if v, err := stringutil.ConvertToInteger(value); err == nil {
-						duration := time.Duration(v)
-						format := `timer`
+					var duration time.Duration
 
-						if len(formats) > 0 {
-							format = formats[0]
-						}
+					if vD, ok := value.(time.Duration); ok {
+						duration = vD
+					} else if v, err := stringutil.ConvertToInteger(value); err == nil {
+						duration = time.Duration(v)
 
 						switch unit {
 						case `ns`, ``:
@@ -210,30 +289,75 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						default:
 							return ``, fmt.Errorf("Unrecognized unit %q", unit)
 						}
-
-						basetime := time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC)
-						basetime = basetime.Add(duration)
-
-						return tmFmt(basetime, format)
 					} else {
 						return ``, err
 					}
+
+					format := `timer`
+
+					if len(formats) > 0 {
+						format = formats[0]
+					}
+
+					basetime := time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC)
+					basetime = basetime.Add(duration)
+
+					return tmFmt(basetime, format)
 				},
 			}, {
 				Name:    `isBefore`,
 				Summary: `Return whether the first time occurs before the second one.`,
+				Arguments: []funcArg{
+					{
+						Name:        `first`,
+						Type:        `string, time`,
+						Description: `The time to compare against.`,
+					}, {
+						Name:        `second`,
+						Type:        `string, time`,
+						Description: `The time being checked.`,
+					},
+				},
 				Function: func(first interface{}, secondI ...interface{}) (bool, error) {
 					return timeCmp(true, first, secondI...)
 				},
 			}, {
 				Name:    `isAfter`,
 				Summary: `Return whether the first time occurs after the second one.`,
+				Arguments: []funcArg{
+					{
+						Name:        `first`,
+						Type:        `string, time`,
+						Description: `The time to compare against.`,
+					}, {
+						Name:        `second`,
+						Type:        `string, time`,
+						Description: `The time being checked.`,
+					},
+				},
 				Function: func(first interface{}, secondI ...interface{}) (bool, error) {
 					return timeCmp(false, first, secondI...)
 				},
 			}, {
 				Name:    `isBetweenTimes`,
-				Summary: `Return whether the current time is between two times [first, second).`,
+				Summary: `Return whether a time is between two times [first, second).`,
+				Arguments: []funcArg{
+					{
+						Name:        `first`,
+						Type:        `string, time`,
+						Description: `The lower bound.`,
+					}, {
+						Name:        `second`,
+						Type:        `string, time`,
+						Description: `The upper bound.`,
+					}, {
+						Name:        `reference`,
+						Type:        `string, time`,
+						Optional:    true,
+						Description: `If provided, this time will be used to check the given times instead of the current time.`,
+						Default:     `(the current time)`,
+					},
+				},
 				Function: func(firstI interface{}, secondI interface{}, tm ...interface{}) (bool, error) {
 					now := time.Now()
 
@@ -264,6 +388,13 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `extractTime`,
 				Summary: `Attempt to extract a time value from the given string.`,
+				Arguments: []funcArg{
+					{
+						Name:        `value`,
+						Type:        `string`,
+						Description: `A string that will be scanned for values that look like dates and times.`,
+					},
+				},
 				Function: func(baseI interface{}) (time.Time, error) {
 					if base, err := stringutil.ToString(baseI); err == nil {
 						if tm, err := stringutil.ConvertToTime(base); err == nil {
@@ -325,6 +456,23 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `sunrise`,
 				Summary: `Return the time of apparent sunrise at the given coordinates, optionally for a given time.`,
+				Arguments: []funcArg{
+					{
+						Name:        `latitude`,
+						Type:        `float`,
+						Description: `The latitude to retrieve the time for.`,
+					}, {
+						Name:        `longitude`,
+						Type:        `float`,
+						Description: `The longitude to retrieve the time for.`,
+					}, {
+						Name:        `reference`,
+						Type:        `string, time`,
+						Optional:    true,
+						Description: `If provided, this time will be used for the calculation instead of the current time.`,
+						Default:     `(the current time)`,
+					},
+				},
 				Function: func(latitude float64, longitude float64, atTime ...interface{}) (time.Time, error) {
 					sr, _, err := getSunriseSunset(latitude, longitude, atTime...)
 					return sr, err
@@ -332,9 +480,51 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `sunset`,
 				Summary: `Return the time of apparent sunset at the given coordinates, optionally for a given time.`,
+				Arguments: []funcArg{
+					{
+						Name:        `latitude`,
+						Type:        `float`,
+						Description: `The latitude to retrieve the time for.`,
+					}, {
+						Name:        `longitude`,
+						Type:        `float`,
+						Description: `The longitude to retrieve the time for.`,
+					}, {
+						Name:        `reference`,
+						Type:        `string, time`,
+						Optional:    true,
+						Description: `If provided, this time will be used for the calculation instead of the current time.`,
+						Default:     `(the current time)`,
+					},
+				},
 				Function: func(latitude float64, longitude float64, atTime ...interface{}) (time.Time, error) {
 					_, ss, err := getSunriseSunset(latitude, longitude, atTime...)
 					return ss, err
+				},
+			}, {
+				Name:    `timeBetween`,
+				Summary: `Return the duration of time between the first time minus the second time.`,
+				Arguments: []funcArg{
+					{
+						Name:        `first`,
+						Type:        `string, time`,
+						Description: `The first time being computed.`,
+					}, {
+						Name:        `second`,
+						Type:        `string, time`,
+						Description: `The second time being computed.`,
+					},
+				},
+				Function: func(firstI interface{}, secondI interface{}) (time.Duration, error) {
+					if first, err := stringutil.ConvertToTime(firstI); err == nil {
+						if second, err := stringutil.ConvertToTime(secondI); err == nil {
+							return first.Sub(second), nil
+						} else {
+							return 0, err
+						}
+					} else {
+						return 0, err
+					}
 				},
 			},
 		},

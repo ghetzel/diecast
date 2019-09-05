@@ -1331,6 +1331,9 @@ Diecast runtime directory:</p>
         <li>
             <a href="#fn-time">time</a>
         </li>
+        <li>
+            <a href="#fn-timeBetween">timeBetween</a>
+        </li>
     </ul>
 </details>
 <details>
@@ -8486,9 +8489,46 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>ago</code>
+            <code>ago DURATION [FROM]</code>
         </div>
         <p>Return a new time subtracted by the given duration.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>DURATION</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The duration to subtract from the starting time.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>FROM</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>The starting time to subtract a duration from.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-ago-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>ago &#34;1d&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;2006-01-01 15:04:05Z07:00&#34;</p>
+            </div>
+            <div class="example" id="fn-ago-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>ago &#34;45d&#34; &#34;2020-02-15T00:00:00Z&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;2020-01-01 00:00:00 &#43;0000 UTC&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-duration">
         <h4 class="mt-3">
@@ -8499,9 +8539,104 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>duration</code>
+            <code>duration DURATION UNIT [FORMAT]</code>
         </div>
         <p>Convert the given value from a duration (specified with the given unit) into the given time format.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>DURATION</pre></th>
+                    <td>integer, duration</td>
+                    <td>
+                        <p>A duration of time</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>UNIT</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The unit of time the given duration is expressed in. If a “duration” type is given, this may be an empty string.</p>
+                        <i class="d-block mt-2">Acceptable Values:</i>
+                        <table class="table table-sm mt-2">
+                            <tr>
+                                <td><code>&#34;ns&#34;</code></td>
+                                <td><p>Nanoseconds</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;us&#34;</code></td>
+                                <td><p>Microseconds</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;ms&#34;</code></td>
+                                <td><p>Milliseconds</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;s&#34;</code></td>
+                                <td><p>Seconds</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;m&#34;</code></td>
+                                <td><p>Minutes</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;h&#34;</code></td>
+                                <td><p>Hours</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;d&#34;</code></td>
+                                <td><p>Days</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;y&#34;</code></td>
+                                <td><p>Years</p>
+</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>FORMAT</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>How to format the time output. See <a href="#time-formats" rel="nofollow">Time Formats</a> for how to use format strings.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-duration-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>duration 127 &#34;s&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;0001-01-01 00:02:07 &#43;0000 UTC&#34;</p>
+            </div>
+            <div class="example" id="fn-duration-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>duration 127 &#34;s&#34; &#34;kitchen&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;12:02AM&#34;</p>
+            </div>
+            <div class="example" id="fn-duration-example-2">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>duration 127 &#34;s&#34; &#34;15:04:05&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;00:02:07&#34;</p>
+            </div>
+            <div class="example" id="fn-duration-example-3">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>duration 127 &#34;s&#34; &#34;timer&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;02:07&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-extractTime">
         <h4 class="mt-3">
@@ -8512,9 +8647,28 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>extractTime</code>
+            <code>extractTime VALUE</code>
         </div>
         <p>Attempt to extract a time value from the given string.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>VALUE</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>A string that will be scanned for values that look like dates and times.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-isAfter">
         <h4 class="mt-3">
@@ -8525,9 +8679,35 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>isAfter</code>
+            <code>isAfter FIRST SECOND</code>
         </div>
         <p>Return whether the first time occurs after the second one.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>FIRST</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>The time to compare against.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>SECOND</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>The time being checked.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-isBefore">
         <h4 class="mt-3">
@@ -8538,9 +8718,35 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>isBefore</code>
+            <code>isBefore FIRST SECOND</code>
         </div>
         <p>Return whether the first time occurs before the second one.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>FIRST</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>The time to compare against.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>SECOND</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>The time being checked.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-isBetweenTimes">
         <h4 class="mt-3">
@@ -8551,9 +8757,42 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>isBetweenTimes</code>
+            <code>isBetweenTimes FIRST SECOND [REFERENCE]</code>
         </div>
-        <p>Return whether the current time is between two times [first, second).</p>
+        <p>Return whether a time is between two times [first, second).</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>FIRST</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>The lower bound.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>SECOND</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>The upper bound.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>REFERENCE</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>If provided, this time will be used to check the given times instead of the current time.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-now">
         <h4 class="mt-3">
@@ -8676,9 +8915,42 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>sunrise</code>
+            <code>sunrise LATITUDE LONGITUDE [REFERENCE]</code>
         </div>
         <p>Return the time of apparent sunrise at the given coordinates, optionally for a given time.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>LATITUDE</pre></th>
+                    <td>float</td>
+                    <td>
+                        <p>The latitude to retrieve the time for.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>LONGITUDE</pre></th>
+                    <td>float</td>
+                    <td>
+                        <p>The longitude to retrieve the time for.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>REFERENCE</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>If provided, this time will be used for the calculation instead of the current time.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-sunset">
         <h4 class="mt-3">
@@ -8689,9 +8961,42 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>sunset</code>
+            <code>sunset LATITUDE LONGITUDE [REFERENCE]</code>
         </div>
         <p>Return the time of apparent sunset at the given coordinates, optionally for a given time.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>LATITUDE</pre></th>
+                    <td>float</td>
+                    <td>
+                        <p>The latitude to retrieve the time for.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>LONGITUDE</pre></th>
+                    <td>float</td>
+                    <td>
+                        <p>The longitude to retrieve the time for.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>REFERENCE</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>If provided, this time will be used for the calculation instead of the current time.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-time">
         <h4 class="mt-3">
@@ -8735,6 +9040,45 @@ Diecast runtime directory:</p>
                 <p class="returns">&#34;Mon Jan  2 22:04:05 2006&#34;</p>
             </div>
         </div>
+    </section>
+    <section class="function" id="fn-timeBetween">
+        <h4 class="mt-3">
+            timeBetween
+            <a href="#fn-timeBetween" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>timeBetween FIRST SECOND</code>
+        </div>
+        <p>Return the duration of time between the first time minus the second time.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>FIRST</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>The first time being computed.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>SECOND</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>The second time being computed.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </section>
 <section class="group mt-4" id="type-detection-and-manipulation">

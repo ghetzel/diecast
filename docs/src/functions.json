@@ -2165,8 +2165,38 @@
         "Summary": "Return a new time subtracted by the given duration.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "duration",
+            "Type": "string",
+            "Description": "The duration to subtract from the starting time.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "from",
+            "Type": "string, time",
+            "Description": "The starting time to subtract a duration from.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": "(the current time)",
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "ago \"1d\"",
+            "Description": "",
+            "Return": "2006-01-01 15:04:05Z07:00"
+          },
+          {
+            "Code": "ago \"45d\" \"2020-02-15T00:00:00Z\"",
+            "Description": "",
+            "Return": "2020-01-01 00:00:00 +0000 UTC"
+          }
+        ]
       },
       {
         "Name": "since",
@@ -2252,8 +2282,130 @@
         "Summary": "Convert the given value from a duration (specified with the given unit) into the given time format.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
-        "Examples": null
+        "Arguments": [
+          {
+            "Name": "duration",
+            "Type": "integer, duration",
+            "Description": "A duration of time",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "unit",
+            "Type": "string",
+            "Description": "The unit of time the given duration is expressed in. If a \"duration\" type is given, this may be an empty string.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": [
+              {
+                "Name": "ns",
+                "Type": "",
+                "Description": "Nanoseconds",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "us",
+                "Type": "",
+                "Description": "Microseconds",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "ms",
+                "Type": "",
+                "Description": "Milliseconds",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "s",
+                "Type": "",
+                "Description": "Seconds",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "m",
+                "Type": "",
+                "Description": "Minutes",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "h",
+                "Type": "",
+                "Description": "Hours",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "d",
+                "Type": "",
+                "Description": "Days",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "y",
+                "Type": "",
+                "Description": "Years",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              }
+            ]
+          },
+          {
+            "Name": "format",
+            "Type": "string",
+            "Description": "How to format the time output. See [Time Formats](#time-formats) for how to use format strings.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "duration 127 \"s\"",
+            "Description": "",
+            "Return": "0001-01-01 00:02:07 +0000 UTC"
+          },
+          {
+            "Code": "duration 127 \"s\" \"kitchen\"",
+            "Description": "",
+            "Return": "12:02AM"
+          },
+          {
+            "Code": "duration 127 \"s\" \"15:04:05\"",
+            "Description": "",
+            "Return": "00:02:07"
+          },
+          {
+            "Code": "duration 127 \"s\" \"timer\"",
+            "Description": "",
+            "Return": "02:07"
+          }
+        ]
       },
       {
         "Name": "isBefore",
@@ -2262,7 +2414,26 @@
         "Summary": "Return whether the first time occurs before the second one.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "first",
+            "Type": "string, time",
+            "Description": "The time to compare against.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "second",
+            "Type": "string, time",
+            "Description": "The time being checked.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -2272,17 +2443,64 @@
         "Summary": "Return whether the first time occurs after the second one.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "first",
+            "Type": "string, time",
+            "Description": "The time to compare against.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "second",
+            "Type": "string, time",
+            "Description": "The time being checked.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
         "Name": "isBetweenTimes",
         "Alias": "",
         "Aliases": null,
-        "Summary": "Return whether the current time is between two times [first, second).",
+        "Summary": "Return whether a time is between two times [first, second).",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "first",
+            "Type": "string, time",
+            "Description": "The lower bound.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "second",
+            "Type": "string, time",
+            "Description": "The upper bound.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "reference",
+            "Type": "string, time",
+            "Description": "If provided, this time will be used to check the given times instead of the current time.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": "(the current time)",
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -2292,7 +2510,17 @@
         "Summary": "Attempt to extract a time value from the given string.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "value",
+            "Type": "string",
+            "Description": "A string that will be scanned for values that look like dates and times.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -2302,7 +2530,35 @@
         "Summary": "Return the time of apparent sunrise at the given coordinates, optionally for a given time.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "latitude",
+            "Type": "float",
+            "Description": "The latitude to retrieve the time for.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "longitude",
+            "Type": "float",
+            "Description": "The longitude to retrieve the time for.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "reference",
+            "Type": "string, time",
+            "Description": "If provided, this time will be used for the calculation instead of the current time.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": "(the current time)",
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -2312,7 +2568,64 @@
         "Summary": "Return the time of apparent sunset at the given coordinates, optionally for a given time.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "latitude",
+            "Type": "float",
+            "Description": "The latitude to retrieve the time for.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "longitude",
+            "Type": "float",
+            "Description": "The longitude to retrieve the time for.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "reference",
+            "Type": "string, time",
+            "Description": "If provided, this time will be used for the calculation instead of the current time.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": "(the current time)",
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "timeBetween",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the duration of time between the first time minus the second time.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "first",
+            "Type": "string, time",
+            "Description": "The first time being computed.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "second",
+            "Type": "string, time",
+            "Description": "The second time being computed.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       }
     ],
