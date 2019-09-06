@@ -28,6 +28,7 @@ require (
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
+	github.com/signalsciences/tlstext v1.2.0
 	github.com/spaolacci/murmur3 v0.0.0-20170819071325-9f5d223c6079
 	github.com/stretchr/testify v1.4.0
 	github.com/tg123/go-htpasswd v0.0.0-20190305225429-d38e564730bf

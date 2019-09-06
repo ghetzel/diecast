@@ -10,3 +10,7 @@
 /templates
 /test.*
 /vendor
+*.key
+*.crt
+*.inprogress
+/index.html

@@ -6,6 +6,7 @@ package diecast
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"errors"
@@ -46,6 +47,7 @@ import (
 	"github.com/husobee/vestigo"
 	"github.com/jbenet/go-base58"
 	"github.com/mattn/go-shellwords"
+	"github.com/signalsciences/tlstext"
 	"github.com/urfave/negroni"
 	"golang.org/x/text/language"
 )
@@ -219,9 +221,22 @@ type Server struct {
 	// and stored in memory to the ICO format.
 	FaviconPath string `json:"favicon"`
 
+	// Whether to enable SSL/TLS on the server.
+	EnableSSL bool `json:"ssl"`
+
+	// path to a PEM file containing the server's TLS private key.
+	TlsServerPrivate string `json:"ssl_private_keyfile"`
+
+	// path to a PEM file containing the server's TLS public key.
+	TlsServerPublic string `json:"ssl_public_keyfile"`
+
+	// If set, TLS Client certificates will be requested/accepted.  If set, may
+	// be one of: "request", "any", "verify", "require"
+	TlsClientCertMode string `json:"ssl_client_certs"`
+
 	router          *http.ServeMux
 	userRouter      *vestigo.Router
-	server          *negroni.Negroni
+	handler         *negroni.Negroni
 	fs              http.FileSystem
 	precmd          *exec.Cmd
 	altRootCaPool   *x509.CertPool
@@ -434,7 +449,7 @@ func (self *Server) Initialize() error {
 }
 
 func (self *Server) Serve() error {
-	if self.server == nil {
+	if self.handler == nil {
 		if err := self.Initialize(); err != nil {
 			return err
 		}
@@ -460,7 +475,53 @@ func (self *Server) Serve() error {
 		}
 	}()
 
-	return http.ListenAndServe(self.Address, self.server)
+	srv := &http.Server{
+		Addr:    self.Address,
+		Handler: self.handler,
+	}
+
+	if self.EnableSSL {
+		tc := new(tls.Config)
+
+		self.TlsServerPrivate = fileutil.MustExpandUser(self.TlsServerPrivate)
+		self.TlsServerPublic = fileutil.MustExpandUser(self.TlsServerPublic)
+
+		if !fileutil.IsNonemptyFile(self.TlsServerPrivate) {
+			return fmt.Errorf("ssl: key file %q is not readable or does not exist", self.TlsServerPrivate)
+		}
+
+		if !fileutil.IsNonemptyFile(self.TlsServerPublic) {
+			return fmt.Errorf("ssl: cert file %q is not readable or does not exist", self.TlsServerPublic)
+		}
+
+		if mode := self.TlsClientCertMode; mode != `` {
+			switch mode {
+			case `request`:
+				tc.ClientAuth = tls.RequestClientCert
+			case `any`:
+				tc.ClientAuth = tls.RequireAnyClientCert
+			case `verify`:
+				tc.ClientAuth = tls.VerifyClientCertIfGiven
+			case `require`:
+				tc.ClientAuth = tls.RequireAndVerifyClientCert
+			default:
+				return fmt.Errorf(
+					"Invalid value %q for 'ssl_client_certs': must be one of %q, %q, %q, %q.",
+					mode,
+					`request`,
+					`any`,
+					`verify`,
+					`require`,
+				)
+			}
+		}
+
+		srv.TLSConfig = tc
+
+		return srv.ListenAndServeTLS(self.TlsServerPublic, self.TlsServerPrivate)
+	} else {
+		return srv.ListenAndServe()
+	}
 }
 
 func (self *Server) ListenAndServe(address string) error {
@@ -469,7 +530,7 @@ func (self *Server) ListenAndServe(address string) error {
 }
 
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	if self.server == nil {
+	if self.handler == nil {
 		if err := self.Initialize(); err != nil {
 			w.Write([]byte(fmt.Sprintf("Failed to setup Diecast server: %v", err)))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -477,7 +538,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	self.server.ServeHTTP(w, req)
+	self.handler.ServeHTTP(w, req)
 }
 
 // return whether the request path matches any of the configured TemplatePatterns.
@@ -1754,13 +1815,13 @@ func reqid(req *http.Request) string {
 
 func (self *Server) setupServer() error {
 	fileutil.InitMime()
-	self.server = negroni.New()
+	self.handler = negroni.New()
 
 	// setup panic recovery handler
-	self.server.Use(negroni.NewRecovery())
+	self.handler.Use(negroni.NewRecovery())
 
 	// setup request ID generation
-	self.server.UseHandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	self.handler.UseHandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		requestId := base58.Encode(stringutil.UUID().Bytes())
 		log.Debugf("[%s] %s %s", requestId, req.Method, req.URL.Path)
 
@@ -1773,7 +1834,7 @@ func (self *Server) setupServer() error {
 	})
 
 	// process authenticators
-	self.server.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 		if auth, err := self.Authenticators.Authenticator(req); err == nil {
 			if auth != nil {
 				if auth.IsCallback(req.URL) {
@@ -1921,10 +1982,10 @@ func (self *Server) setupServer() error {
 		log.Debugf("[actions] Registered %s", hndPath)
 	}
 
-	self.server.UseHandler(self.router)
+	self.handler.UseHandler(self.router)
 
 	// cleanup request tracing info
-	self.server.UseHandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	self.handler.UseHandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		removeRequestTimer(req)
 	})
 
@@ -2067,6 +2128,26 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 	}
 
 	request[`url`] = url
+
+	ssl := make(map[string]interface{})
+
+	if state := req.TLS; state != nil {
+		sslclient := make(map[string]interface{})
+
+		ssl = map[string]interface{}{
+			`version`:                       tlstext.Version(state.Version),
+			`handshake_complete`:            state.HandshakeComplete,
+			`did_resume`:                    state.DidResume,
+			`cipher_suite`:                  tlstext.CipherSuite(state.CipherSuite),
+			`negotiated_protocol`:           state.NegotiatedProtocol,
+			`negotiated_protocol_is_mutual`: state.NegotiatedProtocolIsMutual,
+			`server_name`:                   state.ServerName,
+			`tls_unique`:                    state.TLSUnique,
+			`client`:                        sslclient,
+		}
+	}
+
+	request[`tls`] = ssl
 
 	rv[`request`] = request
 

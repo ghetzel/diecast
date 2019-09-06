@@ -128,6 +128,24 @@ func main() {
 			Name:  `help-functions`,
 			Usage: `Generate documentation on all supported functions.`,
 		},
+		cli.BoolFlag{
+			Name:  `ssl`,
+			Usage: `Start a TLS server instead of plain HTTP.`,
+		},
+		cli.StringFlag{
+			Name:  `ssl-crt, k`,
+			Usage: `The certificate file for SSL/TLS.`,
+			Value: `server.crt`,
+		},
+		cli.StringFlag{
+			Name:  `ssl-key, K`,
+			Usage: `The certificate key file for SSL/TLS.`,
+			Value: `server.key`,
+		},
+		cli.StringFlag{
+			Name:  `ssl-client-mode, C`,
+			Usage: `Enable SSL client certificate validation; may be one of "request", "any", "verify", or "require"`,
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
@@ -190,6 +208,10 @@ func main() {
 		server.IndexFile = c.String(`index-file`)
 		server.Autoindex = c.Bool(`autoindex`)
 		server.DisableCommands = c.Bool(`disable-commands`)
+		server.EnableSSL = c.Bool(`ssl`)
+		server.TlsServerPublic = c.String(`ssl-crt`)
+		server.TlsServerPrivate = c.String(`ssl-key`)
+		server.TlsClientCertMode = c.String(`ssl-client-mode`)
 
 		for _, cmdline := range c.StringSlice(`prestart-command`) {
 			if cmdline != `` {
@@ -250,7 +272,13 @@ func main() {
 		}
 
 		if err := server.Initialize(); err == nil {
-			log.Infof("diecast v%v listening at http://%s", diecast.ApplicationVersion, server.Address)
+			scheme := `http`
+
+			if server.EnableSSL {
+				scheme = `https`
+			}
+
+			log.Infof("diecast v%v listening at %s://%s", diecast.ApplicationVersion, scheme, server.Address)
 
 			go func() {
 				if err := server.Serve(); err != nil {
