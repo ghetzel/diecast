@@ -129,22 +129,27 @@ func main() {
 			Usage: `Generate documentation on all supported functions.`,
 		},
 		cli.BoolFlag{
-			Name:  `ssl`,
+			Name:  `tls`,
 			Usage: `Start a TLS server instead of plain HTTP.`,
 		},
 		cli.StringFlag{
-			Name:  `ssl-crt, k`,
+			Name:  `tls-crt, k`,
 			Usage: `The certificate file for SSL/TLS.`,
 			Value: `server.crt`,
 		},
 		cli.StringFlag{
-			Name:  `ssl-key, K`,
+			Name:  `tls-key, K`,
 			Usage: `The certificate key file for SSL/TLS.`,
 			Value: `server.key`,
 		},
 		cli.StringFlag{
-			Name:  `ssl-client-mode, C`,
-			Usage: `Enable SSL client certificate validation; may be one of "request", "any", "verify", or "require"`,
+			Name:  `tls-client-mode`,
+			Usage: `Enable TLS client certificate validation; may be one of "request", "any", "verify", or "require"`,
+		},
+		cli.StringFlag{
+			Name:  `tls-client-ca`,
+			Usage: `Specify the path to the PEM-encoded certificate use to verify clients.`,
+			Value: `clients.crt`,
 		},
 	}
 
@@ -208,10 +213,16 @@ func main() {
 		server.IndexFile = c.String(`index-file`)
 		server.Autoindex = c.Bool(`autoindex`)
 		server.DisableCommands = c.Bool(`disable-commands`)
-		server.EnableSSL = c.Bool(`ssl`)
-		server.TlsServerPublic = c.String(`ssl-crt`)
-		server.TlsServerPrivate = c.String(`ssl-key`)
-		server.TlsClientCertMode = c.String(`ssl-client-mode`)
+
+		if c.IsSet(`tls`) {
+			server.TLS = &diecast.TlsConfig{
+				Enable:         c.Bool(`tls`),
+				CertFile:       c.String(`tls-crt`),
+				KeyFile:        c.String(`tls-key`),
+				ClientCertMode: c.String(`tls-client-mode`),
+				ClientCAFile:   c.String(`tls-client-ca`),
+			}
+		}
 
 		for _, cmdline := range c.StringSlice(`prestart-command`) {
 			if cmdline != `` {
@@ -274,7 +285,7 @@ func main() {
 		if err := server.Initialize(); err == nil {
 			scheme := `http`
 
-			if server.EnableSSL {
+			if ssl := server.TLS; ssl != nil && ssl.Enable {
 				scheme = `https`
 			}
 

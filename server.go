@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -44,6 +45,7 @@ import (
 	"github.com/ghetzel/go-stockutil/timeutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/ghodss/yaml"
+	"github.com/gobwas/glob"
 	"github.com/husobee/vestigo"
 	"github.com/jbenet/go-base58"
 	"github.com/mattn/go-shellwords"
@@ -89,6 +91,21 @@ var DefaultRendererMappings = map[string]string{
 	`scss`: `sass`,
 }
 
+var DefaultFilterEnvVars = []string{
+	`_*`,                    // treat vars starting with "_" as internal/hidden
+	`*KEY*`,                 // omit api keys and whatnot
+	`*PASSWORD*`,            // omit things that explicitly call themselves a "password"
+	`*PID*`,                 // avoid PID leakage for weird paranoid reasons
+	`*HOST*`,                // while we're at it, don't leak hostnames either
+	`*URL*`,                 // ...or URLs
+	`*SECRET*`,              // not a secret if you go blabbing about it...
+	`*TOKEN*`,               // ditto.
+	`AWS_ACCESS_KEY_ID`,     // very specifically omit AWS credentials
+	`AWS_SECRET_ACCESS_KEY`, // very specifically omit AWS credentials
+	`PROMPT_COMMAND`,        // people keep weird stuff in here sometimes
+	`PWD`,                   // WHO WANTS TO KNOW?
+}
+
 type RedirectTo string
 
 func (self RedirectTo) Error() string {
@@ -103,6 +120,24 @@ type StartCommand struct {
 	Wait             string                 `json:"timeout"`
 	ExitOnCompletion bool                   `json:"exitOnCompletion"`
 	cmd              *exec.Cmd
+}
+
+type TlsConfig struct {
+	// Whether to enable SSL/TLS on the server.
+	Enable bool `json:"enable"`
+
+	// path to a PEM-encoded (.crt) file containing the server's TLS public key.
+	CertFile string `json:"cert"`
+
+	// path to a PEM-encoded (.key) file containing the server's TLS private key.
+	KeyFile string `json:"key"`
+
+	// If set, TLS Client certificates will be requested/accepted.  If set, may
+	// be one of: "request", "any", "verify", "require"
+	ClientCertMode string `json:"clients"`
+
+	// Path to a PEM-encoded file containing the CA that client certificates are issued and verify against.
+	ClientCAFile string `json:"clientCA"`
 }
 
 type Server struct {
@@ -221,18 +256,14 @@ type Server struct {
 	// and stored in memory to the ICO format.
 	FaviconPath string `json:"favicon"`
 
-	// Whether to enable SSL/TLS on the server.
-	EnableSSL bool `json:"ssl"`
+	// where SSL/TLS configuration is stored
+	TLS *TlsConfig `json:"tls"`
 
-	// path to a PEM file containing the server's TLS private key.
-	TlsServerPrivate string `json:"ssl_private_keyfile"`
+	// a list of glob patterns matching environment variable names that should not be exposed
+	FilterEnvVars []string `json:"filter_env_vars"`
 
-	// path to a PEM file containing the server's TLS public key.
-	TlsServerPublic string `json:"ssl_public_keyfile"`
-
-	// If set, TLS Client certificates will be requested/accepted.  If set, may
-	// be one of: "request", "any", "verify", "require"
-	TlsClientCertMode string `json:"ssl_client_certs"`
+	// a list of glob patterns matching environment variable names that should always be exposed
+	ExposeEnvVars []string `json:"expose_env_vars"`
 
 	router          *http.ServeMux
 	userRouter      *vestigo.Router
@@ -271,6 +302,7 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		TryExtensions:      DefaultTryExtensions,
 		VerifyFile:         DefaultVerifyFile,
 		AutoindexTemplate:  DefaultAutoindexFilename,
+		FilterEnvVars:      DefaultFilterEnvVars,
 		router:             http.NewServeMux(),
 		userRouter:         vestigo.NewRouter(),
 	}
@@ -480,21 +512,21 @@ func (self *Server) Serve() error {
 		Handler: self.handler,
 	}
 
-	if self.EnableSSL {
+	if ssl := self.TLS; ssl != nil && ssl.Enable {
 		tc := new(tls.Config)
 
-		self.TlsServerPrivate = fileutil.MustExpandUser(self.TlsServerPrivate)
-		self.TlsServerPublic = fileutil.MustExpandUser(self.TlsServerPublic)
+		ssl.CertFile = fileutil.MustExpandUser(ssl.CertFile)
+		ssl.KeyFile = fileutil.MustExpandUser(ssl.KeyFile)
 
-		if !fileutil.IsNonemptyFile(self.TlsServerPrivate) {
-			return fmt.Errorf("ssl: key file %q is not readable or does not exist", self.TlsServerPrivate)
+		if !fileutil.IsNonemptyFile(ssl.CertFile) {
+			return fmt.Errorf("ssl: cert file %q is not readable or does not exist", ssl.CertFile)
 		}
 
-		if !fileutil.IsNonemptyFile(self.TlsServerPublic) {
-			return fmt.Errorf("ssl: cert file %q is not readable or does not exist", self.TlsServerPublic)
+		if !fileutil.IsNonemptyFile(ssl.KeyFile) {
+			return fmt.Errorf("ssl: key file %q is not readable or does not exist", ssl.KeyFile)
 		}
 
-		if mode := self.TlsClientCertMode; mode != `` {
+		if mode := ssl.ClientCertMode; mode != `` {
 			switch mode {
 			case `request`:
 				tc.ClientAuth = tls.RequestClientCert
@@ -514,11 +546,23 @@ func (self *Server) Serve() error {
 					`require`,
 				)
 			}
+
+			ssl.ClientCAFile = fileutil.MustExpandUser(ssl.ClientCAFile)
+
+			if !fileutil.IsNonemptyFile(ssl.ClientCAFile) {
+				return fmt.Errorf("ssl: client CA file %q is not readable or does not exist", ssl.ClientCAFile)
+			}
+
+			if pool, err := httputil.LoadCertPool(ssl.ClientCAFile); err == nil {
+				tc.ClientCAs = pool
+			} else {
+				return fmt.Errorf("ssl: client CA: %v", err)
+			}
 		}
 
 		srv.TLSConfig = tc
 
-		return srv.ListenAndServeTLS(self.TlsServerPublic, self.TlsServerPrivate)
+		return srv.ListenAndServeTLS(ssl.CertFile, ssl.KeyFile)
 	} else {
 		return srv.ListenAndServe()
 	}
@@ -609,7 +653,7 @@ func (self *Server) applyTemplate(
 		}
 	}
 
-	earlyData := requestToEvalData(req, header)
+	earlyData := self.requestToEvalData(req, header)
 
 	// get a reference to a set of standard functions that won't have a scope yet
 	earlyFuncs := self.GetTemplateFunctions(earlyData, header)
@@ -1103,7 +1147,7 @@ func (self *Server) ToTemplateName(requestPath string) string {
 }
 
 func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}, error) {
-	data := requestToEvalData(req, header)
+	data := self.requestToEvalData(req, header)
 
 	data[`vars`] = make(map[string]interface{})
 
@@ -2045,7 +2089,7 @@ func (self *Server) rp() string {
 	return strings.TrimSuffix(self.RoutePrefix, `/`)
 }
 
-func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]interface{} {
+func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader) map[string]interface{} {
 	rv := make(map[string]interface{})
 	request := make(map[string]interface{})
 	qs := make(map[string]interface{})
@@ -2109,17 +2153,21 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 	request[`remote_ip`] = addr
 	request[`remote_port`] = int(typeutil.Int(port))
 	request[`remote_address`] = req.RemoteAddr
-	request[`host`] = req.Host
 
-	url := map[string]interface{}{
+	host, port := stringutil.SplitPair(sliceutil.OrString(req.URL.Host, req.Host), `:`)
+
+	request[`host`] = host
+
+	url, _ := maputil.Compact(map[string]interface{}{
 		`unmodified`: req.RequestURI,
 		`string`:     req.URL.String(),
 		`scheme`:     req.URL.Scheme,
-		`host`:       req.URL.Host,
+		`host`:       host,
+		`port`:       typeutil.Int(port),
 		`path`:       req.URL.Path,
 		`fragment`:   req.URL.Fragment,
 		`query`:      qs,
-	}
+	})
 
 	if header != nil {
 		url[`params`] = header.UrlParams
@@ -2127,12 +2175,30 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 		url[`params`] = make(map[string]interface{})
 	}
 
-	request[`url`] = url
-
 	ssl := make(map[string]interface{})
 
 	if state := req.TLS; state != nil {
-		sslclient := make(map[string]interface{})
+		sslclients := make([]map[string]interface{}, 0)
+
+		for _, pcrt := range state.PeerCertificates {
+			sslclients = append(sslclients, map[string]interface{}{
+				`issuer`:           pkixNameToMap(pcrt.Issuer),
+				`subject`:          pkixNameToMap(pcrt.Subject),
+				`not_before`:       pcrt.NotBefore,
+				`not_after`:        pcrt.NotAfter,
+				`seconds_left`:     -1 * time.Since(pcrt.NotAfter).Round(time.Second).Seconds(),
+				`ocsp_server`:      pcrt.OCSPServer,
+				`issuing_cert_url`: pcrt.IssuingCertificateURL,
+				`version`:          pcrt.Version,
+				`serialnumber`:     pcrt.SerialNumber.String(),
+				`san`: map[string]interface{}{
+					`dns`:   pcrt.DNSNames,
+					`email`: pcrt.EmailAddresses,
+					`ip`:    pcrt.IPAddresses,
+					`uri`:   pcrt.URIs,
+				},
+			})
+		}
 
 		ssl = map[string]interface{}{
 			`version`:                       tlstext.Version(state.Version),
@@ -2143,10 +2209,21 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 			`negotiated_protocol_is_mutual`: state.NegotiatedProtocolIsMutual,
 			`server_name`:                   state.ServerName,
 			`tls_unique`:                    state.TLSUnique,
-			`client`:                        sslclient,
+			`client_chain`:                  nil,
+			`client`:                        nil,
 		}
+
+		if len(sslclients) > 0 {
+			ssl[`client_chain`] = sslclients[1:]
+			ssl[`client`] = sslclients[0]
+		}
+
+		url[`scheme`] = `https`
+	} else {
+		url[`scheme`] = `http`
 	}
 
+	request[`url`] = url
 	request[`tls`] = ssl
 
 	rv[`request`] = request
@@ -2156,7 +2233,11 @@ func requestToEvalData(req *http.Request, header *TemplateHeader) map[string]int
 
 	for _, pair := range os.Environ() {
 		key, value := stringutil.SplitPair(pair, `=`)
-		env[key] = stringutil.Autotype(value)
+		key = envKeyNorm(key)
+
+		if self.mayExposeEnvVar(key) {
+			env[key] = stringutil.Autotype(value)
+		}
 	}
 
 	rv[`env`] = env
@@ -2246,6 +2327,24 @@ func (self *Server) RunStartCommand(scmds []*StartCommand, waitForCommand bool) 
 	return false, nil
 }
 
+func (self *Server) mayExposeEnvVar(name string) bool {
+	name = envKeyNorm(name)
+
+	for _, f := range self.ExposeEnvVars {
+		if glob.MustCompile(envKeyNorm(f)).Match(name) {
+			return true
+		}
+	}
+
+	for _, f := range self.FilterEnvVars {
+		if glob.MustCompile(envKeyNorm(f)).Match(name) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (self *Server) cleanupCommands() {
 	for _, psc := range self.PrestartCommands {
 		if psc.cmd != nil {
@@ -2286,4 +2385,26 @@ func i18nTagBase(tag language.Tag) string {
 	} else {
 		return ``
 	}
+}
+
+func pkixNameToMap(name pkix.Name) map[string]interface{} {
+	out, _ := maputil.Compact(map[string]interface{}{
+		`country`:      name.Country,
+		`organization`: strings.Join(name.Organization, `,`),
+		`orgunit`:      strings.Join(name.OrganizationalUnit, `,`),
+		`locality`:     strings.Join(name.Locality, `,`),
+		`state`:        strings.Join(name.Province, `,`),
+		`street`:       strings.Join(name.StreetAddress, `,`),
+		`postalcode`:   strings.Join(name.PostalCode, `,`),
+		`serialnumber`: name.SerialNumber,
+		`common`:       name.CommonName,
+	})
+
+	return out
+}
+
+func envKeyNorm(in string) string {
+	in = strings.ToLower(in)
+
+	return in
 }

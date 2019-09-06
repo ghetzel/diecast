@@ -52,3 +52,39 @@ package:
 		--name        diecast \
 		--version     `./pkg/usr/bin/diecast -v | cut -d' ' -f3` \
 		-C            pkg
+
+clients.csr:
+	openssl req -new -newkey rsa:4096 -nodes -keyout clients.key -out clients.csr -subj '/O=ghetzel/CN=diecast'
+
+clients.crt: clients.csr
+	openssl x509 -req -days 3650 -in clients.csr -signkey clients.key -out clients.crt
+
+sign-client: clients.crt
+	test -n "$(NAME)" || $(error NAME (client name) is not set)
+#	Generate new client private key and signing request (CSR)
+	openssl req \
+		-new \
+		-nodes \
+		-keyout $(NAME).key \
+		-out $(NAME).csr \
+		-days 3650 \
+		-subj '/O=diecast/CN=$(NAME)' \
+		-extensions v3_req
+
+#	Sign client certificate with clients CA
+	openssl x509 \
+		-req \
+		-days 3650 \
+		-in $(NAME).csr \
+		-CA clients.crt \
+		-CAkey clients.key \
+		-CAcreateserial \
+		-out $(NAME).crt \
+		-extensions v3_req
+
+#	Also generate a PKCS#12 encoded bundle of the newly generated cert+key
+	openssl pkcs12 \
+		-export \
+		-in $(NAME).crt \
+		-inkey $(NAME).key \
+		-out $(NAME).p12

@@ -12,5 +12,10 @@
 /vendor
 *.key
 *.crt
+*.csr
+*.pem
+*.p12
+*.srl
+*.crl
 *.inprogress
 /index.html
