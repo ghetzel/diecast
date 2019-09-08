@@ -27,6 +27,8 @@ func main() {
 	app.Version = diecast.ApplicationVersion
 	app.EnableBashCompletion = true
 
+	server := diecast.NewServer(``)
+
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:   `log-level, L`,
@@ -200,8 +202,8 @@ func main() {
 
 	app.Action = func(c *cli.Context) {
 		servePath := filepath.Clean(c.Args().First())
-		server := diecast.NewServer(servePath)
 
+		server.RootPath = servePath
 		server.BinPath, _ = filepath.Abs(os.Args[0])
 		server.Address = c.String(`address`)
 		server.Environment = c.String(`env`)
@@ -372,6 +374,54 @@ func main() {
 		} else {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
+	}
+
+	app.Commands = []cli.Command{
+		{
+			Name:  `render`,
+			Usage: `Render the given file as a template.`,
+			Flags: []cli.Flag{
+				cli.StringSliceFlag{
+					Name:  `data, d`,
+					Usage: `Specify a data to include in the template input as a "[nested.]key=value" string.`,
+				},
+			},
+			Action: func(c *cli.Context) {
+				var in io.Reader
+
+				engine := diecast.TextEngine
+
+				tpl := diecast.NewTemplate(`inline`, engine)
+				_, defs := diecast.GetFunctions(server)
+				tpl.Funcs(defs)
+
+				f := c.Args().First()
+
+				switch f {
+				case ``, `-`:
+					in = os.Stdin
+				default:
+					if file, err := os.Open(f); err == nil {
+						in = file
+					} else {
+						log.Fatalf("file: %v", err)
+					}
+				}
+
+				if err := tpl.ParseFrom(in); err == nil {
+					data := maputil.M(nil)
+
+					for _, pair := range c.StringSlice(`data`) {
+						k, v := stringutil.SplitPair(pair, `=`)
+						data.Set(k, typeutil.Auto(v))
+					}
+
+					log.FatalIf(tpl.Render(os.Stdout, data, ``))
+				} else {
+					log.Fatalf("parse: %v", err)
+				}
+			},
+		},
 	}
 
 	app.Run(os.Args)
