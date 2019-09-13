@@ -9,6 +9,16 @@ import (
 	"time"
 )
 
+var renderers = make(map[string]Renderer)
+
+func init() {
+	RegisterRenderer(`pdf`, new(PdfRenderer))
+	RegisterRenderer(`markdown`, new(MarkdownRenderer))
+	RegisterRenderer(`sass`, new(SassRenderer))
+	RegisterRenderer(`html`, new(TemplateRenderer))
+	RegisterRenderer(``, new(TemplateRenderer))
+}
+
 type RenderOptions struct {
 	Header        *TemplateHeader
 	HeaderOffset  int
@@ -25,21 +35,21 @@ type PrewriteFunc func(*http.Request)
 
 type Renderer interface {
 	SetPrewriteFunc(PrewriteFunc)
+	SetServer(*Server)
 	Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error
 	ShouldPrerender() bool
 }
 
+func RegisterRenderer(name string, renderer Renderer) {
+	renderers[name] = renderer
+}
+
 func GetRenderer(name string, server *Server) (Renderer, error) {
-	switch name {
-	case `pdf`:
-		return &PdfRenderer{server: server}, nil
-	case `markdown`:
-		return &MarkdownRenderer{server: server}, nil
-	case `sass`:
-		return &SassRenderer{server: server}, nil
-	case ``, `html`:
-		return &TemplateRenderer{server: server}, nil
-	default:
+	if renderer, ok := renderers[name]; ok && renderer != nil {
+		renderer.SetServer(server)
+
+		return renderer, nil
+	} else {
 		return nil, fmt.Errorf("Unknown renderer %q", name)
 	}
 }

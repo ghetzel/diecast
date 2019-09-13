@@ -27,6 +27,10 @@ func (self *PdfRenderer) ShouldPrerender() bool {
 	return false
 }
 
+func (self *PdfRenderer) SetServer(server *Server) {
+	self.server = server
+}
+
 func (self *PdfRenderer) SetPrewriteFunc(fn PrewriteFunc) {
 	self.prewrite = fn
 }

@@ -11,6 +11,7 @@ require (
 	github.com/ghetzel/go-stockutil v1.8.3
 	github.com/ghetzel/go-webfriend v0.9.40
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-shiori/go-readability v0.0.0-20190829113304-8630e8f6e148
 	github.com/gobwas/glob v0.2.3
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/grokify/html-strip-tags-go v0.0.0-20180530080503-3f8856873ce5

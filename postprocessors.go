@@ -10,10 +10,12 @@ var rxEmptyLine = regexp.MustCompile(`(?m)^\s*$[\r\n]*|[\r\n]+\s+\z`)
 
 type PostprocessorFunc func(string) (string, error)
 
-var registeredPostprocessors = map[string]PostprocessorFunc{
-	`trim-empty-lines`: TrimEmptyLines,
-	`prettify-html`:    PrettifyHTML,
+func init() {
+	RegisterPostprocessor(`trim-empty-lines`, TrimEmptyLines)
+	RegisterPostprocessor(`prettify-html`, PrettifyHTML)
 }
+
+var registeredPostprocessors = make(map[string]PostprocessorFunc)
 
 func RegisterPostprocessor(name string, ppfunc PostprocessorFunc) {
 	if ppfunc != nil {

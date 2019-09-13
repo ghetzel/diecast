@@ -18,6 +18,10 @@ func (self *TemplateRenderer) ShouldPrerender() bool {
 	return false
 }
 
+func (self *TemplateRenderer) SetServer(server *Server) {
+	self.server = server
+}
+
 func (self *TemplateRenderer) SetPrewriteFunc(fn PrewriteFunc) {
 	self.prewrite = fn
 }

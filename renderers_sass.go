@@ -33,6 +33,10 @@ func (self *SassRenderer) SetPrewriteFunc(fn PrewriteFunc) {
 	self.prewrite = fn
 }
 
+func (self *SassRenderer) SetServer(server *Server) {
+	self.server = server
+}
+
 func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
 	defer options.Input.Close()
 

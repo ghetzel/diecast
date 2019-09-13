@@ -1,0 +1,35 @@
+---
+postprocessors:
+- prettify-html
+---
+<html>
+<head>
+    <style>
+        html, body {
+            width:  100vw;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background:      #222222;
+            color:           white;
+            display:         flex;
+            justify-content: center;
+        }
+
+
+        .page {
+            width: 50vw;
+        }
+
+        .page img {
+            object-fit: contain;
+            max-width:   100%;
+        }
+    </style>
+</head>
+<body>
+{{ readabilize (qs "url" "") }}
+</body>
+</html>

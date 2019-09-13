@@ -17,6 +17,10 @@ func (self *MarkdownRenderer) ShouldPrerender() bool {
 	return true
 }
 
+func (self *MarkdownRenderer) SetServer(server *Server) {
+	self.server = server
+}
+
 func (self *MarkdownRenderer) SetPrewriteFunc(fn PrewriteFunc) {
 	self.prewrite = fn
 }

@@ -1,17 +1,22 @@
 package diecast
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"html/template"
 	"net/url"
+	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/go-shiori/go-readability"
 	base58 "github.com/jbenet/go-base58"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
+	"golang.org/x/net/html"
 )
 
 func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
@@ -183,8 +188,17 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Description: `The raw HTML snippet you sneakily want to sneak past the HTML sanitizer for reasons.`,
 					},
 				},
-				Function: func(value string) template.HTML {
-					return template.HTML(value)
+				Function: func(value interface{}) (template.HTML, error) {
+					switch value.(type) {
+					case *goquery.Document:
+						if doc, err := value.(*goquery.Document).Html(); err == nil {
+							return template.HTML(doc), nil
+						} else {
+							return ``, err
+						}
+					default:
+						return template.HTML(typeutil.String(value)), nil
+					}
 				},
 			}, {
 				Name: `sanitize`,
@@ -192,13 +206,49 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 					`to evaluate scripts, but leaving the rest. Useful for preparing user-generated HTML for display.`,
 				Arguments: []funcArg{
 					{
-						Name:        ``,
-						Type:        ``,
-						Description: ``,
+						Name:        `value`,
+						Type:        `string, HTML document object`,
+						Description: `The document to sanitize.`,
 					},
 				},
-				Function: func(value string) template.HTML {
-					return template.HTML(bluemonday.UGCPolicy().Sanitize(value))
+				Function: func(value interface{}) (template.HTML, error) {
+					var document string
+
+					switch value.(type) {
+					case *goquery.Document:
+						if doc, err := value.(*goquery.Document).Html(); err == nil {
+							document = doc
+						} else {
+							return ``, err
+						}
+					default:
+						document = typeutil.String(value)
+					}
+
+					return template.HTML(bluemonday.UGCPolicy().Sanitize(document)), nil
+				},
+			}, {
+				Name:    `readabilize`,
+				Summary: `Takes a raw HTML string and a readable version out of it.`,
+				Arguments: []funcArg{
+					{
+						Name:        `value`,
+						Type:        `string, HTML document object`,
+						Description: `The document to sanitize.`,
+					},
+				},
+				Function: func(url string) (template.HTML, error) {
+					if article, err := readability.FromURL(url, 10*time.Second); err == nil {
+						buf := bytes.NewBuffer(nil)
+
+						if err := html.Render(buf, article.Node); err == nil {
+							return template.HTML(buf.String()), nil
+						} else {
+							return ``, err
+						}
+					} else {
+						return ``, err
+					}
 				},
 			}, {
 				Name:    `urlencode`,
