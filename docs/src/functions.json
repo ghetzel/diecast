@@ -1401,9 +1401,29 @@
         "Hidden": false,
         "Arguments": [
           {
-            "Name": "",
-            "Type": "",
-            "Description": "",
+            "Name": "value",
+            "Type": "string, HTML document object",
+            "Description": "The document to sanitize.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "readabilize",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Takes a raw HTML string and a readable version out of it.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "value",
+            "Type": "string, HTML document object",
+            "Description": "The document to sanitize.",
             "Variadic": false,
             "Optional": false,
             "Default": null,

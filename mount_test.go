@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/ghetzel/testify/require"
 )
 
 type TestFileSystem map[string]http.File

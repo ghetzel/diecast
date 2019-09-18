@@ -11,7 +11,7 @@ import (
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/typeutil"
-	"github.com/stretchr/testify/require"
+	"github.com/ghetzel/testify/require"
 )
 
 func TestBindingHttp(t *testing.T) {

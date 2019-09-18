@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/ghetzel/go-stockutil/typeutil"
-	"github.com/stretchr/testify/require"
+	"github.com/ghetzel/testify/require"
 )
 
 func TestSassRenderer(t *testing.T) {

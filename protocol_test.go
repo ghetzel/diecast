@@ -3,7 +3,7 @@ package diecast
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/ghetzel/testify/require"
 )
 
 func TestProtocolRequest(t *testing.T) {

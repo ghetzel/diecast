@@ -952,6 +952,9 @@ Diecast runtime directory:</p>
             <a href="#fn-markdown">markdown</a>
         </li>
         <li>
+            <a href="#fn-readabilize">readabilize</a>
+        </li>
+        <li>
             <a href="#fn-sanitize">sanitize</a>
         </li>
         <li>
@@ -5376,6 +5379,38 @@ Diecast runtime directory:</p>
             </tbody>
         </table>
     </section>
+    <section class="function" id="fn-readabilize">
+        <h4 class="mt-3">
+            readabilize
+            <a href="#fn-readabilize" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>readabilize VALUE</code>
+        </div>
+        <p>Takes a raw HTML string and a readable version out of it.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>VALUE</pre></th>
+                    <td>string, HTML document object</td>
+                    <td>
+                        <p>The document to sanitize.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
     <section class="function" id="fn-sanitize">
         <h4 class="mt-3">
             sanitize
@@ -5385,7 +5420,7 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>sanitize </code>
+            <code>sanitize VALUE</code>
         </div>
         <p>Takes a raw HTML string and santizes it, removing attributes and elements that can be used to evaluate scripts, but leaving the rest. Useful for preparing user-generated HTML for display.</p>
         <h5>Arguments</h5>
@@ -5399,9 +5434,10 @@ Diecast runtime directory:</p>
             </thead>
             <tbody>
                 <tr>
-                    <th><pre></pre></th>
-                    <td></td>
+                    <th><pre>VALUE</pre></th>
+                    <td>string, HTML document object</td>
                     <td>
+                        <p>The document to sanitize.</p>
                     </td>
                 </tr>
             </tbody>

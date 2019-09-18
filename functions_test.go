@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/ghetzel/testify/require"
 )
 
 func TestCollectionFunctions(t *testing.T) {
