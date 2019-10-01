@@ -461,7 +461,7 @@
         "Name": "trim",
         "Alias": "",
         "Aliases": null,
-        "Summary": "Return the given string with any leading and trailing whitespace removed.",
+        "Summary": "Return the given string with any leading and trailing whitespace or characters removed.",
         "Returns": "",
         "Hidden": false,
         "Arguments": [
@@ -473,6 +473,15 @@
             "Optional": false,
             "Default": null,
             "Valid": null
+          },
+          {
+            "Name": "characters",
+            "Type": "string",
+            "Description": "A sequence of characters to trim from the string.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
           }
         ],
         "Examples": [
@@ -480,6 +489,11 @@
             "Code": "trim \" Hello   World  \"",
             "Description": "",
             "Return": "Hello  World"
+          },
+          {
+            "Code": "trim \"'hello world'\" \"'\"",
+            "Description": "",
+            "Return": "hello world"
           }
         ]
       },

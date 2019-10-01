@@ -9132,9 +9132,9 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>trim IN</code>
+            <code>trim IN [CHARACTERS]</code>
         </div>
-        <p>Return the given string with any leading and trailing whitespace removed.</p>
+        <p>Return the given string with any leading and trailing whitespace or characters removed.</p>
         <h5>Arguments</h5>
         <table class="table table-sm w-100">
             <thead>
@@ -9152,6 +9152,13 @@ Diecast runtime directory:</p>
                         <p>The input string to trim.</p>
                     </td>
                 </tr>
+                <tr>
+                    <th><pre>CHARACTERS</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>A sequence of characters to trim from the string.</p>
+                    </td>
+                </tr>
             </tbody>
         </table>
         <h5>Examples</h5>
@@ -9159,6 +9166,10 @@ Diecast runtime directory:</p>
             <div class="example" id="fn-trim-example-0">
                 <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>trim &#34; Hello   World  &#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">&#34;Hello  World&#34;</p>
+            </div>
+            <div class="example" id="fn-trim-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>trim &#34;&#39;hello world&#39;&#34; &#34;&#39;&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;hello world&#34;</p>
             </div>
         </div>
     </section>

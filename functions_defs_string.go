@@ -347,21 +347,41 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 			}, {
-				Name:     `trim`,
-				Summary:  `Return the given string with any leading and trailing whitespace removed.`,
-				Function: strings.TrimSpace,
+				Name:    `trim`,
+				Summary: `Return the given string with any leading and trailing whitespace or characters removed.`,
 				Arguments: []funcArg{
 					{
 						Name:        `in`,
 						Type:        `string`,
 						Description: `The input string to trim.`,
+					}, {
+						Name:        `characters`,
+						Type:        `string`,
+						Description: `A sequence of characters to trim from the string.`,
+						Optional:    true,
 					},
 				},
 				Examples: []funcExample{
 					{
 						Code:   `trim " Hello   World  "`,
 						Return: `Hello  World`,
+					}, {
+						Code:   `trim "'hello world'" "'"`,
+						Return: `hello world`,
 					},
+				},
+				Function: func(in interface{}, cuts ...string) string {
+					cutset := ``
+
+					if len(cuts) > 0 {
+						cutset = strings.Join(cuts, ``)
+					}
+
+					if cutset == `` {
+						return strings.TrimSpace(typeutil.String(in))
+					} else {
+						return strings.Trim(typeutil.String(in), cutset)
+					}
 				},
 			}, {
 				Name:     `upper`,
