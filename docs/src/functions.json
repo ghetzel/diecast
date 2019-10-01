@@ -3028,6 +3028,106 @@
         "Examples": null
       },
       {
+        "Name": "ceil",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the greatest integer value greater than or equal to the given number.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "floor",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the greatest integer value less than or equal to the given number.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "sin",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the sine of the given number (in radians).",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "cos",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the cosine of the given number (in radians).",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "tan",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the tangent of the given number (in radians).",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "asin",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the arcsine of the given number (in radians).",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "acos",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the arccosine of the given number (in radians).",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "atan",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the arctangent of the given number (in radians).",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "deg2rad",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the given number of degrees in radians.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "rad2deg",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the given number of radians in degrees.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
         "Name": "maximum",
         "Alias": "",
         "Aliases": null,
