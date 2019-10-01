@@ -119,6 +119,66 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 				Function: func(number interface{}) float64 {
 					return math.Abs(typeutil.Float(number))
 				},
+			}, {
+				Name:    `ceil`,
+				Summary: `Return the greatest integer value greater than or equal to the given number.`,
+				Function: func(number interface{}) float64 {
+					return math.Ceil(typeutil.Float(number))
+				},
+			}, {
+				Name:    `floor`,
+				Summary: `Return the greatest integer value less than or equal to the given number.`,
+				Function: func(number interface{}) float64 {
+					return math.Floor(typeutil.Float(number))
+				},
+			}, {
+				Name:    `sin`,
+				Summary: `Return the sine of the given number (in radians).`,
+				Function: func(rad interface{}) float64 {
+					return math.Sin(typeutil.Float(rad))
+				},
+			}, {
+				Name:    `cos`,
+				Summary: `Return the cosine of the given number (in radians).`,
+				Function: func(rad interface{}) float64 {
+					return math.Cos(typeutil.Float(rad))
+				},
+			}, {
+				Name:    `tan`,
+				Summary: `Return the tangent of the given number (in radians).`,
+				Function: func(rad interface{}) float64 {
+					return math.Tan(typeutil.Float(rad))
+				},
+			}, {
+				Name:    `asin`,
+				Summary: `Return the arcsine of the given number (in radians).`,
+				Function: func(rad interface{}) float64 {
+					return math.Asin(typeutil.Float(rad))
+				},
+			}, {
+				Name:    `acos`,
+				Summary: `Return the arccosine of the given number (in radians).`,
+				Function: func(rad interface{}) float64 {
+					return math.Acos(typeutil.Float(rad))
+				},
+			}, {
+				Name:    `atan`,
+				Summary: `Return the arctangent of the given number (in radians).`,
+				Function: func(rad interface{}) float64 {
+					return math.Atan(typeutil.Float(rad))
+				},
+			}, {
+				Name:    `deg2rad`,
+				Summary: `Return the given number of degrees in radians.`,
+				Function: func(deg interface{}) float64 {
+					return typeutil.Float(deg) * (math.Pi / 180)
+				},
+			}, {
+				Name:    `rad2deg`,
+				Summary: `Return the given number of radians in degrees.`,
+				Function: func(rad interface{}) float64 {
+					return typeutil.Float(rad) * (180 / math.Pi)
+				},
 			},
 		},
 	}
