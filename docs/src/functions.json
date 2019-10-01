@@ -3067,7 +3067,7 @@
           {
             "Name": "number",
             "Type": "float, integer",
-            "Description": "The number(s) to round.",
+            "Description": "The number to round.",
             "Variadic": false,
             "Optional": false,
             "Default": null,
@@ -3087,7 +3087,7 @@
           {
             "Name": "number",
             "Type": "float, integer",
-            "Description": "The number(s) to operate on.",
+            "Description": "The number to operate on.",
             "Variadic": false,
             "Optional": false,
             "Default": null,
@@ -3107,7 +3107,7 @@
           {
             "Name": "number",
             "Type": "float, integer",
-            "Description": "The number(s) to test.",
+            "Description": "The number to test.",
             "Variadic": false,
             "Optional": false,
             "Default": null,
@@ -3127,7 +3127,7 @@
           {
             "Name": "number",
             "Type": "float, integer",
-            "Description": "The number(s) to test.",
+            "Description": "The number to test.",
             "Variadic": false,
             "Optional": false,
             "Default": null,
@@ -3147,7 +3147,7 @@
           {
             "Name": "number",
             "Type": "float, integer",
-            "Description": "The number(s) to operate on.",
+            "Description": "The number to operate on.",
             "Variadic": false,
             "Optional": false,
             "Default": null,
@@ -3167,7 +3167,7 @@
           {
             "Name": "number",
             "Type": "float, integer",
-            "Description": "The number(s) to operate on.",
+            "Description": "The number to operate on.",
             "Variadic": false,
             "Optional": false,
             "Default": null,
@@ -3187,7 +3187,7 @@
           {
             "Name": "number",
             "Type": "float, integer",
-            "Description": "The number(s) to operate on.",
+            "Description": "The number to operate on.",
             "Variadic": false,
             "Optional": false,
             "Default": null,

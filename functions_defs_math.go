@@ -150,7 +150,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 					{
 						Name:        `number`,
 						Type:        `float, integer`,
-						Description: `The number(s) to round.`,
+						Description: `The number to round.`,
 					},
 				},
 				Function: func(in interface{}, places ...int) (float64, error) {
@@ -177,7 +177,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 					{
 						Name:        `number`,
 						Type:        `float, integer`,
-						Description: `The number(s) to operate on.`,
+						Description: `The number to operate on.`,
 					},
 				},
 				Function: func(value interface{}) float64 {
@@ -190,7 +190,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 					{
 						Name:        `number`,
 						Type:        `float, integer`,
-						Description: `The number(s) to test.`,
+						Description: `The number to test.`,
 					},
 				},
 				Function: func(number interface{}) bool {
@@ -203,7 +203,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 					{
 						Name:        `number`,
 						Type:        `float, integer`,
-						Description: `The number(s) to test.`,
+						Description: `The number to test.`,
 					},
 				},
 				Function: func(number interface{}) bool {
@@ -216,7 +216,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 					{
 						Name:        `number`,
 						Type:        `float, integer`,
-						Description: `The number(s) to operate on.`,
+						Description: `The number to operate on.`,
 					},
 				},
 				Function: func(number interface{}) float64 {
@@ -229,7 +229,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 					{
 						Name:        `number`,
 						Type:        `float, integer`,
-						Description: `The number(s) to operate on.`,
+						Description: `The number to operate on.`,
 					},
 				},
 				Function: func(number interface{}) float64 {
@@ -242,7 +242,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 					{
 						Name:        `number`,
 						Type:        `float, integer`,
-						Description: `The number(s) to operate on.`,
+						Description: `The number to operate on.`,
 					},
 				},
 				Function: func(number interface{}) float64 {
