@@ -697,6 +697,11 @@
             "Code": "autobyte 2490368 \"%.2f\"",
             "Description": "",
             "Return": "2.38MB"
+          },
+          {
+            "Code": "autobyte 9876543210 \"%.0f \"",
+            "Description": "",
+            "Return": "9 GB"
           }
         ]
       },

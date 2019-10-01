@@ -521,6 +521,9 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 					{
 						Code:   `autobyte 2490368 "%.2f"`,
 						Return: `2.38MB`,
+					}, {
+						Code:   `autobyte 9876543210 "%.0f "`,
+						Return: `9 GB`,
 					},
 				},
 			}, {
