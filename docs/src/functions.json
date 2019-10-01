@@ -2914,7 +2914,17 @@
         "Summary": "Return the sum of all of the given values.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to add together.",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -2924,7 +2934,17 @@
         "Summary": "Sequentially subtract all of the given values.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to subtract, in order.",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -2934,7 +2954,17 @@
         "Summary": "Return the product of all of the given values.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to multiply together.",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -2944,7 +2974,17 @@
         "Summary": "Sequentially divide all of the given values in the order given.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to divide, in order.",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -2954,7 +2994,17 @@
         "Summary": "Return the modulus of all of the given values.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to operate on, in order.",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -2964,7 +3014,17 @@
         "Summary": "Sequentially exponentiate of all of the given *values*.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to operate on, in order.",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -2974,7 +3034,26 @@
         "Summary": "Return an array of integers representing a sequence from [0, _n_).",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "end",
+            "Type": "integer",
+            "Description": "The largest number in the sequence (exclusive).",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "start",
+            "Type": "integer",
+            "Description": "The number to start the sequence at (inclusive)",
+            "Variadic": false,
+            "Optional": true,
+            "Default": 0,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -2984,7 +3063,17 @@
         "Summary": "Round a number to the nearest _n_ places.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to round.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -2994,7 +3083,17 @@
         "Summary": "Return the given number multiplied by -1.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to operate on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3004,7 +3103,17 @@
         "Summary": "Return whether the given number is even.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to test.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3014,7 +3123,17 @@
         "Summary": "Return whether the given number is odd.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to test.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3024,7 +3143,17 @@
         "Summary": "Return the absolute value of the given number.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to operate on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3034,7 +3163,17 @@
         "Summary": "Return the greatest integer value greater than or equal to the given number.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to operate on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3044,7 +3183,17 @@
         "Summary": "Return the greatest integer value less than or equal to the given number.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "number",
+            "Type": "float, integer",
+            "Description": "The number(s) to operate on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3054,7 +3203,17 @@
         "Summary": "Return the sine of the given number (in radians).",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "radians",
+            "Type": "float, integer",
+            "Description": "The value (in radians) to operate on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3064,7 +3223,17 @@
         "Summary": "Return the cosine of the given number (in radians).",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "radians",
+            "Type": "float, integer",
+            "Description": "The value (in radians) to operate on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3074,7 +3243,17 @@
         "Summary": "Return the tangent of the given number (in radians).",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "radians",
+            "Type": "float, integer",
+            "Description": "The value (in radians) to operate on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3084,7 +3263,17 @@
         "Summary": "Return the arcsine of the given number (in radians).",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "radians",
+            "Type": "float, integer",
+            "Description": "The value (in radians) to operate on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3094,7 +3283,17 @@
         "Summary": "Return the arccosine of the given number (in radians).",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "radians",
+            "Type": "float, integer",
+            "Description": "The value (in radians) to operate on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3104,7 +3303,17 @@
         "Summary": "Return the arctangent of the given number (in radians).",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "radians",
+            "Type": "float, integer",
+            "Description": "The value (in radians) to operate on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3114,7 +3323,17 @@
         "Summary": "Return the given number of degrees in radians.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "degrees",
+            "Type": "float, integer",
+            "Description": "The value (in degrees) to convert.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3124,7 +3343,17 @@
         "Summary": "Return the given number of radians in degrees.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "radians",
+            "Type": "float, integer",
+            "Description": "The value (in radians) to convert.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {

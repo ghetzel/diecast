@@ -23,6 +23,14 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `add`,
 				Summary: `Return the sum of all of the given values.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to add together.`,
+						Variadic:    true,
+					},
+				},
 				Function: func(values ...interface{}) float64 {
 					out, _ := calcFn(`+`, values...)
 					return out
@@ -30,6 +38,14 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `subtract`,
 				Summary: `Sequentially subtract all of the given values.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to subtract, in order.`,
+						Variadic:    true,
+					},
+				},
 				Function: func(values ...interface{}) float64 {
 					out, _ := calcFn(`-`, values...)
 					return out
@@ -37,6 +53,14 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `multiply`,
 				Summary: `Return the product of all of the given values.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to multiply together.`,
+						Variadic:    true,
+					},
+				},
 				Function: func(values ...interface{}) float64 {
 					out, _ := calcFn(`*`, values...)
 					return out
@@ -44,30 +68,74 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `divide`,
 				Summary: `Sequentially divide all of the given values in the order given.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to divide, in order.`,
+						Variadic:    true,
+					},
+				},
 				Function: func(values ...interface{}) (float64, error) {
 					return calcFn(`/`, values...)
 				},
 			}, {
 				Name:    `mod`,
 				Summary: `Return the modulus of all of the given values.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to operate on, in order.`,
+						Variadic:    true,
+					},
+				},
 				Function: func(values ...interface{}) (float64, error) {
 					return calcFn(`%`, values...)
 				},
 			}, {
 				Name:    `pow`,
 				Summary: `Sequentially exponentiate of all of the given *values*.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to operate on, in order.`,
+						Variadic:    true,
+					},
+				},
 				Function: func(values ...interface{}) (float64, error) {
 					return calcFn(`^`, values...)
 				},
 			}, {
 				Name:    `sequence`,
 				Summary: `Return an array of integers representing a sequence from [0, _n_).`,
-				Function: func(max interface{}) []int {
+				Arguments: []funcArg{
+					{
+						Name:        `end`,
+						Type:        `integer`,
+						Description: `The largest number in the sequence (exclusive).`,
+					},
+					{
+						Name:        `start`,
+						Type:        `integer`,
+						Description: `The number to start the sequence at (inclusive)`,
+						Optional:    true,
+						Default:     0,
+					},
+				},
+				Function: func(max interface{}, starts ...interface{}) []int {
+					start := 0
+
+					if len(starts) > 0 {
+						start = int(typeutil.Int(starts[0]))
+					}
+
 					if v, err := stringutil.ConvertToInteger(max); err == nil {
 						seq := make([]int, v)
 
 						for i, _ := range seq {
-							seq[i] = i
+							seq[i] = start + i
 						}
 
 						return seq
@@ -78,6 +146,13 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `round`,
 				Summary: `Round a number to the nearest _n_ places.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to round.`,
+					},
+				},
 				Function: func(in interface{}, places ...int) (float64, error) {
 					if inF, err := stringutil.ConvertToFloat(in); err == nil {
 						n := 0
@@ -98,84 +173,182 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `negate`,
 				Summary: `Return the given number multiplied by -1.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to operate on.`,
+					},
+				},
 				Function: func(value interface{}) float64 {
 					return -1 * typeutil.V(value).Float()
 				},
 			}, {
 				Name:    `isEven`,
 				Summary: `Return whether the given number is even.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to test.`,
+					},
+				},
 				Function: func(number interface{}) bool {
 					return (math.Mod(typeutil.Float(number), 2) == 0)
 				},
 			}, {
 				Name:    `isOdd`,
 				Summary: `Return whether the given number is odd.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to test.`,
+					},
+				},
 				Function: func(number interface{}) bool {
 					return (math.Mod(typeutil.Float(number), 2) != 0)
 				},
 			}, {
 				Name:    `abs`,
 				Summary: `Return the absolute value of the given number.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to operate on.`,
+					},
+				},
 				Function: func(number interface{}) float64 {
 					return math.Abs(typeutil.Float(number))
 				},
 			}, {
 				Name:    `ceil`,
 				Summary: `Return the greatest integer value greater than or equal to the given number.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to operate on.`,
+					},
+				},
 				Function: func(number interface{}) float64 {
 					return math.Ceil(typeutil.Float(number))
 				},
 			}, {
 				Name:    `floor`,
 				Summary: `Return the greatest integer value less than or equal to the given number.`,
+				Arguments: []funcArg{
+					{
+						Name:        `number`,
+						Type:        `float, integer`,
+						Description: `The number(s) to operate on.`,
+					},
+				},
 				Function: func(number interface{}) float64 {
 					return math.Floor(typeutil.Float(number))
 				},
 			}, {
 				Name:    `sin`,
 				Summary: `Return the sine of the given number (in radians).`,
+				Arguments: []funcArg{
+					{
+						Name:        `radians`,
+						Type:        `float, integer`,
+						Description: `The value (in radians) to operate on.`,
+					},
+				},
 				Function: func(rad interface{}) float64 {
 					return math.Sin(typeutil.Float(rad))
 				},
 			}, {
 				Name:    `cos`,
 				Summary: `Return the cosine of the given number (in radians).`,
+				Arguments: []funcArg{
+					{
+						Name:        `radians`,
+						Type:        `float, integer`,
+						Description: `The value (in radians) to operate on.`,
+					},
+				},
 				Function: func(rad interface{}) float64 {
 					return math.Cos(typeutil.Float(rad))
 				},
 			}, {
 				Name:    `tan`,
 				Summary: `Return the tangent of the given number (in radians).`,
+				Arguments: []funcArg{
+					{
+						Name:        `radians`,
+						Type:        `float, integer`,
+						Description: `The value (in radians) to operate on.`,
+					},
+				},
 				Function: func(rad interface{}) float64 {
 					return math.Tan(typeutil.Float(rad))
 				},
 			}, {
 				Name:    `asin`,
 				Summary: `Return the arcsine of the given number (in radians).`,
+				Arguments: []funcArg{
+					{
+						Name:        `radians`,
+						Type:        `float, integer`,
+						Description: `The value (in radians) to operate on.`,
+					},
+				},
 				Function: func(rad interface{}) float64 {
 					return math.Asin(typeutil.Float(rad))
 				},
 			}, {
 				Name:    `acos`,
 				Summary: `Return the arccosine of the given number (in radians).`,
+				Arguments: []funcArg{
+					{
+						Name:        `radians`,
+						Type:        `float, integer`,
+						Description: `The value (in radians) to operate on.`,
+					},
+				},
 				Function: func(rad interface{}) float64 {
 					return math.Acos(typeutil.Float(rad))
 				},
 			}, {
 				Name:    `atan`,
 				Summary: `Return the arctangent of the given number (in radians).`,
+				Arguments: []funcArg{
+					{
+						Name:        `radians`,
+						Type:        `float, integer`,
+						Description: `The value (in radians) to operate on.`,
+					},
+				},
 				Function: func(rad interface{}) float64 {
 					return math.Atan(typeutil.Float(rad))
 				},
 			}, {
 				Name:    `deg2rad`,
 				Summary: `Return the given number of degrees in radians.`,
+				Arguments: []funcArg{
+					{
+						Name:        `degrees`,
+						Type:        `float, integer`,
+						Description: `The value (in degrees) to convert.`,
+					},
+				},
 				Function: func(deg interface{}) float64 {
 					return typeutil.Float(deg) * (math.Pi / 180)
 				},
 			}, {
 				Name:    `rad2deg`,
 				Summary: `Return the given number of radians in degrees.`,
+				Arguments: []funcArg{
+					{
+						Name:        `radians`,
+						Type:        `float, integer`,
+						Description: `The value (in radians) to convert.`,
+					},
+				},
 				Function: func(rad interface{}) float64 {
 					return typeutil.Float(rad) * (180 / math.Pi)
 				},
