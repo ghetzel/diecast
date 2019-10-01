@@ -7290,9 +7290,68 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>calc</code>
+            <code>calc OPERATOR [NUMBERS ...]</code>
         </div>
-        <i>Undocumented</i>
+        <p>Perform arbitrary calculations on zero or more numbers.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>OPERATOR</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>An operation to perform on the given sequence of numbers.</p>
+                        <i class="d-block mt-2">Acceptable Values:</i>
+                        <table class="table table-sm mt-2">
+                            <tr>
+                                <td><code>&#34;&#43;&#34;</code></td>
+                                <td><p>Addition operator</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;-&#34;</code></td>
+                                <td><p>Subtraction operator</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;*&#34;</code></td>
+                                <td><p>Multiply operator</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;/&#34;</code></td>
+                                <td><p>Division operator</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;^&#34;</code></td>
+                                <td><p>Exponent operator</p>
+</td>
+                            </tr>
+                            <tr>
+                                <td><code>&#34;%&#34;</code></td>
+                                <td><p>Modulus operator</p>
+</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>NUMBERS</pre></th>
+                    <td>float, integer (1+)</td>
+                    <td>
+                        <p>Zero or more numbers to perform the given operation on (in order).</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-ceil">
         <h4 class="mt-3">
@@ -7527,9 +7586,28 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>maximum</code>
+            <code>maximum NUMBERS</code>
         </div>
         <p>Return the maximum of the given array of numbers.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>NUMBERS</pre></th>
+                    <td>array[float, integer]</td>
+                    <td>
+                        <p>An array of numbers to aggregate.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-mean">
         <h4 class="mt-3">
@@ -7540,9 +7618,28 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>mean</code>
+            <code>mean NUMBERS</code>
         </div>
         <p>Return the mean of the given array of numbers.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>NUMBERS</pre></th>
+                    <td>array[float, integer]</td>
+                    <td>
+                        <p>An array of numbers to aggregate.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-median">
         <h4 class="mt-3">
@@ -7553,9 +7650,28 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>median</code>
+            <code>median NUMBERS</code>
         </div>
         <p>Return the median of the given array of numbers.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>NUMBERS</pre></th>
+                    <td>array[float, integer]</td>
+                    <td>
+                        <p>An array of numbers to aggregate.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-minimum">
         <h4 class="mt-3">
@@ -7566,9 +7682,28 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>minimum</code>
+            <code>minimum NUMBERS</code>
         </div>
         <p>Return the minimum of the given array of numbers.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>NUMBERS</pre></th>
+                    <td>array[float, integer]</td>
+                    <td>
+                        <p>An array of numbers to aggregate.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-minimum_nz">
         <h4 class="mt-3">
@@ -7579,9 +7714,28 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>minimum_nz</code>
+            <code>minimum_nz NUMBERS</code>
         </div>
         <p>Return the minimum (excluding zero) of the given array of numbers.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>NUMBERS</pre></th>
+                    <td>array[float, integer]</td>
+                    <td>
+                        <p>An array of numbers to aggregate.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-mod">
         <h4 class="mt-3">
@@ -7855,9 +8009,28 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>stddev</code>
+            <code>stddev NUMBERS</code>
         </div>
         <p>Return the standard deviation of the given array of numbers.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>NUMBERS</pre></th>
+                    <td>array[float, integer]</td>
+                    <td>
+                        <p>An array of numbers to aggregate.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-subtract">
         <h4 class="mt-3">
@@ -7900,9 +8073,28 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>sum</code>
+            <code>sum NUMBERS</code>
         </div>
         <p>Return the sum of the given array of numbers.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>NUMBERS</pre></th>
+                    <td>array[float, integer]</td>
+                    <td>
+                        <p>An array of numbers to aggregate.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-tan">
         <h4 class="mt-3">

@@ -17,8 +17,42 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 		Description: `These functions implement basic mathematical and statistical operations on numbers.`,
 		Functions: []funcDef{
 			{
-				Name:     `calc`,
-				Summary:  ``,
+				Name:    `calc`,
+				Summary: `Perform arbitrary calculations on zero or more numbers.`,
+				Arguments: []funcArg{
+					{
+						Name:        `operator`,
+						Type:        `string`,
+						Description: `An operation to perform on the given sequence of numbers.`,
+						Valid: []funcArg{
+
+							{
+								Name:        `+`,
+								Description: `Addition operator`,
+							}, {
+								Name:        `-`,
+								Description: `Subtraction operator`,
+							}, {
+								Name:        `*`,
+								Description: `Multiply operator`,
+							}, {
+								Name:        `/`,
+								Description: `Division operator`,
+							}, {
+								Name:        `^`,
+								Description: `Exponent operator`,
+							}, {
+								Name:        `%`,
+								Description: `Modulus operator`,
+							},
+						},
+					}, {
+						Name:        `numbers`,
+						Type:        `float, integer`,
+						Description: `Zero or more numbers to perform the given operation on (in order).`,
+						Variadic:    true,
+					},
+				},
 				Function: calcFn,
 			}, {
 				Name:    `add`,
@@ -394,6 +428,13 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 		group.Functions = append(group.Functions, funcDef{
 			Name:    obj.Name,
 			Summary: fmt.Sprintf("Return the %s of the given array of numbers.", docName),
+			Arguments: []funcArg{
+				{
+					Name:        `numbers`,
+					Type:        `array[float, integer]`,
+					Description: `An array of numbers to aggregate.`,
+				},
+			},
 			Function: func(statsFn statsUnaryFn) statsTplFunc {
 				return func(in interface{}) (float64, error) {
 					var input []float64

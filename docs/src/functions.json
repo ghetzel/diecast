@@ -2901,10 +2901,84 @@
         "Name": "calc",
         "Alias": "",
         "Aliases": null,
-        "Summary": "",
+        "Summary": "Perform arbitrary calculations on zero or more numbers.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "operator",
+            "Type": "string",
+            "Description": "An operation to perform on the given sequence of numbers.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": [
+              {
+                "Name": "+",
+                "Type": "",
+                "Description": "Addition operator",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "-",
+                "Type": "",
+                "Description": "Subtraction operator",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "*",
+                "Type": "",
+                "Description": "Multiply operator",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "/",
+                "Type": "",
+                "Description": "Division operator",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "^",
+                "Type": "",
+                "Description": "Exponent operator",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "%",
+                "Type": "",
+                "Description": "Modulus operator",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              }
+            ]
+          },
+          {
+            "Name": "numbers",
+            "Type": "float, integer",
+            "Description": "Zero or more numbers to perform the given operation on (in order).",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3363,7 +3437,17 @@
         "Summary": "Return the maximum of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "numbers",
+            "Type": "array[float, integer]",
+            "Description": "An array of numbers to aggregate.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3373,7 +3457,17 @@
         "Summary": "Return the mean of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "numbers",
+            "Type": "array[float, integer]",
+            "Description": "An array of numbers to aggregate.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3383,7 +3477,17 @@
         "Summary": "Return the median of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "numbers",
+            "Type": "array[float, integer]",
+            "Description": "An array of numbers to aggregate.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3393,7 +3497,17 @@
         "Summary": "Return the minimum of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "numbers",
+            "Type": "array[float, integer]",
+            "Description": "An array of numbers to aggregate.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3403,7 +3517,17 @@
         "Summary": "Return the minimum (excluding zero) of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "numbers",
+            "Type": "array[float, integer]",
+            "Description": "An array of numbers to aggregate.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3413,7 +3537,17 @@
         "Summary": "Return the standard deviation of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "numbers",
+            "Type": "array[float, integer]",
+            "Description": "An array of numbers to aggregate.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -3423,7 +3557,17 @@
         "Summary": "Return the sum of the given array of numbers.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "numbers",
+            "Type": "array[float, integer]",
+            "Description": "An array of numbers to aggregate.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       }
     ],
