@@ -1658,6 +1658,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 		}
 
 		body = bytes.NewReader(data)
+		req.Body = ioutil.NopCloser(body)
 	} else {
 		return nil, nil, err
 	}
@@ -1682,6 +1683,10 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 				return nil, nil, err
 			}
 		}
+	}
+
+	if _, err := body.Seek(0, 0); err != nil {
+		return nil, nil, err
 	}
 
 	if lastErr == nil {
