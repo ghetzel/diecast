@@ -1008,8 +1008,17 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`a`, `b`, `c`, `d`},
 					},
 				},
-				Function: func(input interface{}, keys ...string) []interface{} {
-					return sorter(input, false, keys...)
+				Function: func(input interface{}) []interface{} {
+					out := sliceutil.Sliceify(input)
+
+					sort.Slice(out, func(i, j int) bool {
+						iv := typeutil.String(out[i])
+						jv := typeutil.String(out[j])
+
+						return iv < jv
+					})
+
+					return out
 				},
 			}, {
 				Name:    `rsort`,
@@ -1027,8 +1036,17 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`d`, `c`, `b`, `a`},
 					},
 				},
-				Function: func(input interface{}, keys ...string) []interface{} {
-					return sorter(input, true, keys...)
+				Function: func(input interface{}) []interface{} {
+					out := sliceutil.Sliceify(input)
+
+					sort.Slice(out, func(i, j int) bool {
+						iv := typeutil.String(out[i])
+						jv := typeutil.String(out[j])
+
+						return iv > jv
+					})
+
+					return out
 				},
 			}, {
 				Name:    `isort`,
@@ -1046,10 +1064,17 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`ALICE`, `bob`, `Mallory`},
 					},
 				},
-				Function: func(input interface{}, keys ...string) []interface{} {
-					return sorter(sliceutil.MapString(input, func(_ int, v string) string {
-						return strings.ToLower(v)
-					}), true, keys...)
+				Function: func(input interface{}) []interface{} {
+					out := sliceutil.Sliceify(input)
+
+					sort.Slice(out, func(i, j int) bool {
+						iv := strings.ToLower(typeutil.String(out[i]))
+						jv := strings.ToLower(typeutil.String(out[j]))
+
+						return iv < jv
+					})
+
+					return out
 				},
 			}, {
 				Name:    `irsort`,
@@ -1068,9 +1093,16 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(input interface{}, keys ...string) []interface{} {
-					return sorter(sliceutil.MapString(input, func(_ int, v string) string {
-						return strings.ToLower(v)
-					}), true, keys...)
+					out := sliceutil.Sliceify(input)
+
+					sort.Slice(out, func(i, j int) bool {
+						iv := strings.ToLower(typeutil.String(out[i]))
+						jv := strings.ToLower(typeutil.String(out[j]))
+
+						return iv > jv
+					})
+
+					return out
 				},
 			}, {
 				Name:    `mostcommon`,
