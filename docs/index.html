@@ -735,6 +735,9 @@ Diecast runtime directory:</p>
             <a href="#fn-intersect">intersect</a>
         </li>
         <li>
+            <a href="#fn-irSortByKey">irSortByKey</a>
+        </li>
+        <li>
             <a href="#fn-irsort">irsort</a>
         </li>
         <li>
@@ -742,6 +745,9 @@ Diecast runtime directory:</p>
         </li>
         <li>
             <a href="#fn-isort">isort</a>
+        </li>
+        <li>
+            <a href="#fn-isortByKey">isortByKey</a>
         </li>
         <li>
             <a href="#fn-keys">keys</a>
@@ -2546,6 +2552,69 @@ Diecast runtime directory:</p>
             </div>
         </div>
     </section>
+    <section class="function" id="fn-irSortByKey">
+        <h4 class="mt-3">
+            irSortByKey
+            <a href="#fn-irSortByKey" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>irSortByKey ARRAY KEY [EXPRESSION]</code>
+        </div>
+        <p>Same as isortByKey, but reversed (case-insensitive compare).</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>ARRAY</pre></th>
+                    <td>array</td>
+                    <td>
+                        <p>The array of objects to sort.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>KEY</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name of the key on each object whose values should determine the order of the output array.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>EXPRESSION</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The “{{ expression }}” to apply to the value at key from each object before determining uniqueness.  Uses the same expression rules as <a href="#fn-filter" rel="nofollow">filter</a></p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-irSortByKey-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>irSortByKey [{&#34;name&#34;: &#34;Bob&#34;}, {&#34;name&#34;: &#34;Mallory&#34;}, {&#34;name&#34;: &#34;Alice&#34;}] &#34;name&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">[
+  {
+    &#34;name&#34;: &#34;Mallory&#34;
+  },
+  {
+    &#34;name&#34;: &#34;Bob&#34;
+  },
+  {
+    &#34;name&#34;: &#34;Alice&#34;
+  }
+]</p>
+            </div>
+        </div>
+    </section>
     <section class="function" id="fn-irsort">
         <h4 class="mt-3">
             irsort
@@ -2667,6 +2736,69 @@ Diecast runtime directory:</p>
   &#34;ALICE&#34;,
   &#34;bob&#34;,
   &#34;Mallory&#34;
+]</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-isortByKey">
+        <h4 class="mt-3">
+            isortByKey
+            <a href="#fn-isortByKey" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>isortByKey ARRAY KEY [EXPRESSION]</code>
+        </div>
+        <p>Sort the given array of objects by comparing the values of the given key for all objects (case-insensitive compare).</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>ARRAY</pre></th>
+                    <td>array</td>
+                    <td>
+                        <p>The array of objects to sort.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>KEY</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name of the key on each object whose values should determine the order of the output array.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>EXPRESSION</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The “{{ expression }}” to apply to the value at key from each object before determining uniqueness.  Uses the same expression rules as <a href="#fn-filter" rel="nofollow">filter</a></p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-isortByKey-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>isortByKey [{&#34;name&#34;: &#34;Bob&#34;}, {&#34;name&#34;: &#34;Mallory&#34;}, {&#34;name&#34;: &#34;Alice&#34;}] &#34;name&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">[
+  {
+    &#34;name&#34;: &#34;Alice&#34;
+  },
+  {
+    &#34;name&#34;: &#34;Bob&#34;
+  },
+  {
+    &#34;name&#34;: &#34;Mallory&#34;
+  }
 ]</p>
             </div>
         </div>
@@ -3055,16 +3187,16 @@ Diecast runtime directory:</p>
         <h5>Examples</h5>
         <div class="examples">
             <div class="example" id="fn-rSortByKey-example-0">
-                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>rSortByKey [{&#34;name&#34;: &#34;Bob&#34;}, {&#34;name&#34;: &#34;Mallory&#34;}, {&#34;name&#34;: &#34;Alice&#34;}] &#34;name&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>rSortByKey [{&#34;name&#34;: &#34;bob&#34;}, {&#34;name&#34;: &#34;Mallory&#34;}, {&#34;name&#34;: &#34;ALICE&#34;}] &#34;name&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">[
   {
     &#34;name&#34;: &#34;Mallory&#34;
   },
   {
-    &#34;name&#34;: &#34;Bob&#34;
+    &#34;name&#34;: &#34;bob&#34;
   },
   {
-    &#34;name&#34;: &#34;Alice&#34;
+    &#34;name&#34;: &#34;ALICE&#34;
   }
 ]</p>
             </div>
@@ -3516,13 +3648,13 @@ Diecast runtime directory:</p>
         <h5>Examples</h5>
         <div class="examples">
             <div class="example" id="fn-sortByKey-example-0">
-                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>sortByKey [{&#34;name&#34;: &#34;Bob&#34;}, {&#34;name&#34;: &#34;Mallory&#34;}, {&#34;name&#34;: &#34;Alice&#34;}] &#34;name&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>sortByKey [{&#34;name&#34;: &#34;bob&#34;}, {&#34;name&#34;: &#34;Mallory&#34;}, {&#34;name&#34;: &#34;ALICE&#34;}] &#34;name&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">[
   {
-    &#34;name&#34;: &#34;Alice&#34;
+    &#34;name&#34;: &#34;ALICE&#34;
   },
   {
-    &#34;name&#34;: &#34;Bob&#34;
+    &#34;name&#34;: &#34;bob&#34;
   },
   {
     &#34;name&#34;: &#34;Mallory&#34;

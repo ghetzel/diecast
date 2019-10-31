@@ -4087,14 +4087,14 @@
         ],
         "Examples": [
           {
-            "Code": "sortByKey [{\"name\": \"Bob\"}, {\"name\": \"Mallory\"}, {\"name\": \"Alice\"}] \"name\"",
+            "Code": "sortByKey [{\"name\": \"bob\"}, {\"name\": \"Mallory\"}, {\"name\": \"ALICE\"}] \"name\"",
             "Description": "",
             "Return": [
               {
-                "name": "Alice"
+                "name": "ALICE"
               },
               {
-                "name": "Bob"
+                "name": "bob"
               },
               {
                 "name": "Mallory"
@@ -4141,7 +4141,115 @@
         ],
         "Examples": [
           {
-            "Code": "rSortByKey [{\"name\": \"Bob\"}, {\"name\": \"Mallory\"}, {\"name\": \"Alice\"}] \"name\"",
+            "Code": "rSortByKey [{\"name\": \"bob\"}, {\"name\": \"Mallory\"}, {\"name\": \"ALICE\"}] \"name\"",
+            "Description": "",
+            "Return": [
+              {
+                "name": "Mallory"
+              },
+              {
+                "name": "bob"
+              },
+              {
+                "name": "ALICE"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "Name": "isortByKey",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Sort the given array of objects by comparing the values of the given key for all objects (case-insensitive compare).",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "array",
+            "Type": "array",
+            "Description": "The array of objects to sort.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "key",
+            "Type": "string",
+            "Description": "The name of the key on each object whose values should determine the order of the output array.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "expression",
+            "Type": "string",
+            "Description": "The \"{{ expression }}\" to apply to the value at key from each object before determining uniqueness.  Uses the same expression rules as [filter](#fn-filter)",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "isortByKey [{\"name\": \"Bob\"}, {\"name\": \"Mallory\"}, {\"name\": \"Alice\"}] \"name\"",
+            "Description": "",
+            "Return": [
+              {
+                "name": "Alice"
+              },
+              {
+                "name": "Bob"
+              },
+              {
+                "name": "Mallory"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "Name": "irSortByKey",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Same as isortByKey, but reversed (case-insensitive compare).",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "array",
+            "Type": "array",
+            "Description": "The array of objects to sort.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "key",
+            "Type": "string",
+            "Description": "The name of the key on each object whose values should determine the order of the output array.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "expression",
+            "Type": "string",
+            "Description": "The \"{{ expression }}\" to apply to the value at key from each object before determining uniqueness.  Uses the same expression rules as [filter](#fn-filter)",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "irSortByKey [{\"name\": \"Bob\"}, {\"name\": \"Mallory\"}, {\"name\": \"Alice\"}] \"name\"",
             "Description": "",
             "Return": [
               {

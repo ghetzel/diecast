@@ -422,10 +422,10 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				},
 				Examples: []funcExample{
 					{
-						Code: `sortByKey [{"name": "Bob"}, {"name": "Mallory"}, {"name": "Alice"}] "name"`,
+						Code: `sortByKey [{"name": "bob"}, {"name": "Mallory"}, {"name": "ALICE"}] "name"`,
 						Return: []map[string]interface{}{
-							{"name": "Alice"},
-							{"name": "Bob"},
+							{"name": "ALICE"},
+							{"name": "bob"},
 							{"name": "Mallory"},
 						},
 					},
@@ -462,7 +462,87 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				},
 				Examples: []funcExample{
 					{
-						Code: `rSortByKey [{"name": "Bob"}, {"name": "Mallory"}, {"name": "Alice"}] "name"`,
+						Code: `rSortByKey [{"name": "bob"}, {"name": "Mallory"}, {"name": "ALICE"}] "name"`,
+						Return: []map[string]interface{}{
+							{"name": "Mallory"},
+							{"name": "bob"},
+							{"name": "ALICE"},
+						},
+					},
+				},
+				Function: func(input interface{}, key string) ([]interface{}, error) {
+					out := sliceutil.Sliceify(input)
+					sort.Slice(out, func(i int, j int) bool {
+						mI := maputil.M(out[i])
+						mJ := maputil.M(out[j])
+						return mI.String(key) > mJ.String(key)
+					})
+					return out, nil
+				},
+			}, {
+				Name:    `isortByKey`,
+				Summary: `Sort the given array of objects by comparing the values of the given key for all objects (case-insensitive compare).`,
+				Arguments: []funcArg{
+					{
+						Name:        `array`,
+						Type:        `array`,
+						Description: `The array of objects to sort.`,
+					}, {
+						Name:        `key`,
+						Type:        `string`,
+						Description: `The name of the key on each object whose values should determine the order of the output array.`,
+					}, {
+						Name:     `expression`,
+						Type:     `string`,
+						Optional: true,
+						Description: `The "{{ expression }}" to apply to the value at key from each object before determining uniqueness.  ` +
+							`Uses the same expression rules as [filter](#fn-filter)`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code: `isortByKey [{"name": "Bob"}, {"name": "Mallory"}, {"name": "Alice"}] "name"`,
+						Return: []map[string]interface{}{
+							{"name": "Alice"},
+							{"name": "Bob"},
+							{"name": "Mallory"},
+						},
+					},
+				},
+				Function: func(input interface{}, key string) ([]interface{}, error) {
+					out := sliceutil.Sliceify(input)
+					sort.Slice(out, func(i int, j int) bool {
+						mI := maputil.M(out[i])
+						mJ := maputil.M(out[j])
+
+						return strings.ToLower(mI.String(key)) < strings.ToLower(mJ.String(key))
+					})
+					return out, nil
+				},
+			}, {
+
+				Name:    `irSortByKey`,
+				Summary: `Same as isortByKey, but reversed (case-insensitive compare).`,
+				Arguments: []funcArg{
+					{
+						Name:        `array`,
+						Type:        `array`,
+						Description: `The array of objects to sort.`,
+					}, {
+						Name:        `key`,
+						Type:        `string`,
+						Description: `The name of the key on each object whose values should determine the order of the output array.`,
+					}, {
+						Name:     `expression`,
+						Type:     `string`,
+						Optional: true,
+						Description: `The "{{ expression }}" to apply to the value at key from each object before determining uniqueness.  ` +
+							`Uses the same expression rules as [filter](#fn-filter)`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code: `irSortByKey [{"name": "Bob"}, {"name": "Mallory"}, {"name": "Alice"}] "name"`,
 						Return: []map[string]interface{}{
 							{"name": "Mallory"},
 							{"name": "Bob"},
@@ -475,7 +555,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 					sort.Slice(out, func(i int, j int) bool {
 						mI := maputil.M(out[i])
 						mJ := maputil.M(out[j])
-						return mI.String(key) > mJ.String(key)
+						return strings.ToLower(mI.String(key)) > strings.ToLower(mJ.String(key))
 					})
 					return out, nil
 				},
