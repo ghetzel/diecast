@@ -5,12 +5,15 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/ghetzel/go-stockutil/httputil"
+	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/go-shiori/go-readability"
 	base58 "github.com/jbenet/go-base58"
@@ -305,6 +308,18 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `url`,
 				Summary: `Builds a URL with querystrings from the given base URL string and object.`,
+				Arguments: []funcArg{
+					{
+						Name:        `baseurl`,
+						Type:        `string`,
+						Description: `The URL to modify`,
+					}, {
+						Name:        `querymap`,
+						Type:        `object`,
+						Optional:    true,
+						Description: `A key-value object of query string values to add to the URL.`,
+					},
+				},
 				Function: func(base string, queries ...map[string]interface{}) (string, error) {
 					if u, err := url.Parse(base); err == nil {
 						for _, qs := range queries {
@@ -314,6 +329,154 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						}
 
 						return u.String(), nil
+					} else {
+						return ``, err
+					}
+				},
+			}, {
+				Name:    `urlScheme`,
+				Summary: `Return the scheme portion of the given URL.`,
+				Arguments: []funcArg{
+					{
+						Name:        `url`,
+						Type:        `string`,
+						Description: `The URL to parse`,
+					},
+				},
+				Function: func(in string) (string, error) {
+					if u, err := url.Parse(in); err == nil {
+						return u.Scheme, nil
+					} else {
+						return ``, err
+					}
+				},
+			}, {
+				Name:    `urlHost`,
+				Summary: `Return the host[:port] portion of the given URL.`,
+				Arguments: []funcArg{
+					{
+						Name:        `url`,
+						Type:        `string`,
+						Description: `The URL to parse`,
+					},
+				},
+				Function: func(in string) (string, error) {
+					if u, err := url.Parse(in); err == nil {
+						return u.Host, nil
+					} else {
+						return ``, err
+					}
+				},
+			}, {
+				Name:    `urlHostname`,
+				Summary: `Return the hostname (without port number) portion of the given URL.`,
+				Arguments: []funcArg{
+					{
+						Name:        `url`,
+						Type:        `string`,
+						Description: `The URL to parse`,
+					},
+				},
+				Function: func(in string) (string, error) {
+					if u, err := url.Parse(in); err == nil {
+						return u.Hostname(), nil
+					} else {
+						return ``, err
+					}
+				},
+			}, {
+				Name:    `urlPort`,
+				Summary: `Return the numeric port number of the given URL.`,
+				Arguments: []funcArg{
+					{
+						Name:        `url`,
+						Type:        `string`,
+						Description: `The URL to parse`,
+					},
+				},
+				Function: func(in string) (int, error) {
+					if u, err := url.Parse(in); err == nil {
+						if p := u.Port(); p != `` {
+							return int(typeutil.Int(p)), nil
+						} else {
+							return 0, fmt.Errorf("Invalid port number")
+						}
+					} else {
+						return 0, err
+					}
+				},
+			}, {
+				Name:    `urlPath`,
+				Summary: `Return the path component of the given URL.`,
+				Arguments: []funcArg{
+					{
+						Name:        `url`,
+						Type:        `string`,
+						Description: `The URL to parse`,
+					},
+				},
+				Function: func(in string) (string, error) {
+					if u, err := url.Parse(in); err == nil {
+						if p := u.Path; strings.HasPrefix(p, `/`) {
+							return p, nil
+						} else {
+							return `/`, nil
+						}
+					} else {
+						return ``, err
+					}
+				},
+			}, {
+				Name:    `urlQueryString`,
+				Summary: `Return a querystring value from the given URL.`,
+				Arguments: []funcArg{
+					{
+						Name:        `url`,
+						Type:        `string`,
+						Description: `The URL to parse`,
+					}, {
+						Name:        `key`,
+						Type:        `string`,
+						Description: `The querystring value to retrieve.`,
+					},
+				},
+				Function: func(in string, key string) (string, error) {
+					if u, err := url.Parse(in); err == nil {
+						return u.Query().Get(key), nil
+					} else {
+						return ``, err
+					}
+				},
+			}, {
+				Name:    `urlQuery`,
+				Summary: `Return all querystring values from the given URL.`,
+				Arguments: []funcArg{
+					{
+						Name:        `url`,
+						Type:        `string`,
+						Description: `The URL to parse`,
+					},
+				},
+				Function: func(in string) (map[string]interface{}, error) {
+					if u, err := url.Parse(in); err == nil {
+						return maputil.M(u.Query()).MapNative(), nil
+					} else {
+						return nil, err
+					}
+				},
+			}, {
+				Name:    `urlFragment`,
+				Summary: `Return the fragment component from the given URL.`,
+				Arguments: []funcArg{
+					{
+						Name:        `url`,
+						Type:        `string`,
+						Description: `The URL to parse`,
+					},
+				},
+				Function: func(in string) (string, error) {
+					if u, err := url.Parse(in); err == nil {
+						return u.Fragment, nil
 					} else {
 						return ``, err
 					}

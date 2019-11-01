@@ -985,10 +985,34 @@ Diecast runtime directory:</p>
             <a href="#fn-url">url</a>
         </li>
         <li>
+            <a href="#fn-urlFragment">urlFragment</a>
+        </li>
+        <li>
+            <a href="#fn-urlHost">urlHost</a>
+        </li>
+        <li>
+            <a href="#fn-urlHostname">urlHostname</a>
+        </li>
+        <li>
+            <a href="#fn-urlPath">urlPath</a>
+        </li>
+        <li>
             <a href="#fn-urlPathDecode">urlPathDecode</a>
         </li>
         <li>
             <a href="#fn-urlPathEncode">urlPathEncode</a>
+        </li>
+        <li>
+            <a href="#fn-urlPort">urlPort</a>
+        </li>
+        <li>
+            <a href="#fn-urlQuery">urlQuery</a>
+        </li>
+        <li>
+            <a href="#fn-urlQueryString">urlQueryString</a>
+        </li>
+        <li>
+            <a href="#fn-urlScheme">urlScheme</a>
         </li>
         <li>
             <a href="#fn-urldecode">urldecode</a>
@@ -5863,9 +5887,163 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>url</code>
+            <code>url BASEURL [QUERYMAP]</code>
         </div>
         <p>Builds a URL with querystrings from the given base URL string and object.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>BASEURL</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The URL to modify</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>QUERYMAP</pre></th>
+                    <td>object</td>
+                    <td>
+                        <p>A key-value object of query string values to add to the URL.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-urlFragment">
+        <h4 class="mt-3">
+            urlFragment
+            <a href="#fn-urlFragment" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>urlFragment URL</code>
+        </div>
+        <p>Return the fragment component from the given URL.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>URL</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The URL to parse</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-urlHost">
+        <h4 class="mt-3">
+            urlHost
+            <a href="#fn-urlHost" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>urlHost URL</code>
+        </div>
+        <p>Return the host[:port] portion of the given URL.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>URL</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The URL to parse</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-urlHostname">
+        <h4 class="mt-3">
+            urlHostname
+            <a href="#fn-urlHostname" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>urlHostname URL</code>
+        </div>
+        <p>Return the hostname (without port number) portion of the given URL.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>URL</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The URL to parse</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-urlPath">
+        <h4 class="mt-3">
+            urlPath
+            <a href="#fn-urlPath" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>urlPath URL</code>
+        </div>
+        <p>Return the path component of the given URL.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>URL</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The URL to parse</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-urlPathDecode">
         <h4 class="mt-3">
@@ -5926,6 +6104,141 @@ Diecast runtime directory:</p>
                     <td>string</td>
                     <td>
                         <p>The string to encode.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-urlPort">
+        <h4 class="mt-3">
+            urlPort
+            <a href="#fn-urlPort" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>urlPort URL</code>
+        </div>
+        <p>Return the numeric port number of the given URL.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>URL</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The URL to parse</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-urlQuery">
+        <h4 class="mt-3">
+            urlQuery
+            <a href="#fn-urlQuery" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>urlQuery URL</code>
+        </div>
+        <p>Return all querystring values from the given URL.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>URL</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The URL to parse</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-urlQueryString">
+        <h4 class="mt-3">
+            urlQueryString
+            <a href="#fn-urlQueryString" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>urlQueryString URL KEY</code>
+        </div>
+        <p>Return a querystring value from the given URL.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>URL</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The URL to parse</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>KEY</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The querystring value to retrieve.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-urlScheme">
+        <h4 class="mt-3">
+            urlScheme
+            <a href="#fn-urlScheme" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>urlScheme URL</code>
+        </div>
+        <p>Return the scheme portion of the given URL.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>URL</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The URL to parse</p>
                     </td>
                 </tr>
             </tbody>
