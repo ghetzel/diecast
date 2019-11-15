@@ -19,7 +19,6 @@ import (
 	_ "image/png"
 	"io"
 	"io/ioutil"
-
 	"net"
 	"net/http"
 	"net/http/httptest"

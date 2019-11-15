@@ -57,10 +57,18 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 	if err := tmpl.ParseFragments(options.Fragments); err == nil {
 		log.Debugf("[%s] Rendering %q as %v template", reqid(req), options.RequestedPath, tmpl.Engine())
 
-		if options.Header != nil {
+		if hdr := options.Header; hdr != nil {
 			// include any configured response headers now
-			for name, value := range options.Header.Headers {
-				w.Header().Set(name, fmt.Sprintf("%v", value))
+			for name, value := range hdr.Headers {
+				w.Header().Set(name, MustEvalInline(
+					fmt.Sprintf("%v", value),
+					options.Data,
+					options.FunctionSet,
+				))
+			}
+
+			if hdr.StatusCode > 0 {
+				w.WriteHeader(hdr.StatusCode)
 			}
 		}
 
@@ -68,6 +76,7 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 			options.MimeType = `text/html; charset=utf-8`
 		}
 
+		// this entire if-block is just for debugging templates
 		if self.server.ShouldReturnSource(req) {
 			w.Header().Set(`Content-Type`, `text/plain`)
 

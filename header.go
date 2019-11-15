@@ -66,6 +66,9 @@ type TemplateHeader struct {
 	// Override the string used to join multiple values of the same HTTP header.
 	HeaderJoiner string `json:"header_joiner,omitempty"`
 
+	// Override the HTTP response status code of this page
+	StatusCode int `json:"code,omitempty"`
+
 	lines int
 }
 
@@ -103,6 +106,13 @@ func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error
 		newHeader.Locale = other.Locale
 	} else {
 		newHeader.Locale = self.Locale
+	}
+
+	// status code: prefer non-zero
+	if other.StatusCode != 0 {
+		newHeader.StatusCode = other.StatusCode
+	} else {
+		newHeader.StatusCode = self.StatusCode
 	}
 
 	// Redirect: prefer other, fallback to ours
