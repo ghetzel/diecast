@@ -30,6 +30,7 @@ require (
 	github.com/tg123/go-htpasswd v0.0.0-20190305225429-d38e564730bf
 	github.com/urfave/negroni v1.0.0
 	github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8
+	github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036 // indirect
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1
 	golang.org/x/text v0.3.0
