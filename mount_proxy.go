@@ -22,23 +22,24 @@ var DefaultProxyMountTimeout = time.Duration(10) * time.Second
 var MaxBufferedBodySize = 16535
 
 type ProxyMount struct {
-	MountPoint          string                 `json:"-"`
-	URL                 string                 `json:"-"`
-	Method              string                 `json:"method,omitempty"`
-	Headers             map[string]interface{} `json:"headers,omitempty"`
-	ResponseHeaders     map[string]interface{} `json:"response_headers,omitempty"`
-	ResponseCode        int                    `json:"response_code"`
-	RedirectOnSuccess   string                 `json:"redirect_on_success"`
-	Params              map[string]interface{} `json:"params,omitempty"`
-	Timeout             time.Duration          `json:"timeout,omitempty"`
-	PassthroughRequests bool                   `json:"passthrough_requests"`
-	PassthroughErrors   bool                   `json:"passthrough_errors"`
-	StripPathPrefix     string                 `json:"strip_path_prefix"`
-	AppendPathPrefix    string                 `json:"append_path_prefix"`
-	Insecure            bool                   `json:"insecure"`
-	Client              *http.Client
-	urlRewriteFrom      string
-	urlRewriteTo        string
+	MountPoint           string                 `json:"-"`
+	URL                  string                 `json:"-"`
+	Method               string                 `json:"method,omitempty"`
+	Headers              map[string]interface{} `json:"headers,omitempty"`
+	ResponseHeaders      map[string]interface{} `json:"response_headers,omitempty"`
+	ResponseCode         int                    `json:"response_code"`
+	RedirectOnSuccess    string                 `json:"redirect_on_success"`
+	Params               map[string]interface{} `json:"params,omitempty"`
+	Timeout              time.Duration          `json:"timeout,omitempty"`
+	PassthroughRequests  bool                   `json:"passthrough_requests"`
+	PassthroughErrors    bool                   `json:"passthrough_errors"`
+	PassthroughRedirects bool                   `json:"passthrough_redirects"`
+	StripPathPrefix      string                 `json:"strip_path_prefix"`
+	AppendPathPrefix     string                 `json:"append_path_prefix"`
+	Insecure             bool                   `json:"insecure"`
+	Client               *http.Client
+	urlRewriteFrom       string
+	urlRewriteTo         string
 }
 
 func (self *ProxyMount) GetMountPoint() string {
@@ -65,7 +66,9 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			},
 			Timeout: self.Timeout,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				if self.urlRewriteTo == `` {
+				if self.PassthroughRedirects {
+					return http.ErrUseLastResponse
+				} else if self.urlRewriteTo == `` {
 					if len(via) > 0 {
 						self.urlRewriteFrom = via[len(via)-1].URL.String()
 						self.urlRewriteFrom = strings.TrimSuffix(self.urlRewriteFrom, `/`)
