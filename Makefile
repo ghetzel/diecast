@@ -4,6 +4,7 @@
 GO111MODULE ?= on
 LOCALS      := $(shell find . -type f -name '*.go')
 BIN         ?= diecast-$(shell go env GOOS)-$(shell go env GOARCH)
+VERSION      = $(lastword $(shell bin/$(BIN) -v))
 
 all: deps test build docs
 
@@ -88,3 +89,10 @@ sign-client: clients.crt
 		-in $(NAME).crt \
 		-inkey $(NAME).key \
 		-out $(NAME).p12
+
+docker:
+	@echo "Building Docker image for v$(VERSION)"
+	docker tag $(shell docker build --quiet .) ghetzel/diecast:$(VERSION)
+	docker tag ghetzel/diecast:$(VERSION) ghetzel/diecast:latest
+	docker push ghetzel/diecast:$(VERSION)
+	docker push ghetzel/diecast:latest
