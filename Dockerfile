@@ -2,10 +2,10 @@ FROM ubuntu:bionic
 MAINTAINER Gary Hetzel <its@gary.cool>
 
 RUN apt-get -qq update
-RUN apt-get install -y libsass0 ca-certificates
+RUN apt-get install -qq -y libsass0 ca-certificates curl wget iputils-ping net-tools dnsutils
 RUN apt-get clean all
 RUN mkdir /config
-RUN echo "---" > /config/diecast.yml
+RUN echo 'bindingPrefix: "http://localhost:28419"' > /config/diecast.yml
 COPY bin/diecast-linux-amd64 /usr/bin/diecast
 
 EXPOSE 28419
