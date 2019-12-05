@@ -331,6 +331,8 @@ func (self *Server) LoadConfig(filename string) error {
 	if pathutil.FileExists(filename) {
 		if file, err := os.Open(filename); err == nil {
 			if data, err := ioutil.ReadAll(file); err == nil && len(data) > 0 {
+				data = []byte(stringutil.ExpandEnv(string(data)))
+
 				if err := yaml.Unmarshal(data, self); err == nil {
 					// apply environment-specific overrides
 					if self.Environment != `` {
@@ -1684,6 +1686,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 			lastErr = err
 
 			if err == nil {
+				log.Debugf("mount %v handled %q", mount.GetMountPoint(), requestPath)
 				return mount, mountResponse, nil
 			} else if IsHardStop(err) {
 				return nil, nil, err
