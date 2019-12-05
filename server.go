@@ -1145,7 +1145,8 @@ func (self *Server) ToTemplateName(requestPath string) string {
 	return requestPath
 }
 
-func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}, error) {
+// gets a FuncMap and data usable in templates and error pages alike, before bindings are evaluated.
+func (self *Server) getPreBindingData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}) {
 	data := self.requestToEvalData(req, header)
 
 	data[`vars`] = make(map[string]interface{})
@@ -1207,6 +1208,12 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	} else {
 		data[`page`] = make(map[string]interface{})
 	}
+
+	return funcs, data
+}
+
+func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}, error) {
+	funcs, data := self.getPreBindingData(req, header)
 
 	// Evaluate "bindings": Bindings have access to $.page, and each subsequent binding has access
 	//                      to all binding output that preceded it.  This allows bindings to be
@@ -1603,10 +1610,10 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 		self.userRouter.ServeHTTP(w, req)
 	} else if lastErr != nil {
 		// something else went sideways
-		self.respondError(w, fmt.Errorf("[%s] an error occurred accessing %s: %v", id, req.URL.Path, lastErr), http.StatusServiceUnavailable)
+		self.respondError(w, req, fmt.Errorf("[%s] an error occurred accessing %s: %v", id, req.URL.Path, lastErr), http.StatusServiceUnavailable)
 	} else {
 		// if we got *here*, then File Not Found
-		self.respondError(w, fmt.Errorf("[%s] File %q was not found.", id, req.URL.Path), http.StatusNotFound)
+		self.respondError(w, req, fmt.Errorf("[%s] File %q was not found.", id, req.URL.Path), http.StatusNotFound)
 	}
 }
 
@@ -1740,10 +1747,10 @@ func (self *Server) tryToHandleFoundFile(
 
 			// render the final template and write it out
 			if err := self.applyTemplate(w, req, requestPath, templateData, header, urlParams, mimeType); err != nil {
-				self.respondError(w, err, http.StatusInternalServerError)
+				self.respondError(w, req, err, http.StatusInternalServerError)
 			}
 		} else {
-			self.respondError(w, err, http.StatusInternalServerError)
+			self.respondError(w, req, err, http.StatusInternalServerError)
 		}
 	} else {
 		// if not templated, then the file is returned outright
@@ -1754,23 +1761,23 @@ func (self *Server) tryToHandleFoundFile(
 			if err := renderer.Render(w, req, RenderOptions{
 				Input: file,
 			}); err != nil {
-				self.respondError(w, err, http.StatusInternalServerError)
+				self.respondError(w, req, err, http.StatusInternalServerError)
 			}
 		} else if renderer, ok := GetRendererForFilename(requestPath, self); ok {
 			if err := renderer.Render(w, req, RenderOptions{
 				Input: file,
 			}); err != nil {
-				self.respondError(w, err, http.StatusInternalServerError)
+				self.respondError(w, req, err, http.StatusInternalServerError)
 			}
 		} else {
-			self.respondError(w, fmt.Errorf("Unknown renderer %q", rendererName), http.StatusBadRequest)
+			self.respondError(w, req, fmt.Errorf("Unknown renderer %q", rendererName), http.StatusBadRequest)
 		}
 	}
 
 	return true
 }
 
-func (self *Server) respondError(w http.ResponseWriter, resErr error, code int) {
+func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resErr error, code int) {
 	tmpl := NewTemplate(`error`, HtmlEngine)
 
 	if code >= 400 && code < 500 {
@@ -1789,12 +1796,14 @@ func (self *Server) respondError(w http.ResponseWriter, resErr error, code int) 
 		fmt.Sprintf("%s/default.html", self.ErrorsPath),
 	} {
 		if f, err := self.fs.Open(filename); err == nil {
-			if err := tmpl.ParseFrom(f); err == nil {
-				w.Header().Set(`Content-Type`, `text/html`)
+			funcs, errorData := self.getPreBindingData(req, self.BaseHeader)
+			errorData[`error`] = resErr.Error()
+			tmpl.Funcs(funcs)
 
-				if err := tmpl.Render(w, map[string]interface{}{
-					`error`: resErr.Error(),
-				}, ``); err == nil {
+			if err := tmpl.ParseFrom(f); err == nil {
+				w.Header().Set(`Content-Type`, fileutil.GetMimeType(filename, `text/html; charset=utf-8`))
+
+				if err := tmpl.Render(w, errorData, ``); err == nil {
 					return
 				} else {
 					log.Warningf("Error template %v render failed: %v", filename, err)
@@ -1893,7 +1902,7 @@ func (self *Server) setupServer() error {
 				}
 			}
 		} else {
-			self.respondError(w, err, http.StatusInternalServerError)
+			self.respondError(w, req, err, http.StatusInternalServerError)
 		}
 
 		// fallback to proceeding down the middleware chain
