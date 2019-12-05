@@ -1,3 +1,5 @@
+// +build amd64
+
 package diecast
 
 import (
@@ -19,7 +21,7 @@ func TestSassRenderer(t *testing.T) {
 	assert.NoError(server.Initialize())
 
 	renderer := new(SassRenderer)
-	renderer.server = server
+	renderer.SetServer(server)
 
 	request := httptest.NewRequest(`GET`, `/css/for-sass.scss`, nil)
 	recorder := httptest.NewRecorder()
