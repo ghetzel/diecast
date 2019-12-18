@@ -34,6 +34,7 @@ require (
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1
 	golang.org/x/text v0.3.0
+	gopkg.in/yaml.v2 v2.2.2
 )
 
 go 1.13

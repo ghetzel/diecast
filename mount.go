@@ -12,9 +12,9 @@ import (
 )
 
 type MountConfig struct {
-	Mount   string                 `json:"mount"`
-	To      string                 `json:"to"`
-	Options map[string]interface{} `json:"options"`
+	Mount   string                 `yaml:"mount"   json:"mount"`   // The URL path that this mount will respond to
+	To      string                 `yaml:"to"      json:"to"`      // The upstream URL or local filesystem path that will serve this path
+	Options map[string]interface{} `yaml:"options" json:"options"` // Mount-specific options
 }
 
 var MountHaltErr = errors.New(`mount halted`)

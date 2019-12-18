@@ -19,8 +19,8 @@ import (
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
-	"github.com/ghodss/yaml"
 	"github.com/oliveagle/jsonpath"
+	"gopkg.in/yaml.v2"
 )
 
 var DefaultBindingTimeout = 10 * time.Second
@@ -55,108 +55,52 @@ var AllowInsecureLoopbackBindings bool
 var DefaultParamJoiner = `;`
 
 type PaginatorConfig struct {
-	Total        string            `json:"total"`
-	Count        string            `json:"count"`
-	Done         string            `json:"done"`
-	Maximum      int64             `json:"max"`
-	Data         string            `json:"data"`
-	QueryStrings map[string]string `json:"params"`
-	Headers      map[string]string `json:"headers"`
+	Total        string            `yaml:"total"   json:"total"`
+	Count        string            `yaml:"count"   json:"count"`
+	Done         string            `yaml:"done"    json:"done"`
+	Maximum      int64             `yaml:"max"     json:"max"`
+	Data         string            `yaml:"data"    json:"data"`
+	QueryStrings map[string]string `yaml:"params"  json:"params"`
+	Headers      map[string]string `yaml:"headers" json:"headers"`
 }
 
 type ResultsPage struct {
-	Page    int         `json:"page"`
-	Last    bool        `json:"last,omitempty"`
-	Range   []int64     `json:"range"`
-	Data    interface{} `json:"data"`
-	Counter int64       `json:"counter"`
-	Total   int64       `json:"total"`
+	Page    int         `yaml:"page"           json:"page"`
+	Last    bool        `yaml:"last,omitempty" json:"last,omitempty"`
+	Range   []int64     `yaml:"range"          json:"range"`
+	Data    interface{} `yaml:"data"           json:"data"`
+	Counter int64       `yaml:"counter"        json:"counter"`
+	Total   int64       `yaml:"total"          json:"total"`
 }
 
 type Binding struct {
-	// The name of the key in the $.bindings template variable.
-	Name string `json:"name,omitempty"`
-
-	// Only evaluate the template on request URL paths matching one of the regular expressions in this array.
-	Restrict []string `json:"restrict,omitempty"`
-
-	// Only evaluate the binding if this expression yields a truthy value.
-	OnlyIfExpr string `json:"only_if,omitempty"`
-
-	// Do not evaluate the binding if this expression yields a truthy value.
-	NotIfExpr string `json:"not_if,omitempty"`
-
-	// The protocol-specific method to perform the request with.
-	Method string `json:"method,omitempty"`
-
-	// The URL that specifies the protocol and resource to retrieve.
-	Resource string `json:"resource,omitempty"`
-
-	// A duration specifying the timeout for the request.
-	Timeout interface{} `json:"timeout,omitempty"`
-
-	// If the protocol supports an insecure request mode (e.g.: HTTPS), permit it in this case.
-	Insecure bool `json:"insecure,omitempty"`
-
-	// A set of additional parameters to include in the request (e.g.: HTTP query string parameters)
-	Params map[string]interface{} `json:"params,omitempty"`
-
-	// If a parameter is provided as an array, but must be a string in the request, how shall the array elements be joined.
-	ParamJoiner string `json:"param_joiner,omitempty"`
-
-	// Additional headers to include in the request.
-	Headers map[string]string `json:"headers,omitempty"`
-
-	// If the request receives an open-ended body, this will allow structured data to be passed in.
-	BodyParams map[string]interface{} `json:"body,omitempty"`
-
-	// If the request receives an open-ended body, this will allow raw data to be passed in as-is.
-	RawBody string `json:"rawbody,omitempty"`
-
-	// How to serialize BodyParams into a string before the request is made.
-	Formatter string `json:"formatter,omitempty"`
-
-	// How to parse the response content from the request.
-	Parser string `json:"parser,omitempty"`
-
-	// Disable templating of variables in this binding.
-	NoTemplate bool `json:"no_template,omitempty"`
-
-	// Whether the request failing will cause a page-wide error or be ignored.
-	Optional bool `json:"optional,omitempty"`
-
-	// The value to place in $.bindings if the request fails.
-	Fallback interface{} `json:"fallback,omitempty"`
-
-	// Actions to take if the request fails.
-	OnError BindingErrorAction `json:"on_error,omitempty"`
-
-	// Actions to take in response to specific numeric response status codes.
-	IfStatus map[string]BindingErrorAction `json:"if_status,omitempty"`
-
-	// A templated value that yields an array.  The binding request will be performed once for each array element, wherein
-	// the Resource value is passed into a template that includes the $index and $item variables, which represent the repeat
-	// array item's position and value, respectively.
-	Repeat string `json:"repeat,omitempty"`
-
-	// Do not passthrough the headers that were sent to the template from the client's browser, even if Passthrough mode is enabled.
-	SkipInheritHeaders bool `json:"skip_inherit_headers,omitempty"`
-
-	// Reserved for future use.
-	DisableCache bool `json:"disable_cache,omitempty"`
-
-	// An open-ended set of options that are available for protocol implementations to use.
-	ProtocolOptions map[string]interface{} `json:"protocol,omitempty"`
-
-	// A specialized repeater configuration that automatically performs pagination on an upstream request, aggregating
-	// the results before returning them.
-	Paginate *PaginatorConfig `json:"paginate,omitempty"`
-
-	// Specifies a JSONPath expression that can be used to transform the response data received from the binding
-	// into the data that is provided to the template.
-	Transform string `json:"transform,omitempty"`
-
-	server *Server
+	BodyParams         map[string]interface{}        `yaml:"body,omitempty"                 json:"body,omitempty"`                 // If the request receives an open-ended body, this will allow structured data to be passed in.
+	DisableCache       bool                          `yaml:"disable_cache,omitempty"        json:"disable_cache,omitempty"`        // Reserved for future use.
+	Fallback           interface{}                   `yaml:"fallback,omitempty"             json:"fallback,omitempty"`             // The value to place in $.bindings if the request fails.
+	Formatter          string                        `yaml:"formatter,omitempty"            json:"formatter,omitempty"`            // How to serialize BodyParams into a string before the request is made.
+	Headers            map[string]string             `yaml:"headers,omitempty"              json:"headers,omitempty"`              // Additional headers to include in the request.
+	IfStatus           map[string]BindingErrorAction `yaml:"if_status,omitempty"            json:"if_status,omitempty"`            // Actions to take in response to specific numeric response status codes.
+	Insecure           bool                          `yaml:"insecure,omitempty"             json:"insecure,omitempty"`             // If the protocol supports an insecure request mode (e.g.: HTTPS), permit it in this case.
+	Method             string                        `yaml:"method,omitempty"               json:"method,omitempty"`               // The protocol-specific method to perform the request with.
+	Name               string                        `yaml:"name,omitempty"                 json:"name,omitempty"`                 // The name of the key in the $.bindings template variable.
+	NoTemplate         bool                          `yaml:"no_template,omitempty"          json:"no_template,omitempty"`          // Disable templating of variables in this binding.
+	NotIfExpr          string                        `yaml:"not_if,omitempty"               json:"not_if,omitempty"`               // Do not evaluate the binding if this expression yields a truthy value.
+	OnError            BindingErrorAction            `yaml:"on_error,omitempty"             json:"on_error,omitempty"`             // Actions to take if the request fails.
+	OnlyIfExpr         string                        `yaml:"only_if,omitempty"              json:"only_if,omitempty"`              // Only evaluate the binding if this expression yields a truthy value.
+	Optional           bool                          `yaml:"optional,omitempty"             json:"optional,omitempty"`             // Whether the request failing will cause a page-wide error or be ignored.
+	Paginate           *PaginatorConfig              `yaml:"paginate,omitempty"             json:"paginate,omitempty"`             // A specialized repeater configuration that automatically performs pagination on an upstream request, aggregating the results before returning them.
+	ParamJoiner        string                        `yaml:"param_joiner,omitempty"         json:"param_joiner,omitempty"`         // If a parameter is provided as an array, but must be a string in the request, how shall the array elements be joined.
+	Params             map[string]interface{}        `yaml:"params,omitempty"               json:"params,omitempty"`               // A set of additional parameters to include in the request (e.g.: HTTP query string parameters)
+	Parser             string                        `yaml:"parser,omitempty"               json:"parser,omitempty"`               // How to parse the response content from the request.
+	ProtocolOptions    map[string]interface{}        `yaml:"protocol,omitempty"             json:"protocol,omitempty"`             // An open-ended set of options that are available for protocol implementations to use.
+	RawBody            string                        `yaml:"rawbody,omitempty"              json:"rawbody,omitempty"`              // If the request receives an open-ended body, this will allow raw data to be passed in as-is.
+	Repeat             string                        `yaml:"repeat,omitempty"               json:"repeat,omitempty"`               // A templated value that yields an array.  The binding request will be performed once for each array element, wherein the Resource value is passed into a template that includes the $index and $item variables, which represent the repeat array item's position and value, respectively.
+	Resource           string                        `yaml:"resource,omitempty"             json:"resource,omitempty"`             // The URL that specifies the protocol and resource to retrieve.
+	Restrict           []string                      `yaml:"restrict,omitempty"             json:"restrict,omitempty"`             // Only evaluate the template on request URL paths matching one of the regular expressions in this array.
+	SkipInheritHeaders bool                          `yaml:"skip_inherit_headers,omitempty" json:"skip_inherit_headers,omitempty"` // Do not passthrough the headers that were sent to the template from the client's browser, even if Passthrough mode is enabled.
+	Timeout            interface{}                   `yaml:"timeout,omitempty"              json:"timeout,omitempty"`              // A duration specifying the timeout for the request.
+	Transform          string                        `yaml:"transform,omitempty"            json:"transform,omitempty"`            // Specifies a JSONPath expression that can be used to transform the response data received from the binding into the data that is provided to the template.
+	server             *Server
 }
 
 func (self *Binding) ShouldEvaluate(req *http.Request) bool {
@@ -367,7 +311,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						}
 
 					case `yaml`:
-						err = yaml.Unmarshal(data, &rv)
+						err = yaml.UnmarshalStrict(data, &rv)
 
 					case `html`:
 						rv, err = goquery.NewDocumentFromReader(bytes.NewBuffer(data))

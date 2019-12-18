@@ -43,7 +43,6 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/timeutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
-	"github.com/ghodss/yaml"
 	"github.com/gobwas/glob"
 	"github.com/husobee/vestigo"
 	"github.com/jbenet/go-base58"
@@ -51,6 +50,7 @@ import (
 	"github.com/signalsciences/tlstext"
 	"github.com/urfave/negroni"
 	"golang.org/x/text/language"
+	"gopkg.in/yaml.v2"
 )
 
 var ITotallyUnderstandRunningArbitraryCommandsAsRootIsRealRealBad = false
@@ -112,171 +112,75 @@ func (self RedirectTo) Error() string {
 }
 
 type StartCommand struct {
-	Command          string                 `json:"command"`
-	Directory        string                 `json:"directory"`
-	Environment      map[string]interface{} `json:"env"`
-	WaitBefore       string                 `json:"delay"`
-	Wait             string                 `json:"timeout"`
-	ExitOnCompletion bool                   `json:"exitOnCompletion"`
+	Command          string                 `yaml:"command"          json:"command"`          // The shell command line to execute on start
+	Directory        string                 `yaml:"directory"        json:"directory"`        // The working directory the command should be run from
+	Environment      map[string]interface{} `yaml:"env"              json:"env"`              // A map of environment variables to expose to the command
+	WaitBefore       string                 `yaml:"delay"            json:"delay"`            // How long to delay before running the command
+	Wait             string                 `yaml:"timeout"          json:"timeout"`          // How long to wait before killing the command
+	ExitOnCompletion bool                   `yaml:"exitOnCompletion" json:"exitOnCompletion"` // Whether Diecast should exit upon command completion
 	cmd              *exec.Cmd
 }
 
 type TlsConfig struct {
-	// Whether to enable SSL/TLS on the server.
-	Enable bool `json:"enable"`
-
-	// path to a PEM-encoded (.crt) file containing the server's TLS public key.
-	CertFile string `json:"cert"`
-
-	// path to a PEM-encoded (.key) file containing the server's TLS private key.
-	KeyFile string `json:"key"`
-
-	// If set, TLS Client certificates will be requested/accepted.  If set, may
-	// be one of: "request", "any", "verify", "require"
-	ClientCertMode string `json:"clients"`
-
-	// Path to a PEM-encoded file containing the CA that client certificates are issued and verify against.
-	ClientCAFile string `json:"clientCA"`
+	Enable         bool   `yaml:"enable"   json:"enable"`   // Whether to enable SSL/TLS on the server.
+	CertFile       string `yaml:"cert"     json:"cert"`     // path to a PEM-encoded (.crt) file containing the server's TLS public key.
+	KeyFile        string `yaml:"key"      json:"key"`      // path to a PEM-encoded (.key) file containing the server's TLS private key.
+	ClientCertMode string `yaml:"clients"  json:"clients"`  // If set, TLS Client certificates will be requested/accepted.  If set, may be one of: "request", "any", "verify", "require"
+	ClientCAFile   string `yaml:"clientCA" json:"clientCA"` // Path to a PEM-encoded file containing the CA that client certificates are issued and verify against.
 }
 
 type Server struct {
-	// Exposes the location of the diecast binary
-	BinPath string `json:"-"`
-
-	// The host:port address the server is listening on
-	Address string `json:"address"`
-
-	// Top-level bindings that apply to every rendered template
-	Bindings []Binding `json:"bindings"`
-
-	// Specify a string to prefix all binding resource values that start with "/"
-	BindingPrefix string `json:"bindingPrefix"`
-
-	// The filesystem location where templates and files are served from
-	RootPath string `json:"root"`
-
-	// The path to the layouts template directory
-	LayoutPath string `json:"layouts"`
-
-	// The path to the errors template directory
-	ErrorsPath string `json:"errors"`
-
-	// Enables additional options for debugging applications. Caution: can expose secrets and other sensitive data.
-	EnableDebugging bool `json:"debug"`
-
-	// Disable emitting per-request Server-Timing headers to aid in tracing bottlenecks and performance issues.
-	DisableTimings bool `json:"disableTimings"`
-
-	// Specifies whether layouts are enabled
-	EnableLayouts bool `json:"enableLayouts"`
-
-	// If specified, all requests must be prefixed with this string.
-	RoutePrefix string `json:"routePrefix"`
-
-	// A set of glob patterns specifying which files will be rendered as templates.
-	TemplatePatterns []string `json:"patterns"`
-
-	// Allow for the programmatic addition of extra functions for use in templates.
-	AdditionalFunctions template.FuncMap `json:"-"`
-
-	// Whether to attempt to locate a local file matching the requested path before attempting to find a template.
-	TryLocalFirst bool `json:"localFirst"`
-
-	// The name of the template file to use when a directory is requested.
-	IndexFile string `json:"indexFile"`
-
-	// A file that must exist and be readable before starting the server.
-	VerifyFile string `json:"verifyFile"`
-
-	// The set of all registered mounts.
-	Mounts []Mount `json:"-"`
-
-	// A list of mount configurations read from the diecast.yml config file.
-	MountConfigs []MountConfig `json:"mounts"`
-
-	// A default header that all templates will inherit from.
-	BaseHeader         *TemplateHeader        `json:"header"`
-	DefaultPageObject  map[string]interface{} `json:"-"`
-	OverridePageObject map[string]interface{} `json:"-"`
-
-	// A command that will be executed before the server is started.
-	PrestartCommands []*StartCommand `json:"prestart"`
-
-	// A command that will be executed after the server is confirmed running.
-	StartCommands []*StartCommand `json:"start"`
-
-	// Disable the execution of PrestartCommands and StartCommand .
-	DisableCommands bool `json:"disable_commands"`
-
-	// A set of authenticator configurations used to protect some or all routes.
-	Authenticators AuthenticatorConfigs `json:"authenticators"`
-
-	// Try these file extensions when looking for default (i.e.: "index") files.  If IndexFile has an extension, it will be stripped first.
-	TryExtensions []string `json:"tryExtensions"`
-
-	// Map file extensions to preferred renderers for a given file type.
-	RendererMappings map[string]string `json:"rendererMapping"`
-
-	// Which types of files will automatically have layouts applied.
-	AutolayoutPatterns []string `json:"autolayoutPatterns"`
-
-	// List of filenames containing PEM-encoded X.509 TLS certificates that represent trusted authorities.
-	// Use to validate certificates signed by an internal, non-public authority.
-	TrustedRootPEMs []string `json:"trustedRootPEMs"`
-
-	// Configure routes and actions to execute when those routes are requested.
-	Actions []*Action `json:"actions"`
-
-	// Specify that requests that terminate at a filesystem directory should automatically generate an index
-	// listing of that directory.
-	Autoindex bool `json:"autoindex"`
-
-	// If Autoindex is enabled, this allows the template used to generate the index page to be customized.
-	AutoindexTemplate string `json:"autoindexTemplate"`
-
-	// Setup global configuration details for Binding Protocols
-	Protocols map[string]ProtocolConfig `json:"protocols"`
-
-	// A function that can be used to intercept handlers being added to the server.
-	OnAddHandler AddHandlerFunc `json:"-"`
-
-	// Stores translations for use with the i18n and l10n functions.  Keys values represent the
-	Translations map[string]interface{} `json:"translations,omitempty"`
-
-	// Specify the default locale for pages being served.
-	Locale string `json:"locale"`
-
-	// Specify the environment for loading environment-specific configuration files in the form "diecast.env.yml"
-	Environment string `json:"environment"`
-
-	// TODO: favicon autogenerator
-	// Specifies the relative path to the file containing the /favicon.ico file.  This path can point to
-	// a Windows Icon (.ico), GIF, PNG, JPEG, or Bitmap (.bmp).  If necessary, the file will be converted
-	// and stored in memory to the ICO format.
-	FaviconPath string `json:"favicon"`
-
-	// where SSL/TLS configuration is stored
-	TLS *TlsConfig `json:"tls"`
-
-	// a list of glob patterns matching environment variable names that should not be exposed
-	FilterEnvVars []string `json:"filterEnvVars"`
-
-	// a list of glob patterns matching environment variable names that should always be exposed
-	ExposeEnvVars []string `json:"exposeEnvVars"`
-
-	// A set of HTTP headers that should be added to EVERY response Diecast returns, regardless of whether it
-	// originates from a template, mount, or other configuration.
-	GlobalHeaders map[string]interface{} `json:"globalHeaders"`
-
-	router          *http.ServeMux
-	userRouter      *vestigo.Router
-	handler         *negroni.Negroni
-	fs              http.FileSystem
-	precmd          *exec.Cmd
-	altRootCaPool   *x509.CertPool
-	initialized     bool
-	hasUserRoutes   bool
-	faviconImageIco []byte
+	Actions             []*Action                 `yaml:"actions"                 json:"actions"`            // Configure routes and actions to execute when those routes are requested.
+	AdditionalFunctions template.FuncMap          `yaml:"-"                       json:"-"`                  // Allow for the programmatic addition of extra functions for use in templates.
+	Address             string                    `yaml:"address"                 json:"address"`            // The host:port address the server is listening on
+	Authenticators      AuthenticatorConfigs      `yaml:"authenticators"          json:"authenticators"`     // A set of authenticator configurations used to protect some or all routes.
+	Autoindex           bool                      `yaml:"autoindex"               json:"autoindex"`          // Specify that requests that terminate at a filesystem directory should automatically generate an index listing of that directory.
+	AutoindexTemplate   string                    `yaml:"autoindexTemplate"       json:"autoindexTemplate"`  // If Autoindex is enabled, this allows the template used to generate the index page to be customized.
+	AutolayoutPatterns  []string                  `yaml:"autolayoutPatterns"      json:"autolayoutPatterns"` // Which types of files will automatically have layouts applied.
+	BaseHeader          *TemplateHeader           `yaml:"header"                  json:"header"`             // A default header that all templates will inherit from.
+	BinPath             string                    `yaml:"-"                       json:"-"`                  // Exposes the location of the diecast binary
+	BindingPrefix       string                    `yaml:"bindingPrefix"           json:"bindingPrefix"`      // Specify a string to prefix all binding resource values that start with "/"
+	Bindings            []Binding                 `yaml:"bindings"                json:"bindings"`           // Top-level bindings that apply to every rendered template
+	DefaultPageObject   map[string]interface{}    `yaml:"-"                       json:"-"`
+	DisableCommands     bool                      `yaml:"disable_commands"        json:"disable_commands"`        // Disable the execution of PrestartCommands and StartCommand .
+	DisableTimings      bool                      `yaml:"disableTimings"          json:"disableTimings"`          // Disable emitting per-request Server-Timing headers to aid in tracing bottlenecks and performance issues.
+	EnableDebugging     bool                      `yaml:"debug"                   json:"debug"`                   // Enables additional options for debugging applications. Caution: can expose secrets and other sensitive data.
+	EnableLayouts       bool                      `yaml:"enableLayouts"           json:"enableLayouts"`           // Specifies whether layouts are enabled
+	Environment         string                    `yaml:"environment"             json:"environment"`             // Specify the environment for loading environment-specific configuration files in the form "diecast.env.yml"
+	ErrorsPath          string                    `yaml:"errors"                  json:"errors"`                  // The path to the errors template directory
+	ExposeEnvVars       []string                  `yaml:"exposeEnvVars"           json:"exposeEnvVars"`           // a list of glob patterns matching environment variable names that should always be exposed
+	FaviconPath         string                    `yaml:"favicon"                 json:"favicon"`                 // TODO: favicon autogenerator: Specifies the relative path to the file containing the /favicon.ico file.  This path can point to a Windows Icon (.ico), GIF, PNG, JPEG, or Bitmap (.bmp).  If necessary, the file will be converted and stored in memory to the ICO format.
+	FilterEnvVars       []string                  `yaml:"filterEnvVars"           json:"filterEnvVars"`           // a list of glob patterns matching environment variable names that should not be exposed
+	GlobalHeaders       map[string]interface{}    `yaml:"globalHeaders,omitempty" json:"globalHeaders,omitempty"` // A set of HTTP headers that should be added to EVERY response Diecast returns, regardless of whether it originates from a template, mount, or other configuration.
+	IndexFile           string                    `yaml:"indexFile"               json:"indexFile"`               // The name of the template file to use when a directory is requested.
+	LayoutPath          string                    `yaml:"layouts"                 json:"layouts"`                 // The path to the layouts template directory
+	Locale              string                    `yaml:"locale"                  json:"locale"`                  // Specify the default locale for pages being served.
+	MountConfigs        []MountConfig             `yaml:"mounts"                  json:"mounts"`                  // A list of mount configurations read from the diecast.yml config file.
+	Mounts              []Mount                   `yaml:"-"                       json:"-"`                       // The set of all registered mounts.
+	OnAddHandler        AddHandlerFunc            `yaml:"-"                       json:"-"`                       // A function that can be used to intercept handlers being added to the server.
+	OverridePageObject  map[string]interface{}    `yaml:"-"                       json:"-"`
+	PrestartCommands    []*StartCommand           `yaml:"prestart"                json:"prestart"`               // A command that will be executed before the server is started.
+	Protocols           map[string]ProtocolConfig `yaml:"protocols"               json:"protocols"`              // Setup global configuration details for Binding Protocols
+	RendererMappings    map[string]string         `yaml:"rendererMapping"         json:"rendererMapping"`        // Map file extensions to preferred renderers for a given file type.
+	RootPath            string                    `yaml:"root"                    json:"root"`                   // The filesystem location where templates and files are served from
+	RoutePrefix         string                    `yaml:"routePrefix"             json:"routePrefix"`            // If specified, all requests must be prefixed with this string.
+	StartCommands       []*StartCommand           `yaml:"start"                   json:"start"`                  // A command that will be executed after the server is confirmed running.
+	TLS                 *TlsConfig                `yaml:"tls"                     json:"tls"`                    // where SSL/TLS configuration is stored
+	TemplatePatterns    []string                  `yaml:"patterns"                json:"patterns"`               // A set of glob patterns specifying which files will be rendered as templates.
+	Translations        map[string]interface{}    `yaml:"translations,omitempty"  json:"translations,omitempty"` // Stores translations for use with the i18n and l10n functions.  Keys values represent the
+	TrustedRootPEMs     []string                  `yaml:"trustedRootPEMs"         json:"trustedRootPEMs"`        // List of filenames containing PEM-encoded X.509 TLS certificates that represent trusted authorities.  Use to validate certificates signed by an internal, non-public authority.
+	TryExtensions       []string                  `yaml:"tryExtensions"           json:"tryExtensions"`          // Try these file extensions when looking for default (i.e.: "index") files.  If IndexFile has an extension, it will be stripped first.
+	TryLocalFirst       bool                      `yaml:"localFirst"              json:"localFirst"`             // Whether to attempt to locate a local file matching the requested path before attempting to find a template.
+	VerifyFile          string                    `yaml:"verifyFile"              json:"verifyFile"`             // A file that must exist and be readable before starting the server.
+	altRootCaPool       *x509.CertPool
+	faviconImageIco     []byte
+	fs                  http.FileSystem
+	handler             *negroni.Negroni
+	hasUserRoutes       bool
+	initialized         bool
+	precmd              *exec.Cmd
+	router              *http.ServeMux
+	userRouter          *vestigo.Router
 }
 
 func NewServer(root interface{}, patterns ...string) *Server {
@@ -306,6 +210,7 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		VerifyFile:         DefaultVerifyFile,
 		AutoindexTemplate:  DefaultAutoindexFilename,
 		FilterEnvVars:      DefaultFilterEnvVars,
+		GlobalHeaders:      make(map[string]interface{}),
 		router:             http.NewServeMux(),
 		userRouter:         vestigo.NewRouter(),
 	}
@@ -337,7 +242,7 @@ func (self *Server) LoadConfig(filename string) error {
 			if data, err := ioutil.ReadAll(file); err == nil && len(data) > 0 {
 				data = []byte(stringutil.ExpandEnv(string(data)))
 
-				if err := yaml.Unmarshal(data, self); err == nil {
+				if err := yaml.UnmarshalStrict(data, self); err == nil {
 					// apply environment-specific overrides
 					if self.Environment != `` {
 						eDir, eFile := filepath.Split(filename)
@@ -1848,7 +1753,7 @@ func SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, erro
 				if parts[1] != nil {
 					header.lines = len(strings.Split(string(parts[1]), "\n"))
 
-					if err := yaml.Unmarshal(parts[1], &header); err != nil {
+					if err := yaml.UnmarshalStrict(parts[1], &header); err != nil {
 						return nil, nil, err
 					}
 				}

@@ -17,12 +17,12 @@ type Authenticator interface {
 }
 
 type AuthenticatorConfig struct {
-	Name         string                 `json:"name,omitempty"`
-	Type         string                 `json:"type"`
-	Paths        []string               `json:"paths"`
-	Except       []string               `json:"except"`
-	CallbackPath string                 `json:"callback"`
-	Options      map[string]interface{} `json:"options"`
+	Name         string                 `yaml:"name,omitempty" json:"name,omitempty"` // The name of the Authenticator
+	Type         string                 `yaml:"type"           json:"type"`           // The type of Authenticator to create
+	Paths        []string               `yaml:"paths"          json:"paths"`          // Which paths this Authenticator should apply to (defaults to all paths)
+	Except       []string               `yaml:"except"         json:"except"`         // Specific paths this Authenticator should not cover (defaults to none)
+	CallbackPath string                 `yaml:"callback"       json:"callback"`       // A secondary path this authenticator should redirect to (for multi-step Authenticators)
+	Options      map[string]interface{} `yaml:"options"        json:"options"`        // Type-specific options
 	globs        []glob.Glob
 	exceptGlobs  []glob.Glob
 }

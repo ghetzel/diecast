@@ -39,12 +39,12 @@ type Performable interface {
 }
 
 type StepConfig struct {
-	Type     string      `json:"type"`
-	Data     interface{} `json:"data"`
-	Timeout  string      `json:"timeout,omitempty"`
-	Parser   string      `json:"parser"`
-	Output   interface{} `json:"-"`
-	Error    error       `json:"-"`
+	Type     string      `yaml:"type"              json:"type"`              // The type of step
+	Data     interface{} `yaml:"data"              json:"data"`              // The data being passed into this step from the previous one
+	Timeout  string      `yaml:"timeout,omitempty" json:"timeout,omitempty"` // Timeout for this step
+	Parser   string      `yaml:"parser"            json:"parser"`            // The format the data being passed in is expected to be in
+	Output   interface{} `yaml:"-"                 json:"-"`
+	Error    error       `yaml:"-"                 json:"-"`
 	index    int
 	firstlog bool
 	reader   io.Reader
@@ -182,10 +182,10 @@ func (self *StepConfig) logstep(format string, args ...interface{}) {
 }
 
 type Action struct {
-	Name   string        `json:"name,omitempty"`
-	Path   string        `json:"path"`
-	Method interface{}   `json:"method"`
-	Steps  []*StepConfig `json:"steps"`
+	Name   string        `yaml:"name,omitempty" json:"name,omitempty"` // The name of this action
+	Path   string        `yaml:"path"           json:"path"`           // The URL path this action is accessible from
+	Method interface{}   `yaml:"method"         json:"method"`         // The HTTP method(s) this action will respond to
+	Steps  []*StepConfig `yaml:"steps"          json:"steps"`          // The list of steps that are applied, in order, to the request body in order to generate a response
 }
 
 // Performs the action in response to an HTTP request, evaluating all action steps.  Steps are
