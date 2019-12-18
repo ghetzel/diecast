@@ -232,7 +232,7 @@ type Server struct {
 	Autoindex bool `json:"autoindex"`
 
 	// If Autoindex is enabled, this allows the template used to generate the index page to be customized.
-	AutoindexTemplate string `json:"autoindex_template"`
+	AutoindexTemplate string `json:"autoindexTemplate"`
 
 	// Setup global configuration details for Binding Protocols
 	Protocols map[string]ProtocolConfig `json:"protocols"`
@@ -259,14 +259,14 @@ type Server struct {
 	TLS *TlsConfig `json:"tls"`
 
 	// a list of glob patterns matching environment variable names that should not be exposed
-	FilterEnvVars []string `json:"filter_env_vars"`
+	FilterEnvVars []string `json:"filterEnvVars"`
 
 	// a list of glob patterns matching environment variable names that should always be exposed
-	ExposeEnvVars []string `json:"expose_env_vars"`
+	ExposeEnvVars []string `json:"exposeEnvVars"`
 
 	// A set of HTTP headers that should be added to EVERY response Diecast returns, regardless of whether it
 	// originates from a template, mount, or other configuration.
-	GlobalHeaders map[string]interface{} `json:"global_headers"`
+	GlobalHeaders map[string]interface{} `json:"globalHeaders"`
 
 	router          *http.ServeMux
 	userRouter      *vestigo.Router
