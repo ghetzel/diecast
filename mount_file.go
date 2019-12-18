@@ -3,15 +3,13 @@ package diecast
 import (
 	"fmt"
 	"io"
-	"mime"
 	"net/http"
 	"os"
 	"path"
 	"strings"
 
-	"github.com/ghetzel/go-stockutil/log"
+	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/h2non/filetype"
 )
 
 // A FileMount exposes the contents of a given filesystem directory.
@@ -71,7 +69,6 @@ func (self *FileMount) OpenWithType(name string, req *http.Request, requestBody 
 		for name, value := range self.ResponseHeaders {
 			value = strings.Join(sliceutil.Stringify(value), `,`)
 			response.Metadata[name] = value
-			log.Debugf("  [R]   %v: %v", name, value)
 		}
 
 		// override the response status code (if specified)
@@ -101,18 +98,19 @@ func (self *FileMount) Open(name string) (http.File, error) {
 }
 
 func figureOutMimeType(filename string, file io.ReadSeeker) (string, error) {
-	if mimetype := mime.TypeByExtension(path.Ext(filename)); mimetype != `` {
+	var mimetype string
+
+	if mimetype = fileutil.GetMimeType(path.Ext(filename)); mimetype != `` {
 		return mimetype, nil
-	} else if ftype, err := filetype.MatchReader(file); err == nil {
-		// if we couldn't determine MIME type from the filename, try to figure it out
-		// by actually reading the file
-
-		if _, err := file.Seek(0, io.SeekStart); err != nil {
-			return ``, err
-		}
-
-		return ftype.MIME.Value, nil
-	} else {
-		return ``, nil
 	}
+
+	if file != nil {
+		defer file.Seek(0, io.SeekStart)
+
+		if mimetype = fileutil.GetMimeType(file); mimetype != `` {
+			return mimetype, nil
+		}
+	}
+
+	return ``, nil
 }

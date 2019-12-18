@@ -78,7 +78,7 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 
 		// this entire if-block is just for debugging templates
 		if self.server.ShouldReturnSource(req) {
-			w.Header().Set(`Content-Type`, `text/plain`)
+			w.Header().Set(`Content-Type`, `text/plain; charset=utf-8`)
 
 			if fn := self.prewrite; fn != nil {
 				fn(req)

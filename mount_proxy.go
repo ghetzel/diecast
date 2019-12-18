@@ -30,7 +30,7 @@ type ProxyMount struct {
 	ResponseCode         int                    `json:"response_code"`
 	RedirectOnSuccess    string                 `json:"redirect_on_success"`
 	Params               map[string]interface{} `json:"params,omitempty"`
-	Timeout              time.Duration          `json:"timeout,omitempty"`
+	Timeout              interface{}            `json:"timeout,omitempty"`
 	PassthroughRequests  bool                   `json:"passthrough_requests"`
 	PassthroughErrors    bool                   `json:"passthrough_errors"`
 	PassthroughRedirects bool                   `json:"passthrough_redirects"`
@@ -55,11 +55,25 @@ func (self *ProxyMount) WillRespondTo(name string, req *http.Request, requestBod
 }
 
 func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (*MountResponse, error) {
+	id := reqid(req)
+
 	var proxyURI string
+	var timeout time.Duration
 
 	if self.Client == nil {
-		if self.Timeout == 0 {
-			self.Timeout = DefaultProxyMountTimeout
+		if t, ok := self.Timeout.(string); ok {
+			if tm, err := time.ParseDuration(t); err == nil {
+				timeout = tm
+			} else {
+				log.Warningf("[%s] proxy: INVALID TIMEOUT %q (%v), using default", id, t, err)
+				timeout = DefaultProxyMountTimeout
+			}
+		} else if tm, ok := self.Timeout.(time.Duration); ok {
+			timeout = tm
+		}
+
+		if timeout == 0 {
+			timeout = DefaultProxyMountTimeout
 		}
 
 		self.Client = &http.Client{
@@ -68,7 +82,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 					InsecureSkipVerify: self.Insecure,
 				},
 			},
-			Timeout: self.Timeout,
+			Timeout: timeout,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				if self.PassthroughRedirects {
 					return http.ErrUseLastResponse
@@ -160,25 +174,23 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		// inject params into new request
 		for name, value := range self.Params {
 			if newReq.URL.Query().Get(name) == `` {
-				log.Debugf("  [Q] %v=%v", name, value)
+				log.Debugf("[%s] proxy: [Q] %v=%v", id, name, value)
 				httputil.SetQ(newReq.URL, name, value)
 			}
 		}
-
-		log.Debugf("  Handled by %v", self)
 
 		if requestBody != nil && self.PassthroughRequests {
 			var buf bytes.Buffer
 
 			if n, err := io.CopyN(&buf, requestBody, int64(MaxBufferedBodySize)); err == nil {
-				log.Debugf("  using streaming request body (body exceeds %d bytes)", n)
+				log.Debugf("[%s] proxy: using streaming request body (body exceeds %d bytes)", id, n)
 
 				// make the upstream request body the aggregate of the already-read portion of the body
 				// and the unread remainder of the incoming request body
 				newReq.Body = MultiReadCloser(&buf, requestBody)
 
 			} else if err == io.EOF {
-				log.Debugf("  fixed-length request body (%d bytes)", buf.Len())
+				log.Debugf("[%s] proxy: fixed-length request body (%d bytes)", id, buf.Len())
 				newReq.Body = MultiReadCloser(&buf)
 				newReq.ContentLength = int64(buf.Len())
 				newReq.TransferEncoding = []string{`identity`}
@@ -187,11 +199,18 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			}
 		}
 
-		log.Infof("  proxying '%v %v' to '%v %v'", req.Method, req.URL, newReq.Method, newReq.URL)
-		log.Debugf("  %v %v", newReq.Method, newReq.URL)
+		from := req.Method + ` ` + req.URL.String()
+		to := newReq.Method + ` ` + newReq.URL.String()
+
+		if from == to {
+			log.Debugf("[%s] proxy: request: %s", id, from)
+		} else {
+			log.Debugf("[%s] proxy: from: %s", id, from)
+			log.Debugf("[%s] proxy: to: %s", id, to)
+		}
 
 		for k, v := range newReq.Header {
-			log.Debugf("  [H] %v: %v", k, strings.Join(v, ` `))
+			log.Debugf("[%s] proxy: [H] %v: %v", id, k, strings.Join(v, ` `))
 		}
 
 		if response, err := self.Client.Do(newReq); err == nil {
@@ -218,16 +237,16 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 				response.Header.Set(`Location`, self.RedirectOnSuccess)
 			}
 
-			log.Debugf("  [R] %v", response.Status)
+			log.Debugf("[%s] proxy: [R] %v", id, response.Status)
 
 			for k, v := range response.Header {
-				log.Debugf("  [R]   %v: %v", k, strings.Join(v, ` `))
+				log.Debugf("[%s] proxy: [R]   %v: %v", id, k, strings.Join(v, ` `))
 			}
 
 			log.Infof(
-				"%v %v responded with: %v (Content-Length: %v)",
-				newReq.Method,
-				newReq.URL,
+				"[%s] proxy: %s responded with: %v (Content-Length: %v)",
+				id,
+				to,
 				response.Status,
 				response.ContentLength,
 			)
@@ -266,11 +285,11 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			} else {
 				if data, err := ioutil.ReadAll(response.Body); err == nil {
 					for _, line := range stringutil.SplitLines(data, "\n") {
-						log.Debugf("  [B] %s", line)
+						log.Debugf("[%s] proxy: [B] %s", id, line)
 					}
 				}
 
-				log.Debugf("  %s %s: %s", method, newReq.URL, response.Status)
+				log.Debugf("[%s] proxy: %s %s: %s", id, method, newReq.URL, response.Status)
 
 				return nil, MountHaltErr
 			}

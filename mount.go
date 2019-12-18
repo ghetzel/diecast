@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -59,6 +60,15 @@ func NewMountFromSpec(spec string) (Mount, error) {
 	}
 
 	return mount, nil
+}
+
+func mountSummary(mount Mount) string {
+	mtype := fmt.Sprintf("%T", mount)
+	mtype = strings.TrimPrefix(mtype, `*diecast.`)
+	mtype = strings.TrimSuffix(mtype, `Mount`)
+	mtype = strings.ToLower(mtype)
+
+	return fmt.Sprintf("%s: %s -> %s", mtype, mount.GetMountPoint(), mount.GetTarget())
 }
 
 func IsSameMount(first Mount, second Mount) bool {

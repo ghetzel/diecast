@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"mime"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -51,7 +52,7 @@ var BindingClient = &http.Client{
 	Timeout: 60 * time.Second,
 }
 
-var AllowInsecureLoopbackBindings bool
+var AllowInsecureLoopbackBindings bool = true
 var DefaultParamJoiner = `;`
 
 type PaginatorConfig struct {
@@ -157,7 +158,24 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		// allows bindings referencing the local server to avoid TLS cert verification
 		// because the prefix is often `localhost:port`, which probably won't verify anyway.
 		if AllowInsecureLoopbackBindings {
-			self.Insecure = true
+			if bpu, err := url.Parse(uri); err == nil {
+				// lookup the hostname of the requested URL. if and only if ALL of the
+				// returned addresses are loopback addresses does Insecure remain true.
+				if addrs, err := net.LookupIP(bpu.Hostname()); err == nil {
+					self.Insecure = true
+
+					for _, addr := range addrs {
+						if !addr.IsLoopback() {
+							self.Insecure = false
+							break
+						}
+					}
+				} else {
+					log.Warningf("binding loopback TLS (%q): %v", bpu.Hostname(), err)
+				}
+			} else {
+				log.Warningf("binding loopback TLS: bad URI: %v", err)
+			}
 		}
 	}
 

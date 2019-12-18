@@ -171,6 +171,7 @@ type Server struct {
 	TryExtensions       []string                  `yaml:"tryExtensions"           json:"tryExtensions"`          // Try these file extensions when looking for default (i.e.: "index") files.  If IndexFile has an extension, it will be stripped first.
 	TryLocalFirst       bool                      `yaml:"localFirst"              json:"localFirst"`             // Whether to attempt to locate a local file matching the requested path before attempting to find a template.
 	VerifyFile          string                    `yaml:"verifyFile"              json:"verifyFile"`             // A file that must exist and be readable before starting the server.
+	PreserveConnections bool                      `yaml:"preserveConnections"     json:"preserveConnections"`    // Don't add the "Connection: close" header to every response.
 	altRootCaPool       *x509.CertPool
 	faviconImageIco     []byte
 	fs                  http.FileSystem
@@ -471,6 +472,14 @@ func (self *Server) ListenAndServe(address string) error {
 }
 
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if req.Body != nil {
+		defer req.Body.Close()
+	}
+
+	if !self.PreserveConnections {
+		w.Header().Set(`Connection`, `close`)
+	}
+
 	if self.handler == nil {
 		if err := self.Initialize(); err != nil {
 			w.Write([]byte(fmt.Sprintf("Failed to setup Diecast server: %v", err)))
@@ -1335,186 +1344,6 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	return funcs, data, nil
 }
 
-// The main entry point for handling requests not otherwise intercepted by Actions or User Routes.
-//
-// The Process:
-//     1. Build a list of paths to try based on the requested path.  This is how things like
-//        expanding "/thing" -> "/thing/index.html" OR "/thing.html" works.
-//
-//     2. For each path, do the following:
-//
-//        a. try to find a local file named X in the webroot
-//        b.
-//
-func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
-	id := reqid(req)
-	prefix := fmt.Sprintf("%s/", self.rp())
-
-	var lastErr error
-
-	if strings.HasPrefix(req.URL.Path, prefix) {
-		defer req.Body.Close()
-
-		log.Infof("[%s] %v %v", id, req.Method, req.URL)
-		requestPaths := []string{req.URL.Path}
-
-		// if we're looking at a directory, throw in the index file if the path as given doesn't respond
-		if strings.HasSuffix(req.URL.Path, `/`) {
-			requestPaths = append(requestPaths, path.Join(req.URL.Path, self.IndexFile))
-
-			for _, ext := range self.TryExtensions {
-				base := filepath.Base(self.IndexFile)
-				base = strings.TrimSuffix(base, filepath.Ext(self.IndexFile))
-
-				requestPaths = append(requestPaths, path.Join(req.URL.Path, fmt.Sprintf("%s.%s", base, ext)))
-			}
-
-		} else if path.Ext(req.URL.Path) == `` {
-			// if we're requesting a path without a file extension, try an index file in a directory with that name,
-			// then try just <filename>.html
-			requestPaths = append(requestPaths, fmt.Sprintf("%s/%s", req.URL.Path, self.IndexFile))
-
-			for _, ext := range self.TryExtensions {
-				requestPaths = append(requestPaths, fmt.Sprintf("%s.%s", req.URL.Path, ext))
-			}
-		}
-
-		// finally, add handlers for implementing routing
-		if parent := path.Dir(req.URL.Path); parent != `.` {
-			for _, ext := range self.TryExtensions {
-				requestPaths = append(requestPaths, fmt.Sprintf("%s/index__id.%s", strings.TrimSuffix(parent, `/`), ext))
-
-				if base := strings.TrimSuffix(parent, `/`); base != `` {
-					requestPaths = append(requestPaths, fmt.Sprintf("%s__id.%s", base, ext))
-				}
-			}
-		}
-
-		var triedLocal bool
-
-	PathLoop:
-		// search for the file in all of the generated request paths
-		for _, rPath := range sliceutil.UniqueStrings(requestPaths) {
-			// remove the Route Prefix, as that's a structural part of the path but does not
-			// represent where the files are (used for embedding diecast in other services
-			// to avoid name collisions)
-			//
-			rPath = strings.TrimPrefix(rPath, self.rp())
-
-			var file http.File
-			var statusCode int
-			var mimeType string
-			var redirectTo string
-			var redirectCode int
-			var headers = make(map[string]interface{})
-			var urlParams = make(map[string]interface{})
-			var forceTemplate bool
-
-			if self.TryLocalFirst && !triedLocal {
-				triedLocal = true
-
-				// attempt loading the file from the local filesystem before searching the mounts
-				if f, m, err := self.tryLocalFile(rPath, req); err == nil {
-					file = f
-					mimeType = m
-
-				} else if IsDirectoryErr(err) && self.Autoindex {
-					if f, m, ok := self.tryAutoindex(); ok {
-						file = f
-						mimeType = m
-						forceTemplate = true
-					} else {
-						log.Warningf("[%s] failed to load autoindex template", id)
-						continue
-					}
-				} else if _, response, err := self.tryMounts(rPath, req); err == nil {
-					file = response.GetFile()
-					mimeType = response.ContentType
-					statusCode = response.StatusCode
-					headers = response.Metadata
-					redirectTo = response.RedirectTo
-					redirectCode = response.RedirectCode
-
-				} else if IsHardStop(err) {
-					lastErr = err
-					break PathLoop
-				}
-			} else {
-				// search the mounts before attempting to load the file from the local filesystem
-				if _, response, err := self.tryMounts(rPath, req); err == nil && response != nil {
-					file = response.GetFile()
-					mimeType = response.ContentType
-					statusCode = response.StatusCode
-					headers = response.Metadata
-					redirectTo = response.RedirectTo
-					redirectCode = response.RedirectCode
-
-				} else if IsHardStop(err) {
-					lastErr = err
-					break PathLoop
-
-				} else if f, m, err := self.tryLocalFile(rPath, req); err == nil {
-					file = f
-					mimeType = m
-				} else if IsDirectoryErr(err) && self.Autoindex {
-					if f, m, ok := self.tryAutoindex(); ok {
-						file = f
-						mimeType = m
-						forceTemplate = true
-					} else {
-						log.Warningf("[%s] failed to load autoindex template", id)
-						continue
-					}
-				}
-			}
-
-			if redirectCode > 0 {
-				if redirectTo == `` {
-					redirectTo = fmt.Sprintf("%s/", req.URL.Path)
-				}
-
-				http.Redirect(w, req, redirectTo, redirectCode)
-				log.Debugf("[%s]  path %v redirecting to %v (HTTP %d)", id, rPath, redirectTo, redirectCode)
-				return
-			}
-
-			if file != nil {
-				defer file.Close()
-
-				// TODO: better support for url parameters in filenames
-				// filename := filepath.Base(rPath)
-				// filename = strings.TrimSuffix(filename, filepath.Ext(filepath))
-				// basepath := strings.Trim(path.Base(req.URL.Path), `/`)
-
-				// for i, part := range strings.Split(filename, `__`) {
-
-				// 	urlParams[typeutil.String(i)] =
-				// 	urlParams[part] =
-				// }
-
-				if strings.Contains(rPath, `__id.`) {
-					urlParams[`1`] = strings.Trim(path.Base(req.URL.Path), `/`)
-					urlParams[`id`] = strings.Trim(path.Base(req.URL.Path), `/`)
-				}
-
-				if handled := self.tryToHandleFoundFile(rPath, mimeType, file, statusCode, headers, urlParams, w, req, forceTemplate); handled {
-					return
-				}
-			}
-		}
-	}
-
-	if self.hasUserRoutes {
-		self.userRouter.ServeHTTP(w, req)
-	} else if lastErr != nil {
-		// something else went sideways
-		self.respondError(w, req, fmt.Errorf("[%s] an error occurred accessing %s: %v", id, req.URL.Path, lastErr), http.StatusServiceUnavailable)
-	} else {
-		// if we got *here*, then File Not Found
-		self.respondError(w, req, fmt.Errorf("[%s] File %q was not found.", id, req.URL.Path), http.StatusNotFound)
-	}
-}
-
 func (self *Server) tryAutoindex() (http.File, string, bool) {
 	if autoindex, err := self.fs.Open(self.AutoindexTemplate); err == nil {
 		return autoindex, `text/html`, true
@@ -1532,9 +1361,7 @@ func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.Fi
 	if file, err := self.fs.Open(requestPath); err == nil {
 		if stat, err := file.Stat(); err == nil {
 			if !stat.IsDir() {
-				if mimetype := httputil.Q(req, `mimetype`); mimetype != `` {
-					return file, mimetype, nil
-				} else if mimetype, err := figureOutMimeType(stat.Name(), file); err == nil {
+				if mimetype, err := figureOutMimeType(stat.Name(), file); err == nil {
 					return file, mimetype, nil
 				} else {
 					return file, ``, err
@@ -1599,81 +1426,6 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 	}
 
 	return nil, nil, lastErr
-}
-
-func (self *Server) tryToHandleFoundFile(
-	requestPath string,
-	mimeType string,
-	file http.File,
-	statusCode int,
-	headers map[string]interface{},
-	urlParams map[string]interface{},
-	w http.ResponseWriter,
-	req *http.Request,
-	forceTemplate bool,
-) bool {
-	// add in any metadata as response headers
-	for k, v := range headers {
-		w.Header().Set(k, fmt.Sprintf("%v", v))
-	}
-
-	if mimeType == `` {
-		mimeType = fileutil.GetMimeType(requestPath, `application/octet-stream`)
-	}
-
-	// write out the HTTP status if we were given one
-	if statusCode > 0 {
-		w.WriteHeader(statusCode)
-	}
-
-	// we got a real actual file here, figure out if we're templating it or not
-	if self.shouldApplyTemplate(requestPath) || forceTemplate {
-		// tease the template header out of the file
-		if header, templateData, err := SplitTemplateHeaderContent(file); err == nil {
-			if header != nil {
-				if redirect := header.Redirect; redirect != nil {
-					w.Header().Set(`Location`, redirect.URL)
-
-					if redirect.Code > 0 {
-						w.WriteHeader(redirect.Code)
-					} else {
-						w.WriteHeader(http.StatusMovedPermanently)
-					}
-
-					return true
-				}
-			}
-
-			// render the final template and write it out
-			if err := self.applyTemplate(w, req, requestPath, templateData, header, urlParams, mimeType); err != nil {
-				self.respondError(w, req, err, http.StatusInternalServerError)
-			}
-		} else {
-			self.respondError(w, req, err, http.StatusInternalServerError)
-		}
-	} else {
-		// if not templated, then the file is returned outright
-		if rendererName := httputil.Q(req, `renderer`); rendererName == `` {
-			w.Header().Set(`Content-Type`, mimeType)
-			io.Copy(w, file)
-		} else if renderer, err := GetRenderer(rendererName, self); err == nil {
-			if err := renderer.Render(w, req, RenderOptions{
-				Input: file,
-			}); err != nil {
-				self.respondError(w, req, err, http.StatusInternalServerError)
-			}
-		} else if renderer, ok := GetRendererForFilename(requestPath, self); ok {
-			if err := renderer.Render(w, req, RenderOptions{
-				Input: file,
-			}); err != nil {
-				self.respondError(w, req, err, http.StatusInternalServerError)
-			}
-		} else {
-			self.respondError(w, req, fmt.Errorf("Unknown renderer %q", rendererName), http.StatusBadRequest)
-		}
-	}
-
-	return true
 }
 
 func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resErr error, code int) {
@@ -1777,9 +1529,9 @@ func (self *Server) setupServer() error {
 	self.handler.Use(negroni.NewRecovery())
 
 	// setup request ID generation
-	self.handler.UseHandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 		requestId := base58.Encode(stringutil.UUID().Bytes())
-		log.Debugf("[%s] %s %s", requestId, req.Method, req.URL.Path)
+		log.Infof("[%s] %s %s", requestId, req.Method, req.URL.Path)
 
 		parent := req.Context()
 		identified := context.WithValue(parent, ContextRequestKey, requestId)
@@ -1788,6 +1540,7 @@ func (self *Server) setupServer() error {
 
 		// setup request tracing info
 		startRequestTimer(req)
+		next(w, req)
 	})
 
 	// inject global headers
@@ -1956,8 +1709,13 @@ func (self *Server) setupServer() error {
 	self.handler.UseHandler(self.router)
 
 	// cleanup request tracing info
-	self.handler.UseHandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+		if tm := getRequestTimer(req); tm != nil {
+			log.Debugf("[%s] completed: %v", tm.ID, time.Since(tm.StartedAt).Round(time.Microsecond))
+		}
+
 		removeRequestTimer(req)
+		next(w, req)
 	})
 
 	// if we're appending additional trusted certs (for Bindings and other internal HTTP clients)
