@@ -264,6 +264,10 @@ type Server struct {
 	// a list of glob patterns matching environment variable names that should always be exposed
 	ExposeEnvVars []string `json:"expose_env_vars"`
 
+	// A set of HTTP headers that should be added to EVERY response Diecast returns, regardless of whether it
+	// originates from a template, mount, or other configuration.
+	GlobalHeaders map[string]interface{} `json:"global_headers"`
+
 	router          *http.ServeMux
 	userRouter      *vestigo.Router
 	handler         *negroni.Negroni
@@ -580,6 +584,17 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			w.Write([]byte(fmt.Sprintf("Failed to setup Diecast server: %v", err)))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
+		}
+	}
+
+	// inject global headers
+	for k, v := range self.GlobalHeaders {
+		if typeutil.IsArray(v) {
+			for _, i := range sliceutil.Stringify(v) {
+				w.Header().Add(k, i)
+			}
+		} else {
+			w.Header().Set(k, typeutil.String(v))
 		}
 	}
 
