@@ -15,17 +15,19 @@ var reqTimes sync.Map
 var timerDescriptions sync.Map
 
 type requestTimer struct {
-	ID      string
-	Request *http.Request
-	Times   map[string]time.Duration
+	ID        string
+	Request   *http.Request
+	StartedAt time.Time
+	Times     map[string]time.Duration
 }
 
 func startRequestTimer(req *http.Request) {
 	if id := reqid(req); id != `` {
 		reqTimes.Store(id, &requestTimer{
-			ID:      id,
-			Request: req,
-			Times:   make(map[string]time.Duration),
+			ID:        id,
+			Request:   req,
+			StartedAt: time.Now(),
+			Times:     make(map[string]time.Duration),
 		})
 	}
 }
@@ -43,6 +45,18 @@ func reqtime(req *http.Request, key string, took time.Duration) {
 			}
 		}
 	}
+}
+
+func getRequestTimer(req *http.Request) *requestTimer {
+	if id := reqid(req); id != `` {
+		if v, ok := reqTimes.Load(id); ok {
+			if timer, ok := v.(*requestTimer); ok {
+				return timer
+			}
+		}
+	}
+
+	return nil
 }
 
 func writeRequestTimerHeaders(server *Server, w http.ResponseWriter, req *http.Request) {
