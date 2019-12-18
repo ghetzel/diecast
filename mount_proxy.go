@@ -46,6 +46,10 @@ func (self *ProxyMount) GetMountPoint() string {
 	return self.MountPoint
 }
 
+func (self *ProxyMount) GetTarget() string {
+	return self.URL
+}
+
 func (self *ProxyMount) WillRespondTo(name string, req *http.Request, requestBody io.Reader) bool {
 	return strings.HasPrefix(name, self.GetMountPoint())
 }

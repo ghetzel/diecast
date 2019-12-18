@@ -31,7 +31,6 @@ import (
 	"time"
 
 	ico "github.com/biessek/golang-ico"
-	"github.com/fatih/structs"
 	"github.com/ghetzel/go-stockutil/executil"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/httputil"
@@ -264,26 +263,14 @@ func (self *Server) LoadConfig(filename string) error {
 							mountOverwriteIndex := -1
 
 							for i, existing := range self.Mounts {
-								if mount.GetMountPoint() == existing.GetMountPoint() {
+								if IsSameMount(mount, existing) {
 									mountOverwriteIndex = i
 									break
 								}
 							}
 
-							mstruct := structs.New(mount)
-
-							for k, v := range config.Options {
-								for _, field := range mstruct.Fields() {
-									if tag := field.Tag(`json`); tag != `` {
-										if tag == k || strings.HasPrefix(tag, k+`,`) {
-											if err := field.Set(v); err != nil {
-												return fmt.Errorf("mount %d: field %v error: %v", i, k, err)
-											}
-
-											break
-										}
-									}
-								}
+							if err := maputil.TaggedStructFromMap(config.Options, mount, `json`); err != nil {
+								return fmt.Errorf("mount %d options: %v", i, err)
 							}
 
 							if mountOverwriteIndex >= 0 {
@@ -489,17 +476,6 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			w.Write([]byte(fmt.Sprintf("Failed to setup Diecast server: %v", err)))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		}
-	}
-
-	// inject global headers
-	for k, v := range self.GlobalHeaders {
-		if typeutil.IsArray(v) {
-			for _, i := range sliceutil.Stringify(v) {
-				w.Header().Add(k, i)
-			}
-		} else {
-			w.Header().Set(k, typeutil.String(v))
 		}
 	}
 
@@ -1808,9 +1784,24 @@ func (self *Server) setupServer() error {
 		parent := req.Context()
 		identified := context.WithValue(parent, ContextRequestKey, requestId)
 		*req = *req.WithContext(identified)
+		w.Header().Set(`X-Diecast-Request-ID`, requestId)
 
 		// setup request tracing info
 		startRequestTimer(req)
+	})
+
+	// inject global headers
+	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+		for k, v := range self.GlobalHeaders {
+			if typeutil.IsArray(v) {
+				for _, i := range sliceutil.Stringify(v) {
+					w.Header().Add(k, i)
+				}
+			} else {
+				w.Header().Set(k, typeutil.String(v))
+			}
+		}
+		next(w, req)
 	})
 
 	// process authenticators

@@ -28,6 +28,10 @@ func (self *FileMount) GetMountPoint() string {
 	return self.MountPoint
 }
 
+func (self *FileMount) GetTarget() string {
+	return self.Path
+}
+
 func (self *FileMount) WillRespondTo(name string, req *http.Request, requestBody io.Reader) bool {
 	return strings.HasPrefix(name, self.GetMountPoint())
 }

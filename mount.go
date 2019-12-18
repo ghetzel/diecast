@@ -24,7 +24,7 @@ type Mount interface {
 	OpenWithType(string, *http.Request, io.Reader) (*MountResponse, error)
 	WillRespondTo(string, *http.Request, io.Reader) bool
 	GetMountPoint() string
-	String() string
+	GetTarget() string
 }
 
 func NewMountFromSpec(spec string) (Mount, error) {
@@ -59,6 +59,20 @@ func NewMountFromSpec(spec string) (Mount, error) {
 	}
 
 	return mount, nil
+}
+
+func IsSameMount(first Mount, second Mount) bool {
+	if first != nil {
+		if second != nil {
+			if first.GetMountPoint() == second.GetMountPoint() {
+				if first.GetTarget() == second.GetTarget() {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
 }
 
 func IsHardStop(err error) bool {
