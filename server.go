@@ -128,6 +128,11 @@ type TlsConfig struct {
 	ClientCAFile   string `yaml:"clientCA" json:"clientCA"` // Path to a PEM-encoded file containing the CA that client certificates are issued and verify against.
 }
 
+type CSRF struct {
+	Enable bool     `yaml:"enable" json:"enable"`  // Whether to enable stateless CSRF protection
+	Except []string `yaml:"except"  json:"except"` // A list of paths and path globs that should not be covered by CSRF protection
+}
+
 type Server struct {
 	Actions             []*Action                 `yaml:"actions"                 json:"actions"`            // Configure routes and actions to execute when those routes are requested.
 	AdditionalFunctions template.FuncMap          `yaml:"-"                       json:"-"`                  // Allow for the programmatic addition of extra functions for use in templates.
@@ -172,6 +177,7 @@ type Server struct {
 	TryLocalFirst       bool                      `yaml:"localFirst"              json:"localFirst"`             // Whether to attempt to locate a local file matching the requested path before attempting to find a template.
 	VerifyFile          string                    `yaml:"verifyFile"              json:"verifyFile"`             // A file that must exist and be readable before starting the server.
 	PreserveConnections bool                      `yaml:"preserveConnections"     json:"preserveConnections"`    // Don't add the "Connection: close" header to every response.
+	CSRF                *CSRF                     `yaml:"csrf"                    json:"csrf"`                   // configures CSRF protection
 	altRootCaPool       *x509.CertPool
 	faviconImageIco     []byte
 	fs                  http.FileSystem
@@ -1530,6 +1536,8 @@ func (self *Server) setupServer() error {
 
 	// setup request ID generation
 	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+		defer next(w, req)
+
 		requestId := base58.Encode(stringutil.UUID().Bytes())
 		log.Infof("[%s] %s %s", requestId, req.Method, req.URL.Path)
 
@@ -1540,11 +1548,12 @@ func (self *Server) setupServer() error {
 
 		// setup request tracing info
 		startRequestTimer(req)
-		next(w, req)
 	})
 
 	// inject global headers
 	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+		defer next(w, req)
+
 		for k, v := range self.GlobalHeaders {
 			if typeutil.IsArray(v) {
 				for _, i := range sliceutil.Stringify(v) {
@@ -1554,8 +1563,17 @@ func (self *Server) setupServer() error {
 				w.Header().Set(k, typeutil.String(v))
 			}
 		}
-		next(w, req)
 	})
+
+	// enforce CSRF protection (if configured)
+	// TODO: github.com/justinas/nosurf
+	if csrf := self.CSRF; csrf != nil {
+		if csrf.Enable {
+			for _, except := range csrf.Except {
+				log.Infof("[%s] path %q exempted from CSRF protection", reqid(id), req.URL.Path)
+			}
+		}
+	}
 
 	// process authenticators
 	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
