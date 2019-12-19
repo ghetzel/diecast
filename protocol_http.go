@@ -170,6 +170,27 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 			RootCAs:            rr.Binding.server.altRootCaPool,
 		}
 
+		// jump through some hoops to allow per-binding TLS client auth
+		if crt := rr.Binding.TlsCertificate; crt != `` {
+			if key := rr.Binding.TlsKey; key != `` {
+				if crtdata, err := rr.ReadFile(crt); err == nil {
+					if keydata, err := rr.ReadFile(key); err == nil {
+						if certificate, err := tls.X509KeyPair(crtdata, keydata); err == nil {
+							newTCC.GetClientCertificate = func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
+								return &certificate, nil
+							}
+						} else {
+							return nil, fmt.Errorf("bad certificate: %v", err)
+						}
+					} else {
+						return nil, fmt.Errorf("bad tls key: %v", err)
+					}
+				} else {
+					return nil, fmt.Errorf("bad tls cert: %v", err)
+				}
+			}
+		}
+
 		newTCC.BuildNameToCertificate()
 
 		if transport, ok := BindingClient.Transport.(*http.Transport); ok {

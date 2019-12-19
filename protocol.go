@@ -2,6 +2,7 @@ package diecast
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -40,6 +41,16 @@ type ProtocolRequest struct {
 	Header        *TemplateHeader
 	TemplateData  map[string]interface{}
 	TemplateFuncs FuncMap
+}
+
+func (self *ProtocolRequest) ReadFile(filename string) ([]byte, error) {
+	if b := self.Binding; b != nil {
+		if s := b.server; s != nil {
+			return readFromFS(s.fs, filename)
+		}
+	}
+
+	return nil, fmt.Errorf("no such file or directory")
 }
 
 func (self *ProtocolRequest) Template(input interface{}) typeutil.Variant {
