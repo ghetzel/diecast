@@ -1,3 +1,4 @@
+.EXPORT_ALL_VARIABLES:
 BIN ?= diecast-$(shell go env GOOS)-$(shell go env GOARCH)
 
 all:
