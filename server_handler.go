@@ -112,9 +112,9 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 							RedirectTo:   mountResponse.RedirectTo,
 							RedirectCode: mountResponse.RedirectCode,
 						}
-					} else {
-						break
 					}
+
+					break
 
 				} else if IsHardStop(err) {
 					// A mount Hard Stop means:
