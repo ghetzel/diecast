@@ -35,6 +35,7 @@ favicon.go:
 
 build: fmt
 	go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/$(BIN) cmd/diecast/main.go
+	CGO_ENABLED=0 go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/$(BIN)-nocgo cmd/diecast/main.go
 	#GOOS=darwin go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/diecast-darwin-amd64 cmd/diecast/main.go
 	which diecast && cp -v bin/$(BIN) $(shell which diecast) || true
 
