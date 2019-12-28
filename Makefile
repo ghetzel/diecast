@@ -93,7 +93,7 @@ sign-client: clients.crt
 
 docker:
 	@echo "Building Docker image for v$(VERSION)"
-	docker tag $(shell docker build --quiet .) ghetzel/diecast:$(VERSION)
+	docker build -t ghetzel/diecast:$(VERSION) .
 	docker tag ghetzel/diecast:$(VERSION) ghetzel/diecast:latest
 	docker push ghetzel/diecast:$(VERSION)
 	docker push ghetzel/diecast:latest
