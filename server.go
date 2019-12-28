@@ -1513,6 +1513,8 @@ func SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, erro
 					}
 				}
 
+				parts[2] = bytes.TrimLeft(parts[2], "\r\n")
+
 				return &header, parts[2], nil
 			}
 		}
