@@ -234,6 +234,28 @@ page:
 </html>
 ```
 
+## Conditional Template Loading (Switches)
+
+Diecast templates have a feature that allows you to conditionally switch to loading different templates based on conditions you specify.  This is extremely useful for things like loading a different homepage for logged-in users vs. logged out ones.
+
+```
+switch:
+    - condition: '{{ not (isEmpty $.bindings.current_user) }}'
+      use: "/logged-in-homepage.html"
+
+    - use: "/logged-out-homepage.html"
+```
+
+### Switch Types
+
+Switch conditions can perform various checks, which interpret the `condition` value differently depending on the check type.
+
+| Value of `type`             | What `condition` should be |
+| --------------------------- | -------------------------- |
+| `""` or `"expression"`      | A valid template expression that yields a `true` value      |
+| `"qs:name_of_query_string"` | A string value for the querystring `name_of_query_string`   |
+| `"header:x-my-header"`      | A string value for the header `x-my-header` / `X-My-Header` |
+
 ## Data Bindings
 
 Data Bindings (or just _bindings_) are one of the most important concepts in Diecast.  Bindings are directives you add to the Front Matter of layouts and templates that specify remote URLs to retrieve (via an HTTP client built in to `diecast`), as well as how to handle parsing the response data and what to do about errors.  This concept is extremely powerful, in that it allows you to create complex data-driven sites easily and cleanly by treating remote data from RESTful APIs and other sources as first-class citizens in the templating language.

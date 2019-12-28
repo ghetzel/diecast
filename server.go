@@ -621,16 +621,43 @@ func (self *Server) applyTemplate(
 		// switches allow the template processing to be hijacked/redirected mid-evaluation
 		// based on data already evaluated
 		if len(finalHeader.Switch) > 0 {
+		SwitchCaseLoop:
 			for i, swcase := range finalHeader.Switch {
 				if swcase == nil {
-					continue
+					continue SwitchCaseLoop
 				}
 
 				if swcase.UsePath != `` {
-					// if a condition is specified, it must evalutate to a truthy value to proceed
-					if swcase.Condition != `` {
-						if !typeutil.V(MustEvalInline(swcase.Condition, data, funcs)).Bool() {
-							continue
+					// if a condition is specified, it must evaluate to a truthy value to proceed
+					if cond := swcase.Condition; cond != `` {
+						cond = MustEvalInline(cond, data, funcs)
+						checkType, checkTypeArg := stringutil.SplitPair(swcase.CheckType, `:`)
+
+						switch checkType {
+						case `querystring`, `qs`:
+							if checkTypeArg != `` {
+								if httputil.Q(req, checkTypeArg) != cond {
+									continue SwitchCaseLoop
+								}
+							} else {
+								return fmt.Errorf("switch checktype %q must specify an argument; e.g.: %q", `querystring`, `querystring:id`)
+							}
+
+						case `header`:
+							if checkTypeArg != `` {
+								if req.Header.Get(checkTypeArg) != cond {
+									continue SwitchCaseLoop
+								}
+							} else {
+								return fmt.Errorf("switch checktype %q must specify an argument; e.g.: %q", `header`, `header:X-My-Header`)
+							}
+
+						case `expression`, ``:
+							if !typeutil.V(cond).Bool() {
+								continue SwitchCaseLoop
+							}
+						default:
+							return fmt.Errorf("unknown switch checktype %q", swcase.CheckType)
 						}
 					}
 
