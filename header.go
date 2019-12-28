@@ -6,13 +6,13 @@ import (
 )
 
 type Redirect struct {
-	URL  string `json:"url"`
-	Code int    `json:"code"`
+	URL  string `yaml:"url"  json:"url"`
+	Code int    `yaml:"code" json:"code"`
 }
 
 type SwitchCase struct {
-	Condition string `json:"condition,omitempty"`
-	UsePath   string `json:"use,omitempty"`
+	Condition string `yaml:"condition,omitempty" json:"condition,omitempty"`
+	UsePath   string `yaml:"use,omitempty"       json:"use,omitempty"`
 }
 
 type TemplateHeader struct {
