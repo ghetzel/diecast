@@ -61,12 +61,12 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 
 		// search for local files and autoindex opportunities
 		for _, rPath := range requestPaths {
-			log.Debugf("[%s] try local file: %s", id, rPath)
+			// log.Debugf("[%s] try local file: %s", id, rPath)
 
 			// actually try to stat the file from the filesystem rooted at RootPath
 			if file, mimetype, err := self.tryLocalFile(rPath, req); err == nil {
 				if localCandidate == nil {
-					log.Debugf("[%s] found local file: %s", id, rPath)
+					// log.Debugf("[%s] found local file: %s", id, rPath)
 					localCandidate = &candidateFile{
 						Type:     `local`,
 						Source:   httpFilename(file),
@@ -80,7 +80,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 			} else if IsDirectoryErr(err) && self.Autoindex {
 				if file, mimetype, ok := self.tryAutoindex(); ok {
 					if autoindexCandidate == nil {
-						log.Debugf("[%s] found autoindex template for %s", id, rPath)
+						// log.Debugf("[%s] found autoindex template for %s", id, rPath)
 						autoindexCandidate = &candidateFile{
 							Type:          `autoindex`,
 							Source:        httpFilename(file),
@@ -100,7 +100,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 			for _, rPath := range requestPaths {
 				if mount, mountResponse, err := self.tryMounts(rPath, req); err == nil && mountResponse != nil {
 					if mountCandidate == nil {
-						log.Debugf("[%s] found mount response: %s", id, rPath)
+						// log.Debugf("[%s] found mount response: %s", id, rPath)
 						mountCandidate = &candidateFile{
 							Type:         `mount`,
 							Source:       mountSummary(mount),
