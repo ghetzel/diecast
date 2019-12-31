@@ -629,36 +629,42 @@ func (self *Server) applyTemplate(
 
 				if swcase.UsePath != `` {
 					// if a condition is specified, it must evaluate to a truthy value to proceed
-					if cond := swcase.Condition; cond != `` {
-						cond = MustEvalInline(cond, data, funcs)
-						checkType, checkTypeArg := stringutil.SplitPair(swcase.CheckType, `:`)
+					cond := MustEvalInline(swcase.Condition, data, funcs)
+					checkType, checkTypeArg := stringutil.SplitPair(swcase.CheckType, `:`)
 
-						switch checkType {
-						case `querystring`, `qs`:
-							if checkTypeArg != `` {
-								if httputil.Q(req, checkTypeArg) != cond {
+					switch checkType {
+					case `querystring`, `qs`:
+						if checkTypeArg != `` {
+							if cond == `` {
+								if httputil.Q(req, checkTypeArg) == `` {
 									continue SwitchCaseLoop
 								}
-							} else {
-								return fmt.Errorf("switch checktype %q must specify an argument; e.g.: %q", `querystring`, `querystring:id`)
-							}
-
-						case `header`:
-							if checkTypeArg != `` {
-								if req.Header.Get(checkTypeArg) != cond {
-									continue SwitchCaseLoop
-								}
-							} else {
-								return fmt.Errorf("switch checktype %q must specify an argument; e.g.: %q", `header`, `header:X-My-Header`)
-							}
-
-						case `expression`, ``:
-							if !typeutil.V(cond).Bool() {
+							} else if httputil.Q(req, checkTypeArg) != cond {
 								continue SwitchCaseLoop
 							}
-						default:
-							return fmt.Errorf("unknown switch checktype %q", swcase.CheckType)
+						} else {
+							return fmt.Errorf("switch checktype %q must specify an argument; e.g.: %q", `querystring`, `querystring:id`)
 						}
+
+					case `header`:
+						if checkTypeArg != `` {
+							if cond == `` {
+								if req.Header.Get(checkTypeArg) == `` {
+									continue SwitchCaseLoop
+								}
+							} else if req.Header.Get(checkTypeArg) != cond {
+								continue SwitchCaseLoop
+							}
+						} else {
+							return fmt.Errorf("switch checktype %q must specify an argument; e.g.: %q", `header`, `header:X-My-Header`)
+						}
+
+					case `expression`, ``:
+						if !typeutil.V(cond).Bool() {
+							continue SwitchCaseLoop
+						}
+					default:
+						return fmt.Errorf("unknown switch checktype %q", swcase.CheckType)
 					}
 
 					if swTemplate, err := self.fs.Open(swcase.UsePath); err == nil {
