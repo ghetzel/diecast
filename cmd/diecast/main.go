@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -17,6 +19,7 @@ import (
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/rxutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -392,6 +395,10 @@ func main() {
 					Name:  `data, d`,
 					Usage: `Specify a data key/value pair to include in the template input as a "[nested.]key=value" string.`,
 				},
+				cli.StringSliceFlag{
+					Name:  `filter-regex, p`,
+					Usage: `Provide a regular expression that is used to eliminate matching lines from the output.`,
+				},
 			},
 			Action: func(c *cli.Context) {
 				var in io.Reader
@@ -442,7 +449,28 @@ func main() {
 						data.Set(k, typeutil.Auto(v))
 					}
 
-					log.FatalIf(tpl.Render(os.Stdout, data.MapNative(), ``))
+					output := bytes.NewBuffer(nil)
+
+					if err := tpl.Render(output, data.MapNative(), ``); err == nil {
+						var patterns []*regexp.Regexp
+
+						for _, pattern := range c.StringSlice(`filter-regex`) {
+							patterns = append(patterns, regexp.MustCompile(pattern))
+						}
+
+					LineLoop:
+						for _, line := range strings.Split(output.String(), "\n") {
+							for _, pattern := range patterns {
+								if rxutil.Match(pattern, line) != nil {
+									continue LineLoop
+								}
+							}
+
+							os.Stdout.Write([]byte(line + "\n"))
+						}
+					} else {
+						log.Fatal(err)
+					}
 				} else {
 					log.Fatalf("parse: %v", err)
 				}
