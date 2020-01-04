@@ -14,6 +14,7 @@ import (
 
 	"github.com/ghetzel/cli"
 	"github.com/ghetzel/diecast"
+	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
@@ -421,58 +422,17 @@ func main() {
 					for _, pair := range c.StringSlice(`data-file`) {
 						baseK, filename := stringutil.SplitPairTrailing(pair, `=`)
 
-						if file, err := os.Open(filename); err == nil {
-							defer file.Close()
-
-							var parsed interface{}
-							var err error
-
-							switch ext := filepath.Ext(filename); strings.ToLower(ext) {
-							case `.yaml`:
-								err = yaml.NewDecoder(file).Decode(&parsed)
-							case `.txt`:
-								pM := maputil.M(nil)
-
-								if b, err := ioutil.ReadAll(file); err == nil {
-									for _, line := range strings.Split(string(b), "\n") {
-										line = strings.TrimSpace(line)
-
-										if len(line) == 0 || strings.HasPrefix(line, `#`) {
-											continue
-										}
-
-										k, v := stringutil.SplitPair(line, `=`)
-										k = strings.TrimSpace(k)
-										v = strings.TrimSpace(v)
-
-										pM.Set(k, typeutil.Auto(v))
-									}
-
-									parsed = pM.MapNative()
-								} else {
-									log.Fatalf("bad data-file %s: %v", pair, err)
+						if fileutil.DirExists(filename) {
+							if entries, err := ioutil.ReadDir(filename); err == nil {
+								for _, entry := range entries {
+									baseK = strings.TrimSuffix(filepath.Base(entry.Name()), filepath.Ext(entry.Name()))
+									appendDataFile(data, baseK, filepath.Join(filename, entry.Name()))
 								}
-							default:
-								err = json.NewDecoder(file).Decode(&parsed)
-							}
-
-							if err != nil {
-								log.Fatalf("bad data-file %s: %v", pair, err)
-							}
-
-							if baseK != `` {
-								data.Set(baseK, parsed)
-							} else if typeutil.IsMap(parsed) {
-								for k, v := range typeutil.MapNative(parsed) {
-									data.Set(k, v)
-								}
-							} else if typeutil.IsArray(parsed) {
-								for i, item := range sliceutil.Sliceify(parsed) {
-									data.Set(typeutil.String(i), item)
-								}
+							} else {
+								log.Fatalf("bad data-file: %v", err)
 							}
 						} else {
-							log.Fatalf("bad data-file %s: %v", pair, err)
+							appendDataFile(data, baseK, filename)
 						}
 					}
 
@@ -491,6 +451,73 @@ func main() {
 	}
 
 	app.Run(os.Args)
+}
+
+func appendDataFile(data *maputil.Map, baseK string, filename string) {
+	if filename == `` {
+		return
+	}
+
+	if file, err := os.Open(filename); err == nil {
+		defer file.Close()
+
+		var parsed interface{}
+		var err error
+
+		ext := filepath.Ext(filename)
+		ext = strings.ToLower(ext)
+
+		switch ext {
+		case `.yaml`:
+			err = yaml.NewDecoder(file).Decode(&parsed)
+		case `.txt`:
+			pM := maputil.M(nil)
+
+			if b, err := ioutil.ReadAll(file); err == nil {
+				for _, line := range strings.Split(string(b), "\n") {
+					line = strings.TrimSpace(line)
+
+					if len(line) == 0 || strings.HasPrefix(line, `#`) {
+						continue
+					}
+
+					k, v := stringutil.SplitPair(line, `=`)
+					k = strings.TrimSpace(k)
+					v = strings.TrimSpace(v)
+
+					pM.Set(k, typeutil.Auto(v))
+				}
+
+				parsed = pM.MapNative()
+			} else {
+				log.Fatalf("bad data-file: %v", err)
+			}
+		case `.json`:
+			err = json.NewDecoder(file).Decode(&parsed)
+		default:
+			return
+		}
+
+		if err != nil {
+			log.Fatalf("bad data-file: %v", err)
+		}
+
+		log.Debugf("parsing data-file: path=%s key=%s", filename, baseK)
+
+		if baseK != `` {
+			data.Set(baseK, parsed)
+		} else if typeutil.IsMap(parsed) {
+			for k, v := range typeutil.MapNative(parsed) {
+				data.Set(k, v)
+			}
+		} else if typeutil.IsArray(parsed) {
+			for i, item := range sliceutil.Sliceify(parsed) {
+				data.Set(typeutil.String(i), item)
+			}
+		}
+	} else {
+		log.Fatalf("bad data-file: %v", err)
+	}
 }
 
 func populateFlags(into map[string]interface{}, from []string) {

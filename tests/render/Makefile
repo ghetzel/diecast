@@ -1,8 +1,10 @@
-RUNBIN := ../../bin/diecast-$(shell go env GOOS)-$(shell go env GOARCH)
-OD      = od --width=32768 -a --format 'a' - | head -n1 | tr -d ' ' | tail -c +8
-SUM     = $(OD) | sha256sum - | cut -d' ' -f1
+RUNBIN   := ../../bin/diecast-$(shell go env GOOS)-$(shell go env GOARCH)
+OD        = od --width=32768 -a --format 'a' - | head -n1 | tr -d ' ' | tail -c +8
+SUM       = $(OD) | sha256sum - | cut -d' ' -f1
+LOGLEVEL ?= notice
 
 .PHONY: $(RUNBIN) $(wildcard *.txt)
+.EXPORT_ALL_VARIABLES:
 
 all: $(wildcard *.txt)
 
@@ -20,8 +22,16 @@ test-render-kv.txt:
 test-render-file.txt:
 	@ -rm -f $(@:%.txt=%.out)
 	@$(RUNBIN) render \
-		-D other.json \
-		-D test.json \
+		-D data/other.json \
+		-D data/test.json \
+		$(@) > $(@:%.txt=%.out)
+	@test "$$(cat $(@:%.txt=%.out) | $(SUM))" = "$$(echo -n 'type=othernl-sp1nl-sp3nl-sp5nldebug=true' | $(SUM))"
+	@echo "[RENDER] $(@): ok"
+
+test-render-dir.txt:
+	@ -rm -f $(@:%.txt=%.out)
+	@$(RUNBIN) render \
+		-D data \
 		$(@) > $(@:%.txt=%.out)
 	@test "$$(cat $(@:%.txt=%.out) | $(SUM))" = "$$(echo -n 'type=othernl-sp1nl-sp3nl-sp5nldebug=true' | $(SUM))"
 	@echo "[RENDER] $(@): ok"
