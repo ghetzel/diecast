@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,6 +19,7 @@ import (
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	yaml "gopkg.in/yaml.v2"
 )
 
 func main() {
@@ -382,8 +384,12 @@ func main() {
 			Usage: `Render the given file as a template.`,
 			Flags: []cli.Flag{
 				cli.StringSliceFlag{
+					Name:  `data-file, D`,
+					Usage: `Specify a data file to parse and include in the template input.  If given as [nested.]key=filename.{json,yaml,txt}, the parsed contents will be available under the named key.`,
+				},
+				cli.StringSliceFlag{
 					Name:  `data, d`,
-					Usage: `Specify a data to include in the template input as a "[nested.]key=value" string.`,
+					Usage: `Specify a data key/value pair to include in the template input as a "[nested.]key=value" string.`,
 				},
 			},
 			Action: func(c *cli.Context) {
@@ -411,12 +417,72 @@ func main() {
 				if err := tpl.ParseFrom(in); err == nil {
 					data := maputil.M(nil)
 
+					// parse data files and add them to the data
+					for _, pair := range c.StringSlice(`data-file`) {
+						baseK, filename := stringutil.SplitPairTrailing(pair, `=`)
+
+						if file, err := os.Open(filename); err == nil {
+							defer file.Close()
+
+							var parsed interface{}
+							var err error
+
+							switch ext := filepath.Ext(filename); strings.ToLower(ext) {
+							case `.yaml`:
+								err = yaml.NewDecoder(file).Decode(&parsed)
+							case `.txt`:
+								pM := maputil.M(nil)
+
+								if b, err := ioutil.ReadAll(file); err == nil {
+									for _, line := range strings.Split(string(b), "\n") {
+										line = strings.TrimSpace(line)
+
+										if len(line) == 0 || strings.HasPrefix(line, `#`) {
+											continue
+										}
+
+										k, v := stringutil.SplitPair(line, `=`)
+										k = strings.TrimSpace(k)
+										v = strings.TrimSpace(v)
+
+										pM.Set(k, typeutil.Auto(v))
+									}
+
+									parsed = pM.MapNative()
+								} else {
+									log.Fatalf("bad data-file %s: %v", pair, err)
+								}
+							default:
+								err = json.NewDecoder(file).Decode(&parsed)
+							}
+
+							if err != nil {
+								log.Fatalf("bad data-file %s: %v", pair, err)
+							}
+
+							if baseK != `` {
+								data.Set(baseK, parsed)
+							} else if typeutil.IsMap(parsed) {
+								for k, v := range typeutil.MapNative(parsed) {
+									data.Set(k, v)
+								}
+							} else if typeutil.IsArray(parsed) {
+								for i, item := range sliceutil.Sliceify(parsed) {
+									data.Set(typeutil.String(i), item)
+								}
+							}
+						} else {
+							log.Fatalf("bad data-file %s: %v", pair, err)
+						}
+					}
+
+					// needle in any specific data values
 					for _, pair := range c.StringSlice(`data`) {
 						k, v := stringutil.SplitPair(pair, `=`)
 						data.Set(k, typeutil.Auto(v))
 					}
 
-					log.FatalIf(tpl.Render(os.Stdout, data, ``))
+					log.FatalIf(tpl.Render(os.Stdout, data.MapNative(), ``))
 				} else {
 					log.Fatalf("parse: %v", err)
 				}

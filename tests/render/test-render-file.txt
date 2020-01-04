@@ -1,0 +1,5 @@
+type={{ underscore $.type }}
+{{ range $item := $.items -}}
+- {{ $item.id }}
+{{ end -}}
+debug=true
