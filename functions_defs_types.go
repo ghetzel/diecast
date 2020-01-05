@@ -34,6 +34,18 @@ func loadStandardFunctionsTypes(funcs FuncMap, server *Server) funcGroup {
 				Summary:  `Return whether the given *value* is empty.`,
 				Function: typeutil.IsEmpty,
 			}, {
+				Name:    `isNotZero`,
+				Summary: `Return whether the given *value* is NOT a zero-valued variable.`,
+				Function: func(value interface{}) bool {
+					return !typeutil.IsZero(value)
+				},
+			}, {
+				Name:    `isNotEmpty`,
+				Summary: `Return whether the given *value* is NOT empty.`,
+				Function: func(value interface{}) bool {
+					return !typeutil.IsEmpty(value)
+				},
+			}, {
 				Name:     `isArray`,
 				Summary:  `Return whether the given *value* is an iterable array or slice.`,
 				Function: typeutil.IsArray,
