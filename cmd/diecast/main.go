@@ -40,13 +40,15 @@ func main() {
 			EnvVar: `LOGLEVEL`,
 		},
 		cli.StringFlag{
-			Name:  `config, c`,
-			Usage: `The name of the configuration file to load (if present)`,
-			Value: diecast.DefaultConfigFile,
+			Name:   `config, c`,
+			Usage:  `The name of the configuration file to load (if present)`,
+			Value:  diecast.DefaultConfigFile,
+			EnvVar: `DIECAST_CONFIG`,
 		},
 		cli.StringFlag{
-			Name:  `render`,
-			Usage: `Name a single path to render as a template, then exit.`,
+			Name:   `render`,
+			Usage:  `Name a single path to render as a template, then exit.`,
+			EnvVar: `DIECAST_RENDER_FILE`,
 		},
 		cli.StringFlag{
 			Name:   `env, e`,
