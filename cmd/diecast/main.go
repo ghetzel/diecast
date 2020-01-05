@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,17 +8,15 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/ghetzel/cli"
 	"github.com/ghetzel/diecast"
-	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/rxutil"
+	"github.com/ghetzel/go-stockutil/netutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -46,6 +43,10 @@ func main() {
 			Name:  `config, c`,
 			Usage: `The name of the configuration file to load (if present)`,
 			Value: diecast.DefaultConfigFile,
+		},
+		cli.StringFlag{
+			Name:  `render`,
+			Usage: `Name a single path to render as a template, then exit.`,
 		},
 		cli.StringFlag{
 			Name:   `env, e`,
@@ -290,6 +291,20 @@ func main() {
 			log.Debugf("mount %T: %+v", mount, mount)
 		}
 
+		renderSingleFile := c.String(`render`)
+
+		// is it hacky? sure.  but it works
+		if renderSingleFile != `` {
+			if port, err := netutil.EphemeralPort(); err == nil {
+				server.VerifyFile = renderSingleFile
+				server.TemplatePatterns = append(server.TemplatePatterns, renderSingleFile)
+				server.Address = fmt.Sprintf("127.0.0.1:%d", port)
+				server.BindingPrefix = fmt.Sprintf("http://%s", server.Address)
+			} else {
+				log.Fatalf("cannot allocate ephemeral port: %v", err)
+			}
+		}
+
 		if err := server.Initialize(); err == nil {
 			scheme := `http`
 
@@ -297,12 +312,12 @@ func main() {
 				scheme = `https`
 			}
 
+			errchan := make(chan error)
+
 			log.Infof("diecast v%v listening at %s://%s", diecast.ApplicationVersion, scheme, server.Address)
 
 			go func() {
-				if err := server.Serve(); err != nil {
-					log.Fatal(err)
-				}
+				errchan <- server.Serve()
 			}()
 
 			if c.Bool(`build-site`) {
@@ -375,107 +390,20 @@ func main() {
 					}
 				}
 			} else {
-				select {}
+				go func() {
+					if renderSingleFile != `` {
+						errchan <- server.RenderPath(os.Stdout, renderSingleFile)
+					}
+				}()
+
+				select {
+				case err := <-errchan:
+					log.FatalIf(err)
+				}
 			}
 		} else {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
-	}
-
-	app.Commands = []cli.Command{
-		{
-			Name:  `render`,
-			Usage: `Render the given file as a template.`,
-			Flags: []cli.Flag{
-				cli.StringSliceFlag{
-					Name:  `data-file, D`,
-					Usage: `Specify a data file to parse and include in the template input.  If given as [nested.]key=filename.{json,yaml,txt}, the parsed contents will be available under the named key.`,
-				},
-				cli.StringSliceFlag{
-					Name:  `data, d`,
-					Usage: `Specify a data key/value pair to include in the template input as a "[nested.]key=value" string.`,
-				},
-				cli.StringSliceFlag{
-					Name:  `filter-regex, p`,
-					Usage: `Provide a regular expression that is used to eliminate matching lines from the output.`,
-				},
-			},
-			Action: func(c *cli.Context) {
-				var in io.Reader
-
-				engine := diecast.TextEngine
-
-				tpl := diecast.NewTemplate(`inline`, engine)
-				_, defs := diecast.GetFunctions(server)
-				tpl.Funcs(defs)
-
-				f := c.Args().First()
-
-				switch f {
-				case ``, `-`:
-					in = os.Stdin
-				default:
-					if file, err := os.Open(f); err == nil {
-						in = file
-					} else {
-						log.Fatalf("file: %v", err)
-					}
-				}
-
-				if err := tpl.ParseFrom(in); err == nil {
-					data := maputil.M(nil)
-
-					// parse data files and add them to the data
-					for _, pair := range c.StringSlice(`data-file`) {
-						baseK, filename := stringutil.SplitPairTrailing(pair, `=`)
-
-						if fileutil.DirExists(filename) {
-							if entries, err := ioutil.ReadDir(filename); err == nil {
-								for _, entry := range entries {
-									baseK = strings.TrimSuffix(filepath.Base(entry.Name()), filepath.Ext(entry.Name()))
-									appendDataFile(data, baseK, filepath.Join(filename, entry.Name()))
-								}
-							} else {
-								log.Fatalf("bad data-file: %v", err)
-							}
-						} else {
-							appendDataFile(data, baseK, filename)
-						}
-					}
-
-					// needle in any specific data values
-					for _, pair := range c.StringSlice(`data`) {
-						k, v := stringutil.SplitPair(pair, `=`)
-						data.Set(k, typeutil.Auto(v))
-					}
-
-					output := bytes.NewBuffer(nil)
-
-					if err := tpl.Render(output, data.MapNative(), ``); err == nil {
-						var patterns []*regexp.Regexp
-
-						for _, pattern := range c.StringSlice(`filter-regex`) {
-							patterns = append(patterns, regexp.MustCompile(pattern))
-						}
-
-					LineLoop:
-						for _, line := range strings.Split(output.String(), "\n") {
-							for _, pattern := range patterns {
-								if rxutil.Match(pattern, line) != nil {
-									continue LineLoop
-								}
-							}
-
-							os.Stdout.Write([]byte(line + "\n"))
-						}
-					} else {
-						log.Fatal(err)
-					}
-				} else {
-					log.Fatalf("parse: %v", err)
-				}
-			},
-		},
 	}
 
 	app.Run(os.Args)

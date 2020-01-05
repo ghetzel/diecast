@@ -378,7 +378,7 @@ func (self *Server) Initialize() error {
 	}
 }
 
-func (self *Server) Serve() error {
+func (self *Server) prestart() error {
 	if self.handler == nil {
 		if err := self.Initialize(); err != nil {
 			return err
@@ -404,6 +404,36 @@ func (self *Server) Serve() error {
 			log.Errorf("start command failed: %v", err)
 		}
 	}()
+
+	return nil
+}
+
+// Perform an end-to-end render of a single path, writing the output to the given writer,
+// then exit.
+func (self *Server) RenderPath(w io.Writer, path string) error {
+	path = `/` + strings.TrimPrefix(path, `/`)
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, path, nil)
+	self.ServeHTTP(rw, req)
+
+	if !rw.Flushed {
+		rw.Flush()
+	}
+
+	if res := rw.Result(); res.StatusCode < 400 {
+		_, err := io.Copy(w, res.Body)
+		return err
+	} else {
+		errbody, _ := ioutil.ReadAll(res.Body)
+		return fmt.Errorf("render failed: %v", sliceutil.Or(string(errbody), res.Status))
+	}
+}
+
+// Start a long-running webserver.
+func (self *Server) Serve() error {
+	if err := self.prestart(); err != nil {
+		return err
+	}
 
 	srv := &http.Server{
 		Addr:    self.Address,
