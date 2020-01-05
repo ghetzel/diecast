@@ -297,13 +297,18 @@ func main() {
 
 		// is it hacky? sure.  but it works
 		if renderSingleFile != `` {
-			if port, err := netutil.EphemeralPort(); err == nil {
-				server.VerifyFile = renderSingleFile
-				server.TemplatePatterns = append(server.TemplatePatterns, renderSingleFile)
-				server.Address = fmt.Sprintf("127.0.0.1:%d", port)
-				server.BindingPrefix = fmt.Sprintf("http://%s", server.Address)
+			if abspath, err := filepath.Abs(renderSingleFile); err == nil {
+				if port, err := netutil.EphemeralPort(); err == nil {
+					server.RootPath = filepath.Dir(abspath)
+					server.VerifyFile = filepath.Base(abspath)
+					server.TemplatePatterns = append(server.TemplatePatterns, `/`+filepath.Base(abspath))
+					server.Address = fmt.Sprintf("127.0.0.1:%d", port)
+					server.BindingPrefix = fmt.Sprintf("http://%s", server.Address)
+				} else {
+					log.Fatalf("cannot allocate ephemeral port: %v", err)
+				}
 			} else {
-				log.Fatalf("cannot allocate ephemeral port: %v", err)
+				log.Fatalf("cannot get abspath: %v", err)
 			}
 		}
 
@@ -394,7 +399,7 @@ func main() {
 			} else {
 				go func() {
 					if renderSingleFile != `` {
-						errchan <- server.RenderPath(os.Stdout, renderSingleFile)
+						errchan <- server.RenderPath(os.Stdout, filepath.Base(renderSingleFile))
 					}
 				}()
 
