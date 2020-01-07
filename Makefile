@@ -19,6 +19,7 @@ fmt:
 
 test:
 	go test -count=1 ./...
+	cd tests/render && make
 
 favicon.go:
 	@convert -background transparent -define icon:auto-resize=16 contrib/diecast-ico-source.svg contrib/favicon.ico
@@ -35,6 +36,7 @@ favicon.go:
 
 build: fmt
 	go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/$(BIN) cmd/diecast/main.go
+	CGO_ENABLED=0 go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/$(BIN)-nocgo cmd/diecast/main.go
 	#GOOS=darwin go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/diecast-darwin-amd64 cmd/diecast/main.go
 	which diecast && cp -v bin/$(BIN) $(shell which diecast) || true
 
@@ -92,7 +94,7 @@ sign-client: clients.crt
 
 docker:
 	@echo "Building Docker image for v$(VERSION)"
-	docker tag $(shell docker build --quiet .) ghetzel/diecast:$(VERSION)
+	docker build -t ghetzel/diecast:$(VERSION) .
 	docker tag ghetzel/diecast:$(VERSION) ghetzel/diecast:latest
 	docker push ghetzel/diecast:$(VERSION)
 	docker push ghetzel/diecast:latest

@@ -90,6 +90,8 @@ func IsHardStop(err error) bool {
 		return true
 	} else if log.ErrContains(err, `request canceled`) {
 		return true
+	} else if log.ErrContains(err, `x509:`) {
+		return true
 	}
 
 	return false

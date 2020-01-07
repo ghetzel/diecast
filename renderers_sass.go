@@ -1,3 +1,5 @@
+// +build cgo
+
 package diecast
 
 // #cgo CFLAGS: -Wno-implicit-function-declaration

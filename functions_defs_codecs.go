@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -336,6 +337,12 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `urlScheme`,
 				Summary: `Return the scheme portion of the given URL.`,
+				Examples: []funcExample{
+					{
+						Code:   `urlScheme "https://example.com:8443/path/to/file.xml?lang=en&active=true#s6.9"`,
+						Return: `https`,
+					},
+				},
 				Arguments: []funcArg{
 					{
 						Name:        `url`,
@@ -353,6 +360,15 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `urlHost`,
 				Summary: `Return the host[:port] portion of the given URL.`,
+				Examples: []funcExample{
+					{
+						Code:   `urlHost "https://example.com:8443/path/to/file.xml?lang=en&active=true#s6.9"`,
+						Return: `example.com:8443`,
+					}, {
+						Code:   `urlHost "https://example.com/somewhere/else/`,
+						Return: `example.com`,
+					},
+				},
 				Arguments: []funcArg{
 					{
 						Name:        `url`,
@@ -377,6 +393,15 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Description: `The URL to parse`,
 					},
 				},
+				Examples: []funcExample{
+					{
+						Code:   `urlHostname "https://example.com:8443/path/to/file.xml?lang=en&active=true#s6.9"`,
+						Return: `example.com`,
+					}, {
+						Code:   `urlHostname "https://other.example.com/somewhere/else/`,
+						Return: `other.example.com`,
+					},
+				},
 				Function: func(in string) (string, error) {
 					if u, err := url.Parse(in); err == nil {
 						return u.Hostname(), nil
@@ -387,6 +412,15 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `urlPort`,
 				Summary: `Return the numeric port number of the given URL.`,
+				Examples: []funcExample{
+					{
+						Code:   `urlPort "https://example.com:8443/path/to/file.xml?lang=en&active=true#s6.9"`,
+						Return: 8443,
+					}, {
+						Code:   `urlPort "https://example.com/somewhere/else/`,
+						Return: 443,
+					},
+				},
 				Arguments: []funcArg{
 					{
 						Name:        `url`,
@@ -415,6 +449,12 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Description: `The URL to parse`,
 					},
 				},
+				Examples: []funcExample{
+					{
+						Code:   `urlPath "https://example.com:8443/path/to/file.xml?lang=en&active=true#s6.9"`,
+						Return: `/path/to/file.xml`,
+					},
+				},
 				Function: func(in string) (string, error) {
 					if u, err := url.Parse(in); err == nil {
 						if p := u.Path; strings.HasPrefix(p, `/`) {
@@ -440,6 +480,12 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Description: `The querystring value to retrieve.`,
 					},
 				},
+				Examples: []funcExample{
+					{
+						Code:   `urlQueryString "https://example.com:8443/path/to/file.xml?lang=en&active=true#s6.9" "lang"`,
+						Return: `en`,
+					},
+				},
 				Function: func(in string, key string) (string, error) {
 					if u, err := url.Parse(in); err == nil {
 						return u.Query().Get(key), nil
@@ -457,6 +503,15 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Description: `The URL to parse`,
 					},
 				},
+				Examples: []funcExample{
+					{
+						Code: `urlQuery "https://example.com:8443/path/to/file.xml?lang=en&active=true#s6.9"`,
+						Return: map[string]interface{}{
+							`lang`:   `en`,
+							`active`: true,
+						},
+					},
+				},
 				Function: func(in string) (map[string]interface{}, error) {
 					if u, err := url.Parse(in); err == nil {
 						return maputil.M(u.Query()).MapNative(), nil
@@ -472,6 +527,12 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Name:        `url`,
 						Type:        `string`,
 						Description: `The URL to parse`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `urlFragment "https://example.com:8443/path/to/file.xml?lang=en&active=true#s6.9"`,
+						Return: `s6.9`,
 					},
 				},
 				Function: func(in string) (string, error) {
@@ -705,6 +766,24 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 					default:
 						return base64.RawStdEncoding.DecodeString(s)
 					}
+				},
+			}, {
+				Name:    `httpStatusText`,
+				Summary: `Return a human-readable description of the given HTTP error code.`,
+				Function: func(code interface{}) string {
+					return http.StatusText(int(typeutil.Int(code)))
+				},
+				Examples: []funcExample{
+					{
+						Code:   `httpStatusText 404`,
+						Return: `Not Found`,
+					}, {
+						Code:   `httpStatusText "404"`,
+						Return: `Not Found`,
+					}, {
+						Code:   `httpStatusText 979`,
+						Return: ``,
+					},
 				},
 			},
 		},

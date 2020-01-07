@@ -1,4 +1,4 @@
-// +build arm
+// +build arm OR !cgo
 
 package diecast
 
@@ -26,5 +26,5 @@ func (self *SassRenderer) SetServer(server *Server) {
 
 func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
 	defer options.Input.Close()
-	return fmt.Errorf("Sass rendering is not available for the ARM architecture")
+	return fmt.Errorf("Sass rendering is not available")
 }

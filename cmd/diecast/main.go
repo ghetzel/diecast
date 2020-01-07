@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -15,9 +16,11 @@ import (
 	"github.com/ghetzel/diecast"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/netutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	yaml "gopkg.in/yaml.v2"
 )
 
 func main() {
@@ -37,9 +40,15 @@ func main() {
 			EnvVar: `LOGLEVEL`,
 		},
 		cli.StringFlag{
-			Name:  `config, c`,
-			Usage: `The name of the configuration file to load (if present)`,
-			Value: diecast.DefaultConfigFile,
+			Name:   `config, c`,
+			Usage:  `The name of the configuration file to load (if present)`,
+			Value:  diecast.DefaultConfigFile,
+			EnvVar: `DIECAST_CONFIG`,
+		},
+		cli.StringFlag{
+			Name:   `render`,
+			Usage:  `Name a single path to render as a template, then exit.`,
+			EnvVar: `DIECAST_RENDER_FILE`,
 		},
 		cli.StringFlag{
 			Name:   `env, e`,
@@ -284,6 +293,25 @@ func main() {
 			log.Debugf("mount %T: %+v", mount, mount)
 		}
 
+		renderSingleFile := c.String(`render`)
+
+		// is it hacky? sure.  but it works
+		if renderSingleFile != `` {
+			if abspath, err := filepath.Abs(renderSingleFile); err == nil {
+				if port, err := netutil.EphemeralPort(); err == nil {
+					server.RootPath = filepath.Dir(abspath)
+					server.VerifyFile = filepath.Base(abspath)
+					server.TemplatePatterns = append(server.TemplatePatterns, `/`+filepath.Base(abspath))
+					server.Address = fmt.Sprintf("127.0.0.1:%d", port)
+					server.BindingPrefix = fmt.Sprintf("http://%s", server.Address)
+				} else {
+					log.Fatalf("cannot allocate ephemeral port: %v", err)
+				}
+			} else {
+				log.Fatalf("cannot get abspath: %v", err)
+			}
+		}
+
 		if err := server.Initialize(); err == nil {
 			scheme := `http`
 
@@ -291,12 +319,12 @@ func main() {
 				scheme = `https`
 			}
 
+			errchan := make(chan error)
+
 			log.Infof("diecast v%v listening at %s://%s", diecast.ApplicationVersion, scheme, server.Address)
 
 			go func() {
-				if err := server.Serve(); err != nil {
-					log.Fatal(err)
-				}
+				errchan <- server.Serve()
 			}()
 
 			if c.Bool(`build-site`) {
@@ -369,62 +397,90 @@ func main() {
 					}
 				}
 			} else {
-				select {}
+				go func() {
+					if renderSingleFile != `` {
+						errchan <- server.RenderPath(os.Stdout, filepath.Base(renderSingleFile))
+					}
+				}()
+
+				select {
+				case err := <-errchan:
+					log.FatalIf(err)
+				}
 			}
 		} else {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
 	}
 
-	app.Commands = []cli.Command{
-		{
-			Name:  `render`,
-			Usage: `Render the given file as a template.`,
-			Flags: []cli.Flag{
-				cli.StringSliceFlag{
-					Name:  `data, d`,
-					Usage: `Specify a data to include in the template input as a "[nested.]key=value" string.`,
-				},
-			},
-			Action: func(c *cli.Context) {
-				var in io.Reader
+	app.Run(os.Args)
+}
 
-				engine := diecast.TextEngine
-
-				tpl := diecast.NewTemplate(`inline`, engine)
-				_, defs := diecast.GetFunctions(server)
-				tpl.Funcs(defs)
-
-				f := c.Args().First()
-
-				switch f {
-				case ``, `-`:
-					in = os.Stdin
-				default:
-					if file, err := os.Open(f); err == nil {
-						in = file
-					} else {
-						log.Fatalf("file: %v", err)
-					}
-				}
-
-				if err := tpl.ParseFrom(in); err == nil {
-					data := maputil.M(nil)
-
-					for _, pair := range c.StringSlice(`data`) {
-						k, v := stringutil.SplitPair(pair, `=`)
-						data.Set(k, typeutil.Auto(v))
-					}
-
-					log.FatalIf(tpl.Render(os.Stdout, data, ``))
-				} else {
-					log.Fatalf("parse: %v", err)
-				}
-			},
-		},
+func appendDataFile(data *maputil.Map, baseK string, filename string) {
+	if filename == `` {
+		return
 	}
 
-	app.Run(os.Args)
+	if file, err := os.Open(filename); err == nil {
+		defer file.Close()
+
+		var parsed interface{}
+		var err error
+
+		ext := filepath.Ext(filename)
+		ext = strings.ToLower(ext)
+
+		switch ext {
+		case `.yaml`:
+			err = yaml.NewDecoder(file).Decode(&parsed)
+		case `.txt`:
+			pM := maputil.M(nil)
+
+			if b, err := ioutil.ReadAll(file); err == nil {
+				for _, line := range strings.Split(string(b), "\n") {
+					line = strings.TrimSpace(line)
+
+					if len(line) == 0 || strings.HasPrefix(line, `#`) {
+						continue
+					}
+
+					k, v := stringutil.SplitPair(line, `=`)
+					k = strings.TrimSpace(k)
+					v = strings.TrimSpace(v)
+
+					pM.Set(k, typeutil.Auto(v))
+				}
+
+				parsed = pM.MapNative()
+			} else {
+				log.Fatalf("bad data-file: %v", err)
+			}
+		case `.json`:
+			err = json.NewDecoder(file).Decode(&parsed)
+		default:
+			return
+		}
+
+		if err != nil {
+			log.Fatalf("bad data-file: %v", err)
+		}
+
+		log.Debugf("parsing data-file: path=%s key=%s", filename, baseK)
+
+		if baseK != `` {
+			data.Set(baseK, parsed)
+		} else if typeutil.IsMap(parsed) {
+			for k, v := range typeutil.MapNative(parsed) {
+				data.Set(k, v)
+			}
+		} else if typeutil.IsArray(parsed) {
+			for i, item := range sliceutil.Sliceify(parsed) {
+				data.Set(typeutil.String(i), item)
+			}
+		}
+	} else {
+		log.Fatalf("bad data-file: %v", err)
+	}
 }
 
 func populateFlags(into map[string]interface{}, from []string) {

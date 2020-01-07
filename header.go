@@ -6,13 +6,14 @@ import (
 )
 
 type Redirect struct {
-	URL  string `json:"url"`
-	Code int    `json:"code"`
+	URL  string `yaml:"url"  json:"url"`
+	Code int    `yaml:"code" json:"code"`
 }
 
 type SwitchCase struct {
-	Condition string `json:"condition,omitempty"`
-	UsePath   string `json:"use,omitempty"`
+	CheckType string `yaml:"type,omitempty"      json:"type,omitempty"`      // The type of test to perform (one of: "expression", "querystring:<name>", "header:<name>")
+	Condition string `yaml:"condition,omitempty" json:"condition,omitempty"` // A type-specific condition value (e.g.: an expression or querystring value)
+	UsePath   string `yaml:"use,omitempty"       json:"use,omitempty"`       // The template to load if the condition matches
 }
 
 type TemplateHeader struct {

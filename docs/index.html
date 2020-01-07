@@ -44,6 +44,7 @@
                     <a class="nav-link" href="#url-structure">URL Structure</a>
                     <a class="nav-link" href="#configuration">Configuration</a>
                     <a class="nav-link" href="#templating">Templating</a>
+                    <a class="nav-link" href="#conditional-template-loading-switches">Conditional Template Loading (Switches)</a>
                     <a class="nav-link" href="#data-bindings">Data Bindings</a>
                     <a class="nav-link" href="#authenticators">Authenticators</a>
                     <a class="nav-link" href="#actions">Actions</a>
@@ -223,6 +224,37 @@ page:
 &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
+<h2 id="conditional-template-loading-switches">Conditional Template Loading (Switches)</h2>
+<p>Diecast templates have a feature that allows you to conditionally switch to loading different templates based on conditions you specify.  This is extremely useful for things like loading a different homepage for logged-in users vs. logged out ones.</p>
+<pre><code>switch:
+    - condition: &#39;{{ not (isEmpty $.bindings.current_user) }}&#39;
+      use: &#34;/logged-in-homepage.html&#34;
+    - use: &#34;/logged-out-homepage.html&#34;
+</code></pre>
+<h3 id="switch-types">Switch Types</h3>
+<p>Switch conditions can perform various checks, which interpret the <code>condition</code> value differently depending on the check type.</p>
+<table class="table table-sm table-striped">
+<thead>
+<tr>
+<th>Value of <code>type</code></th>
+<th>What <code>condition</code> should be</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&#34;&#34;</code> or <code>&#34;expression&#34;</code></td>
+<td>A valid template expression that yields a <code>true</code> value</td>
+</tr>
+<tr>
+<td><code>&#34;qs:name_of_query_string&#34;</code></td>
+<td>A string value for the querystring <code>name_of_query_string</code></td>
+</tr>
+<tr>
+<td><code>&#34;header:x-my-header&#34;</code></td>
+<td>A string value for the header <code>x-my-header</code> / <code>X-My-Header</code></td>
+</tr>
+</tbody>
+</table>
 <h2 id="data-bindings">Data Bindings</h2>
 <p>Data Bindings (or just <em>bindings</em>) are one of the most important concepts in Diecast.  Bindings are directives you add to the Front Matter of layouts and templates that specify remote URLs to retrieve (via an HTTP client built in to <code>diecast</code>), as well as how to handle parsing the response data and what to do about errors.  This concept is extremely powerful, in that it allows you to create complex data-driven sites easily and cleanly by treating remote data from RESTful APIs and other sources as first-class citizens in the templating language.</p>
 <h3 id="overview">Overview</h3>

@@ -338,7 +338,7 @@ func TestLayoutsDefault(t *testing.T) {
 	doTestServerRequest(server, `GET`, `/h2layout`, func(w *httptest.ResponseRecorder) {
 		assert.Equal(200, w.Code)
 		data := strings.TrimSpace(w.Body.String())
-		assert.Equal("<h2>\n<b>GET</b>\n</h2>", data)
+		assert.Equal("<h2><b>GET</b>\n</h2>", data)
 	})
 
 	doTestServerRequest(server, `GET`, `/h2-nolayout`, func(w *httptest.ResponseRecorder) {

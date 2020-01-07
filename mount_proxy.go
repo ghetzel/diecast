@@ -22,24 +22,27 @@ var DefaultProxyMountTimeout = time.Duration(10) * time.Second
 var MaxBufferedBodySize = 16535
 
 type ProxyMount struct {
-	MountPoint           string                 `json:"-"`
-	URL                  string                 `json:"-"`
-	Method               string                 `json:"method,omitempty"`
-	Headers              map[string]interface{} `json:"headers,omitempty"`
-	ResponseHeaders      map[string]interface{} `json:"response_headers,omitempty"`
-	ResponseCode         int                    `json:"response_code"`
-	RedirectOnSuccess    string                 `json:"redirect_on_success"`
-	Params               map[string]interface{} `json:"params,omitempty"`
-	Timeout              interface{}            `json:"timeout,omitempty"`
-	PassthroughRequests  bool                   `json:"passthrough_requests"`
-	PassthroughErrors    bool                   `json:"passthrough_errors"`
-	PassthroughRedirects bool                   `json:"passthrough_redirects"`
-	StripPathPrefix      string                 `json:"strip_path_prefix"`
-	AppendPathPrefix     string                 `json:"append_path_prefix"`
-	Insecure             bool                   `json:"insecure"`
-	Client               *http.Client
-	urlRewriteFrom       string
-	urlRewriteTo         string
+	MountPoint              string                 `json:"-"`
+	URL                     string                 `json:"-"`
+	Method                  string                 `json:"method,omitempty"`
+	Headers                 map[string]interface{} `json:"headers,omitempty"`
+	ResponseHeaders         map[string]interface{} `json:"response_headers,omitempty"`
+	ResponseCode            int                    `json:"response_code"`
+	RedirectOnSuccess       string                 `json:"redirect_on_success"`
+	Params                  map[string]interface{} `json:"params,omitempty"`
+	Timeout                 interface{}            `json:"timeout,omitempty"`
+	PassthroughRequests     bool                   `json:"passthrough_requests"`
+	PassthroughHeaders      bool                   `json:"passthrough_headers"`
+	PassthroughQueryStrings bool                   `json:"passthrough_query_strings"`
+	PassthroughBody         bool                   `json:"passthrough_body"`
+	PassthroughErrors       bool                   `json:"passthrough_errors"`
+	PassthroughRedirects    bool                   `json:"passthrough_redirects"`
+	StripPathPrefix         string                 `json:"strip_path_prefix"`
+	AppendPathPrefix        string                 `json:"append_path_prefix"`
+	Insecure                bool                   `json:"insecure"`
+	Client                  *http.Client
+	urlRewriteFrom          string
+	urlRewriteTo            string
 }
 
 func (self *ProxyMount) GetMountPoint() string {
@@ -99,11 +102,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		}
 	}
 
-	if self.Method == `` {
-		self.Method = `get`
-	}
-
-	if req != nil && self.PassthroughRequests {
+	if req != nil && (self.PassthroughRequests || self.PassthroughQueryStrings) {
 		if newURL, err := url.Parse(self.url()); err == nil {
 			req.URL.Scheme = newURL.Scheme
 			req.URL.Host = newURL.Host
@@ -140,8 +139,12 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 
 	method := strings.ToUpper(self.Method)
 
-	if req != nil && self.PassthroughRequests {
-		method = req.Method
+	if method == `` {
+		if req != nil {
+			method = req.Method
+		} else {
+			method = `GET`
+		}
 	}
 
 	if newReq, err := http.NewRequest(method, proxyURI, nil); err == nil {
@@ -153,7 +156,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			newReq.URL.Path = pp + newReq.URL.Path
 		}
 
-		if req != nil && self.PassthroughRequests {
+		if req != nil && (self.PassthroughRequests || self.PassthroughHeaders) {
 			for name, values := range req.Header {
 				for _, value := range values {
 					newReq.Header.Set(name, value)
@@ -179,7 +182,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			}
 		}
 
-		if requestBody != nil && self.PassthroughRequests {
+		if requestBody != nil && (self.PassthroughRequests || self.PassthroughBody) {
 			var buf bytes.Buffer
 
 			if n, err := io.CopyN(&buf, requestBody, int64(MaxBufferedBodySize)); err == nil {
@@ -319,7 +322,7 @@ func (self *ProxyMount) String() string {
 	return fmt.Sprintf(
 		"%v -> %v %v (passthrough requests=%v errors=%v)",
 		self.MountPoint,
-		strings.ToUpper(sliceutil.OrString(self.Method, `get`)),
+		strings.ToUpper(sliceutil.OrString(self.Method, `<method>`)),
 		self.url(),
 		self.PassthroughRequests,
 		self.PassthroughErrors,

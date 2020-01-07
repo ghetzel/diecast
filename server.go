@@ -384,7 +384,7 @@ func (self *Server) Initialize() error {
 	}
 }
 
-func (self *Server) Serve() error {
+func (self *Server) prestart() error {
 	if self.handler == nil {
 		if err := self.Initialize(); err != nil {
 			return err
@@ -410,6 +410,36 @@ func (self *Server) Serve() error {
 			log.Errorf("start command failed: %v", err)
 		}
 	}()
+
+	return nil
+}
+
+// Perform an end-to-end render of a single path, writing the output to the given writer,
+// then exit.
+func (self *Server) RenderPath(w io.Writer, path string) error {
+	path = `/` + strings.TrimPrefix(path, `/`)
+	rw := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, path, nil)
+	self.ServeHTTP(rw, req)
+
+	if !rw.Flushed {
+		rw.Flush()
+	}
+
+	if res := rw.Result(); res.StatusCode < 400 {
+		_, err := io.Copy(w, res.Body)
+		return err
+	} else {
+		errbody, _ := ioutil.ReadAll(res.Body)
+		return fmt.Errorf("render failed: %v", sliceutil.Or(string(errbody), res.Status))
+	}
+}
+
+// Start a long-running webserver.
+func (self *Server) Serve() error {
+	if err := self.prestart(); err != nil {
+		return err
+	}
 
 	srv := &http.Server{
 		Addr:    self.Address,
@@ -627,17 +657,50 @@ func (self *Server) applyTemplate(
 		// switches allow the template processing to be hijacked/redirected mid-evaluation
 		// based on data already evaluated
 		if len(finalHeader.Switch) > 0 {
+		SwitchCaseLoop:
 			for i, swcase := range finalHeader.Switch {
 				if swcase == nil {
-					continue
+					continue SwitchCaseLoop
 				}
 
 				if swcase.UsePath != `` {
-					// if a condition is specified, it must evalutate to a truthy value to proceed
-					if swcase.Condition != `` {
-						if !typeutil.V(MustEvalInline(swcase.Condition, data, funcs)).Bool() {
-							continue
+					// if a condition is specified, it must evaluate to a truthy value to proceed
+					cond := MustEvalInline(swcase.Condition, data, funcs)
+					checkType, checkTypeArg := stringutil.SplitPair(swcase.CheckType, `:`)
+
+					switch checkType {
+					case `querystring`, `qs`:
+						if checkTypeArg != `` {
+							if cond == `` {
+								if httputil.Q(req, checkTypeArg) == `` {
+									continue SwitchCaseLoop
+								}
+							} else if httputil.Q(req, checkTypeArg) != cond {
+								continue SwitchCaseLoop
+							}
+						} else {
+							return fmt.Errorf("switch checktype %q must specify an argument; e.g.: %q", `querystring`, `querystring:id`)
 						}
+
+					case `header`:
+						if checkTypeArg != `` {
+							if cond == `` {
+								if req.Header.Get(checkTypeArg) == `` {
+									continue SwitchCaseLoop
+								}
+							} else if req.Header.Get(checkTypeArg) != cond {
+								continue SwitchCaseLoop
+							}
+						} else {
+							return fmt.Errorf("switch checktype %q must specify an argument; e.g.: %q", `header`, `header:X-My-Header`)
+						}
+
+					case `expression`, ``:
+						if !typeutil.V(cond).Bool() {
+							continue SwitchCaseLoop
+						}
+					default:
+						return fmt.Errorf("unknown switch checktype %q", swcase.CheckType)
 					}
 
 					if swTemplate, err := self.fs.Open(swcase.UsePath); err == nil {
@@ -1491,6 +1554,8 @@ func SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, erro
 						return nil, nil, err
 					}
 				}
+
+				parts[2] = bytes.TrimLeft(parts[2], "\r\n")
 
 				return &header, parts[2], nil
 			}
