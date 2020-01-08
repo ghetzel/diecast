@@ -45,6 +45,7 @@ import (
 	"github.com/gobwas/glob"
 	"github.com/husobee/vestigo"
 	"github.com/jbenet/go-base58"
+	"github.com/justinas/nosurf"
 	"github.com/mattn/go-shellwords"
 	"github.com/signalsciences/tlstext"
 	"github.com/urfave/negroni"
@@ -128,9 +129,54 @@ type TlsConfig struct {
 	ClientCAFile   string `yaml:"clientCA" json:"clientCA"` // Path to a PEM-encoded file containing the CA that client certificates are issued and verify against.
 }
 
+type CookieSameSite string
+
+const (
+	SameSiteDefault CookieSameSite = ``
+	SameSiteLax                    = `lax`
+	SameSiteStrict                 = `strict`
+	SameSiteNone                   = `none`
+)
+
+func (self CookieSameSite) SameSite() http.SameSite {
+	switch self {
+	case SameSiteLax:
+		return http.SameSiteLaxMode
+	case SameSiteStrict:
+		return http.SameSiteStrictMode
+	case SameSiteNone:
+		return http.SameSiteNoneMode
+	default:
+		return http.SameSiteDefaultMode
+	}
+}
+
+type Cookie struct {
+	Path     string         `yaml:"path,omitempty"     json:"path,omitempty"`
+	Domain   string         `yaml:"domain,omitempty"   json:"domain,omitempty"`
+	MaxAge   int            `yaml:"maxAge,omitempty"   json:"maxAge,omitempty"`
+	Secure   bool           `yaml:"secure,omitempty"   json:"secure,omitempty"`
+	HttpOnly bool           `yaml:"httpOnly,omitempty" json:"httpOnly,omitempty"`
+	SameSite CookieSameSite `yaml:"sameSite,omitempty" json:"sameSite,omitempty"`
+}
+
 type CSRF struct {
-	Enable bool     `yaml:"enable" json:"enable"`  // Whether to enable stateless CSRF protection
-	Except []string `yaml:"except"  json:"except"` // A list of paths and path globs that should not be covered by CSRF protection
+	Enable bool     `yaml:"enable" json:"enable"` // Whether to enable stateless CSRF protection
+	Except []string `yaml:"except" json:"except"` // A list of paths and path globs that should not be covered by CSRF protection
+	Cookie *Cookie  `yaml:"cookie" json:"cookie"` // Specify default fields for the CSRF cookie that is set
+}
+
+func (self *CSRF) IsExempt(req *http.Request) bool {
+	if req != nil {
+		for _, pattern := range self.Except {
+			if m, err := filepath.Match(pattern, req.URL.Path); err == nil && m {
+				log.Infof("[%s] path %q exempted from CSRF protection", reqid(req), req.URL.Path)
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 type Server struct {
@@ -1630,16 +1676,6 @@ func (self *Server) setupServer() error {
 		}
 	})
 
-	// enforce CSRF protection (if configured)
-	// TODO: github.com/justinas/nosurf
-	if csrf := self.CSRF; csrf != nil {
-		if csrf.Enable {
-			for _, except := range csrf.Except {
-				log.Infof("[%s] path %q exempted from CSRF protection", reqid(id), req.URL.Path)
-			}
-		}
-	}
-
 	// process authenticators
 	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 		if auth, err := self.Authenticators.Authenticator(req); err == nil {
@@ -1789,7 +1825,34 @@ func (self *Server) setupServer() error {
 		log.Debugf("[actions] Registered %s", hndPath)
 	}
 
-	self.handler.UseHandler(self.router)
+	var hnd http.Handler = self.router
+
+	// enforce CSRF protection (if configured)
+	if csrf := self.CSRF; csrf != nil {
+		if csrf.Enable {
+			csrfhnd := nosurf.New(self.router)
+			csrfhnd.ExemptFunc(csrf.IsExempt)
+
+			if c := csrf.Cookie; c != nil {
+				csrfhnd.SetBaseCookie(http.Cookie{
+					Path:     c.Path,
+					Domain:   c.Domain,
+					MaxAge:   c.MaxAge,
+					Secure:   c.Secure,
+					HttpOnly: c.HttpOnly,
+					SameSite: c.SameSite.SameSite(),
+				})
+			}
+
+			csrfhnd.SetFailureHandler(
+				constantErrHandler(self, fmt.Errorf("CSRF verification failed"), http.StatusForbidden),
+			)
+
+			hnd = csrfhnd
+		}
+	}
+
+	self.handler.UseHandler(hnd)
 
 	// cleanup request tracing info
 	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
@@ -1993,6 +2056,7 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 
 	request[`url`] = url
 	request[`tls`] = ssl
+	request[`csrftoken`] = nosurf.Token(req)
 
 	rv[`request`] = request
 
