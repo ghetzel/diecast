@@ -56,9 +56,10 @@ func main() {
 			EnvVar: `DIECAST_ENV`,
 		},
 		cli.StringFlag{
-			Name:  `address, a`,
-			Usage: `Address the HTTP server should listen on`,
-			Value: diecast.DefaultAddress,
+			Name:   `address, a`,
+			Usage:  `Address the HTTP server should listen on`,
+			Value:  diecast.DefaultAddress,
+			EnvVar: `DIECAST_ADDRESS`,
 		},
 		cli.StringFlag{
 			Name:  `binding-prefix, b`,

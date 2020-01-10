@@ -1,10 +1,20 @@
 # This is a sample diecast.yml file that contains every supported option
 # and detailed decriptions of each one.  The values of each key represent
 # the default values if absent from the config.
-
+#
+# Note the use of the inline syntax for reading environment variables and providing a fallback
+# value if said variable is empty or missing.  This syntax may be used anywhere in the configuration.
+#
+# "${MY_ENV_VAR}"       -> value of environment variable "MY_ENV_VAR", or empty string if missing.
+# "${MY_ENV_VAR|hello}" -> value of environment variable "MY_ENV_VAR", or "hello" if missing.
+#
 
 # Specify the local address and port to listen on.
-address: '127.0.0.1:28419'
+address: "${DIECAST_ADDRESS|127.0.0.1:28419}"
+
+# Explicitly specify the environment, which is used to load additional configuration
+# files in the format "diecast.{environment}.yml".
+environment: "development"
 
 # Specify the path to a favicon.  This path may be accessible via a mount, or
 # refer to a local file.  It may point to a PNG, GIF, JPEG, or ICO image file.
@@ -12,48 +22,75 @@ address: '127.0.0.1:28419'
 # served.
 favicon: my-website.png
 
-# An array of bindings that will be evaluated before every template.
-bindings:
-- name:     todos
-  method:   get
-  resource: https://jsonplaceholder.typicode.com/todos/
-  optional: true
-  fallback: []
-  params:
-    v:         '1.2.3'
-    timestamp: '{{ now "epoch-ns" }}'
+# SSL/TLS configuration.  Diecast can terminate TLS directly using the following configuration.
+# --------------------------------------------------------------------------------------------------
+tls:
+  # Enable TLS on the port we're listening on.  All requests will need to use HTTPS.
+  enable: true
 
+  # Local filesystem path to the PEM-encoded public key component of the TLS certificate.
+  cert: /etc/ssl/certs/my-cool-website.pem
+
+  # Local filesystem path to the PEM-encoded private key component of the TLS certificate.
+  key: /etc/ssl/private/my-cool-website.key
+
+  # Enable prompting/requiring TLS client certificates. May be one of: "request", "any", "verify", "require"
+  clients: request
+
+  # Path to a PEM-encoded file containing the CA that client certificates are issued and verify against.
+  clientCA: /etc/ssl/certs/my-cool-client-ca.pem
+
+# A list of paths to PEM-encoded X.509 TLS certificates that represent trusted authorities.  Use this to add internal or
+# self-signed certificate authorities so that you don't have to set "insecure: true" on mounts and bindings referring to
+# internal HTTPS resources.
+trustedRootPEMs:
+  - /etc/ssl/certs/my-self-signed-cert.pem
+
+# Specify that requests that terminate at a filesystem directory without an index file should
+# automatically generate a listing of the files that directory.
+autoindex: true
+
+# If autoindex is enabled, this allows you to customize the template used to generate the index page.
+autoindexTemplate: path/to/autoindex-template.html
+
+# An array of bindings that will be evaluated before every template.
+# --------------------------------------------------------------------------------------------------
+bindings:
+  - name: todos
+    method: get
+    resource: https://jsonplaceholder.typicode.com/todos/
+    optional: true
+    fallback: []
+    params:
+      v: "1.2.3"
+      timestamp: '{{ now "epoch-ns" }}'
 
 # For bindings that specify relative paths (e.g.: /my/data), the binding
 # prefix specifies the base URL those paths are relative to.  This value
 # defaults to the listen address of Diecast itself.
-bindingPrefix: 'http://localhost:28419'
-
+bindingPrefix: "http://localhost:28419"
 
 # Disable emission of the "Server-Timing" header when requesting resources from Diecast.
 # This header is useful for debugging performance issues in templates, but also exposes
 # Binding names to the client.  If these names are considered private and secure, set
 # this to true.
 #
-# disableTimings: true
+disableTimings: false
 
 # The root of the working directory that templates and files will be served
 # from. If left blank, the directory `diecast` was started in will be used.
-root: '.'
+root: "."
 # root: '/usr/www'
-
 
 # The path where layouts will be loaded from. If left blank, this path will
 # be the ./_layouts directory inside of the root path.
-layouts: './_layouts'
+layouts: "./_layouts"
 # layouts: /usr/www/my-diecast-layouts
-
 
 # The path where error pages will be loaded from. If left blank, this path will
 # be the ./_errors directory inside of the root path.
-errors: './_errors'
+errors: "./_errors"
 # errors: /usr/www/my-diecast-errors
-
 
 # Enable an INSECURE debugging mode that is useful for building sites. If
 # this is true, any page can have the ?__viewsource=true query string
@@ -61,16 +98,13 @@ errors: './_errors'
 # actually rendering it.
 debug: false
 
-
 # Specify whether layouts are enabled at all.
 enableLayouts: true
-
 
 # Provide a prefix that will be expected for all request paths. For example,
 # if routePrefix is "/site/", then requesting "/site/about.html" would expect
 # a template at {root}/about.html instead of {root}/site/about.html.
-routePrefix: ''
-
+routePrefix: ""
 
 # Specify file glob patterns (relative to the root directory) that match
 # files that should be rendered as templates in lieu of being served as
@@ -79,10 +113,9 @@ routePrefix: ''
 # to the array below; all HTML, Markdown, and SCSS files PLUS any CSS under
 # {root}/assets/css/ would be rendered as a template.
 patterns:
-- '*.html'
-- '*.md'
-- '*.scss'
-
+  - "*.html"
+  - "*.md"
+  - "*.scss"
 
 # Specifies how to handle the scenario where a requested path matches files
 # from multiple locations (e.g.: /test.gif exists in the root directory AND
@@ -91,17 +124,14 @@ patterns:
 # data sources will be served.
 localFirst: false
 
-
 # Specify the name of the file to be used when a filename is not explicitly
 # specified in the request path.
-indexFile: 'index.html'
-
+indexFile: "index.html"
 
 # If non-empty, this file must be present and readable when Diecast starts,
 # otherwise the program will exit with an error.  Set this to an empty
 # string to disable this check.
-verifyFile: '/index.html'
-
+verifyFile: "/index.html"
 
 # For request paths that don't explicitly specify a filename (with
 # extension), a sequence of possible extensions are used to try to locate
@@ -111,9 +141,8 @@ verifyFile: '/index.html'
 # This setting specifies which extensions (and in what order) will be used
 # when locating these files.
 tryExtensions:
-- html
-- md
-
+  - html
+  - md
 
 # Diecast supports various options for rendering template output into the
 # actual data that is sent to the client.  The default renderer is "html",
@@ -121,18 +150,59 @@ tryExtensions:
 # This setting allows you to specify which renderers are used for the given
 # file extensions.
 rendererMapping:
-  md:   markdown
+  md: markdown
   scss: sass
-
 
 # When no layout is explicitly specified in a template's Front Matter, a
 # default layout is used (if present at {layout}/default.html).  This
 # setting specifies globs of the request paths this behavior will happen
 # for.
 autolayoutPatterns:
-- '*.html'
-- '*.md'
+  - "*.html"
+  - "*.md"
 
+# By default, the "Connection: close" header is set on every HTTP response. Setting this to true disables
+# this behavior.
+preserveConnections: false
+
+# A set of HTTP headers that should be added to EVERY response Diecast returns, regardless of
+# whether it originates from a template, mount, or other configuration.
+globalHeaders:
+  X-My-Cool-App: true
+  X-My-App-Server: "${AN_ENVIRONMENT_VARIABLE}"
+
+# Specify the default locale to use for localization (l10n) and internationalization (i18n).
+locale: en-us
+
+# A set of objects specifying key-value pairs of translations for various languages and locales.
+# These are used by the "i18n" and "l10n" template functions for providing translation support.
+translations:
+  en:
+    greeting: "Hello there!"
+  en-gb:
+    greeting: "Greetings chap!"
+  en-au:
+    greeting: "G'day mate!"
+
+# A list of glob patterns matching environment variable names that should never be exposed to templates.
+# Below is the default list of filters if none are specified.
+filterEnvVars:
+	- "_"                     # Treat vars starting with "_" as internal/hidden
+	- "*KEY"                  # Omit api keys and whatnot
+	- "*PASSWORD"             # Omit things that explicitly call themselves a "password"
+	- "*PID"                  # Avoid PIDs
+	- "*HOST"                 # Don't leak hostnames
+	- "*URL"                  # Don't leak URLs
+	- "*SECRET"               # Avoid anything claiming to be a "secret"
+	- "*TOKEN"                # Avoid anything claiming to be a "token"
+	- "AWS_ACCESS_KEY_ID"     # Omit AWS credentials
+	- "AWS_SECRET_ACCESS_KEY" # Omit AWS credentials
+	- "PROMPT_COMMAND"        # This can occasionally contain sensitive data.
+	- "PWD"                   # No need for this by default.
+
+# A list of glob patterns matching environment variable names that should always be exposed to templates.  Use this to
+# explicitly whitelist certain variables or groups of variables that would otherwise be caught by filterEnvVars.
+exposeEnvVars: []
 
 # Mounts are a special concept in Diecast that allow you to overlay other
 # locations over top of the root directory tree.  This allows you to source
@@ -143,29 +213,29 @@ autolayoutPatterns:
 # consulted as a fallback (or, if localFirst is true, the root directory is
 # checked first, and the mounts become the fallback(s).)
 mounts:
-# Filesystem Mount: allow for a subset of request paths to be served from a
-# different directory on the same machine Diecast is running on.
-- mount: /usr/share/diecast-assets/img
-  to:    /assets/img/
+  # Filesystem Mount: allow for a subset of request paths to be served from a
+  # different directory on the same machine Diecast is running on.
+  - mount: /usr/share/diecast-assets/img
+    to: /assets/img/
 
-# HTTP Proxy Mount: proxy requests to a specific path prefix to another
-# server via HTTP(S).
-- mount: https://ajax.googleapis.com/ajax/libs/
-  to:    /assets/js/
-  options:
-    # Include all headers sent from the client when proxying the request.
-    passthrough_requests: true
+  # HTTP Proxy Mount: proxy requests to a specific path prefix to another
+  # server via HTTP(S).
+  - mount: https://ajax.googleapis.com/ajax/libs/
+    to: /assets/js/
+    options:
+      # Include all headers sent from the client when proxying the request.
+      passthrough_requests: true
 
-    # Pass any errors the remote server sends directly to the client.
-    passthrough_errors:   true
+      # Pass any errors the remote server sends directly to the client.
+      passthrough_errors: true
 
-- mount: https://ajax.googleapis.com/ajax/libs/
-  to:    /assets/css/
-  options:
-    # Include these headers in every request to the proxy resource.
-    headers:
-      X-From-Application: diecast
-      Authorization: 'Token abc123'
+  - mount: https://ajax.googleapis.com/ajax/libs/
+    to: /assets/css/
+    options:
+      # Include these headers in every request to the proxy resource.
+      headers:
+        X-From-Application: diecast
+        Authorization: "Token abc123"
 
 # Specify default values for the header (i.e. Front Matter) for all
 # templates and layouts.  This is useful for seeding site-wide variables
@@ -175,116 +245,107 @@ header:
   page:
     my_global_data: 42
 
-
 # Authenticators are modules that run before specified requests that will
 # do the work of verifying a user's credentials and/or redirecting them to
 # an authentication process.  Through this mechanism, some or all content
 # on a Diecast site can be secured behind an authentication/authorization
 # scheme.
 authenticators:
-# Basic Authenticator: Basic HTTP authentication.
-# directory.
-- type: basic
-  except:
-  - '/assets/**'
-  options:
-    # Specify the RFC 2617 Realm attribute for HTTP basic authentication
-    realm:    'My Realm'
+  # Basic Authenticator: Basic HTTP authentication.
+  # directory.
+  - type: basic
+    except:
+      - "/assets/**"
+    options:
+      # Specify the RFC 2617 Realm attribute for HTTP basic authentication
+      realm: "My Realm"
 
-    # The htpasswd file containing users and password hashes permitted to
-    # access the protected resources.
-    htpasswd: '/etc/my-app/htpasswd'
+      # The htpasswd file containing users and password hashes permitted to
+      # access the protected resources.
+      htpasswd: "/etc/my-app/htpasswd"
 
-    # Explicitly provided username-password hash pair that will also be accepted.
-    # username = "admin", password = "admin" (generated on Linux with the command: htpasswd -B -n admin)
-    credentials:
-        admin: '$2y$05$UO/Ugxm/FOpDjbG6gOVxqejUDOA8wGFfMskI8h0PG4KaQEBy5RYe2'
+      # Explicitly provided username-password hash pair that will also be accepted.
+      # username = "admin", password = "admin" (generated on Linux with the command: htpasswd -B -n admin)
+      credentials:
+        admin: "$2y$05$UO/Ugxm/FOpDjbG6gOVxqejUDOA8wGFfMskI8h0PG4KaQEBy5RYe2"
 
-# OAuth2 Authenticator: OAuth2 third-party authentication (e.g.: Google, GitHub, etc.)
-- type: oauth2
-  callback: http://mydomain.example.com/auth
-  options:
-    provider:    'google'
-    client_id:   'oauth_client_id_abc123'
-    secret:      'oauth_client_secret_xyz987'
+  # OAuth2 Authenticator: OAuth2 third-party authentication (e.g.: Google, GitHub, etc.)
+  - type: oauth2
+    callback: http://mydomain.example.com/auth
+    options:
+      provider: "google"
+      client_id: "oauth_client_id_abc123"
+      secret: "oauth_client_secret_xyz987"
 
-    # Specify specific OAuth scopes to authorize
-    # scopes: ['user', 'email', 'other']
+      # Specify specific OAuth scopes to authorize
+      # scopes: ['user', 'email', 'other']
+      # Specify the name of the cookie stored in the user browser/agent
+      # cookie_name: 'DCSESSION'
+      # How long the session is valid for.
+      # lifetime: '30d'
+      # If provider is "custom", specify the authentication and token validation URLs
+      # auth_url: 'https://...'
+      # token_url: 'https://...'
 
-    # Specify the name of the cookie stored in the user browser/agent
-    # cookie_name: 'DCSESSION'
-
-    # How long the session is valid for.
-    # lifetime: '30d'
-
-    # If provider is "custom", specify the authentication and token validation URLs
-    # auth_url: 'https://...'
-    # token_url: 'https://...'
-
-# Shell Authenticator: Call a script and let it do perform/validate authentication.
-- type: shell
-  options:
-    command: /usr/libexec/my-cool-authenticator
-
-    # By default, if the script exits with status 0 and has content on standard output,
-    # that content will be stored in a cookie on the user browser/agent. Subsequent requests
-    # are expected to present this cookie, whose contents will be passed as standard input to the
-    # calling script for validation.  Setting this to false explicitly disables this behavior, and
-    # the authentication script will expect credentials every time.
-    # disable_cookies: false
-
-    # Specify the parameters for the cookie stored in the user browser/agent.
-    # cookie_name: 'DCSESSION'
-    # cookie_path: ''
-    # cookie_domain: ''
-    # cookie_lifetime: ''
-    # cookie_secure: true
-    # cookie_http_only: false
-
-    # Specifies that all requests matching this path will remove an active session.
-    # deauth_path: /my-api/logout
-
-    # The path to redirect to after deauth is performed.
-    # deauth_redirect: /
+  # Shell Authenticator: Call a script and let it do perform/validate authentication.
+  - type: shell
+    options:
+      command: /usr/libexec/my-cool-authenticator
+      # By default, if the script exits with status 0 and has content on standard output,
+      # that content will be stored in a cookie on the user browser/agent. Subsequent requests
+      # are expected to present this cookie, whose contents will be passed as standard input to the
+      # calling script for validation.  Setting this to false explicitly disables this behavior, and
+      # the authentication script will expect credentials every time.
+      # disable_cookies: false
+      # Specify the parameters for the cookie stored in the user browser/agent.
+      # cookie_name: 'DCSESSION'
+      # cookie_path: ''
+      # cookie_domain: ''
+      # cookie_lifetime: ''
+      # cookie_secure: true
+      # cookie_http_only: false
+      # Specifies that all requests matching this path will remove an active session.
+      # deauth_path: /my-api/logout
+      # The path to redirect to after deauth is performed.
+      # deauth_redirect: /
 
 # It is possible to specify a command to run before Diecast begins serving
 # data, as well as after the server has started and is confirmed running.
 
 # Command to run before the API server is started.
 prestart:
-- command:          '/usr/bin/my-command prestart'
-  directory:        '/tmp'
-  delay:            '2s'
-  timeout:          '10s'
-  exitOnCompletion: false
-  env:
-    PATH:                    '/usr/local/bin:/usr/bin:/bin'
-    # These variables are automatically made available to the command being run.
-    # DIECAST:                true
-    # DIECAST_DEBUG:          false
-    # DIECAST_ADDRESS:        http://localhost:28419
-    # DIECAST_ROOT:           /my/root/path
-    # DIECAST_PATH_LAYOUTS:   /my/root/path/_layouts
-    # DIECAST_PATH_ERRORS:    /my/root/path/_errors
-    # DIECAST_BINDING_PREFIX: ''
-    # DIECAST_ROUTE_PREFIX:   ''
+  - command: "/usr/bin/my-command prestart"
+    directory: "/tmp"
+    delay: "2s"
+    timeout: "10s"
+    exitOnCompletion: false
+    env:
+      PATH: "/usr/local/bin:/usr/bin:/bin"
+      # These variables are automatically made available to the command being run.
+      # DIECAST:                true
+      # DIECAST_DEBUG:          false
+      # DIECAST_ADDRESS:        http://localhost:28419
+      # DIECAST_ROOT:           /my/root/path
+      # DIECAST_PATH_LAYOUTS:   /my/root/path/_layouts
+      # DIECAST_PATH_ERRORS:    /my/root/path/_errors
+      # DIECAST_BINDING_PREFIX: ''
+      # DIECAST_ROUTE_PREFIX:   ''
 
 # Command to run after the API server has started.
 start:
-- command:          'bash -c "/usr/bin/curl ${DIECAST_ADDRESS}/things"'
-  delay:            '5s'
-  exitOnCompletion: true
-  env:
-    # These variables are automatically made available to the command being run.
-    # DIECAST:                true
-    # DIECAST_DEBUG:          false
-    # DIECAST_ADDRESS:        http://localhost:28419
-    # DIECAST_ROOT:           /my/root/path
-    # DIECAST_PATH_LAYOUTS:   /my/root/path/_layouts
-    # DIECAST_PATH_ERRORS:    /my/root/path/_errors
-    # DIECAST_BINDING_PREFIX: ''
-    # DIECAST_ROUTE_PREFIX:   ''
-
+  - command: 'bash -c "/usr/bin/curl ${DIECAST_ADDRESS}/things"'
+    delay: "5s"
+    exitOnCompletion: true
+    env:
+      # These variables are automatically made available to the command being run.
+      # DIECAST:                true
+      # DIECAST_DEBUG:          false
+      # DIECAST_ADDRESS:        http://localhost:28419
+      # DIECAST_ROOT:           /my/root/path
+      # DIECAST_PATH_LAYOUTS:   /my/root/path/_layouts
+      # DIECAST_PATH_ERRORS:    /my/root/path/_errors
+      # DIECAST_BINDING_PREFIX: ''
+      # DIECAST_ROUTE_PREFIX:   ''
 
 # Actions provide a mechanism to act as a very simple RESTful API service.
 #   You specify actions as one or more configuration objects, specifying the
@@ -292,68 +353,68 @@ start:
 #   series of steps to perform in fulfilling the request.
 #
 actions:
-# Configure an action to return the system's current uptime (in seconds).
-- path:     /api/system/uptime
-  method:   get
-  steps:
-  # Shell out to read the /proc/uptime file.
-  - type:   'shell'
-    data:   'cat /proc/uptime'
+  # Configure an action to return the system's current uptime (in seconds).
+  - path: /api/system/uptime
+    method: get
+    steps:
+      # Shell out to read the /proc/uptime file.
+      - type: "shell"
+        data: "cat /proc/uptime"
 
-# Configure a more complex action that executes a script and returns the output.
-- path:     /api/system/cpu
-  method:   get
-  steps:
-  - type:   'shell'
-    data: |
-      #!/bin/bash
-      # Read /proc/stat file (for first datapoint)
-      read cpu user nice system idle iowait irq softirq steal guest< /proc/stat
+  # Configure a more complex action that executes a script and returns the output.
+  - path: /api/system/cpu
+    method: get
+    steps:
+      - type: "shell"
+        data: |
+          #!/bin/bash
+          # Read /proc/stat file (for first datapoint)
+          read cpu user nice system idle iowait irq softirq steal guest< /proc/stat
 
-      # compute active and total utilizations
-      cpu_active_prev=$((user+system+nice+softirq+steal))
-      cpu_total_prev=$((user+system+nice+softirq+steal+idle+iowait))
-      cpu_user_prev=${user}
-      cpu_sys_prev=${system}
-      cpu_nice_prev=${nice}
-      cpu_io_prev=${iowait}
-      cpu_irq_prev=${irq}
-      cpu_sirq_prev=${softirq}
-      cpu_steal_prev=${steal}
-      sleep 0.05
+          # compute active and total utilizations
+          cpu_active_prev=$((user+system+nice+softirq+steal))
+          cpu_total_prev=$((user+system+nice+softirq+steal+idle+iowait))
+          cpu_user_prev=${user}
+          cpu_sys_prev=${system}
+          cpu_nice_prev=${nice}
+          cpu_io_prev=${iowait}
+          cpu_irq_prev=${irq}
+          cpu_sirq_prev=${softirq}
+          cpu_steal_prev=${steal}
+          sleep 0.05
 
-      # Read /proc/stat file (for second datapoint)
-      read cpu user nice system idle iowait irq softirq steal guest< /proc/stat
+          # Read /proc/stat file (for second datapoint)
+          read cpu user nice system idle iowait irq softirq steal guest< /proc/stat
 
-      # compute active and total utilizations
-      cpu_active_cur=$((user+system+nice+softirq+steal))
-      cpu_total_cur=$((user+system+nice+softirq+steal+idle+iowait))
-      cpu_user_cur=${user}
-      cpu_sys_cur=${system}
-      cpu_nice_cur=${nice}
-      cpu_io_cur=${iowait}
-      cpu_irq_cur=${irq}
-      cpu_sirq_cur=${softirq}
-      cpu_steal_cur=${steal}
+          # compute active and total utilizations
+          cpu_active_cur=$((user+system+nice+softirq+steal))
+          cpu_total_cur=$((user+system+nice+softirq+steal+idle+iowait))
+          cpu_user_cur=${user}
+          cpu_sys_cur=${system}
+          cpu_nice_cur=${nice}
+          cpu_io_cur=${iowait}
+          cpu_irq_cur=${irq}
+          cpu_sirq_cur=${softirq}
+          cpu_steal_cur=${steal}
 
-      # compute CPU utilization (%)
-      cpu_util=$((100*( cpu_active_cur-cpu_active_prev ) / (cpu_total_cur-cpu_total_prev) ))
-      cpu_user=$((100*( cpu_user_cur-cpu_user_prev ) / (cpu_total_cur-cpu_total_prev) ))
-      cpu_sys=$((100*( cpu_sys_cur-cpu_sys_prev ) / (cpu_total_cur-cpu_total_prev) ))
-      cpu_nice=$((100*( cpu_nice_cur-cpu_nice_prev ) / (cpu_total_cur-cpu_total_prev) ))
-      cpu_io=$((100*( cpu_io_cur-cpu_io_prev ) / (cpu_total_cur-cpu_total_prev) ))
-      cpu_irq=$((100*( cpu_irq_cur-cpu_irq_prev ) / (cpu_total_cur-cpu_total_prev)))
-      cpu_sirq=$((100*( cpu_sirq_cur-cpu_sirq_prev ) / (cpu_total_cur-cpu_total_prev)))
-      cpu_steal=$((100*( cpu_steal_cur-cpu_steal_prev ) / (cpu_total_cur-cpu_total_prev) ))
+          # compute CPU utilization (%)
+          cpu_util=$((100*( cpu_active_cur-cpu_active_prev ) / (cpu_total_cur-cpu_total_prev) ))
+          cpu_user=$((100*( cpu_user_cur-cpu_user_prev ) / (cpu_total_cur-cpu_total_prev) ))
+          cpu_sys=$((100*( cpu_sys_cur-cpu_sys_prev ) / (cpu_total_cur-cpu_total_prev) ))
+          cpu_nice=$((100*( cpu_nice_cur-cpu_nice_prev ) / (cpu_total_cur-cpu_total_prev) ))
+          cpu_io=$((100*( cpu_io_cur-cpu_io_prev ) / (cpu_total_cur-cpu_total_prev) ))
+          cpu_irq=$((100*( cpu_irq_cur-cpu_irq_prev ) / (cpu_total_cur-cpu_total_prev)))
+          cpu_sirq=$((100*( cpu_sirq_cur-cpu_sirq_prev ) / (cpu_total_cur-cpu_total_prev)))
+          cpu_steal=$((100*( cpu_steal_cur-cpu_steal_prev ) / (cpu_total_cur-cpu_total_prev) ))
 
-      echo -n '{'
-      echo   '"total": '"${cpu_util}"','
-      echo   '"user": '"${cpu_user}"','
-      echo   '"system": '"${cpu_sys}"','
-      echo   '"nice": '"${cpu_nice}"','
-      echo   '"iowait": '"${cpu_io}"','
-      echo   '"softirq": '"${cpu_sirq}"','
-      echo   '"irq": '"${cpu_irq}"','
-      echo   '"steal": '"${cpu_steal}"
-      echo '}'
-      exit 0
+          echo -n '{'
+          echo   '"total": '"${cpu_util}"','
+          echo   '"user": '"${cpu_user}"','
+          echo   '"system": '"${cpu_sys}"','
+          echo   '"nice": '"${cpu_nice}"','
+          echo   '"iowait": '"${cpu_io}"','
+          echo   '"softirq": '"${cpu_sirq}"','
+          echo   '"irq": '"${cpu_irq}"','
+          echo   '"steal": '"${cpu_steal}"
+          echo '}'
+          exit 0
