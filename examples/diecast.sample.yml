@@ -53,6 +53,27 @@ autoindex: true
 # If autoindex is enabled, this allows you to customize the template used to generate the index page.
 autoindexTemplate: path/to/autoindex-template.html
 
+# Enable Cross-Site Request Forgery (CSRF) protection
+# --------------------------------------------------------------------------------------------------
+csrf:
+  # Enable CSRF protection on all requests
+  enable: true
+
+  # ...except for paths matching the patterns below
+  except:
+  - /assets/**
+  - /api/thing/stuff/?
+
+  # Customize the CSRF cookie set in the client's browser
+  cookie:
+    path: /
+    domain: example.com
+    maxAge: 3600
+    secure: true
+    httpOnly: true
+    sameSite: strict  # also: "" (default) and "lax"
+
+
 # An array of bindings that will be evaluated before every template.
 # --------------------------------------------------------------------------------------------------
 bindings:
