@@ -1578,7 +1578,13 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "urlScheme \"https://example.com:8443/path/to/file.xml?lang=en\u0026active=true#s6.9\"",
+            "Description": "",
+            "Return": "https"
+          }
+        ]
       },
       {
         "Name": "urlHost",
@@ -1598,7 +1604,18 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "urlHost \"https://example.com:8443/path/to/file.xml?lang=en\u0026active=true#s6.9\"",
+            "Description": "",
+            "Return": "example.com:8443"
+          },
+          {
+            "Code": "urlHost \"https://example.com/somewhere/else/",
+            "Description": "",
+            "Return": "example.com"
+          }
+        ]
       },
       {
         "Name": "urlHostname",
@@ -1618,7 +1635,18 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "urlHostname \"https://example.com:8443/path/to/file.xml?lang=en\u0026active=true#s6.9\"",
+            "Description": "",
+            "Return": "example.com"
+          },
+          {
+            "Code": "urlHostname \"https://other.example.com/somewhere/else/",
+            "Description": "",
+            "Return": "other.example.com"
+          }
+        ]
       },
       {
         "Name": "urlPort",
@@ -1638,7 +1666,18 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "urlPort \"https://example.com:8443/path/to/file.xml?lang=en\u0026active=true#s6.9\"",
+            "Description": "",
+            "Return": 8443
+          },
+          {
+            "Code": "urlPort \"https://example.com/somewhere/else/",
+            "Description": "",
+            "Return": 443
+          }
+        ]
       },
       {
         "Name": "urlPath",
@@ -1658,7 +1697,13 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "urlPath \"https://example.com:8443/path/to/file.xml?lang=en\u0026active=true#s6.9\"",
+            "Description": "",
+            "Return": "/path/to/file.xml"
+          }
+        ]
       },
       {
         "Name": "urlQueryString",
@@ -1687,7 +1732,13 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "urlQueryString \"https://example.com:8443/path/to/file.xml?lang=en\u0026active=true#s6.9\" \"lang\"",
+            "Description": "",
+            "Return": "en"
+          }
+        ]
       },
       {
         "Name": "urlQuery",
@@ -1707,7 +1758,16 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "urlQuery \"https://example.com:8443/path/to/file.xml?lang=en\u0026active=true#s6.9\"",
+            "Description": "",
+            "Return": {
+              "active": true,
+              "lang": "en"
+            }
+          }
+        ]
       },
       {
         "Name": "urlFragment",
@@ -1727,7 +1787,13 @@
             "Valid": null
           }
         ],
-        "Examples": null
+        "Examples": [
+          {
+            "Code": "urlFragment \"https://example.com:8443/path/to/file.xml?lang=en\u0026active=true#s6.9\"",
+            "Description": "",
+            "Return": "s6.9"
+          }
+        ]
       },
       {
         "Name": "hex",
@@ -2036,6 +2102,32 @@
             "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw=="
           }
         ]
+      },
+      {
+        "Name": "httpStatusText",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return a human-readable description of the given HTTP error code.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": [
+          {
+            "Code": "httpStatusText 404",
+            "Description": "",
+            "Return": "Not Found"
+          },
+          {
+            "Code": "httpStatusText \"404\"",
+            "Description": "",
+            "Return": "Not Found"
+          },
+          {
+            "Code": "httpStatusText 979",
+            "Description": "",
+            "Return": ""
+          }
+        ]
       }
     ],
     "Skip": false
@@ -2089,6 +2181,26 @@
         "Alias": "",
         "Aliases": null,
         "Summary": "Return whether the given *value* is empty.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isNotZero",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return whether the given *value* is NOT a zero-valued variable.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "isNotEmpty",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return whether the given *value* is NOT empty.",
         "Returns": "",
         "Hidden": false,
         "Arguments": null,

@@ -984,6 +984,9 @@ Diecast runtime directory:</p>
             <a href="#fn-hex">hex</a>
         </li>
         <li>
+            <a href="#fn-httpStatusText">httpStatusText</a>
+        </li>
+        <li>
             <a href="#fn-jsonify">jsonify</a>
         </li>
         <li>
@@ -1477,6 +1480,12 @@ Diecast runtime directory:</p>
         </li>
         <li>
             <a href="#fn-isMap">isMap</a>
+        </li>
+        <li>
+            <a href="#fn-isNotEmpty">isNotEmpty</a>
+        </li>
+        <li>
+            <a href="#fn-isNotZero">isNotZero</a>
         </li>
         <li>
             <a href="#fn-isTime">isTime</a>
@@ -5448,6 +5457,34 @@ Diecast runtime directory:</p>
             </div>
         </div>
     </section>
+    <section class="function" id="fn-httpStatusText">
+        <h4 class="mt-3">
+            httpStatusText
+            <a href="#fn-httpStatusText" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>httpStatusText</code>
+        </div>
+        <p>Return a human-readable description of the given HTTP error code.</p>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-httpStatusText-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>httpStatusText 404<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;Not Found&#34;</p>
+            </div>
+            <div class="example" id="fn-httpStatusText-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>httpStatusText &#34;404&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;Not Found&#34;</p>
+            </div>
+            <div class="example" id="fn-httpStatusText-example-2">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>httpStatusText 979<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;&#34;</p>
+            </div>
+        </div>
+    </section>
     <section class="function" id="fn-jsonify">
         <h4 class="mt-3">
             jsonify
@@ -5980,6 +6017,13 @@ Diecast runtime directory:</p>
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-urlFragment-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>urlFragment &#34;https://example.com:8443/path/to/file.xml?lang=en&amp;active=true#s6.9&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;s6.9&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-urlHost">
         <h4 class="mt-3">
@@ -6012,6 +6056,17 @@ Diecast runtime directory:</p>
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-urlHost-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>urlHost &#34;https://example.com:8443/path/to/file.xml?lang=en&amp;active=true#s6.9&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;example.com:8443&#34;</p>
+            </div>
+            <div class="example" id="fn-urlHost-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>urlHost &#34;https://example.com/somewhere/else/<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;example.com&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-urlHostname">
         <h4 class="mt-3">
@@ -6044,6 +6099,17 @@ Diecast runtime directory:</p>
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-urlHostname-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>urlHostname &#34;https://example.com:8443/path/to/file.xml?lang=en&amp;active=true#s6.9&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;example.com&#34;</p>
+            </div>
+            <div class="example" id="fn-urlHostname-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>urlHostname &#34;https://other.example.com/somewhere/else/<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;other.example.com&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-urlPath">
         <h4 class="mt-3">
@@ -6076,6 +6142,13 @@ Diecast runtime directory:</p>
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-urlPath-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>urlPath &#34;https://example.com:8443/path/to/file.xml?lang=en&amp;active=true#s6.9&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;/path/to/file.xml&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-urlPathDecode">
         <h4 class="mt-3">
@@ -6172,6 +6245,17 @@ Diecast runtime directory:</p>
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-urlPort-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>urlPort &#34;https://example.com:8443/path/to/file.xml?lang=en&amp;active=true#s6.9&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">8443</p>
+            </div>
+            <div class="example" id="fn-urlPort-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>urlPort &#34;https://example.com/somewhere/else/<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">443</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-urlQuery">
         <h4 class="mt-3">
@@ -6204,6 +6288,16 @@ Diecast runtime directory:</p>
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-urlQuery-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>urlQuery &#34;https://example.com:8443/path/to/file.xml?lang=en&amp;active=true#s6.9&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">{
+  &#34;active&#34;: true,
+  &#34;lang&#34;: &#34;en&#34;
+}</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-urlQueryString">
         <h4 class="mt-3">
@@ -6243,6 +6337,13 @@ Diecast runtime directory:</p>
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-urlQueryString-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>urlQueryString &#34;https://example.com:8443/path/to/file.xml?lang=en&amp;active=true#s6.9&#34; &#34;lang&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;en&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-urlScheme">
         <h4 class="mt-3">
@@ -6275,6 +6376,13 @@ Diecast runtime directory:</p>
                 </tr>
             </tbody>
         </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-urlScheme-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>urlScheme &#34;https://example.com:8443/path/to/file.xml?lang=en&amp;active=true#s6.9&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;https&#34;</p>
+            </div>
+        </div>
     </section>
     <section class="function" id="fn-urldecode">
         <h4 class="mt-3">
@@ -10579,6 +10687,32 @@ Diecast runtime directory:</p>
             <code>isMap</code>
         </div>
         <p>Return whether the given <em>value</em> is a key-value map type.</p>
+    </section>
+    <section class="function" id="fn-isNotEmpty">
+        <h4 class="mt-3">
+            isNotEmpty
+            <a href="#fn-isNotEmpty" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>isNotEmpty</code>
+        </div>
+        <p>Return whether the given <em>value</em> is NOT empty.</p>
+    </section>
+    <section class="function" id="fn-isNotZero">
+        <h4 class="mt-3">
+            isNotZero
+            <a href="#fn-isNotZero" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>isNotZero</code>
+        </div>
+        <p>Return whether the given <em>value</em> is NOT a zero-valued variable.</p>
     </section>
     <section class="function" id="fn-isTime">
         <h4 class="mt-3">

@@ -144,8 +144,8 @@ func (self CookieSameSite) SameSite() http.SameSite {
 		return http.SameSiteLaxMode
 	case SameSiteStrict:
 		return http.SameSiteStrictMode
-	case SameSiteNone:
-		return http.SameSiteNoneMode
+	// case SameSiteNone:
+	// 	return http.SameSiteNoneMode
 	default:
 		return http.SameSiteDefaultMode
 	}

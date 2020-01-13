@@ -4,6 +4,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.5.0
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/biessek/golang-ico v0.0.0-20180326222316-d348d9ea4670
+	github.com/c-bata/go-prompt v0.2.2 // indirect
 	github.com/dustin/go-humanize v0.0.0-20180713052910-9f541cc9db5d
 	github.com/ghetzel/cli v1.17.0
 	github.com/ghetzel/go-stockutil v1.8.17
@@ -23,6 +24,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.0
 	github.com/montanaflynn/stats v0.0.0-20151014174947-eeaced052adb
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
+	github.com/pkg/term v0.0.0-20180730021639-bffc007b7fd5 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/signalsciences/tlstext v1.2.0
 	github.com/spaolacci/murmur3 v0.0.0-20170819071325-9f5d223c6079
@@ -36,4 +38,4 @@ require (
 	gopkg.in/yaml.v2 v2.2.2
 )
 
-go 1.13
+go 1.12
