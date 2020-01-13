@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/xml"
 	"io"
+	"net/http"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/log"
@@ -152,5 +153,21 @@ func xsvToArray(data []byte, delim rune) (map[string]interface{}, error) {
 		return out, nil
 	} else {
 		return nil, err
+	}
+}
+
+type funcHandler struct {
+	fn http.HandlerFunc
+}
+
+func (self *funcHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	self.fn(w, req)
+}
+
+func constantErrHandler(server *Server, err error, code int) http.Handler {
+	return &funcHandler{
+		fn: func(w http.ResponseWriter, req *http.Request) {
+			server.respondError(w, req, err, code)
+		},
 	}
 }

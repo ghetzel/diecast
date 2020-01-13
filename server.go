@@ -45,6 +45,7 @@ import (
 	"github.com/gobwas/glob"
 	"github.com/husobee/vestigo"
 	"github.com/jbenet/go-base58"
+	"github.com/justinas/nosurf"
 	"github.com/mattn/go-shellwords"
 	"github.com/signalsciences/tlstext"
 	"github.com/urfave/negroni"
@@ -128,6 +129,56 @@ type TlsConfig struct {
 	ClientCAFile   string `yaml:"clientCA" json:"clientCA"` // Path to a PEM-encoded file containing the CA that client certificates are issued and verify against.
 }
 
+type CookieSameSite string
+
+const (
+	SameSiteDefault CookieSameSite = ``
+	SameSiteLax                    = `lax`
+	SameSiteStrict                 = `strict`
+	SameSiteNone                   = `none`
+)
+
+func (self CookieSameSite) SameSite() http.SameSite {
+	switch self {
+	case SameSiteLax:
+		return http.SameSiteLaxMode
+	case SameSiteStrict:
+		return http.SameSiteStrictMode
+	// case SameSiteNone:
+	// 	return http.SameSiteNoneMode
+	default:
+		return http.SameSiteDefaultMode
+	}
+}
+
+type Cookie struct {
+	Path     string         `yaml:"path,omitempty"     json:"path,omitempty"`
+	Domain   string         `yaml:"domain,omitempty"   json:"domain,omitempty"`
+	MaxAge   int            `yaml:"maxAge,omitempty"   json:"maxAge,omitempty"`
+	Secure   bool           `yaml:"secure,omitempty"   json:"secure,omitempty"`
+	HttpOnly bool           `yaml:"httpOnly,omitempty" json:"httpOnly,omitempty"`
+	SameSite CookieSameSite `yaml:"sameSite,omitempty" json:"sameSite,omitempty"`
+}
+
+type CSRF struct {
+	Enable bool     `yaml:"enable" json:"enable"` // Whether to enable stateless CSRF protection
+	Except []string `yaml:"except" json:"except"` // A list of paths and path globs that should not be covered by CSRF protection
+	Cookie *Cookie  `yaml:"cookie" json:"cookie"` // Specify default fields for the CSRF cookie that is set
+}
+
+func (self *CSRF) IsExempt(req *http.Request) bool {
+	if req != nil {
+		for _, pattern := range self.Except {
+			if m, err := filepath.Match(pattern, req.URL.Path); err == nil && m {
+				log.Infof("[%s] path %q exempted from CSRF protection", reqid(req), req.URL.Path)
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 type Server struct {
 	Actions             []*Action                 `yaml:"actions"                 json:"actions"`            // Configure routes and actions to execute when those routes are requested.
 	AdditionalFunctions template.FuncMap          `yaml:"-"                       json:"-"`                  // Allow for the programmatic addition of extra functions for use in templates.
@@ -172,6 +223,7 @@ type Server struct {
 	TryLocalFirst       bool                      `yaml:"localFirst"              json:"localFirst"`             // Whether to attempt to locate a local file matching the requested path before attempting to find a template.
 	VerifyFile          string                    `yaml:"verifyFile"              json:"verifyFile"`             // A file that must exist and be readable before starting the server.
 	PreserveConnections bool                      `yaml:"preserveConnections"     json:"preserveConnections"`    // Don't add the "Connection: close" header to every response.
+	CSRF                *CSRF                     `yaml:"csrf"                    json:"csrf"`                   // configures CSRF protection
 	altRootCaPool       *x509.CertPool
 	faviconImageIco     []byte
 	fs                  http.FileSystem
@@ -1595,6 +1647,8 @@ func (self *Server) setupServer() error {
 
 	// setup request ID generation
 	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+		defer next(w, req)
+
 		requestId := base58.Encode(stringutil.UUID().Bytes())
 		log.Infof("[%s] %s %s", requestId, req.Method, req.URL.Path)
 
@@ -1605,11 +1659,12 @@ func (self *Server) setupServer() error {
 
 		// setup request tracing info
 		startRequestTimer(req)
-		next(w, req)
 	})
 
 	// inject global headers
 	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+		defer next(w, req)
+
 		for k, v := range self.GlobalHeaders {
 			if typeutil.IsArray(v) {
 				for _, i := range sliceutil.Stringify(v) {
@@ -1619,7 +1674,6 @@ func (self *Server) setupServer() error {
 				w.Header().Set(k, typeutil.String(v))
 			}
 		}
-		next(w, req)
 	})
 
 	// process authenticators
@@ -1771,7 +1825,34 @@ func (self *Server) setupServer() error {
 		log.Debugf("[actions] Registered %s", hndPath)
 	}
 
-	self.handler.UseHandler(self.router)
+	var hnd http.Handler = self.router
+
+	// enforce CSRF protection (if configured)
+	if csrf := self.CSRF; csrf != nil {
+		if csrf.Enable {
+			csrfhnd := nosurf.New(self.router)
+			csrfhnd.ExemptFunc(csrf.IsExempt)
+
+			if c := csrf.Cookie; c != nil {
+				csrfhnd.SetBaseCookie(http.Cookie{
+					Path:     c.Path,
+					Domain:   c.Domain,
+					MaxAge:   c.MaxAge,
+					Secure:   c.Secure,
+					HttpOnly: c.HttpOnly,
+					SameSite: c.SameSite.SameSite(),
+				})
+			}
+
+			csrfhnd.SetFailureHandler(
+				constantErrHandler(self, fmt.Errorf("CSRF verification failed"), http.StatusForbidden),
+			)
+
+			hnd = csrfhnd
+		}
+	}
+
+	self.handler.UseHandler(hnd)
 
 	// cleanup request tracing info
 	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
@@ -1975,6 +2056,7 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 
 	request[`url`] = url
 	request[`tls`] = ssl
+	request[`csrftoken`] = nosurf.Token(req)
 
 	rv[`request`] = request
 
