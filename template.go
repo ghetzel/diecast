@@ -6,6 +6,7 @@ import (
 	html "html/template"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"path"
 	"strings"
 	text "text/template"
@@ -255,6 +256,10 @@ func (self *Template) prepareError(err error) error {
 }
 
 func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) error {
+	return self.renderWithRequest(nil, w, data, subtemplate)
+}
+
+func (self *Template) renderWithRequest(req *http.Request, w io.Writer, data interface{}, subtemplate string) error {
 	if self.tmpl == nil {
 		return fmt.Errorf("No template input provided")
 	}
@@ -297,7 +302,7 @@ func (self *Template) Render(w io.Writer, data interface{}, subtemplate string) 
 		outstr := output.String()
 
 		for n, postprocessor := range self.postprocessors {
-			if out, err := postprocessor(outstr); err == nil {
+			if out, err := postprocessor(outstr, req); err == nil {
 				outstr = out
 			} else {
 				return self.prepareError(

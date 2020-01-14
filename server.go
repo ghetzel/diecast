@@ -72,6 +72,8 @@ const DebuggingQuerystringParam = `__viewsource`
 const LayoutTemplateName = `layout`
 const ContentTemplateName = `content`
 const ContextRequestKey = `diecast-request-id`
+const DefaultCsrfInjectFormFieldSelector = `form[method="post"], form[method="POST"], form[method="Post"]` // if you need more case permutations than this, you may override this default
+const DefaultCsrfInjectFieldFormat = `<input type="hidden" name="csrf_token" value="%s">`
 
 var HeaderSeparator = []byte{'-', '-', '-'}
 var DefaultIndexFile = `index.html`
@@ -152,6 +154,7 @@ func (self CookieSameSite) SameSite() http.SameSite {
 }
 
 type Cookie struct {
+	Name     string         `yaml:"name,omitempty"     json:"name,omitempty"`
 	Path     string         `yaml:"path,omitempty"     json:"path,omitempty"`
 	Domain   string         `yaml:"domain,omitempty"   json:"domain,omitempty"`
 	MaxAge   int            `yaml:"maxAge,omitempty"   json:"maxAge,omitempty"`
@@ -161,9 +164,12 @@ type Cookie struct {
 }
 
 type CSRF struct {
-	Enable bool     `yaml:"enable" json:"enable"` // Whether to enable stateless CSRF protection
-	Except []string `yaml:"except" json:"except"` // A list of paths and path globs that should not be covered by CSRF protection
-	Cookie *Cookie  `yaml:"cookie" json:"cookie"` // Specify default fields for the CSRF cookie that is set
+	Enable                  bool     `yaml:"enable"                  json:"enable"`                  // Whether to enable stateless CSRF protection
+	Except                  []string `yaml:"except"                  json:"except"`                  // A list of paths and path globs that should not be covered by CSRF protection
+	Cookie                  *Cookie  `yaml:"cookie"                  json:"cookie"`                  // Specify default fields for the CSRF cookie that is set
+	InjectFormFields        bool     `yaml:"injectFormFields"        json:"injectFormFields"`        // If true, a postprocessor will be added that injects a hidden <input> field into all <form> elements returned from Diecast
+	InjectFormFieldSelector string   `yaml:"injectFormFieldSelector" json:"injectFormFieldSelector"` // A CSS selector used to locate <form> tags that need the CSRF <input> field injected.
+	FormTokenTagFormat      string   `yaml:"formTokenTagFormat"      json:"formTokenTagFormat"`      // Specify the format string that will be used to replace </form> tags with the injected field.
 }
 
 func (self *CSRF) IsExempt(req *http.Request) bool {
@@ -1569,7 +1575,7 @@ func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resEr
 			if err := tmpl.ParseFrom(f); err == nil {
 				w.Header().Set(`Content-Type`, fileutil.GetMimeType(filename, `text/html; charset=utf-8`))
 
-				if err := tmpl.Render(w, errorData, ``); err == nil {
+				if err := tmpl.renderWithRequest(req, w, errorData, ``); err == nil {
 					return
 				} else {
 					log.Warningf("Error template %v render failed: %v", filename, err)
@@ -1835,6 +1841,7 @@ func (self *Server) setupServer() error {
 
 			if c := csrf.Cookie; c != nil {
 				csrfhnd.SetBaseCookie(http.Cookie{
+					Name:     c.Name,
 					Path:     c.Path,
 					Domain:   c.Domain,
 					MaxAge:   c.MaxAge,
@@ -1847,6 +1854,36 @@ func (self *Server) setupServer() error {
 			csrfhnd.SetFailureHandler(
 				constantErrHandler(self, fmt.Errorf("CSRF verification failed"), http.StatusForbidden),
 			)
+
+			if csrf.InjectFormFields {
+				if csrf.InjectFormFieldSelector == `` {
+					csrf.InjectFormFieldSelector = DefaultCsrfInjectFormFieldSelector
+				}
+
+				if csrf.FormTokenTagFormat == `` {
+					csrf.FormTokenTagFormat = DefaultCsrfInjectFieldFormat
+				}
+
+				RegisterPostprocessor(`__diecast_csrf`, func(in string, req *http.Request) (string, error) {
+					if doc, err := htmldoc(in); err == nil {
+						doc.Find(csrf.InjectFormFieldSelector).AppendHtml(
+							fmt.Sprintf(csrf.FormTokenTagFormat, nosurf.Token(req)),
+						)
+
+						doc.End()
+						return doc.Html()
+					} else {
+						log.Warningf("failed to inject CSRF field: %v", err)
+						return in, nil
+					}
+				})
+
+				if self.BaseHeader == nil {
+					self.BaseHeader = new(TemplateHeader)
+				}
+
+				self.BaseHeader.Postprocessors = append([]string{`__diecast_csrf`}, self.BaseHeader.Postprocessors...)
+			}
 
 			hnd = csrfhnd
 		}
