@@ -66,6 +66,7 @@ csrf:
 
   # Customize the CSRF cookie set in the client's browser
   cookie:
+    name: my-cool-csrf-cookie
     path: /
     domain: example.com
     maxAge: 3600
@@ -73,6 +74,14 @@ csrf:
     httpOnly: true
     sameSite: strict  # also: "" (default) and "lax"
 
+  # If true, a postprocessor will be added that injects a hidden <input> field into all <form> elements returned from Diecast
+  injectFormFields: false
+
+  # A CSS selector used to locate <form> tags that need the CSRF <input> field injected.
+  injectFormFieldSelector: 'form[method="post"], form[method="POST"], form[method="Post"]'
+
+  # Override the format string that will be used to add the <input> tags containing the current CSRF token.
+  formTokenTagFormat: '<input type="hidden" name="csrf_token" value="%s">'
 
 # An array of bindings that will be evaluated before every template.
 # --------------------------------------------------------------------------------------------------
