@@ -110,7 +110,6 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 			return nil
 		} else {
 			w.Header().Set(`Content-Type`, options.MimeType)
-
 			if options.Fragments.HasLayout() {
 				return tmpl.renderWithRequest(req, w, options.Data, LayoutTemplateName)
 			} else {
