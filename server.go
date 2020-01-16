@@ -1673,15 +1673,23 @@ func (self *Server) setupServer() error {
 		defer next(w, req)
 
 		for match, destdir := range self.DebugDumpRequests {
+			var filename string
+
 			if fileutil.DirExists(destdir) {
-				if ok, err := filepath.Match(match, req.URL.Path); err == nil && ok || match == `*` {
-					if dump, err := os.Create(filepath.Join(destdir, `diecast-req-`+reqid(req)+`.log`)); err == nil {
-						dump.Write([]byte(formatRequest(req)))
-						dump.Close()
-						log.Debugf("wrote request to %v", dump.Name())
-					} else {
-						log.Warningf("failed to dump request: %v", err)
-					}
+				filename = filepath.Join(destdir, `diecast-req-`+reqid(req)+`.log`)
+			} else if fileutil.FileExists(destdir) {
+				filename = destdir
+			} else {
+				return
+			}
+
+			if ok, err := filepath.Match(match, req.URL.Path); err == nil && ok || match == `*` {
+				if dump, err := os.Create(filename); err == nil {
+					dump.Write([]byte(formatRequest(req)))
+					dump.Close()
+					log.Debugf("wrote request to %v", dump.Name())
+				} else {
+					log.Warningf("failed to dump request: %v", err)
 				}
 			}
 		}
