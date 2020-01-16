@@ -1,3 +1,4 @@
+---
 # This is a sample diecast.yml file that contains every supported option
 # and detailed decriptions of each one.  The values of each key represent
 # the default values if absent from the config.
