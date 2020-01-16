@@ -112,9 +112,9 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 			w.Header().Set(`Content-Type`, options.MimeType)
 
 			if options.Fragments.HasLayout() {
-				return tmpl.Render(w, options.Data, LayoutTemplateName)
+				return tmpl.renderWithRequest(req, w, options.Data, LayoutTemplateName)
 			} else {
-				return tmpl.Render(w, options.Data, ``)
+				return tmpl.renderWithRequest(req, w, options.Data, ``)
 			}
 		}
 	} else if self.server.ShouldReturnSource(req) {

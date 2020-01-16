@@ -37,9 +37,11 @@ type ProxyMount struct {
 	PassthroughBody         bool                   `json:"passthrough_body"`
 	PassthroughErrors       bool                   `json:"passthrough_errors"`
 	PassthroughRedirects    bool                   `json:"passthrough_redirects"`
+	PassthroughUserAgent    bool                   `json:"passthrough_user_agent"`
 	StripPathPrefix         string                 `json:"strip_path_prefix"`
 	AppendPathPrefix        string                 `json:"append_path_prefix"`
 	Insecure                bool                   `json:"insecure"`
+	BodyBufferSize          int64                  `json:"body_buffer_size"`
 	Client                  *http.Client
 	urlRewriteFrom          string
 	urlRewriteTo            string
@@ -147,7 +149,40 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		}
 	}
 
-	if newReq, err := http.NewRequest(method, proxyURI, nil); err == nil {
+	var buf bytes.Buffer
+	var forwardedBody io.Reader
+
+	if requestBody != nil && (self.PassthroughRequests || self.PassthroughBody) {
+		bufsz := int64(MaxBufferedBodySize)
+
+		if self.BodyBufferSize > 0 {
+			bufsz = self.BodyBufferSize
+		}
+
+		// This is an optimization for large request bodies (large as defined by the BodyBufferSize/MaxBufferedBodySize value(s)).
+		// We attempt to read the request body, up to a certain number of bytes.  Bodies less than/equal to that size are sent
+		// as a regular old request, with a known content-length and all.  Greater than that, the request is sent with
+		// Transfer-Encoding: chunked.  The purpose of this is to limit the amount of data we keep in memory while processing the request,
+		// while also supporting the ability to do things to the stream (e.g.: ungzip or gzip).  This "doing things" option is also why we
+		// can't just trust the content-length we got in the request, as the content-length we send along may be different.
+		//
+		if n, err := io.CopyN(&buf, requestBody, bufsz); err == nil {
+			log.Debugf("[%s] proxy: using streaming request body (body exceeds %d bytes)", id, n)
+
+			// make the upstream request body the aggregate of the already-read portion of the body
+			// and the unread remainder of the incoming request body
+			forwardedBody = io.MultiReader(&buf, requestBody)
+		} else if err == io.EOF {
+			log.Debugf("[%s] proxy: fixed-length request body (%d bytes)", id, buf.Len())
+			forwardedBody = &buf
+		} else {
+			return nil, err
+		}
+	}
+
+	if newReq, err := http.NewRequest(method, proxyURI, forwardedBody); err == nil {
+		newReq.TransferEncoding = []string{`identity`}
+
 		if pp := self.StripPathPrefix; pp != `` {
 			newReq.URL.Path = strings.TrimPrefix(newReq.URL.Path, pp)
 		}
@@ -169,6 +204,10 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			}
 		}
 
+		if !self.PassthroughUserAgent {
+			newReq.Header.Set(`User-Agent`, DiecastUserAgentString)
+		}
+
 		// add explicit headers to new request
 		for name, value := range self.Headers {
 			newReq.Header.Set(name, typeutil.String(value))
@@ -179,26 +218,6 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			if newReq.URL.Query().Get(name) == `` {
 				log.Debugf("[%s] proxy: [Q] %v=%v", id, name, value)
 				httputil.SetQ(newReq.URL, name, value)
-			}
-		}
-
-		if requestBody != nil && (self.PassthroughRequests || self.PassthroughBody) {
-			var buf bytes.Buffer
-
-			if n, err := io.CopyN(&buf, requestBody, int64(MaxBufferedBodySize)); err == nil {
-				log.Debugf("[%s] proxy: using streaming request body (body exceeds %d bytes)", id, n)
-
-				// make the upstream request body the aggregate of the already-read portion of the body
-				// and the unread remainder of the incoming request body
-				newReq.Body = MultiReadCloser(&buf, requestBody)
-
-			} else if err == io.EOF {
-				log.Debugf("[%s] proxy: fixed-length request body (%d bytes)", id, buf.Len())
-				newReq.Body = MultiReadCloser(&buf)
-				newReq.ContentLength = int64(buf.Len())
-				newReq.TransferEncoding = []string{`identity`}
-			} else {
-				return nil, err
 			}
 		}
 

@@ -1,8 +1,10 @@
 package diecast
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"path"
 	"path/filepath"
@@ -346,4 +348,33 @@ func httpFilename(file http.File) string {
 	}
 
 	return `<unknown>`
+}
+
+func formatRequest(req *http.Request) string {
+	var request []string // Add the request string
+
+	url := fmt.Sprintf("%s %v %v", req.Method, req.URL, req.Proto)
+
+	request = append(request, url)
+	request = append(request, fmt.Sprintf("host: %s", req.Host))
+
+	for name, headers := range req.Header {
+		name = strings.ToLower(name)
+
+		for _, h := range headers {
+			request = append(request, fmt.Sprintf("%v: %v", name, h))
+		}
+	}
+
+	data, err := ioutil.ReadAll(req.Body)
+	req.Body.Close()
+
+	if err == nil {
+		req.Body = ioutil.NopCloser(bytes.NewBuffer(data))
+		return strings.Join(request, "\r\n") + "\r\n\r\n" + string(data)
+	} else {
+		request = append(request, fmt.Sprintf("\nFAILED to read body: %v", err))
+	}
+
+	return strings.Join(request, "\n")
 }

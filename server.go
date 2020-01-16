@@ -72,6 +72,8 @@ const DebuggingQuerystringParam = `__viewsource`
 const LayoutTemplateName = `layout`
 const ContentTemplateName = `content`
 const ContextRequestKey = `diecast-request-id`
+const DefaultCsrfInjectFormFieldSelector = `form[method="post"], form[method="POST"], form[method="Post"]` // if you need more case permutations than this, you may override this default
+const DefaultCsrfInjectFieldFormat = `<input type="hidden" name="csrf_token" value="%s">`
 
 var HeaderSeparator = []byte{'-', '-', '-'}
 var DefaultIndexFile = `index.html`
@@ -152,6 +154,7 @@ func (self CookieSameSite) SameSite() http.SameSite {
 }
 
 type Cookie struct {
+	Name     string         `yaml:"name,omitempty"     json:"name,omitempty"`
 	Path     string         `yaml:"path,omitempty"     json:"path,omitempty"`
 	Domain   string         `yaml:"domain,omitempty"   json:"domain,omitempty"`
 	MaxAge   int            `yaml:"maxAge,omitempty"   json:"maxAge,omitempty"`
@@ -161,9 +164,12 @@ type Cookie struct {
 }
 
 type CSRF struct {
-	Enable bool     `yaml:"enable" json:"enable"` // Whether to enable stateless CSRF protection
-	Except []string `yaml:"except" json:"except"` // A list of paths and path globs that should not be covered by CSRF protection
-	Cookie *Cookie  `yaml:"cookie" json:"cookie"` // Specify default fields for the CSRF cookie that is set
+	Enable                  bool     `yaml:"enable"                  json:"enable"`                  // Whether to enable stateless CSRF protection
+	Except                  []string `yaml:"except"                  json:"except"`                  // A list of paths and path globs that should not be covered by CSRF protection
+	Cookie                  *Cookie  `yaml:"cookie"                  json:"cookie"`                  // Specify default fields for the CSRF cookie that is set
+	InjectFormFields        bool     `yaml:"injectFormFields"        json:"injectFormFields"`        // If true, a postprocessor will be added that injects a hidden <input> field into all <form> elements returned from Diecast
+	InjectFormFieldSelector string   `yaml:"injectFormFieldSelector" json:"injectFormFieldSelector"` // A CSS selector used to locate <form> tags that need the CSRF <input> field injected.
+	FormTokenTagFormat      string   `yaml:"formTokenTagFormat"      json:"formTokenTagFormat"`      // Specify the format string that will be used to replace </form> tags with the injected field.
 }
 
 func (self *CSRF) IsExempt(req *http.Request) bool {
@@ -180,21 +186,22 @@ func (self *CSRF) IsExempt(req *http.Request) bool {
 }
 
 type Server struct {
-	Actions             []*Action                 `yaml:"actions"                 json:"actions"`            // Configure routes and actions to execute when those routes are requested.
-	AdditionalFunctions template.FuncMap          `yaml:"-"                       json:"-"`                  // Allow for the programmatic addition of extra functions for use in templates.
-	Address             string                    `yaml:"address"                 json:"address"`            // The host:port address the server is listening on
-	Authenticators      AuthenticatorConfigs      `yaml:"authenticators"          json:"authenticators"`     // A set of authenticator configurations used to protect some or all routes.
-	Autoindex           bool                      `yaml:"autoindex"               json:"autoindex"`          // Specify that requests that terminate at a filesystem directory should automatically generate an index listing of that directory.
-	AutoindexTemplate   string                    `yaml:"autoindexTemplate"       json:"autoindexTemplate"`  // If Autoindex is enabled, this allows the template used to generate the index page to be customized.
-	AutolayoutPatterns  []string                  `yaml:"autolayoutPatterns"      json:"autolayoutPatterns"` // Which types of files will automatically have layouts applied.
-	BaseHeader          *TemplateHeader           `yaml:"header"                  json:"header"`             // A default header that all templates will inherit from.
-	BinPath             string                    `yaml:"-"                       json:"-"`                  // Exposes the location of the diecast binary
-	BindingPrefix       string                    `yaml:"bindingPrefix"           json:"bindingPrefix"`      // Specify a string to prefix all binding resource values that start with "/"
-	Bindings            []Binding                 `yaml:"bindings"                json:"bindings"`           // Top-level bindings that apply to every rendered template
-	DefaultPageObject   map[string]interface{}    `yaml:"-"                       json:"-"`
+	Actions             []*Action                 `yaml:"actions"                 json:"actions"`                 // Configure routes and actions to execute when those routes are requested.
+	AdditionalFunctions template.FuncMap          `yaml:"-"                       json:"-"`                       // Allow for the programmatic addition of extra functions for use in templates.
+	Address             string                    `yaml:"address"                 json:"address"`                 // The host:port address the server is listening on
+	Authenticators      AuthenticatorConfigs      `yaml:"authenticators"          json:"authenticators"`          // A set of authenticator configurations used to protect some or all routes.
+	Autoindex           bool                      `yaml:"autoindex"               json:"autoindex"`               // Specify that requests that terminate at a filesystem directory should automatically generate an index listing of that directory.
+	AutoindexTemplate   string                    `yaml:"autoindexTemplate"       json:"autoindexTemplate"`       // If Autoindex is enabled, this allows the template used to generate the index page to be customized.
+	AutolayoutPatterns  []string                  `yaml:"autolayoutPatterns"      json:"autolayoutPatterns"`      // Which types of files will automatically have layouts applied.
+	BaseHeader          *TemplateHeader           `yaml:"header"                  json:"header"`                  // A default header that all templates will inherit from.
+	BinPath             string                    `yaml:"-"                       json:"-"`                       // Exposes the location of the diecast binary
+	BindingPrefix       string                    `yaml:"bindingPrefix"           json:"bindingPrefix"`           // Specify a string to prefix all binding resource values that start with "/"
+	Bindings            []Binding                 `yaml:"bindings"                json:"bindings"`                // Top-level bindings that apply to every rendered template
+	DefaultPageObject   map[string]interface{}    `yaml:"-"                       json:"-"`                       //
 	DisableCommands     bool                      `yaml:"disable_commands"        json:"disable_commands"`        // Disable the execution of PrestartCommands and StartCommand .
 	DisableTimings      bool                      `yaml:"disableTimings"          json:"disableTimings"`          // Disable emitting per-request Server-Timing headers to aid in tracing bottlenecks and performance issues.
 	EnableDebugging     bool                      `yaml:"debug"                   json:"debug"`                   // Enables additional options for debugging applications. Caution: can expose secrets and other sensitive data.
+	DebugDumpRequests   map[string]string         `yaml:"debugDumpRequests"       json:"debugDumpRequests"`       // An object keyed on path globs whose values are a directory where matching requests are dumped in their entirety as text files.
 	EnableLayouts       bool                      `yaml:"enableLayouts"           json:"enableLayouts"`           // Specifies whether layouts are enabled
 	Environment         string                    `yaml:"environment"             json:"environment"`             // Specify the environment for loading environment-specific configuration files in the form "diecast.env.yml"
 	ErrorsPath          string                    `yaml:"errors"                  json:"errors"`                  // The path to the errors template directory
@@ -208,22 +215,22 @@ type Server struct {
 	MountConfigs        []MountConfig             `yaml:"mounts"                  json:"mounts"`                  // A list of mount configurations read from the diecast.yml config file.
 	Mounts              []Mount                   `yaml:"-"                       json:"-"`                       // The set of all registered mounts.
 	OnAddHandler        AddHandlerFunc            `yaml:"-"                       json:"-"`                       // A function that can be used to intercept handlers being added to the server.
-	OverridePageObject  map[string]interface{}    `yaml:"-"                       json:"-"`
-	PrestartCommands    []*StartCommand           `yaml:"prestart"                json:"prestart"`               // A command that will be executed before the server is started.
-	Protocols           map[string]ProtocolConfig `yaml:"protocols"               json:"protocols"`              // Setup global configuration details for Binding Protocols
-	RendererMappings    map[string]string         `yaml:"rendererMapping"         json:"rendererMapping"`        // Map file extensions to preferred renderers for a given file type.
-	RootPath            string                    `yaml:"root"                    json:"root"`                   // The filesystem location where templates and files are served from
-	RoutePrefix         string                    `yaml:"routePrefix"             json:"routePrefix"`            // If specified, all requests must be prefixed with this string.
-	StartCommands       []*StartCommand           `yaml:"start"                   json:"start"`                  // A command that will be executed after the server is confirmed running.
-	TLS                 *TlsConfig                `yaml:"tls"                     json:"tls"`                    // where SSL/TLS configuration is stored
-	TemplatePatterns    []string                  `yaml:"patterns"                json:"patterns"`               // A set of glob patterns specifying which files will be rendered as templates.
-	Translations        map[string]interface{}    `yaml:"translations,omitempty"  json:"translations,omitempty"` // Stores translations for use with the i18n and l10n functions.  Keys values represent the
-	TrustedRootPEMs     []string                  `yaml:"trustedRootPEMs"         json:"trustedRootPEMs"`        // List of filenames containing PEM-encoded X.509 TLS certificates that represent trusted authorities.  Use to validate certificates signed by an internal, non-public authority.
-	TryExtensions       []string                  `yaml:"tryExtensions"           json:"tryExtensions"`          // Try these file extensions when looking for default (i.e.: "index") files.  If IndexFile has an extension, it will be stripped first.
-	TryLocalFirst       bool                      `yaml:"localFirst"              json:"localFirst"`             // Whether to attempt to locate a local file matching the requested path before attempting to find a template.
-	VerifyFile          string                    `yaml:"verifyFile"              json:"verifyFile"`             // A file that must exist and be readable before starting the server.
-	PreserveConnections bool                      `yaml:"preserveConnections"     json:"preserveConnections"`    // Don't add the "Connection: close" header to every response.
-	CSRF                *CSRF                     `yaml:"csrf"                    json:"csrf"`                   // configures CSRF protection
+	OverridePageObject  map[string]interface{}    `yaml:"-"                       json:"-"`                       //
+	PrestartCommands    []*StartCommand           `yaml:"prestart"                json:"prestart"`                // A command that will be executed before the server is started.
+	Protocols           map[string]ProtocolConfig `yaml:"protocols"               json:"protocols"`               // Setup global configuration details for Binding Protocols
+	RendererMappings    map[string]string         `yaml:"rendererMapping"         json:"rendererMapping"`         // Map file extensions to preferred renderers for a given file type.
+	RootPath            string                    `yaml:"root"                    json:"root"`                    // The filesystem location where templates and files are served from
+	RoutePrefix         string                    `yaml:"routePrefix"             json:"routePrefix"`             // If specified, all requests must be prefixed with this string.
+	StartCommands       []*StartCommand           `yaml:"start"                   json:"start"`                   // A command that will be executed after the server is confirmed running.
+	TLS                 *TlsConfig                `yaml:"tls"                     json:"tls"`                     // where SSL/TLS configuration is stored
+	TemplatePatterns    []string                  `yaml:"patterns"                json:"patterns"`                // A set of glob patterns specifying which files will be rendered as templates.
+	Translations        map[string]interface{}    `yaml:"translations,omitempty"  json:"translations,omitempty"`  // Stores translations for use with the i18n and l10n functions.  Keys values represent the
+	TrustedRootPEMs     []string                  `yaml:"trustedRootPEMs"         json:"trustedRootPEMs"`         // List of filenames containing PEM-encoded X.509 TLS certificates that represent trusted authorities.  Use to validate certificates signed by an internal, non-public authority.
+	TryExtensions       []string                  `yaml:"tryExtensions"           json:"tryExtensions"`           // Try these file extensions when looking for default (i.e.: "index") files.  If IndexFile has an extension, it will be stripped first.
+	TryLocalFirst       bool                      `yaml:"localFirst"              json:"localFirst"`              // Whether to attempt to locate a local file matching the requested path before attempting to find a template.
+	VerifyFile          string                    `yaml:"verifyFile"              json:"verifyFile"`              // A file that must exist and be readable before starting the server.
+	PreserveConnections bool                      `yaml:"preserveConnections"     json:"preserveConnections"`     // Don't add the "Connection: close" header to every response.
+	CSRF                *CSRF                     `yaml:"csrf"                    json:"csrf"`                    // configures CSRF protection
 	altRootCaPool       *x509.CertPool
 	faviconImageIco     []byte
 	fs                  http.FileSystem
@@ -1569,7 +1576,7 @@ func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resEr
 			if err := tmpl.ParseFrom(f); err == nil {
 				w.Header().Set(`Content-Type`, fileutil.GetMimeType(filename, `text/html; charset=utf-8`))
 
-				if err := tmpl.Render(w, errorData, ``); err == nil {
+				if err := tmpl.renderWithRequest(req, w, errorData, ``); err == nil {
 					return
 				} else {
 					log.Warningf("Error template %v render failed: %v", filename, err)
@@ -1659,6 +1666,33 @@ func (self *Server) setupServer() error {
 
 		// setup request tracing info
 		startRequestTimer(req)
+	})
+
+	// handle request dumper
+	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+		defer next(w, req)
+
+		for match, destdir := range self.DebugDumpRequests {
+			var filename string
+
+			if fileutil.DirExists(destdir) {
+				filename = filepath.Join(destdir, `diecast-req-`+reqid(req)+`.log`)
+			} else if fileutil.FileExists(destdir) {
+				filename = destdir
+			} else {
+				return
+			}
+
+			if ok, err := filepath.Match(match, req.URL.Path); err == nil && ok || match == `*` {
+				if dump, err := os.Create(filename); err == nil {
+					dump.Write([]byte(formatRequest(req)))
+					dump.Close()
+					log.Debugf("wrote request to %v", dump.Name())
+				} else {
+					log.Warningf("failed to dump request: %v", err)
+				}
+			}
+		}
 	})
 
 	// inject global headers
@@ -1835,6 +1869,7 @@ func (self *Server) setupServer() error {
 
 			if c := csrf.Cookie; c != nil {
 				csrfhnd.SetBaseCookie(http.Cookie{
+					Name:     c.Name,
 					Path:     c.Path,
 					Domain:   c.Domain,
 					MaxAge:   c.MaxAge,
@@ -1847,6 +1882,39 @@ func (self *Server) setupServer() error {
 			csrfhnd.SetFailureHandler(
 				constantErrHandler(self, fmt.Errorf("CSRF verification failed"), http.StatusForbidden),
 			)
+
+			if csrf.InjectFormFields {
+				if csrf.InjectFormFieldSelector == `` {
+					csrf.InjectFormFieldSelector = DefaultCsrfInjectFormFieldSelector
+				}
+
+				if csrf.FormTokenTagFormat == `` {
+					csrf.FormTokenTagFormat = DefaultCsrfInjectFieldFormat
+				}
+
+				RegisterPostprocessor(`__diecast_csrf`, func(in string, req *http.Request) (string, error) {
+					start := time.Now()
+					defer reqtime(req, `csrf-inject`, time.Since(start))
+
+					if doc, err := htmldoc(in); err == nil {
+						doc.Find(csrf.InjectFormFieldSelector).AppendHtml(
+							fmt.Sprintf(csrf.FormTokenTagFormat, nosurf.Token(req)),
+						)
+
+						doc.End()
+						return doc.Html()
+					} else {
+						log.Warningf("failed to inject CSRF field: %v", err)
+						return in, nil
+					}
+				})
+
+				if self.BaseHeader == nil {
+					self.BaseHeader = new(TemplateHeader)
+				}
+
+				self.BaseHeader.Postprocessors = append([]string{`__diecast_csrf`}, self.BaseHeader.Postprocessors...)
+			}
 
 			hnd = csrfhnd
 		}
