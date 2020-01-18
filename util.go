@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/jbenet/go-base58"
 )
 
 type xmlNode struct {
@@ -134,4 +135,12 @@ func constantErrHandler(server *Server, err error, code int) http.Handler {
 			server.respondError(w, req, err, code)
 		},
 	}
+}
+
+func b58encode(data []byte) string {
+	return base58.EncodeAlphabet(data, base58.BTCAlphabet)
+}
+
+func b58decode(data string) []byte {
+	return base58.DecodeAlphabet(data, base58.BTCAlphabet)
 }

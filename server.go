@@ -5,7 +5,6 @@ package diecast
 
 import (
 	"bytes"
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -26,6 +25,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 	"syscall"
 	"time"
@@ -45,7 +45,6 @@ import (
 	"github.com/gobwas/glob"
 	"github.com/husobee/vestigo"
 	"github.com/jbenet/go-base58"
-	"github.com/justinas/nosurf"
 	"github.com/mattn/go-shellwords"
 	"github.com/signalsciences/tlstext"
 	"github.com/urfave/negroni"
@@ -1499,9 +1498,9 @@ func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resEr
 	tmpl := NewTemplate(`error`, HtmlEngine)
 
 	if code >= 400 && code < 500 {
-		log.Warningf("%v (HTTP %d)", resErr, code)
+		log.Warningf("[%s] %v (HTTP %d)", reqid(req), resErr, code)
 	} else {
-		log.Errorf("%v (HTTP %d)", resErr, code)
+		log.Errorf("[%s] %v (HTTP %d)", reqid(req), resErr, code)
 	}
 
 	if resErr == nil {
@@ -1582,16 +1581,16 @@ func (self *Server) appendIncludes(fragments *FragmentSet, header *TemplateHeade
 	return nil
 }
 
+func csrftoken(req *http.Request) string {
+	return httputil.RequestGetValue(req, ContextCsrfToken).String()
+}
+
 func reqid(req *http.Request) string {
-	if id := req.Context().Value(ContextRequestKey); id != nil {
-		return fmt.Sprintf("%v", id)
-	} else {
-		return ``
-	}
+	return httputil.RequestGetValue(req, ContextRequestKey).String()
 }
 
 func reqres(req *http.Request) http.ResponseWriter {
-	if w := req.Context().Value(ContextResponseKey); w != nil {
+	if w := httputil.RequestGetValue(req, ContextResponseKey).Value; w != nil {
 		if rw, ok := w.(http.ResponseWriter); ok {
 			return rw
 		}
@@ -1614,11 +1613,9 @@ func (self *Server) setupServer() error {
 		requestId := base58.Encode(stringutil.UUID().Bytes())
 		log.Infof("[%s] %s %s", requestId, req.Method, req.URL.Path)
 
-		parent := req.Context()
-		identified := context.WithValue(parent, ContextRequestKey, requestId)
-		associated := context.WithValue(identified, ContextResponseKey, w)
+		httputil.RequestSetValue(req, ContextRequestKey, requestId)
+		httputil.RequestSetValue(req, ContextResponseKey, w)
 
-		*req = *req.WithContext(associated)
 		w.Header().Set(`X-Diecast-Request-ID`, requestId)
 
 		// setup request tracing info
@@ -1685,6 +1682,9 @@ func (self *Server) setupServer() error {
 		// fallback to proceeding down the middleware chain
 		next(w, req)
 	})
+
+	// setup CSRF protection (if enabled)
+	self.applyCsrfIntercept()
 
 	self.router.HandleFunc(fmt.Sprintf("%s/_diecast", self.rp()), func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
@@ -1815,9 +1815,6 @@ func (self *Server) setupServer() error {
 
 		log.Debugf("[actions] Registered %s", hndPath)
 	}
-
-	// setup CSRF protection (if enabled)
-	self.applyCsrfIntercept()
 
 	// cleanup request tracing info
 	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
@@ -2021,7 +2018,7 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 
 	request[`url`] = url
 	request[`tls`] = ssl
-	request[`csrftoken`] = nosurf.Token(req)
+	request[`csrftoken`] = csrftoken(req)
 
 	rv[`request`] = request
 
@@ -2204,4 +2201,36 @@ func envKeyNorm(in string) string {
 	in = strings.ToLower(in)
 
 	return in
+}
+
+func formatRequest(req *http.Request) string {
+	var request []string // Add the request string
+
+	url := fmt.Sprintf("%s %v %v", req.Method, req.URL, req.Proto)
+
+	request = append(request, url)
+	request = append(request, fmt.Sprintf("host: %s", req.Host))
+	headerNames := maputil.StringKeys(req.Header)
+	sort.Strings(headerNames)
+
+	for _, name := range headerNames {
+		headers := req.Header[name]
+		name = strings.ToLower(name)
+
+		for _, h := range headers {
+			request = append(request, fmt.Sprintf("%v: %v", name, h))
+		}
+	}
+
+	data, err := ioutil.ReadAll(req.Body)
+	req.Body.Close()
+
+	if err == nil {
+		req.Body = ioutil.NopCloser(bytes.NewBuffer(data))
+		return strings.Join(request, "\r\n") + "\r\n\r\n" + string(data)
+	} else {
+		request = append(request, fmt.Sprintf("\nFAILED to read body: %v", err))
+	}
+
+	return strings.Join(request, "\n")
 }
