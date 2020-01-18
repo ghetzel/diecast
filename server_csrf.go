@@ -1,11 +1,12 @@
 package diecast
 
 import (
-	"context"
+	"bytes"
 	"crypto/rand"
 	"crypto/subtle"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -111,45 +112,51 @@ func (self *CSRF) GetCookieName() string {
 }
 
 func (self *CSRF) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	if self.upstream == nil {
-		panic("misuse of CSRF handler: must set CSRF.upstream")
-	}
+	if self.Enable {
+		log.Debugf("[%s] middleware: check csrf", reqid(req))
+		self.generateTokenForRequest(w, req, false)
 
-	self.generateTokenForRequest(w, req, false)
+		switch req.Method {
+		case http.MethodGet, http.MethodHead, http.MethodOptions, http.MethodTrace:
+			break
+		default:
+			if !self.IsExempt(req) {
+				// if we're validating the request, then we've "consumed" this token and
+				// should force-regenerate a new one
+				self.generateTokenForRequest(w, req, true)
+				creq := req.Clone(req.Context())
 
-	switch req.Method {
-	case http.MethodGet, http.MethodHead, http.MethodOptions, http.MethodTrace:
-		break
-	default:
-		if !self.IsExempt(req) {
-			// if we're validating the request, then we've "consumed" this token and
-			// should force-regenerate a new one
-			self.generateTokenForRequest(w, req, true)
+				if req.Body != nil {
+					if body, err := ioutil.ReadAll(req.Body); err == nil {
+						req.Body.Close()
+						creq.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+						req.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+					} else if self.server != nil {
+						self.server.respondError(w, req, err, http.StatusBadRequest)
+					} else {
+						http.Error(w, err.Error(), http.StatusBadRequest)
+					}
+				}
 
-			// clone the request so that whatever we do to the request body doesn't affect any other
-			// things in upstream that want to process said body
-			csrfReq := req.Clone(context.Background())
+				// if the token is missing/invalid, stop here and return an error
+				if !self.Verify(creq) {
+					if self.server != nil {
+						self.server.respondError(w, req, fmt.Errorf("CSRF validation failed"), http.StatusBadRequest)
+					} else {
+						http.Error(w, "CSRF validation failed", http.StatusBadRequest)
+					}
 
-			if req.Body != nil {
-				// if body, err := req.GetBody(); err == nil {
-				// 	csrfReq.Body = body
-				// } else {
-				// 	log.Errorf("[%s] csrf: %v", reqid(req), err)
-				// 	self.server.respondError(w, req, fmt.Errorf("Internal Server Error"), http.StatusInternalServerError)
-				// }
+					return
+				}
+			} else {
+				log.Infof("[%s] path %q exempted from CSRF protection", reqid(req), req.URL.Path)
 			}
-
-			// if the token is missing/invalid, stop here and return an error
-			if !self.Verify(csrfReq) {
-				self.server.respondError(w, req, fmt.Errorf("CSRF validation failed"), http.StatusBadRequest)
-				return
-			}
-		} else {
-			log.Infof("[%s] path %q exempted from CSRF protection", reqid(req), req.URL.Path)
 		}
 	}
 
-	self.upstream.ServeHTTP(w, req)
+	if self.upstream != nil {
+		self.upstream.ServeHTTP(w, req)
+	}
 }
 
 // Retrieve the user-submitted token that can be forged.
@@ -256,6 +263,7 @@ func (self *CSRF) generateTokenForRequest(w http.ResponseWriter, req *http.Reque
 
 	// set the cookie
 	w.Header().Set(`Vary`, `Cookie`)
+	w.Header().Set(self.GetHeaderName(), token)
 	cookie := self.cookieFor(token)
 	http.SetCookie(w, cookie)
 }

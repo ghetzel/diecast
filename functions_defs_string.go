@@ -576,7 +576,7 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 				Summary: `Takes an input string and counts the number of words in it. If that number ` +
 					`exceeds a given count, the string will be truncated to be equal to that number of words.`,
 				Function: func(in interface{}, wordcount int) string {
-					return stringutil.ElideWords(fmt.Sprintf("%v", in), uint(wordcount))
+					return stringutil.ElideWords(fmt.Sprintf("%v", in), wordcount)
 				},
 				Arguments: []funcArg{
 					{

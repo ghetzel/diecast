@@ -13,6 +13,7 @@ import (
 
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
+	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -43,7 +44,7 @@ type ProxyMount struct {
 	AppendPathPrefix        string                 `json:"append_path_prefix"`
 	Insecure                bool                   `json:"insecure"`
 	BodyBufferSize          int64                  `json:"body_buffer_size"`
-	PreserveConnection      bool                   `json:"preserve_connection"`
+	CloseConnection         *bool                  `json:"close_connection"`
 	Client                  *http.Client
 	urlRewriteFrom          string
 	urlRewriteTo            string
@@ -159,9 +160,9 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 
 		defer func() {
 			if forwardedBody.StartedAt().IsZero() {
-				log.Debugf("[%s] request body was never read by upstream", id)
+				log.Debugf("[%s] proxy: request body was never read by upstream", id)
 			} else {
-				log.Debugf("[%s] wrote %d bytes to mount in %v", id, forwardedBody.BytesRead(), forwardedBody.Duration())
+				log.Debugf("[%s] proxy: wrote %d bytes to mount in %v", id, forwardedBody.BytesRead(), forwardedBody.Duration())
 			}
 		}()
 	}
@@ -178,6 +179,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			newReq.URL.Path = pp + newReq.URL.Path
 		}
 
+		// passthrough headers from client request to the mount
 		if req != nil && (self.PassthroughRequests || self.PassthroughHeaders) {
 			for name, values := range req.Header {
 				for _, value := range values {
@@ -191,14 +193,18 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			}
 		}
 
+		// user-agent is either ours, overridden in explicit headers below, or passthrough from request
 		if !self.PassthroughUserAgent {
 			newReq.Header.Set(`User-Agent`, DiecastUserAgentString)
 		}
 
-		if self.PreserveConnection {
-			newReq.Header.Set(`Connection`, `keep-alive`)
-		} else {
-			newReq.Header.Set(`Connection`, `close`)
+		// option to control whether we tell the remote server to close the connection
+		if self.CloseConnection != nil {
+			if c := *self.CloseConnection; c {
+				newReq.Header.Set(`Connection`, `close`)
+			} else {
+				newReq.Header.Set(`Connection`, `keep-alive`)
+			}
 		}
 
 		// add explicit headers to new request
@@ -206,7 +212,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			newReq.Header.Set(name, typeutil.String(value))
 		}
 
-		// inject params into new request
+		// inject querstring params into new request URL
 		for name, value := range self.Params {
 			if newReq.URL.Query().Get(name) == `` {
 				log.Debugf("[%s] proxy: [Q] %v=%v", id, name, value)
@@ -218,19 +224,37 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		to := newReq.Method + ` ` + newReq.URL.String()
 
 		if from == to {
-			log.Debugf("[%s] proxy: request: %s", id, from)
+			log.Debugf("[%s] proxy: %s", id, from)
 		} else {
-			log.Debugf("[%s] proxy: from: %s", id, from)
-			log.Debugf("[%s] proxy: to: %s", id, to)
+			log.Debugf("[%s] proxy: %s", id, from)
+			log.Debugf("[%s] proxy: %s (rewritten)", id, to)
 		}
 
-		for k, v := range newReq.Header {
-			log.Debugf("[%s] proxy: [H] %v: %v", id, k, strings.Join(v, ` `))
+		log.Debugf("[%s] proxy: \u256d%s request headers", id, strings.Repeat("\u2500", 56))
+
+		for hdr := range maputil.M(newReq.Header).Iter(maputil.IterOptions{
+			SortKeys: true,
+		}) {
+			log.Debugf("[%s] proxy: \u2502 %v: %v", id, hdr.K, stringutil.Elide(strings.Join(hdr.V.Strings(), ` `), 72, `…`))
 		}
 
-		if response, err := self.Client.Do(newReq); err == nil {
+		log.Debugf("[%s] proxy: \u2570%s end request headers", id, strings.Repeat("\u2500", 56))
+
+		// perform the request
+		// -----------------------------------------------------------------------------------------
+		log.Debugf("[%s] proxy: sending request to %s://%s", id, newReq.URL.Scheme, newReq.URL.Host)
+		reqStartAt := time.Now()
+		response, err := self.Client.Do(newReq)
+		log.Debugf("[%s] proxy: responded in %v", id, time.Since(reqStartAt))
+
+		if err == nil {
 			if response.Body != nil {
-				defer response.Body.Close()
+				timedResponse := utilutil.NewTimedReadCloser(response.Body)
+				response.Body = timedResponse
+				defer func() {
+					response.Body.Close()
+					log.Debugf("[%s] proxy: read %d bytes from mount in %v", id, timedResponse.BytesRead(), timedResponse.Duration())
+				}()
 			}
 
 			// add explicit response headers to response
@@ -252,11 +276,16 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 				response.Header.Set(`Location`, self.RedirectOnSuccess)
 			}
 
-			log.Debugf("[%s] proxy: [R] %v", id, response.Status)
+			log.Debugf("[%s] proxy: HTTP %v", id, response.Status)
+			log.Debugf("[%s] proxy: \u256d%s response headers", id, strings.Repeat("\u2500", 56))
 
-			for k, v := range response.Header {
-				log.Debugf("[%s] proxy: [R]   %v: %v", id, k, strings.Join(v, ` `))
+			for hdr := range maputil.M(response.Header).Iter(maputil.IterOptions{
+				SortKeys: true,
+			}) {
+				log.Debugf("[%s] proxy: \u2502 %v: %v", id, hdr.K, stringutil.Elide(strings.Join(hdr.V.Strings(), ` `), 72, `…`))
 			}
+
+			log.Debugf("[%s] proxy: \u2570%s end response headers", id, strings.Repeat("\u2500", 56))
 
 			log.Infof(
 				"[%s] proxy: %s responded with: %v (Content-Length: %v)",
