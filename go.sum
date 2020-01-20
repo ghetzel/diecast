@@ -69,16 +69,6 @@ github.com/ghetzel/go-stockutil v1.8.3 h1:iJpfCNXsp91GWkl0qOzHEUHMUQOvr/Gz9yhGdQ
 github.com/ghetzel/go-stockutil v1.8.3/go.mod h1:zHk/p1VcoQbWngvmelsQbFbZ6eIQDA4D3ryZPYLoZ1I=
 github.com/ghetzel/go-stockutil v1.8.4 h1:6j2iYVciDnCgfEmllWq2zbf7MkzUoN0b6jJu5POVqj0=
 github.com/ghetzel/go-stockutil v1.8.4/go.mod h1:tq1ycYqlC1z9ZX/Pvgz+sePJvpHsJbd692w8936ed+U=
-github.com/ghetzel/go-stockutil v1.8.17 h1:GAMuyDOVUUgMA9cCqHOIn2wUcdyKYIJ/XyQdn5A+F9o=
-github.com/ghetzel/go-stockutil v1.8.17/go.mod h1:b7mmPNCNKPkZIiK0eexQUwhUeCy72KOJK14k4NaJb5g=
-github.com/ghetzel/go-stockutil v1.8.28 h1:xh1ZF5ZqsGUQPq95c1Sp9ZJKjBjNhbIgKgF6luN7gFc=
-github.com/ghetzel/go-stockutil v1.8.28/go.mod h1:b7mmPNCNKPkZIiK0eexQUwhUeCy72KOJK14k4NaJb5g=
-github.com/ghetzel/go-stockutil v1.8.29 h1:9uv1TjinHGC9ZkqfFSH/pFiK5W2TplBaACHOerlGAXM=
-github.com/ghetzel/go-stockutil v1.8.29/go.mod h1:b7mmPNCNKPkZIiK0eexQUwhUeCy72KOJK14k4NaJb5g=
-github.com/ghetzel/go-stockutil v1.8.30 h1:E7DohmqC42XBzg2cLV+7L0uDWuqcruSt+Kppm3fcqo0=
-github.com/ghetzel/go-stockutil v1.8.30/go.mod h1:b7mmPNCNKPkZIiK0eexQUwhUeCy72KOJK14k4NaJb5g=
-github.com/ghetzel/go-stockutil v1.8.32 h1:/VIVbHfhKR78StHwaiwJVt14oYgOKnzvLWlg8KrM1E4=
-github.com/ghetzel/go-stockutil v1.8.32/go.mod h1:b7mmPNCNKPkZIiK0eexQUwhUeCy72KOJK14k4NaJb5g=
 github.com/ghetzel/go-stockutil v1.8.34 h1:cX2ypOJWAf4gtY2SV5D8an/jcxb6As+6nrelltqyTJo=
 github.com/ghetzel/go-stockutil v1.8.34/go.mod h1:b7mmPNCNKPkZIiK0eexQUwhUeCy72KOJK14k4NaJb5g=
 github.com/ghetzel/go-webfriend v0.9.23/go.mod h1:4tjKFGdCtac9eXJ8Hz48DSCoiwjhzynwFFiyhsLfMnI=
@@ -146,8 +136,6 @@ github.com/juliangruber/go-intersect v1.0.0 h1:0XNPNaEoPd7PZljVNZLk4qrRkR153Sjk2
 github.com/juliangruber/go-intersect v1.0.0/go.mod h1:unIef4vysSJvZ6adJAAPiBVKpS4r/IOkmfuFghRFDDM=
 github.com/julienschmidt/httprouter v0.0.0-20150421170007-8c199fb6259f h1:uUls/Yg9JMVDQiD1vHplcHRNqz5wv6qylEXYM7JtLUY=
 github.com/julienschmidt/httprouter v0.0.0-20150421170007-8c199fb6259f/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
-github.com/justinas/nosurf v1.1.0 h1:qqV6FJmnDBJ6F9pOzhZgZitAZWBYonMOXglof7TtdZw=
-github.com/justinas/nosurf v1.1.0/go.mod h1:ALpWdSbuNGy2lZWtyXdjkYv4edL23oSEgfBT1gPJ5BQ=
 github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 h1:uC1QfSlInpQF+M0ao65imhwqKnz3Q2z/d8PWZRMQvDM=
 github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88/go.mod h1:3w7q1U84EfirKl04SVQ/s7nPm1ZPhiXd34z40TNz36k=
 github.com/kellydunn/golang-geo v0.7.0/go.mod h1:YYlQPJ+DPEzrHx8kT3oPHC/NjyvCCXE+IuKGKdrjrcU=
