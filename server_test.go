@@ -1,7 +1,6 @@
 package diecast
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http/httptest"
 	"strings"
@@ -36,28 +35,6 @@ func TestStaticServer(t *testing.T) {
 	assert.Nil(server.Initialize())
 	assert.Equal(len(mounts), len(server.Mounts))
 
-	doTestServerRequest(server, `GET`, `/_diecast`,
-		func(w *httptest.ResponseRecorder) {
-			assert.Equal(200, w.Code)
-
-			data := make(map[string]interface{})
-			err := json.Unmarshal(w.Body.Bytes(), &data)
-
-			assert.Nil(err)
-			assert.True(len(data) > 0)
-		})
-
-	doTestServerRequest(server, `GET`, `/_bindings`,
-		func(w *httptest.ResponseRecorder) {
-			assert.Equal(200, w.Code)
-
-			data := make([]Binding, 0)
-			err := json.Unmarshal(w.Body.Bytes(), &data)
-
-			assert.Nil(err)
-			assert.NotNil(data)
-		})
-
 	doTestServerRequest(server, `GET`, `/index.html`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
@@ -89,17 +66,6 @@ func TestStaticServerWithRoutePrefix(t *testing.T) {
 	assert.Nil(server.Initialize())
 	assert.Equal(len(mounts), len(server.Mounts))
 
-	// paths without RoutePrefix should fail
-	doTestServerRequest(server, `GET`, `/_diecast`,
-		func(w *httptest.ResponseRecorder) {
-			assert.Equal(404, w.Code)
-		})
-
-	doTestServerRequest(server, `GET`, `/_bindings`,
-		func(w *httptest.ResponseRecorder) {
-			assert.Equal(404, w.Code)
-		})
-
 	doTestServerRequest(server, `GET`, `/index.html`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(404, w.Code)
@@ -108,29 +74,6 @@ func TestStaticServerWithRoutePrefix(t *testing.T) {
 	doTestServerRequest(server, `GET`, `/css/bootstrap.min.css`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(404, w.Code)
-		})
-
-	// paths with RoutePrefix should succeed
-	doTestServerRequest(server, `GET`, `/ui/_diecast`,
-		func(w *httptest.ResponseRecorder) {
-			assert.Equal(200, w.Code, string(w.Body.Bytes()))
-
-			data := make(map[string]interface{})
-			err := json.Unmarshal(w.Body.Bytes(), &data)
-
-			assert.Nil(err)
-			assert.True(len(data) > 0)
-		})
-
-	doTestServerRequest(server, `GET`, `/ui/_bindings`,
-		func(w *httptest.ResponseRecorder) {
-			assert.Equal(200, w.Code)
-
-			data := make([]Binding, 0)
-			err := json.Unmarshal(w.Body.Bytes(), &data)
-
-			assert.Nil(err)
-			assert.NotNil(data)
 		})
 
 	doTestServerRequest(server, `GET`, `/ui/index.html`,
