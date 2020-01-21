@@ -81,7 +81,6 @@ func (self *Server) setupServer() error {
 	// inject global headers
 	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
 		log.Debugf("[%s] middleware: inject global headers", reqid(req))
-		defer next(w, req)
 
 		for k, v := range self.GlobalHeaders {
 			if typeutil.IsArray(v) {
@@ -92,6 +91,8 @@ func (self *Server) setupServer() error {
 				w.Header().Set(k, typeutil.String(v))
 			}
 		}
+
+		next(w, req)
 	})
 
 	// process authenticators
@@ -123,7 +124,8 @@ func (self *Server) setupServer() error {
 		log.Debugf("[%s] middleware: cleanup request", reqid(req))
 
 		if tm := getRequestTimer(req); tm != nil {
-			log.Debugf("[%s] completed: %v", tm.ID, time.Since(tm.StartedAt).Round(time.Microsecond))
+			took := time.Since(tm.StartedAt).Round(time.Microsecond)
+			log.Debugf("[%s] completed: %v", tm.ID, took)
 		}
 
 		removeRequestTimer(req)

@@ -1,8 +1,10 @@
 package diecast
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"path"
 	"path/filepath"
@@ -316,28 +318,51 @@ func (self *Server) handleCandidateFile(
 		} else {
 			self.respondError(w, req, fmt.Errorf("parse template: %v", err), http.StatusInternalServerError)
 		}
-	} else {
+	} else if responseBody, err := self.applyPostprocessors(req, file.Data); err == nil {
 		// if not templated, then the file is returned outright
 		if rendererName := httputil.Q(req, `renderer`); rendererName == `` {
-			io.Copy(w, file.Data)
+			io.Copy(w, responseBody)
 		} else if renderer, err := GetRenderer(rendererName, self); err == nil {
 			if err := renderer.Render(w, req, RenderOptions{
-				Input: file.Data,
+				Input: responseBody,
 			}); err != nil {
 				self.respondError(w, req, err, http.StatusInternalServerError)
 			}
 		} else if renderer, ok := GetRendererForFilename(file.Path, self); ok {
 			if err := renderer.Render(w, req, RenderOptions{
-				Input: file.Data,
+				Input: responseBody,
 			}); err != nil {
 				self.respondError(w, req, err, http.StatusInternalServerError)
 			}
 		} else {
 			self.respondError(w, req, fmt.Errorf("Unknown renderer %q", rendererName), http.StatusBadRequest)
 		}
+	} else {
+		self.respondError(w, req, err, http.StatusInternalServerError)
 	}
 
 	return true
+}
+
+func (self *Server) applyPostprocessors(req *http.Request, in io.ReadCloser) (io.ReadCloser, error) {
+	if data, err := ioutil.ReadAll(in); err == nil {
+		defer in.Close()
+		outstr := string(data)
+
+		for n, postprocessor := range registeredPostprocessors {
+			if strings.HasPrefix(n, `__diecast_`) && postprocessor != nil {
+				if out, err := postprocessor(outstr, req); err == nil {
+					outstr = out
+				} else {
+					return nil, err
+				}
+			}
+		}
+
+		return ioutil.NopCloser(bytes.NewBufferString(outstr)), nil
+	} else {
+		return nil, err
+	}
 }
 
 func httpFilename(file http.File) string {

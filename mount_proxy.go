@@ -13,6 +13,7 @@ import (
 
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
+	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -230,17 +231,30 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		to := newReq.Method + ` ` + newReq.URL.String()
 
 		if from == to {
-			log.Debugf("[%s] proxy: request: %s", id, from)
+			log.Debugf("[%s] proxy: %s", id, from)
 		} else {
-			log.Debugf("[%s] proxy: from: %s", id, from)
-			log.Debugf("[%s] proxy: to: %s", id, to)
+			log.Debugf("[%s] proxy: %s", id, from)
+			log.Debugf("[%s] proxy: %s (rewritten)", id, to)
 		}
 
-		for k, v := range newReq.Header {
-			log.Debugf("[%s] proxy: [H] %v: %v", id, k, strings.Join(v, ` `))
+		log.Debugf("[%s] proxy: \u256d%s request headers", id, strings.Repeat("\u2500", 56))
+
+		for hdr := range maputil.M(newReq.Header).Iter(maputil.IterOptions{
+			SortKeys: true,
+		}) {
+			log.Debugf("[%s] proxy: \u2502 ${red}%v${reset}: %v", id, hdr.K, stringutil.Elide(strings.Join(hdr.V.Strings(), ` `), 72, `…`))
 		}
 
-		if response, err := self.Client.Do(newReq); err == nil {
+		log.Debugf("[%s] proxy: \u2570%s end request headers", id, strings.Repeat("\u2500", 56))
+
+		// perform the request
+		// -----------------------------------------------------------------------------------------
+		log.Debugf("[%s] proxy: sending request to %s://%s", id, newReq.URL.Scheme, newReq.URL.Host)
+		reqStartAt := time.Now()
+		response, err := self.Client.Do(newReq)
+		log.Debugf("[%s] proxy: responded in %v", id, time.Since(reqStartAt))
+
+		if err == nil {
 			if response.Body != nil {
 				defer response.Body.Close()
 			}
@@ -264,11 +278,16 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 				response.Header.Set(`Location`, self.RedirectOnSuccess)
 			}
 
-			log.Debugf("[%s] proxy: [R] %v", id, response.Status)
+			log.Debugf("[%s] proxy: HTTP %v", id, response.Status)
+			log.Debugf("[%s] proxy: \u256d%s response headers", id, strings.Repeat("\u2500", 56))
 
-			for k, v := range response.Header {
-				log.Debugf("[%s] proxy: [R]   %v: %v", id, k, strings.Join(v, ` `))
+			for hdr := range maputil.M(response.Header).Iter(maputil.IterOptions{
+				SortKeys: true,
+			}) {
+				log.Debugf("[%s] proxy: \u2502 ${blue}%v${reset}: %v", id, hdr.K, stringutil.Elide(strings.Join(hdr.V.Strings(), ` `), 72, `…`))
 			}
+
+			log.Debugf("[%s] proxy: \u2570%s end response headers", id, strings.Repeat("\u2500", 56))
 
 			log.Infof(
 				"[%s] proxy: %s responded with: %v (Content-Length: %v)",
