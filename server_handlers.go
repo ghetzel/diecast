@@ -7,6 +7,25 @@ import (
 	"github.com/husobee/vestigo"
 )
 
+// since the Routable interface is for the benefit of external packages, lets
+// make sure Server actually implements it at compile time
+var _compileTimeCheckRoutable Routable = new(Server)
+
+type Routable interface {
+	P(req *http.Request, param string, fallback ...interface{}) typeutil.Variant
+	Get(route string, handler http.HandlerFunc)
+	Head(route string, handler http.HandlerFunc)
+	Post(route string, handler http.HandlerFunc)
+	Put(route string, handler http.HandlerFunc)
+	Delete(route string, handler http.HandlerFunc)
+	Patch(route string, handler http.HandlerFunc)
+	Options(route string, handler http.HandlerFunc)
+	Connect(route string, handler http.HandlerFunc)
+	Trace(route string, handler http.HandlerFunc)
+	HandleFunc(route string, handler http.HandlerFunc)
+	Handle(route string, handler http.Handler)
+}
+
 type AddHandlerFunc func(verb string, route string, handler http.HandlerFunc) (string, string, http.HandlerFunc)
 
 // Return the value of a URL parameter within a given request handler.
