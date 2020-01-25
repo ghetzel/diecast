@@ -649,7 +649,7 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(in interface{}, fallbacks ...string) string {
-					name := typeutil.String(in)
+					var name = typeutil.String(in)
 					name = strings.TrimPrefix(name, `:`)
 					name = strings.TrimSuffix(name, `:`)
 					name = `:` + stringutil.Underscore(name) + `:`
@@ -670,6 +670,54 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 					}, {
 						Code:   `emoji ":not_a_real_emoji:" "nope"`,
 						Return: `nope`,
+					},
+				},
+			}, {
+				Name:    `section`,
+				Summary: `Takes an input string, splits it on a given regular expression, and returns the nth field.`,
+				Function: func(in interface{}, field int, rx ...string) (string, error) {
+					var rxSplit = rxutil.Whitespace
+					var input = typeutil.String(in)
+
+					if len(rx) > 0 && rx[0] != `` {
+						if x, err := regexp.Compile(rx[0]); err == nil {
+							rxSplit = x
+						} else {
+							return ``, err
+						}
+					}
+
+					if sections := rxSplit.Split(input, -1); field < len(sections) {
+						return sections[field], nil
+					} else {
+						return ``, nil
+					}
+
+				},
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `string`,
+						Description: `The string to retrieve the field from.`,
+					}, {
+						Name:        `field`,
+						Type:        `integer`,
+						Description: `The number of the field to retrieve after splitting input.`,
+					}, {
+						Name:        `split`,
+						Type:        `string`,
+						Optional:    true,
+						Description: `A regular expression to use when splitting the string.`,
+						Default:     rxutil.Whitespace,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code:   `elide "This is a sentence that contains fifty characters." 18`,
+						Return: `This is a sentence`,
+					}, {
+						Code:   `elide "hello." 16`,
+						Return: `hello.`,
 					},
 				},
 			},

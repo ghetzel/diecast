@@ -38,7 +38,7 @@ func (self *Server) setupServer() error {
 		requestId := base58.Encode(stringutil.UUID().Bytes())
 
 		log.Debugf("[%s] %s", requestId, strings.Repeat(`-`, 69))
-		log.Infof("[%s] %s %s", requestId, req.Method, req.URL.Path)
+		log.Infof("[%s] %s %s (%s)", requestId, req.Method, req.RequestURI, req.RemoteAddr)
 		log.Debugf("[%s] middleware: request id", requestId)
 
 		httputil.RequestSetValue(req, ContextRequestKey, requestId)

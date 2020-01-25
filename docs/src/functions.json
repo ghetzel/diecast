@@ -858,6 +858,55 @@
             "Return": "nope"
           }
         ]
+      },
+      {
+        "Name": "section",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Takes an input string, splits it on a given regular expression, and returns the nth field.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string",
+            "Description": "The string to retrieve the field from.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "field",
+            "Type": "integer",
+            "Description": "The number of the field to retrieve after splitting input.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "split",
+            "Type": "string",
+            "Description": "A regular expression to use when splitting the string.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": {},
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "elide \"This is a sentence that contains fifty characters.\" 18",
+            "Description": "",
+            "Return": "This is a sentence"
+          },
+          {
+            "Code": "elide \"hello.\" 16",
+            "Description": "",
+            "Return": "hello."
+          }
+        ]
       }
     ],
     "Skip": false

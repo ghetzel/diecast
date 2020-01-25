@@ -1360,6 +1360,9 @@ Diecast runtime directory:</p>
             <a href="#fn-rxreplace">rxreplace</a>
         </li>
         <li>
+            <a href="#fn-section">section</a>
+        </li>
+        <li>
             <a href="#fn-split">split</a>
         </li>
         <li>
@@ -9549,6 +9552,63 @@ Diecast runtime directory:</p>
             <div class="example" id="fn-rxreplace-example-0">
                 <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>rxreplace &#34;&lt;b&gt;Hello &lt;i&gt;World&lt;/i&gt;&lt;/b&gt;&#34; &#34;&lt;/?[bi]&gt;&#34; &#34;*&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">&#34;*Hello *World**&#34;</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-section">
+        <h4 class="mt-3">
+            section
+            <a href="#fn-section" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>section INPUT FIELD [SPLIT]</code>
+        </div>
+        <p>Takes an input string, splits it on a given regular expression, and returns the nth field.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>INPUT</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The string to retrieve the field from.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>FIELD</pre></th>
+                    <td>integer</td>
+                    <td>
+                        <p>The number of the field to retrieve after splitting input.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>SPLIT</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>A regular expression to use when splitting the string.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-section-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>elide &#34;This is a sentence that contains fifty characters.&#34; 18<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;This is a sentence&#34;</p>
+            </div>
+            <div class="example" id="fn-section-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>elide &#34;hello.&#34; 16<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;hello.&#34;</p>
             </div>
         </div>
     </section>
