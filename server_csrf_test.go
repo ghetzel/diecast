@@ -17,7 +17,7 @@ func TestCsrfRequest(t *testing.T) {
 
 	req := httptest.NewRequest(`GET`, `/`, nil)
 	w := httptest.NewRecorder()
-	csrf.ServeHTTP(w, req)
+	assert.True(csrf.Handle(w, req))
 	assert.Empty(csrftoken(req))
 	assert.Equal(http.StatusOK, w.Code)
 	assert.Equal(``, w.HeaderMap.Get(DefaultCsrfHeaderName))
@@ -32,7 +32,7 @@ func TestCsrfRequestEnabled(t *testing.T) {
 
 	req := httptest.NewRequest(`GET`, `/`, nil)
 	w := httptest.NewRecorder()
-	csrf.ServeHTTP(w, req)
+	assert.True(csrf.Handle(w, req))
 	assert.Equal(http.StatusOK, w.Code)
 	assert.Equal(
 		csrftoken(req),
@@ -51,7 +51,7 @@ func TestCsrfPostInvalid(t *testing.T) {
 	// ----------------------------------------------------------------------
 	req := httptest.NewRequest(`POST`, `/thing`, nil)
 	w := httptest.NewRecorder()
-	csrf.ServeHTTP(w, req)
+	assert.False(csrf.Handle(w, req))
 	assert.Equal(http.StatusBadRequest, w.Code)
 }
 
@@ -67,7 +67,7 @@ func TestCsrfPostInvalidNoCookie(t *testing.T) {
 	req.Header.Set(DefaultCsrfHeaderName, `abc123`)
 
 	w := httptest.NewRecorder()
-	csrf.ServeHTTP(w, req)
+	assert.False(csrf.Handle(w, req))
 	assert.Equal(http.StatusBadRequest, w.Code)
 
 }
@@ -88,7 +88,7 @@ func TestCsrfPostValid(t *testing.T) {
 	})
 
 	w := httptest.NewRecorder()
-	csrf.ServeHTTP(w, req)
+	assert.True(csrf.Handle(w, req))
 	assert.Equal(http.StatusOK, w.Code)
 
 }
@@ -109,7 +109,7 @@ func TestCsrfInvalidWrongCookie(t *testing.T) {
 	})
 
 	w := httptest.NewRecorder()
-	csrf.ServeHTTP(w, req)
+	assert.False(csrf.Handle(w, req))
 	assert.Equal(http.StatusBadRequest, w.Code)
 }
 
@@ -131,7 +131,7 @@ func TestCsrfPostValidRequestBodyIntact(t *testing.T) {
 	})
 
 	w := httptest.NewRecorder()
-	csrf.ServeHTTP(w, req)
+	assert.True(csrf.Handle(w, req))
 	assert.Equal(http.StatusOK, w.Code)
 
 	reqbody, err := ioutil.ReadAll(req.Body)

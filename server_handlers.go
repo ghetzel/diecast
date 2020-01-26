@@ -114,34 +114,11 @@ func (self *Server) addHandler(verb string, route string, handler http.HandlerFu
 		}
 	}
 
-	switch verb {
-	case http.MethodGet:
-		self.userRouter.Get(route, handler)
-	case http.MethodHead:
-		self.userRouter.HandleFunc(route, func(w http.ResponseWriter, req *http.Request) {
-			if req.Method == http.MethodHead {
-				handler(w, req)
-			}
+	if verb != `` {
+		self.userRouter.Add(verb, route, func(w http.ResponseWriter, req *http.Request) {
+			handler(w, req)
 		})
-	case http.MethodPost:
-		self.userRouter.Post(route, handler)
-	case http.MethodPut:
-		self.userRouter.Put(route, handler)
-	case http.MethodPatch:
-		self.userRouter.Patch(route, handler)
-	case http.MethodDelete:
-		self.userRouter.Delete(route, handler)
-	case http.MethodConnect:
-		self.userRouter.Connect(route, handler)
-	case http.MethodOptions:
-		self.userRouter.HandleFunc(route, func(w http.ResponseWriter, req *http.Request) {
-			if req.Method == http.MethodOptions {
-				handler(w, req)
-			}
-		})
-	case http.MethodTrace:
-		self.userRouter.Trace(route, handler)
-	case ``:
+	} else {
 		self.userRouter.HandleFunc(route, handler)
 	}
 }

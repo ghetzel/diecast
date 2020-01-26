@@ -198,10 +198,10 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 		self.userRouter.ServeHTTP(w, req)
 	} else if lastErr != nil {
 		// something else went sideways
-		self.respondError(w, req, fmt.Errorf("[%s] an error occurred accessing %s: %v", id, req.URL.Path, lastErr), http.StatusServiceUnavailable)
+		self.respondError(w, req, fmt.Errorf("an error occurred accessing %s: %v", req.URL.Path, lastErr), http.StatusServiceUnavailable)
 	} else {
 		// if we got *here*, then File Not Found
-		self.respondError(w, req, fmt.Errorf("[%s] File %q was not found.", id, req.URL.Path), http.StatusNotFound)
+		self.respondError(w, req, fmt.Errorf("file %q was not found.", req.URL.Path), http.StatusNotFound)
 	}
 }
 

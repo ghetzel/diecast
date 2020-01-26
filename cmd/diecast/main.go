@@ -163,6 +163,11 @@ func main() {
 			Usage: `Specify the path to the PEM-encoded certificate use to verify clients.`,
 			Value: `clients.crt`,
 		},
+		cli.StringFlag{
+			Name:  `protocol`,
+			Usage: `Specify the HTTP protocol to serve ("http" [default], "http2", "http3")`,
+			Value: diecast.DefaultProtocol,
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
@@ -225,6 +230,7 @@ func main() {
 		server.IndexFile = c.String(`index-file`)
 		server.Autoindex = c.Bool(`autoindex`)
 		server.DisableCommands = c.Bool(`disable-commands`)
+		server.Protocol = c.String(`protocol`)
 
 		if c.IsSet(`tls`) {
 			server.TLS = &diecast.TlsConfig{
@@ -315,14 +321,26 @@ func main() {
 
 		if err := server.Initialize(); err == nil {
 			scheme := `http`
+			addr := server.Address
 
 			if ssl := server.TLS; ssl != nil && ssl.Enable {
 				scheme = `https`
 			}
 
+			if strings.HasPrefix(addr, `unix`) {
+				scheme = `unix`
+				addr = strings.TrimPrefix(addr, `unix:`)
+			}
+
 			errchan := make(chan error)
 
-			log.Infof("diecast v%v listening at %s://%s", diecast.ApplicationVersion, scheme, server.Address)
+			log.Infof(
+				"diecast v%v listening at %s://%s (protocol: %s)",
+				diecast.ApplicationVersion,
+				scheme,
+				addr,
+				server.Protocol,
+			)
 
 			go func() {
 				errchan <- server.Serve()

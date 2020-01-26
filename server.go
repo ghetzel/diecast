@@ -40,9 +40,11 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/gobwas/glob"
 	"github.com/husobee/vestigo"
+	"github.com/lucas-clemente/quic-go/http3"
 	"github.com/mattn/go-shellwords"
 	"github.com/signalsciences/tlstext"
-	"github.com/urfave/negroni"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"golang.org/x/text/language"
 	"gopkg.in/yaml.v2"
 )
@@ -50,6 +52,17 @@ import (
 var ITotallyUnderstandRunningArbitraryCommandsAsRootIsRealRealBad = false
 var DirectoryErr = errors.New(`is a directory`)
 var DefaultLocale = language.AmericanEnglish
+var DefaultLogFormat = `common`
+var DefaultProtocol = `http`
+
+var logFormats = map[string]string{
+	`common`: "${remote_address} - - [${request_started_at:%02/Jan/2006:15:04:05 -0700}] \"${method} ${url} ${protocol}\" ${status_code} ${response_length}\n",
+}
+
+// Registers a new named format for log output
+func RegisterLogFormat(name string, format string) {
+	logFormats[name] = format
+}
 
 func IsDirectoryErr(err error) bool {
 	return (err == DirectoryErr)
@@ -100,6 +113,13 @@ var DefaultFilterEnvVars = []string{
 	`PWD`,                   // WHO WANTS TO KNOW?
 }
 
+type Serveable interface {
+	ListenAndServe() error
+	ListenAndServeTLS(string, string) error
+	Serve(net.Listener) error
+	ServeTLS(net.Listener, string, string) error
+}
+
 type RedirectTo string
 
 func (self RedirectTo) Error() string {
@@ -122,6 +142,13 @@ type TlsConfig struct {
 	KeyFile        string `yaml:"key"      json:"key"`      // path to a PEM-encoded (.key) file containing the server's TLS private key.
 	ClientCertMode string `yaml:"clients"  json:"clients"`  // If set, TLS Client certificates will be requested/accepted.  If set, may be one of: "request", "any", "verify", "require"
 	ClientCAFile   string `yaml:"clientCA" json:"clientCA"` // Path to a PEM-encoded file containing the CA that client certificates are issued and verify against.
+}
+
+type LogConfig struct {
+	Format      string `yaml:"format"               json:"format"`             // configure the output format for logging requests
+	Destination string `yaml:"destination"                 json:"destination"` // specify where logs should be written to
+	Truncate    bool   `yaml:"truncate"             json:"truncate"`           // if true, the output log file will be truncated on startup
+	Colorize    bool   `yaml:"colorize"             json:"colorize"`           // if false, log output will not be colorized
 }
 
 type Server struct {
@@ -170,15 +197,20 @@ type Server struct {
 	VerifyFile          string                    `yaml:"verifyFile"              json:"verifyFile"`              // A file that must exist and be readable before starting the server.
 	PreserveConnections bool                      `yaml:"preserveConnections"     json:"preserveConnections"`     // Don't add the "Connection: close" header to every response.
 	CSRF                *CSRF                     `yaml:"csrf"                    json:"csrf"`                    // configures CSRF protection
+	Log                 LogConfig                 `yaml:"log"                     json:"log"`                     // configure logging
+	BeforeHandlers      []Middleware              `yaml:"-"                       json:"-"`                       // contains a stack of Middleware functions that are run before handling the request
+	AfterHandlers       []http.HandlerFunc        `yaml:"-"                       json:"-"`                       // contains a stack of HandlerFuncs that are run after handling the request.  These functions cannot stop the request, as it's already been written to the client.
+	Protocol            string                    `yaml:"protocol"                json:"protocol"`                // Specify which HTTP protocol to use ("http", "http2", "quic", "http3")
 	altRootCaPool       *x509.CertPool
 	faviconImageIco     []byte
 	fs                  http.FileSystem
-	handler             *negroni.Negroni
 	hasUserRoutes       bool
 	initialized         bool
 	precmd              *exec.Cmd
-	router              *http.ServeMux
+	mux                 *http.ServeMux
 	userRouter          *vestigo.Router
+	logwriter           io.Writer
+	isTerminalOutput    bool
 }
 
 func NewServer(root interface{}, patterns ...string) *Server {
@@ -209,8 +241,14 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		AutoindexTemplate:  DefaultAutoindexFilename,
 		FilterEnvVars:      DefaultFilterEnvVars,
 		GlobalHeaders:      make(map[string]interface{}),
-		router:             http.NewServeMux(),
-		userRouter:         vestigo.NewRouter(),
+		Protocol:           DefaultProtocol,
+		Log: LogConfig{
+			Format:      logFormats[`common`],
+			Destination: `-`,
+			Colorize:    true,
+		},
+		mux:        http.NewServeMux(),
+		userRouter: vestigo.NewRouter(),
 	}
 
 	if str, ok := root.(string); ok {
@@ -219,7 +257,7 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		server.SetFileSystem(fs)
 	}
 
-	server.router.HandleFunc(server.rp()+`/`, server.handleRequest)
+	server.mux.HandleFunc(server.rp()+`/`, server.handleRequest)
 
 	return server
 }
@@ -377,7 +415,7 @@ func (self *Server) Initialize() error {
 }
 
 func (self *Server) prestart() error {
-	if self.handler == nil {
+	if !self.initialized {
 		if err := self.Initialize(); err != nil {
 			return err
 		}
@@ -429,15 +467,28 @@ func (self *Server) RenderPath(w io.Writer, path string) error {
 
 // Start a long-running webserver.
 func (self *Server) Serve() error {
+	var serveable Serveable
+	var useTLS bool
+	var useUDP bool
+	var useSocket string
+
+	// fire off some goroutines for the prestart and start commands (if configured)
 	if err := self.prestart(); err != nil {
 		return err
 	}
 
 	srv := &http.Server{
-		Addr:    self.Address,
-		Handler: self.handler,
+		Handler: self,
 	}
 
+	// work out if we're starting a UNIX socket server
+	if addr := self.Address; strings.HasPrefix(addr, `unix:`) {
+		useSocket = strings.TrimPrefix(addr, `unix:`)
+	} else {
+		srv.Addr = addr
+	}
+
+	// setup TLSConfig
 	if ssl := self.TLS; ssl != nil && ssl.Enable {
 		tc := new(tls.Config)
 
@@ -487,10 +538,74 @@ func (self *Server) Serve() error {
 		}
 
 		srv.TLSConfig = tc
+		useTLS = true
+	}
 
-		return srv.ListenAndServeTLS(ssl.CertFile, ssl.KeyFile)
+	// wrap all the various protocol implementations in a common interface
+	switch strings.ToLower(self.Protocol) {
+	case ``, `http`:
+		serveable = srv
+	case `http2`:
+		h2s := new(http2.Server)
+
+		if useTLS {
+			http2.ConfigureServer(srv, h2s)
+		} else {
+			hnd := srv.Handler
+			srv.Handler = h2c.NewHandler(hnd, h2s)
+		}
+
+		serveable = srv
+
+	case `quic`, `http3`:
+		useUDP = true
+		h3s := &http3.Server{
+			Server:     srv,
+			QuicConfig: nil,
+		}
+
+		serveable = &h3serveable{
+			Server: h3s,
+		}
+	default:
+		return fmt.Errorf("unknown protocol %q", self.Protocol)
+	}
+
+	// take a wildly different path if we're listening on a unix socket
+	if useSocket != `` {
+		if x, err := fileutil.ExpandUser(useSocket); err == nil {
+			useSocket = x
+		} else {
+			return err
+		}
+
+		network := `unix`
+
+		if useUDP {
+			network = `unixpacket`
+		}
+
+		if _, err := os.Stat(useSocket); err == nil {
+			if err := os.Remove(useSocket); err != nil {
+				return err
+			}
+		}
+
+		if listener, err := net.Listen(network, useSocket); err == nil {
+			if useTLS {
+				return serveable.ServeTLS(listener, self.TLS.CertFile, self.TLS.KeyFile)
+			} else {
+				return serveable.Serve(listener)
+			}
+		} else {
+			return fmt.Errorf("bad socket: %v", err)
+		}
 	} else {
-		return srv.ListenAndServe()
+		if useTLS {
+			return serveable.ListenAndServeTLS(self.TLS.CertFile, self.TLS.KeyFile)
+		} else {
+			return serveable.ListenAndServe()
+		}
 	}
 }
 
@@ -500,23 +615,42 @@ func (self *Server) ListenAndServe(address string) error {
 }
 
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	// make sure we close the body no matter what
 	if req.Body != nil {
 		defer req.Body.Close()
 	}
 
+	// set Connection header
 	if !self.PreserveConnections {
 		w.Header().Set(`Connection`, `close`)
 	}
 
-	if self.handler == nil {
+	// initialize if necessary. an error here is severe and panics
+	if !self.initialized {
 		if err := self.Initialize(); err != nil {
-			w.Write([]byte(fmt.Sprintf("Failed to setup Diecast server: %v", err)))
-			w.WriteHeader(http.StatusInternalServerError)
+			panic(err.Error())
+		}
+	}
+
+	// setup a ResponseWriter interceptor that catches status code and bytes written
+	// but passes through the Body without buffering it (like httptest.ResponseRecorder does)
+	interceptor := intercept(w)
+	httputil.RequestSetValue(req, ContextResponseKey, interceptor)
+
+	// process the before stack
+	for _, before := range self.BeforeHandlers {
+		if proceed := before(interceptor, req); !proceed {
 			return
 		}
 	}
 
-	self.handler.ServeHTTP(w, req)
+	// finally, pass the request on to the ServeMux router
+	self.mux.ServeHTTP(interceptor, req)
+
+	// process the middlewares
+	for _, after := range self.AfterHandlers {
+		after(interceptor, req)
+	}
 }
 
 // return whether the request path matches any of the configured TemplatePatterns.
@@ -701,7 +835,6 @@ func (self *Server) applyTemplate(
 
 							if fh, err := finalHeader.Merge(swHeader); err == nil {
 								log.Debugf("[%s] Switch case %d matched, switching to template %v", reqid(req), i, swcase.UsePath)
-								// log.Dump(fh)
 
 								return self.applyTemplate(
 									w,
@@ -796,7 +929,7 @@ func (self *Server) applyTemplate(
 			return err
 		}
 	} else if redir, ok := err.(RedirectTo); ok {
-		log.Infof("[%s] Performing 307 Temporary Redirect to %v due to binding response handler.", reqid(req), redir)
+		log.Debugf("[%s] Performing 307 Temporary Redirect to %v due to binding response handler.", reqid(req), redir)
 		writeRequestTimerHeaders(self, w, req)
 		http.Redirect(w, req, redir.Error(), http.StatusTemporaryRedirect)
 		return nil
@@ -1492,12 +1625,6 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resErr error, code int) {
 	tmpl := NewTemplate(`error`, HtmlEngine)
 
-	if code >= 400 && code < 500 {
-		log.Warningf("[%s] %v (HTTP %d)", reqid(req), resErr, code)
-	} else {
-		log.Errorf("[%s] %v (HTTP %d)", reqid(req), resErr, code)
-	}
-
 	if resErr == nil {
 		resErr = fmt.Errorf("Unknown Error")
 	}
@@ -1584,9 +1711,9 @@ func reqid(req *http.Request) string {
 	return httputil.RequestGetValue(req, ContextRequestKey).String()
 }
 
-func reqres(req *http.Request) http.ResponseWriter {
+func reqres(req *http.Request) *statusInterceptor {
 	if w := httputil.RequestGetValue(req, ContextResponseKey).Value; w != nil {
-		if rw, ok := w.(http.ResponseWriter); ok {
+		if rw, ok := w.(*statusInterceptor); ok {
 			return rw
 		}
 	}
@@ -1896,6 +2023,92 @@ func (self *Server) cleanupCommands() {
 				proc.Kill()
 			}
 		}
+	}
+}
+
+// called by the cleanup middleware to log the completed request according to LogFormat.
+func (self *Server) logreq(w http.ResponseWriter, req *http.Request) {
+	if tm := getRequestTimer(req); tm != nil {
+		format := logFormats[self.Log.Format]
+
+		if format == `` {
+			if self.Log.Format != `` {
+				format = self.Log.Format
+			} else {
+				return
+			}
+		}
+
+		if self.logwriter == nil {
+			// discard by default, unless some brave configuration below changes this
+			self.logwriter = ioutil.Discard
+
+			switch lf := strings.ToLower(self.Log.Destination); lf {
+			case ``, `none`, `false`:
+				return
+			case `-`, `stdout`:
+				self.isTerminalOutput = true
+				self.logwriter = os.Stdout
+			case `stderr`:
+				self.isTerminalOutput = true
+				self.logwriter = os.Stderr
+			case `syslog`:
+				log.Warningf("logfile: %q destination is not implemented", lf)
+				return
+			default:
+				if self.Log.Truncate {
+					os.Truncate(self.Log.Destination, 0)
+				}
+
+				if f, err := os.OpenFile(self.Log.Destination, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+					self.logwriter = f
+				} else {
+					log.Warningf("logfile: failed to open logfile: %v", err)
+					return
+				}
+			}
+		}
+
+		interceptor := reqres(req)
+		rh, rp := stringutil.SplitPair(req.RemoteAddr, `:`)
+		code := typeutil.String(interceptor.code)
+
+		if self.isTerminalOutput && self.Log.Colorize {
+			if interceptor.code < 300 {
+				code = log.CSprintf("${green}%d${reset}", interceptor.code)
+			} else if interceptor.code < 400 {
+				code = log.CSprintf("${cyan}%d${reset}", interceptor.code)
+			} else if interceptor.code < 500 {
+				code = log.CSprintf("${yellow}%d${reset}", interceptor.code)
+			} else {
+				code = log.CSprintf("${red}%d${reset}", interceptor.code)
+			}
+		}
+
+		logContext := maputil.M(map[string]interface{}{
+			`host`:                req.Host,
+			`method`:              req.Method,
+			`protocol_major`:      req.ProtoMajor,
+			`protocol_minor`:      req.ProtoMinor,
+			`protocol`:            req.Proto,
+			`remote_address`:      rh,
+			`remote_address_port`: typeutil.Int(rp),
+			`request_id`:          reqid(req),
+			`request_length`:      req.ContentLength,
+			`request_started_at`:  tm.StartedAt,
+			`duration`:            httputil.RequestGetValue(req, `duration`).Duration(),
+			`response_length`:     interceptor.bytesWritten,
+			`scheme`:              req.URL.Scheme,
+			`status_code`:         code,
+			`status_text`:         http.StatusText(interceptor.code),
+			`url_hostname`:        req.URL.Hostname(),
+			`url_port`:            typeutil.Int(req.URL.Port()),
+			`url`:                 req.URL.String(),
+		})
+
+		logContext.Fprintf(self.logwriter, format)
+	} else {
+		bugWarning()
 	}
 }
 

@@ -22,39 +22,56 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	base58 "github.com/jbenet/go-base58"
-	"github.com/urfave/negroni"
 )
 
+// A function that receives the current request, ResponseWriter, and returns whether to call the next middleware
+// in the stack (true) or to stop processing the request immediately (false).
+type Middleware func(w http.ResponseWriter, req *http.Request) bool
+
 func (self *Server) setupServer() error {
-	fileutil.InitMime()
-	self.handler = negroni.New()
+	if err := self.configureTls(); err != nil {
+		return err
+	}
 
-	// setup panic recovery handler
-	self.handler.Use(negroni.NewRecovery())
+	if err := self.registerInternalRoutes(); err != nil {
+		return err
+	}
 
-	// setup request ID generation
-	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
-		defer next(w, req)
-		requestId := base58.Encode(stringutil.UUID().Bytes())
+	self.BeforeHandlers = []Middleware{
+		self.middlewareStartRequest,
+		self.middlewareDebugRequest,
+		self.middlewareInjectHeaders,
+		self.middlewareProcessAuthenticators,
+		self.middlewareCsrf,
+	}
 
-		log.Debugf("[%s] %s", requestId, strings.Repeat(`-`, 69))
-		log.Infof("[%s] %s %s (%s)", requestId, req.Method, req.RequestURI, req.RemoteAddr)
-		log.Debugf("[%s] middleware: request id", requestId)
+	self.AfterHandlers = []http.HandlerFunc{
+		self.afterFinalizeAndLog,
+	}
 
-		httputil.RequestSetValue(req, ContextRequestKey, requestId)
-		httputil.RequestSetValue(req, ContextResponseKey, w)
+	return nil
+}
 
-		w.Header().Set(`X-Diecast-Request-ID`, requestId)
+// setup request (generate ID, intercept ResponseWriter to get status code, set context variables)
+func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Request) bool {
+	requestId := base58.Encode(stringutil.UUID().Bytes())
 
-		// setup request tracing info
-		startRequestTimer(req)
-	})
+	log.Debugf("[%s] %s", requestId, strings.Repeat(`-`, 69))
+	log.Debugf("[%s] %s %s (%s)", requestId, req.Method, req.RequestURI, req.RemoteAddr)
+	log.Debugf("[%s] middleware: request id", requestId)
+	httputil.RequestSetValue(req, ContextRequestKey, requestId)
+	w.Header().Set(`X-Diecast-Request-ID`, requestId)
 
-	// handle request dumper
-	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
+	// setup request tracing info
+	startRequestTimer(req)
+
+	return true
+}
+
+// handle request dumper (for debugging)
+func (self *Server) middlewareDebugRequest(w http.ResponseWriter, req *http.Request) bool {
+	if len(self.DebugDumpRequests) > 0 {
 		log.Debugf("[%s] middleware: request dumper", reqid(req))
-		defer next(w, req)
-
 		for match, destdir := range self.DebugDumpRequests {
 			var filename string
 
@@ -63,7 +80,7 @@ func (self *Server) setupServer() error {
 			} else if fileutil.FileExists(destdir) {
 				filename = destdir
 			} else {
-				return
+				break
 			}
 
 			if ok, err := filepath.Match(match, req.URL.Path); err == nil && ok || match == `*` {
@@ -76,11 +93,14 @@ func (self *Server) setupServer() error {
 				}
 			}
 		}
-	})
+	}
 
-	// inject global headers
-	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
-		defer next(w, req)
+	return true
+}
+
+// inject global headers
+func (self *Server) middlewareInjectHeaders(w http.ResponseWriter, req *http.Request) bool {
+	if len(self.GlobalHeaders) > 0 {
 		log.Debugf("[%s] middleware: inject global headers", reqid(req))
 
 		for k, v := range self.GlobalHeaders {
@@ -92,49 +112,82 @@ func (self *Server) setupServer() error {
 				w.Header().Set(k, typeutil.String(v))
 			}
 		}
+	}
 
-	})
+	return true
+}
 
-	// process authenticators
-	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
-		log.Debugf("[%s] middleware: process authenticators", reqid(req))
+// process authenticators
+func (self *Server) middlewareProcessAuthenticators(w http.ResponseWriter, req *http.Request) bool {
+	log.Debugf("[%s] middleware: process authenticators", reqid(req))
 
-		if auth, err := self.Authenticators.Authenticator(req); err == nil {
-			if auth != nil {
-				if auth.IsCallback(req.URL) {
-					auth.Callback(w, req)
-					return
-				} else if !auth.Authenticate(w, req) {
-					return
+	if auth, err := self.Authenticators.Authenticator(req); err == nil {
+		if auth != nil {
+			if auth.IsCallback(req.URL) {
+				auth.Callback(w, req)
+				return false
+			} else if !auth.Authenticate(w, req) {
+				return false
+			}
+		}
+	} else {
+		self.respondError(w, req, err, http.StatusInternalServerError)
+	}
+
+	// fallback to proceeding down the middleware chain
+	return true
+}
+
+// cleanup request tracing info
+func (self *Server) afterFinalizeAndLog(w http.ResponseWriter, req *http.Request) {
+	log.Debugf("[%s] after: finalize and log request", reqid(req))
+	var took time.Duration
+
+	if tm := getRequestTimer(req); tm != nil {
+		took = time.Since(tm.StartedAt).Round(time.Microsecond)
+		log.Debugf("[%s] completed: %v", tm.ID, took)
+		httputil.RequestSetValue(req, `duration`, took)
+	}
+
+	self.logreq(w, req)
+	removeRequestTimer(req)
+}
+
+// adds a pile of TLS configuration for the benefit of the various HTTP clients uses to do things so
+// that you have an alternative to "insecure: true"; a ray of sunlight in the dark sky of practical modern web cryptosystems.
+func (self *Server) configureTls() error {
+	// if we're appending additional trusted certs (for Bindings and other internal HTTP clients)
+	if len(self.TrustedRootPEMs) > 0 {
+		// get the existing system CA bundle
+		if syspool, err := x509.SystemCertPool(); err == nil {
+			// append each cert
+			for _, pemfile := range self.TrustedRootPEMs {
+				// must be a readable PEM file
+				if pem, err := fileutil.ReadAll(pemfile); err == nil {
+					if !syspool.AppendCertsFromPEM(pem) {
+						return fmt.Errorf("Failed to append certificate %s", pemfile)
+					}
+				} else {
+					return fmt.Errorf("Failed to read certificate %s: %v", pemfile, err)
 				}
 			}
+
+			// this is what http.Client.Transport.TLSClientConfig.RootCAs will become
+			self.altRootCaPool = syspool
 		} else {
-			self.respondError(w, req, err, http.StatusInternalServerError)
+			return fmt.Errorf("Failed to retrieve system CA pool: %v", err)
 		}
+	}
 
-		// fallback to proceeding down the middleware chain
-		next(w, req)
-	})
+	return nil
+}
 
-	// setup CSRF protection (if enabled)
-	self.applyCsrfIntercept()
-
-	// cleanup request tracing info
-	self.handler.UseFunc(func(w http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
-		log.Debugf("[%s] middleware: cleanup request", reqid(req))
-
-		if tm := getRequestTimer(req); tm != nil {
-			log.Debugf("[%s] completed: %v", tm.ID, time.Since(tm.StartedAt).Round(time.Microsecond))
-		}
-
-		removeRequestTimer(req)
-		next(w, req)
-	})
-
+// adds routes for things like favicon and actions.
+func (self *Server) registerInternalRoutes() error {
 	// add favicon.ico handler (if specified)
 	faviconRoute := `/` + filepath.Join(self.rp(), `favicon.ico`)
 
-	self.router.HandleFunc(faviconRoute, func(w http.ResponseWriter, req *http.Request) {
+	self.mux.HandleFunc(faviconRoute, func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
 		case http.MethodGet:
 			defer req.Body.Close()
@@ -204,7 +257,7 @@ func (self *Server) setupServer() error {
 			return fmt.Errorf("Action %d: Must specify a 'path'", i)
 		}
 
-		self.router.HandleFunc(hndPath, func(w http.ResponseWriter, req *http.Request) {
+		self.mux.HandleFunc(hndPath, func(w http.ResponseWriter, req *http.Request) {
 			if handler := self.actionForRequest(req); handler != nil {
 				handler(w, req)
 			} else {
@@ -213,29 +266,6 @@ func (self *Server) setupServer() error {
 		})
 
 		log.Debugf("[actions] Registered %s", hndPath)
-	}
-
-	// if we're appending additional trusted certs (for Bindings and other internal HTTP clients)
-	if len(self.TrustedRootPEMs) > 0 {
-		// get the existing system CA bundle
-		if syspool, err := x509.SystemCertPool(); err == nil {
-			// append each cert
-			for _, pemfile := range self.TrustedRootPEMs {
-				// must be a readable PEM file
-				if pem, err := fileutil.ReadAll(pemfile); err == nil {
-					if !syspool.AppendCertsFromPEM(pem) {
-						return fmt.Errorf("Failed to append certificate %s", pemfile)
-					}
-				} else {
-					return fmt.Errorf("Failed to read certificate %s: %v", pemfile, err)
-				}
-			}
-
-			// this is what http.Client.Transport.TLSClientConfig.RootCAs will become
-			self.altRootCaPool = syspool
-		} else {
-			return fmt.Errorf("Failed to retrieve system CA pool: %v", err)
-		}
 	}
 
 	return nil

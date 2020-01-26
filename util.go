@@ -4,14 +4,21 @@ import (
 	"bytes"
 	"encoding/csv"
 	"encoding/xml"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/jbenet/go-base58"
+	"github.com/lucas-clemente/quic-go/http3"
 )
+
+func bugWarning() {
+	log.Warningf("BUG: no timer associated with request. Please report this at https://github.com/ghetzel/diecast")
+}
 
 type xmlNode struct {
 	XMLName  xml.Name
@@ -179,4 +186,49 @@ func (self *multiReadCloser) Close() error {
 	}
 
 	return mErr
+}
+
+type statusInterceptor struct {
+	http.ResponseWriter
+	code         int
+	bytesWritten int64
+}
+
+func intercept(upstream http.ResponseWriter) *statusInterceptor {
+	return &statusInterceptor{
+		ResponseWriter: upstream,
+		code:           http.StatusOK,
+	}
+}
+
+func (self *statusInterceptor) WriteHeader(code int) {
+	self.ResponseWriter.WriteHeader(code)
+	self.code = code
+}
+
+func (self *statusInterceptor) Write(b []byte) (int, error) {
+	n, err := self.ResponseWriter.Write(b)
+	self.bytesWritten += int64(n)
+	return n, err
+}
+
+// A do-nothing http.Handler that does nothing
+type nopHandler struct{}
+
+func (self *nopHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {}
+
+type h3serveable struct {
+	*http3.Server
+}
+
+func (self *h3serveable) Serve(l net.Listener) error {
+	if pc, ok := l.(net.PacketConn); ok {
+		return self.Server.Serve(pc)
+	} else {
+		return fmt.Errorf("a packet-oriented transport is required")
+	}
+}
+
+func (self *h3serveable) ServeTLS(l net.Listener, _ string, _ string) error {
+	return self.Serve(l)
 }

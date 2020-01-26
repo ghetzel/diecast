@@ -81,8 +81,8 @@ type CSRF struct {
 	InjectFormFieldSelector string   `yaml:"injectFormFieldSelector" json:"injectFormFieldSelector"` // A CSS selector used to locate <form> tags that need the CSRF <input> field injected.
 	InjectFormFieldTemplate string   `yaml:"injectFormFieldTemplate" json:"injectFormFieldTemplate"` // Specify the format string that will be used to replace </form> tags with the injected field.
 	InjectableMediaTypes    []string `yaml:"injectableMediaTypes"    json:"injectableMediaTypes"`    // Specify a list of Media Types (e.g.: MIME or Content-Types) that will have injection attempted on them (if enabled)
-	upstream                http.Handler
 	server                  *Server
+	registered              bool
 	// Method                  CsrfMethod `yaml:"method"                  json:"method"`                  // Specify the method to use for CSRF validation: "cookie" or "hmac".  If unspecified, "hmac" is used if private_key is set to a value, otherwise "cookie" is used.
 	// PrivateKey              string     `yaml:"private_key"             json:"private_key"`             // Provide a base64-encoded private key for use with the HMAC method of token validation
 }
@@ -111,7 +111,7 @@ func (self *CSRF) GetCookieName() string {
 	}
 }
 
-func (self *CSRF) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (self *CSRF) Handle(w http.ResponseWriter, req *http.Request) bool {
 	if self.Enable {
 		log.Debugf("[%s] middleware: check csrf", reqid(req))
 		self.generateTokenForRequest(w, req, false)
@@ -135,6 +135,7 @@ func (self *CSRF) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 						self.server.respondError(w, req, err, http.StatusBadRequest)
 					} else {
 						http.Error(w, err.Error(), http.StatusBadRequest)
+						return false
 					}
 				}
 
@@ -146,7 +147,7 @@ func (self *CSRF) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 						http.Error(w, "CSRF validation failed", http.StatusBadRequest)
 					}
 
-					return
+					return false
 				}
 			} else {
 				log.Infof("[%s] path %q exempted from CSRF protection", reqid(req), req.URL.Path)
@@ -154,9 +155,7 @@ func (self *CSRF) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	if self.upstream != nil {
-		self.upstream.ServeHTTP(w, req)
-	}
+	return true
 }
 
 // Retrieve the user-submitted token that can be forged.
@@ -299,15 +298,11 @@ func (self *CSRF) IsExempt(req *http.Request) bool {
 	return false
 }
 
-func (self *Server) applyCsrfIntercept() {
-	var hnd http.Handler = self.router
-
+func (self *Server) middlewareCsrf(w http.ResponseWriter, req *http.Request) bool {
 	// enforce CSRF protection (if configured)
-	if csrf := self.CSRF; csrf != nil {
-		if csrf.Enable {
+	if csrf := self.CSRF; csrf != nil && csrf.Enable {
+		if !csrf.registered {
 			csrf.server = self
-			csrf.upstream = self.router
-			hnd = csrf
 
 			// Okay, so...
 			//
@@ -390,8 +385,11 @@ func (self *Server) applyCsrfIntercept() {
 			}
 
 			self.BaseHeader.Postprocessors = append([]string{`__diecast_csrf`}, self.BaseHeader.Postprocessors...)
+			csrf.registered = true
 		}
-	}
 
-	self.handler.UseHandler(hnd)
+		return csrf.Handle(w, req)
+	} else {
+		return true
+	}
 }
