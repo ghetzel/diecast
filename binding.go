@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -127,6 +128,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	log.Debugf("[%s] Evaluating binding %q", id, self.Name)
 
 	if req.Header.Get(`X-Diecast-Binding`) == self.Name {
+		httputil.RequestSetValue(req, ContextStatusKey, http.StatusLoopDetected)
 		return nil, fmt.Errorf("Loop detected")
 	}
 
@@ -288,6 +290,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					} else if log.ErrHasPrefix(err, `[`) {
 						return nil, err
 					} else {
+						httputil.RequestSetValue(req, ContextStatusKey, response.StatusCode)
 						return nil, fmt.Errorf("[%s] %s %v: %v", id, method, reqUrl, err)
 					}
 				}

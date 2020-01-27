@@ -23,6 +23,8 @@ const DefaultCsrfInjectFormFieldSelector = `form[method="post"], form[method="PO
 const DefaultCsrfInjectFieldFormat = `<input type="hidden" name="%s" value="%s">`
 const CsrfTokenLength = 32
 const ContextCsrfToken = `csrf-token`
+const ContextStatusKey = `response-status-code`
+const ContextErrorKey = `response-error-message`
 
 var DefaultCsrfHeaderName = `X-CSRF-Token`
 var DefaultCsrfFormFieldName = `csrf_token`

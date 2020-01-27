@@ -111,6 +111,8 @@ func returnAuthenticatorFor(auth *AuthenticatorConfig) (Authenticator, error) {
 		authenticator, err = NewOauthAuthenticator(auth)
 	case `shell`:
 		authenticator, err = NewShellAuthenticator(auth)
+	case `request`:
+		authenticator, err = NewRequestAuthenticator(auth)
 	case `always`:
 		authenticator, err = NewStaticAuthenticator(auth, true)
 	case `never`:

@@ -127,6 +127,7 @@ func (self *Server) middlewareProcessAuthenticators(w http.ResponseWriter, req *
 				auth.Callback(w, req)
 				return false
 			} else if !auth.Authenticate(w, req) {
+				httputil.RequestSetValue(req, ContextStatusKey, http.StatusForbidden)
 				return false
 			}
 		}

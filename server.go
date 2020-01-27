@@ -638,8 +638,16 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	httputil.RequestSetValue(req, ContextResponseKey, interceptor)
 
 	// process the before stack
-	for _, before := range self.BeforeHandlers {
+	for i, before := range self.BeforeHandlers {
 		if proceed := before(interceptor, req); !proceed {
+			log.Debugf(
+				"[%s] processing halted by middleware %d (msg: %v)",
+				reqid(req),
+				i,
+				httputil.RequestGetValue(req, ContextErrorKey),
+			)
+
+			self.respondError(interceptor, req, fmt.Errorf("Middleware halted request"), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -1629,6 +1637,10 @@ func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resEr
 		resErr = fmt.Errorf("Unknown Error")
 	}
 
+	if c := httputil.RequestGetValue(req, ContextStatusKey).Int(); c > 0 {
+		code = int(c)
+	}
+
 	for _, filename := range []string{
 		fmt.Sprintf("%s/%d.html", self.ErrorsPath, code),
 		fmt.Sprintf("%s/%dxx.html", self.ErrorsPath, int(code/100.0)),
@@ -1636,7 +1648,13 @@ func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resEr
 	} {
 		if f, err := self.fs.Open(filename); err == nil {
 			funcs, errorData := self.getPreBindingData(req, self.BaseHeader)
-			errorData[`error`] = resErr.Error()
+			if msg := httputil.RequestGetValue(req, ContextErrorKey).String(); msg != `` {
+				errorData[`error`] = msg
+			} else {
+				errorData[`error`] = resErr.Error()
+			}
+
+			errorData[`errorcode`] = code
 			tmpl.Funcs(funcs)
 
 			if err := tmpl.ParseFrom(f); err == nil {
