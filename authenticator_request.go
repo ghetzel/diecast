@@ -10,7 +10,6 @@ import (
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
@@ -76,7 +75,7 @@ func (self *RequestAuthenticator) Authenticate(w http.ResponseWriter, req *http.
 
 	// if remotes are specified, one must match
 	if len(self.remotes) > 0 {
-		if addr, _ := stringutil.SplitPair(req.RemoteAddr, `:`); addr != `` {
+		if addr, _, err := net.SplitHostPort(req.RemoteAddr); err == nil && addr != `` {
 			for i, remote := range self.remotes {
 				if addr == remote {
 					log.Debugf(
