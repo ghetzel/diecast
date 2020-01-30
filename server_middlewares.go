@@ -108,6 +108,8 @@ func (self *Server) middlewareInjectHeaders(w http.ResponseWriter, req *http.Req
 				for _, i := range sliceutil.Stringify(v) {
 					w.Header().Add(k, i)
 				}
+			} else if typeutil.IsMap(v) {
+				w.Header().Set(k, fancyMapJoin(v))
 			} else {
 				w.Header().Set(k, typeutil.String(v))
 			}

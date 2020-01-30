@@ -8,9 +8,11 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/log"
+	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/jbenet/go-base58"
 	"github.com/lucas-clemente/quic-go/http3"
@@ -231,4 +233,38 @@ func (self *h3serveable) Serve(l net.Listener) error {
 
 func (self *h3serveable) ServeTLS(l net.Listener, _ string, _ string) error {
 	return self.Serve(l)
+}
+
+func fancyMapJoin(in interface{}) string {
+	m := maputil.M(in)
+
+	// extract formatting directives from map keys, which uses in-band signalling that i don't *love*,
+	// but it seems simpler-for-the-user than the alternatives right now.
+	kvjoin := m.String(`_kvjoin`, `=`)
+	vvjoin := m.String(`_join`, `&`)
+	kformat := m.String(`_kformat`, "%v")
+	vformat := m.String(`_vformat`, "%v")
+
+	data := m.MapNative()
+
+	delete(data, `_kvjoin`)
+	delete(data, `_join`)
+	delete(data, `_kformat`)
+	delete(data, `_vformat`)
+
+	// rekey according to the formatting directives
+	for kk, vv := range data {
+		delete(data, kk)
+		data[fmt.Sprintf(kformat, kk)] = fmt.Sprintf(vformat, vv)
+	}
+
+	var pairs []string
+
+	for item := range maputil.M(data).Iter() {
+		pairs = append(pairs, fmt.Sprintf("%s%s%v", item.K, kvjoin, item.V))
+	}
+
+	sort.Strings(pairs)
+
+	return strings.Join(pairs, vvjoin)
 }
