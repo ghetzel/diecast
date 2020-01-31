@@ -3,6 +3,7 @@ package diecast
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html"
 	"html/template"
@@ -53,6 +54,7 @@ var BindingClient = &http.Client{
 	Timeout: 60 * time.Second,
 }
 
+var ErrSkipEval = errors.New(`skip evaluation`)
 var AllowInsecureLoopbackBindings bool = true
 var DefaultParamJoiner = `;`
 
@@ -122,11 +124,11 @@ func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface
 				if ok, err := filepath.Match(pattern, req.URL.Path); err == nil {
 					if ok {
 						proceed = true
-						desc = fmt.Sprintf(" paths %q", pattern)
+						desc = fmt.Sprintf(" pattern only=%q", pattern)
 						break
 					}
 				} else {
-					return fmt.Errorf("bad 'paths' pattern %q: %v", pattern, err)
+					return fmt.Errorf("bad 'only' pattern %q: %v", pattern, err)
 				}
 			}
 		} else {
@@ -139,7 +141,7 @@ func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface
 			if ok, err := filepath.Match(pattern, req.URL.Path); err == nil {
 				if ok {
 					proceed = false
-					desc = fmt.Sprintf(" except %q", pattern)
+					desc = fmt.Sprintf(" pattern except=%q", pattern)
 					break
 				}
 			} else {
@@ -149,20 +151,23 @@ func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface
 
 		if !proceed {
 			self.Optional = true
-			return fmt.Errorf("[%s] Binding %q not being evaluated: path %q matched%s", id, self.Name, req.URL.Path, desc)
+			log.Debugf("[%s] Binding %q not being evaluated: path %q matched%s", id, self.Name, req.URL.Path, desc)
+			return ErrSkipEval
 		}
 
 		if self.OnlyIfExpr != `` {
 			if v := MustEvalInline(self.OnlyIfExpr, data, funcs); !typeutil.Bool(v) {
 				self.Optional = true
-				return fmt.Errorf("[%s] Binding %q not being evaluated because only_if expression was false", id, self.Name)
+				log.Debugf("[%s] Binding %q not being evaluated because only_if expression was false", id, self.Name)
+				return ErrSkipEval
 			}
 		}
 
 		if self.NotIfExpr != `` {
 			if v := MustEvalInline(self.NotIfExpr, data, funcs); typeutil.Bool(v) {
 				self.Optional = true
-				return fmt.Errorf("[%s] Binding %q not being evaluated because not_if expression was truthy", id, self.Name)
+				log.Debugf("[%s] Binding %q not being evaluated because not_if expression was truthy", id, self.Name)
+				return ErrSkipEval
 			}
 		}
 	}

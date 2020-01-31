@@ -1437,7 +1437,9 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 				} else if redir, ok := err.(RedirectTo); ok {
 					return funcs, nil, redir
 				} else {
-					log.Warningf("Binding %q (iteration %d) failed: %v", binding.Name, i, err)
+					if err != ErrSkipEval {
+						log.Warningf("[%s] Binding %q (iteration %d) failed: %v", reqid(req), binding.Name, i, err)
+					}
 
 					if binding.OnError == ActionContinue {
 						continue
@@ -1469,7 +1471,9 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			} else if v == nil && binding.Fallback != nil {
 				bindings[binding.Name] = binding.Fallback
 			} else {
-				log.Warningf("Binding %q failed: %v", binding.Name, err)
+				if err != ErrSkipEval {
+					log.Warningf("[%s] Binding %q failed: %v", reqid(req), binding.Name, err)
+				}
 
 				if !binding.Optional {
 					return funcs, nil, err
