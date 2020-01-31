@@ -308,6 +308,12 @@ bindings:
 <td>An object that will be encoded according to the value of <code>formatter</code> and used as the request body.</td>
 </tr>
 <tr>
+<td><code>except</code></td>
+<td>[]String</td>
+<td>-</td>
+<td>If set, and the request path matches <em>any</em> of the paths/path globs herein, the binding will not evaluate and be marked optional.</td>
+</tr>
+<tr>
 <td><code>fallback</code></td>
 <td>Anything</td>
 <td>-</td>
@@ -362,6 +368,12 @@ bindings:
 <td>What to do if the request fails.</td>
 </tr>
 <tr>
+<td><code>only</code></td>
+<td>[]String</td>
+<td>-</td>
+<td>If set, and the request path does not match <em>any</em> of the paths/path globs herein, the binding will not evaluate and be marked optional.</td>
+</tr>
+<tr>
 <td><code>only_if</code></td>
 <td>String</td>
 <td>-</td>
@@ -402,12 +414,6 @@ bindings:
 <td>String</td>
 <td>-</td>
 <td>The <em>exact</em> string to send as the request body.</td>
-</tr>
-<tr>
-<td><code>restrict</code></td>
-<td>String (Regular Expression)</td>
-<td>-</td>
-<td>If specified, the requested path must match this <a href="https://github.com/google/re2/wiki/Syntax" rel="nofollow">regular expression</a>.  This is a specialized form of <code>only_if</code>.</td>
 </tr>
 <tr>
 <td><code>skip_inherit_headers</code></td>

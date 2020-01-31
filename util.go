@@ -261,7 +261,7 @@ func fancyMapJoin(in interface{}) string {
 	var pairs []string
 
 	for item := range maputil.M(data).Iter() {
-		pairs = append(pairs, fmt.Sprintf("%s%s%v", item.K, kvjoin, item.V))
+		pairs = append(pairs, fmt.Sprintf("%s%s%s", item.K, kvjoin, item.Value))
 	}
 
 	sort.Strings(pairs)

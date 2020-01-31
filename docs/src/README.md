@@ -293,6 +293,7 @@ The `name` and `resource` properties are required for a binding to run, but ther
 | `name`                 | String                            | -             | The name of the variable (under `$.bindings`) where the binding's data is stored.
 | `resource`             | String                            | -             | The URL to retrieve.  This can be a complete URL (e.g.: "https://...") or a relative path.  If a path is specified, the value [bindingPrefix] will be prepended to the path before making the request.
 | `body`                 | Object                            | -             | An object that will be encoded according to the value of `formatter` and used as the request body.
+| `except`               | []String                          | -             | If set, and the request path matches _any_ of the paths/path globs herein, the binding will not evaluate and be marked optional.
 | `fallback`             | Anything                          | -             | If the binding is optional and returns a non-2xx status, this value will be used instead of `null`.
 | `formatter`            | `json, form`                      | `json`        | Specify how the `body` should be serialized before performing the request.
 | `headers`              | Object                            | -             | An object container HTTP request headers to be included in the request.
@@ -302,6 +303,7 @@ The `name` and `resource` properties are required for a binding to run, but ther
 | `no_template`          | Boolean                           | `false`       | If true, inline expressions in binding values will not be honored.
 | `not_if`               | String                            | -             | If this value or expression yields a truthy value, the binding will not be evaluated.
 | `on_error`             | String                            | -             | What to do if the request fails.
+| `only`                 | []String                          | -             | If set, and the request path does not match _any_ of the paths/path globs herein, the binding will not evaluate and be marked optional.
 | `only_if`              | String                            | -             | Only evaluate if this value or expression yields a truthy value.
 | `optional`             | Boolean                           | `false`       | Whether a response error causes the entire template render to fail.
 | `paginate`             | [Paginate Config])(#pagination)   | -             | Paginates through a resultset by performing the binding request repeatedly until an edge condition is met, then returns all the results.
@@ -309,7 +311,6 @@ The `name` and `resource` properties are required for a binding to run, but ther
 | `params`               | Object                            | -             | An object representing the query string parameters to append to the URL in `resource`.  Keys may be any scalar value or array of scalar values.
 | `parser`               | `json, html, text, raw`           | `json`        | Specify how the response body should be parsed into the binding variable.
 | `rawbody`              | String                            | -             | The *exact* string to send as the request body.
-| `restrict`             | String (Regular Expression)       | -             | If specified, the requested path must match this [regular expression](https://github.com/google/re2/wiki/Syntax).  This is a specialized form of `only_if`.
 | `skip_inherit_headers` | Boolean                           | `false`       | If true, no headers from the originating request to render the template will be included in this request, even if Header Passthrough is enabled.
 | `transform`            | String                            | -             | A [JSONPath](#jsonpath-expressions) expression used to transform the resource response before putting it in `$.bindings`.
 

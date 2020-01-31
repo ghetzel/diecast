@@ -14,6 +14,42 @@ import (
 	"github.com/ghetzel/testify/require"
 )
 
+func req(method string, path string) *http.Request {
+	return httptest.NewRequest(method, path, nil)
+}
+
+func TestBindingShouldEvaluate(t *testing.T) {
+	assert := require.New(t)
+
+	b := &Binding{}
+	assert.NoError(b.shouldEvaluate(req(`get`, `/`), nil, nil))
+
+	b = &Binding{
+		OnlyPaths: []string{`/hello`},
+	}
+	assert.Error(b.shouldEvaluate(req(`get`, `/`), nil, nil))
+	assert.NoError(b.shouldEvaluate(req(`get`, `/hello`), nil, nil))
+	assert.NoError(b.shouldEvaluate(req(`get`, `/hello?there=true`), nil, nil))
+	assert.Error(b.shouldEvaluate(req(`get`, `/other`), nil, nil))
+
+	b = &Binding{
+		ExceptPaths: []string{`/hello`},
+	}
+	assert.NoError(b.shouldEvaluate(req(`get`, `/`), nil, nil))
+	assert.Error(b.shouldEvaluate(req(`get`, `/hello`), nil, nil))
+	assert.Error(b.shouldEvaluate(req(`get`, `/hello?there=true`), nil, nil))
+	assert.NoError(b.shouldEvaluate(req(`get`, `/other`), nil, nil))
+
+	b = &Binding{
+		OnlyPaths:   []string{`/hello`},
+		ExceptPaths: []string{`/hello`},
+	}
+	assert.Error(b.shouldEvaluate(req(`get`, `/`), nil, nil))
+	assert.Error(b.shouldEvaluate(req(`get`, `/hello`), nil, nil))
+	assert.Error(b.shouldEvaluate(req(`get`, `/hello?there=true`), nil, nil))
+	assert.Error(b.shouldEvaluate(req(`get`, `/other`), nil, nil))
+}
+
 func TestBindingHttp(t *testing.T) {
 	assert := require.New(t)
 	mux := http.NewServeMux()

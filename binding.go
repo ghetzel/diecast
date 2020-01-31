@@ -11,7 +11,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"regexp"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -98,29 +98,76 @@ type Binding struct {
 	RawBody            string                        `yaml:"rawbody,omitempty"              json:"rawbody,omitempty"`              // If the request receives an open-ended body, this will allow raw data to be passed in as-is.
 	Repeat             string                        `yaml:"repeat,omitempty"               json:"repeat,omitempty"`               // A templated value that yields an array.  The binding request will be performed once for each array element, wherein the Resource value is passed into a template that includes the $index and $item variables, which represent the repeat array item's position and value, respectively.
 	Resource           string                        `yaml:"resource,omitempty"             json:"resource,omitempty"`             // The URL that specifies the protocol and resource to retrieve.
-	Restrict           []string                      `yaml:"restrict,omitempty"             json:"restrict,omitempty"`             // Only evaluate the template on request URL paths matching one of the regular expressions in this array.
 	SkipInheritHeaders bool                          `yaml:"skip_inherit_headers,omitempty" json:"skip_inherit_headers,omitempty"` // Do not passthrough the headers that were sent to the template from the client's browser, even if Passthrough mode is enabled.
 	Timeout            interface{}                   `yaml:"timeout,omitempty"              json:"timeout,omitempty"`              // A duration specifying the timeout for the request.
 	Transform          string                        `yaml:"transform,omitempty"            json:"transform,omitempty"`            // Specifies a JSONPath expression that can be used to transform the response data received from the binding into the data that is provided to the template.
 	TlsCertificate     string                        `yaml:"tlscrt,omitempty"               json:"tlscrt,omitempty"`               // Provide the path to a TLS client certificate to present if the server requests one.
 	TlsKey             string                        `yaml:"tlskey,omitempty"               json:"tlskey,omitempty"`               // Provide the path to a TLS client certificate key to present if the server requests one.
+	OnlyPaths          []string                      `yaml:"only,omitempty"                 json:"only,omitempty"`                 // A list of request paths and glob patterns, ANY of which the binding will evaluate on.
+	ExceptPaths        []string                      `yaml:"except,omitempty"               json:"except,omitempty"`               // A list of request paths and glob patterns, ANY of which the binding will NOT evaluate on.
+	Restrict           interface{}                   `yaml:"restrict,omitempty"             json:"restrict,omitempty"`             // DEPRECATED: use OnlyPaths/ExceptPaths instead.
 	server             *Server
 }
 
-func (self *Binding) ShouldEvaluate(req *http.Request) bool {
-	if self.Restrict == nil {
-		return true
-	} else {
-		for _, restrict := range self.Restrict {
-			if rx, err := regexp.Compile(restrict); err == nil {
-				if rx.MatchString(req.URL.Path) {
-					return true
+func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface{}, funcs FuncMap) error {
+	var id = reqid(req)
+
+	if !self.NoTemplate {
+		var proceed bool
+		var desc string
+
+		// if any inclusions are present, then ONLY a matching path will proceed
+		if len(self.OnlyPaths) > 0 {
+			for _, pattern := range self.OnlyPaths {
+				if ok, err := filepath.Match(pattern, req.URL.Path); err == nil {
+					if ok {
+						proceed = true
+						desc = fmt.Sprintf(" paths %q", pattern)
+						break
+					}
+				} else {
+					return fmt.Errorf("bad 'paths' pattern %q: %v", pattern, err)
 				}
+			}
+		} else {
+			// otherwise, proceed by default
+			proceed = true
+		}
+
+		// if any exclusions are present, then any matching one can stop evaluation
+		for _, pattern := range self.ExceptPaths {
+			if ok, err := filepath.Match(pattern, req.URL.Path); err == nil {
+				if ok {
+					proceed = false
+					desc = fmt.Sprintf(" except %q", pattern)
+					break
+				}
+			} else {
+				return fmt.Errorf("bad 'except' pattern %q: %v", pattern, err)
+			}
+		}
+
+		if !proceed {
+			self.Optional = true
+			return fmt.Errorf("[%s] Binding %q not being evaluated: path %q matched%s", id, self.Name, req.URL.Path, desc)
+		}
+
+		if self.OnlyIfExpr != `` {
+			if v := MustEvalInline(self.OnlyIfExpr, data, funcs); !typeutil.Bool(v) {
+				self.Optional = true
+				return fmt.Errorf("[%s] Binding %q not being evaluated because only_if expression was false", id, self.Name)
+			}
+		}
+
+		if self.NotIfExpr != `` {
+			if v := MustEvalInline(self.NotIfExpr, data, funcs); typeutil.Bool(v) {
+				self.Optional = true
+				return fmt.Errorf("[%s] Binding %q not being evaluated because not_if expression was truthy", id, self.Name)
 			}
 		}
 	}
 
-	return false
+	return nil
 }
 
 func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data map[string]interface{}, funcs FuncMap) (interface{}, error) {
@@ -183,20 +230,8 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		}
 	}
 
-	if !self.NoTemplate {
-		if self.OnlyIfExpr != `` {
-			if v := MustEvalInline(self.OnlyIfExpr, data, funcs); !typeutil.Bool(v) {
-				self.Optional = true
-				return nil, fmt.Errorf("[%s] Binding %q not being evaluated because only_if expression was false", id, self.Name)
-			}
-		}
-
-		if self.NotIfExpr != `` {
-			if v := MustEvalInline(self.NotIfExpr, data, funcs); typeutil.Bool(v) {
-				self.Optional = true
-				return nil, fmt.Errorf("[%s] Binding %q not being evaluated because not_if expression was truthy", id, self.Name)
-			}
-		}
+	if err := self.shouldEvaluate(req, data, funcs); err != nil {
+		return nil, err
 	}
 
 	if reqUrl, err := url.Parse(uri); err == nil {
