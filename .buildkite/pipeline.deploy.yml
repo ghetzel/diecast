@@ -1,6 +1,6 @@
 ---
 steps:
   - label: "Build via K8S"
-    command: .buildkite/deploy
+    command: script/buildkite/deploy
     concurrency: 1
     concurrency_group: builds
