@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+manifest="$(mktemp)"
+
+echo '--- :kubernetes: Shipping'
+envsubst < k8s.yml > "${manifest}"
+kubectl apply -f "${manifest}"
+
+echo '--- :zzz: Waiting for build'
+kubectl wait --for condition=Succeeded --timeout=300s -f "${manifest}"
