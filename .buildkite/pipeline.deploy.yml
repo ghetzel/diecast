@@ -1,6 +1,6 @@
 ---
 steps:
   - label: "Build via K8S"
-    command: "pwd; ls -l"
+    command: "pwd; ls -la"
     concurrency: 1
     concurrency_group: builds
