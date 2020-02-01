@@ -1,6 +1,6 @@
 ---
 steps:
   - label: "Build via K8S"
-    command: script/buildkite/deploy
+    command: "pwd; ls -l"
     concurrency: 1
     concurrency_group: builds
