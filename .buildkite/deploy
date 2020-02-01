@@ -3,7 +3,7 @@ set -euo pipefail
 manifest="$(mktemp)"
 
 echo '--- :kubernetes: Shipping'
-envsubst < k8s.yml > "${manifest}"
+envsubst < .buildkite/k8s.yml > "${manifest}"
 kubectl apply -f "${manifest}"
 
 echo '--- :zzz: Waiting for build'
