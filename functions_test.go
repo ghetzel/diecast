@@ -35,6 +35,16 @@ func TestCollectionFunctions(t *testing.T) {
 	assert.False(isLastElement(3, arr), arr)
 }
 
+func TestCollectionFunctionsCodecs(t *testing.T) {
+	assert := require.New(t)
+	fns := GetStandardFunctions(nil)
+
+	chr2str := fns[`chr2str`].(func(codepoints interface{}) string)
+
+	assert.Equal(`HELLO`, chr2str([]uint8{72, 69, 76, 76, 79}))
+	assert.Equal(`THERE`, chr2str([]uint8{84, 72, 69, 82, 69}))
+}
+
 func TestMiscFunctions(t *testing.T) {
 	assert := require.New(t)
 	fns := GetStandardFunctions(nil)

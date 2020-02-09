@@ -15,6 +15,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/go-shiori/go-readability"
 	base58 "github.com/jbenet/go-base58"
@@ -739,6 +740,10 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Code:        `unbase64 "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw" "standard"`,
 						Return:      []byte("hello?yes=this&is=dog#"),
 					}, {
+						Description: `This shows how to convert the binary data to a Unicode string (assuming it is a Unicode bytestream)`,
+						Code:        `chr2str (unbase64 "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw")`,
+						Return:      "hello?yes=this&is=dog#",
+					}, {
 						Code:   `unbase64 "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==" "padded"`,
 						Return: []byte("hello?yes=this&is=dog#"),
 					}, {
@@ -750,11 +755,15 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(input interface{}, encoding ...string) ([]byte, error) {
-					if len(encoding) == 0 {
-						encoding = []string{`standard`}
-					}
-
 					s := typeutil.String(input)
+
+					if len(encoding) == 0 {
+						if strings.Contains(s, `=`) {
+							encoding = []string{`padded`}
+						} else {
+							encoding = []string{`standard`}
+						}
+					}
 
 					switch encoding[0] {
 					case `padded`:
@@ -783,6 +792,30 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 					}, {
 						Code:   `httpStatusText 979`,
 						Return: ``,
+					},
+				},
+			}, {
+				Name:    `chr2str`,
+				Summary: `Takes an array of integers representing Unicode codepoints and returns the resulting string.`,
+				Function: func(codepoints interface{}) string {
+					var points = sliceutil.Sliceify(codepoints)
+					var chars = make([]rune, len(points))
+
+					for i, n := range points {
+						if codepoint := int(typeutil.Int(n)); codepoint > 0 {
+							chars[i] = rune(codepoint)
+						}
+					}
+
+					return string(chars)
+				},
+				Examples: []funcExample{
+					{
+						Code:   `chr2str [72, 69, 76, 76, 79]`,
+						Return: `HELLO`,
+					}, {
+						Code:   `chr2str [84, 72, 69, 82, 69]`,
+						Return: `THERE`,
 					},
 				},
 			},

@@ -2136,6 +2136,11 @@
             "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw=="
           },
           {
+            "Code": "chr2str (unbase64 \"aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw\")",
+            "Description": "This shows how to convert the binary data to a Unicode string (assuming it is a Unicode bytestream)",
+            "Return": "hello?yes=this\u0026is=dog#"
+          },
+          {
             "Code": "unbase64 \"aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==\" \"padded\"",
             "Description": "",
             "Return": "aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw=="
@@ -2175,6 +2180,27 @@
             "Code": "httpStatusText 979",
             "Description": "",
             "Return": ""
+          }
+        ]
+      },
+      {
+        "Name": "chr2str",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Takes an array of integers representing Unicode codepoints and returns the resulting string.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": null,
+        "Examples": [
+          {
+            "Code": "chr2str [72, 69, 76, 76, 79]",
+            "Description": "",
+            "Return": "HELLO"
+          },
+          {
+            "Code": "chr2str [84, 72, 69, 82, 69]",
+            "Description": "",
+            "Return": "THERE"
           }
         ]
       }

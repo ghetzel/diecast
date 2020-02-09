@@ -984,6 +984,9 @@ Diecast runtime directory:</p>
             <a href="#fn-base64">base64</a>
         </li>
         <li>
+            <a href="#fn-chr2str">chr2str</a>
+        </li>
+        <li>
             <a href="#fn-csv">csv</a>
         </li>
         <li>
@@ -5388,6 +5391,30 @@ Diecast runtime directory:</p>
             </div>
         </div>
     </section>
+    <section class="function" id="fn-chr2str">
+        <h4 class="mt-3">
+            chr2str
+            <a href="#fn-chr2str" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>chr2str</code>
+        </div>
+        <p>Takes an array of integers representing Unicode codepoints and returns the resulting string.</p>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-chr2str-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>chr2str [72, 69, 76, 76, 79]<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;HELLO&#34;</p>
+            </div>
+            <div class="example" id="fn-chr2str-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>chr2str [84, 72, 69, 82, 69]<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;THERE&#34;</p>
+            </div>
+        </div>
+    </section>
     <section class="function" id="fn-csv">
         <h4 class="mt-3">
             csv
@@ -5872,14 +5899,20 @@ Diecast runtime directory:</p>
                 <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
             </div>
             <div class="example" id="fn-unbase64-example-2">
+                <h6><p>This shows how to convert the binary data to a Unicode string (assuming it is a Unicode bytestream)</p>
+</h6>
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>chr2str (unbase64 &#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw&#34;)<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;hello?yes=this\u0026is=dog#&#34;</p>
+            </div>
+            <div class="example" id="fn-unbase64-example-3">
                 <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>unbase64 &#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34; &#34;padded&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
             </div>
-            <div class="example" id="fn-unbase64-example-3">
+            <div class="example" id="fn-unbase64-example-4">
                 <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>unbase64 &#34;aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw&#34; &#34;url&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
             </div>
-            <div class="example" id="fn-unbase64-example-4">
+            <div class="example" id="fn-unbase64-example-5">
                 <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>unbase64 &#34;aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw==&#34; &#34;url-padded&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">&#34;aGVsbG8/eWVzPXRoaXMmaXM9ZG9nIw==&#34;</p>
             </div>
