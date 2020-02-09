@@ -33,6 +33,12 @@ func TestCollectionFunctions(t *testing.T) {
 	assert.False(isLastElement(1, arr), arr)
 	assert.True(isLastElement(2, arr), arr)
 	assert.False(isLastElement(3, arr), arr)
+
+	longestString := fns[`longestString`].(func(interface{}) string)
+	assert.Equal(`three`, longestString([]string{`one`, `two`, `three`, `four`, `five`}))
+	assert.Equal(`four`, longestString([]string{`one`, `two`, `four`, `five`}))
+	assert.Equal(`five`, longestString([]string{`one`, `two`, `five`}))
+	assert.Equal(`one`, longestString([]string{`one`, `two`}))
 }
 
 func TestCollectionFunctionsCodecs(t *testing.T) {

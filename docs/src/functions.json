@@ -907,6 +907,26 @@
             "Return": "hello."
           }
         ]
+      },
+      {
+        "Name": "longestString",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the string in the given array that is longest.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "array",
+            "Type": "string",
+            "Description": "The array of strings to scan.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
       }
     ],
     "Skip": false

@@ -720,6 +720,27 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 						Return: `hello.`,
 					},
 				},
+			}, {
+				Name:    `longestString`,
+				Summary: `Return the string in the given array that is longest.`,
+				Arguments: []funcArg{
+					{
+						Name:        `array`,
+						Type:        `string`,
+						Description: `The array of strings to scan.`,
+					},
+				},
+				Function: func(in interface{}) string {
+					var largest string
+
+					for _, item := range sliceutil.Stringify(in) {
+						if len(item) > len(largest) {
+							largest = item
+						}
+					}
+
+					return largest
+				},
 			},
 		},
 	}
