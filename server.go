@@ -113,6 +113,8 @@ var DefaultFilterEnvVars = []string{
 	`PWD`,                   // WHO WANTS TO KNOW?
 }
 
+type ServeFunc func(*Server) error
+
 type Serveable interface {
 	ListenAndServe() error
 	ListenAndServeTLS(string, string) error
@@ -465,8 +467,10 @@ func (self *Server) RenderPath(w io.Writer, path string) error {
 	}
 }
 
-// Start a long-running webserver.
-func (self *Server) Serve() error {
+// Start a long-running webserver.  If provided, the functions provided will be run in parallel
+// after the server has started.  If any of them return a non-nil error, the server will stop and
+// this method will return that error.
+func (self *Server) Serve(workers ...ServeFunc) error {
 	var serveable Serveable
 	var useTLS bool
 	var useUDP bool
@@ -601,11 +605,29 @@ func (self *Server) Serve() error {
 			return fmt.Errorf("bad socket: %v", err)
 		}
 	} else {
-		if useTLS {
-			return serveable.ListenAndServeTLS(self.TLS.CertFile, self.TLS.KeyFile)
-		} else {
-			return serveable.ListenAndServe()
+		var errchan = make(chan error)
+
+		go func() {
+			if useTLS {
+				errchan <- serveable.ListenAndServeTLS(self.TLS.CertFile, self.TLS.KeyFile)
+			} else {
+				errchan <- serveable.ListenAndServe()
+			}
+		}()
+
+		if len(workers) > 0 {
+			// add a slight delay (until the listen port is confirmed open or 1 second, whichever comes first)
+			// this is for the benefit of worker functions, so we only do it if there are any
+			netutil.WaitForOpen(`tcp`, self.Address, time.Second)
+
+			for _, worker := range workers {
+				go func(w ServeFunc) {
+					errchan <- w(self)
+				}(worker)
+			}
 		}
+
+		return <-errchan
 	}
 }
 
