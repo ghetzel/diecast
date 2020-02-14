@@ -83,19 +83,19 @@
     <img src="/diecast/src/assets/img/diecast-text-light-bg-64.png" alt="Diecast Logo"/>
 </div>
 <h2 id="introduction">Introduction</h2>
-<p>Diecast is a web server that allows you to render a directory tree of template files into HTML, CSS or anything other text-based media in real-time.  You can used Diecast to retrieve data from remote sources during the template rendering process, creating dynamic web pages built by consuming APIs and remote files without the need to use client-side Javascript/AJAX calls or an intermediate server framework.</p>
+<p>Diecast is a web server that allows you to render a directory tree of template files into HTML, CSS or anything other text-based media in real-time. You can used Diecast to retrieve data from remote sources during the template rendering process, creating dynamic web pages built by consuming APIs and remote files without the need to use client-side Javascript/AJAX calls or an intermediate server framework.</p>
 <h2 id="benefits-and-useful-features">Benefits and Useful Features</h2>
-<p>Diecast is a good choice for any web project that consumes data from a remote data source for the purpose of building web pages or other text-based file types.  Think of Diecast as an intermediary that takes raw data and transforms it, in real-time, into websites.</p>
-<p>One of the benefits to this approach is that it enforces separation between data storage and data presentation.  It is often the case that web programming frameworks try to “do it all”, they provide access to data, mediate requests, and generate HTML content.  It is easy to create close dependencies between these separate tasks, the kind that can be very hard to change or remove.</p>
-<p>Diecast, on the other hand, consumes data primarily via HTTP/RESTful API services.  This means that the service(s) responsible for providing the data can focus on doing that one thing well, while the parts of the application responsible for turning that data into something visual and interactive can focus on doing that.  If you need to change out backend languages in the future, or incorporate new data sources, you can do so without a major overhaul of the frontend components.  The HTTP protocol is language-agnostic.</p>
+<p>Diecast is a good choice for any web project that consumes data from a remote data source for the purpose of building web pages or other text-based file types. Think of Diecast as an intermediary that takes raw data and transforms it, in real-time, into websites.</p>
+<p>One of the benefits to this approach is that it enforces separation between data storage and data presentation. It is often the case that web programming frameworks try to “do it all”, they provide access to data, mediate requests, and generate HTML content. It is easy to create close dependencies between these separate tasks, the kind that can be very hard to change or remove.</p>
+<p>Diecast, on the other hand, consumes data primarily via HTTP/RESTful API services. This means that the service(s) responsible for providing the data can focus on doing that one thing well, while the parts of the application responsible for turning that data into something visual and interactive can focus on doing that. If you need to change out backend languages in the future, or incorporate new data sources, you can do so without a major overhaul of the frontend components. The HTTP protocol is language-agnostic.</p>
 <h2 id="getting-started">Getting Started</h2>
-<p>Building a site using Diecast is as easy as putting files in a folder.  When you run the <code>diecast</code> command in this folder (the <em>working directory</em>), Diecast will make the contents of the folder available as a web page (by default, at <a href="http://localhost:28419" rel="nofollow"><code>http://localhost:28419</code></a>.)  Any file ending in <code>.html</code> will be treated as a template and be processed before being returned to the user.  If no other filenames or paths are requested, Diecast will look for and attempt to serve the file <code>index.html</code>.</p>
+<p>Building a site using Diecast is as easy as putting files in a folder. When you run the <code>diecast</code> command in this folder (the <em>working directory</em>), Diecast will make the contents of the folder available as a web page (by default, at <a href="http://localhost:28419" rel="nofollow"><code>http://localhost:28419</code></a>.) Any file ending in <code>.html</code> will be treated as a template and be processed before being returned to the user. If no other filenames or paths are requested, Diecast will look for and attempt to serve the file <code>index.html</code>.</p>
 <h2 id="installation">Installation</h2>
 <p>TODO: make this section much more detailed.</p>
 <pre><code>GO111MODULE=on go get github.com/ghetzel/diecast/cmd/diecast
 </code></pre>
 <h2 id="url-structure">URL Structure</h2>
-<p>Diecast does not have a concept of URL path routing, but rather strives to enforce simple, linear hierarchies by exposing the working directory directly as routable paths.  For example, if a user visits the path <code>/users/list</code>, Diecast will look for files to serve in the following order:</p>
+<p>Diecast does not have a concept of URL path routing, but rather strives to enforce simple, linear hierarchies by exposing the working directory directly as routable paths. For example, if a user visits the path <code>/users/list</code>, Diecast will look for files to serve in the following order:</p>
 <ul>
 <li><code>./users/list/index.html</code></li>
 <li><code>./users/list.html</code></li>
@@ -105,9 +105,9 @@
 </ul>
 <p>The first matching file from the list above will be served.</p>
 <h2 id="configuration">Configuration</h2>
-<p>You can configure Diecast by creating a file called <code>diecast.yml</code> in the same folder that the <code>diecast</code> command is run in, or by specifying the path to the file with the <code>--config</code> command line option.  You can use this configuration file to control how Diecast renders templates and when, as well as set options for how files are accessed and from where.  Diecast tries to use “sane defaults” whenever possible, but you can configure Diecast in many ways to suit your needs.  For more details on these defaults and to see what goes in a <code>diecast.yml</code> file, see the <a href="https://github.com/ghetzel/diecast/blob/master/examples/diecast.sample.yml" rel="nofollow">Example Config File</a>.</p>
+<p>You can configure Diecast by creating a file called <code>diecast.yml</code> in the same folder that the <code>diecast</code> command is run in, or by specifying the path to the file with the <code>--config</code> command line option. You can use this configuration file to control how Diecast renders templates and when, as well as set options for how files are accessed and from where. Diecast tries to use “sane defaults” whenever possible, but you can configure Diecast in many ways to suit your needs. For more details on these defaults and to see what goes in a <code>diecast.yml</code> file, see the <a href="https://github.com/ghetzel/diecast/blob/master/examples/diecast.sample.yml" rel="nofollow">Example Config File</a>.</p>
 <h2 id="templating">Templating</h2>
-<p>Beyond merely acting as a simple file server, Diecast comes with a rich templating environment that you can use to build complex sites in a straightforward, easy to understand way.  Templates are just files that you tell Diecast to treat specially.  The default templating language used by Diecast is <a href="https://golang.org/pkg/text/template/" rel="nofollow">Golang’s built-in <code>text/template</code> package.</a>.  Templates files consist of the template content, and optionally a header section called <em>front matter</em>.  These headers are used to specify template-specific data such as predefined data structures, paths of other templates to include, rendering options, and the inclusion of remote data via <a href="#data-bindings" rel="nofollow">data bindings</a>.  An example template looks like this:</p>
+<p>Beyond merely acting as a simple file server, Diecast comes with a rich templating environment that you can use to build complex sites in a straightforward, easy to understand way. Templates are just files that you tell Diecast to treat specially. The default templating language used by Diecast is <a href="https://golang.org/pkg/text/template/" rel="nofollow">Golang’s built-in <code>text/template</code> package.</a>. Templates files consist of the template content, and optionally a header section called <em>front matter</em>. These headers are used to specify template-specific data such as predefined data structures, paths of other templates to include, rendering options, and the inclusion of remote data via <a href="#data-bindings" rel="nofollow">data bindings</a>. An example template looks like this:</p>
 <pre><code>---
 layout: mobile-v1
 bindings:
@@ -129,9 +129,9 @@ postprocessors:
 &lt;/html&gt;
 </code></pre>
 <h3 id="language-overview">Language Overview</h3>
-<p>Golang’s <code>text/template</code> package provides a fast templating language that is used to generate things like HTML on-the-fly.  When generating HTML, CSS, or Javascript documents, Diecast understands that it is working with these languages and performs automatic escaping of code to ensure the output is safe against many common code injection techniques.  This is especially useful when using templates to render user-defined input that may contain HTML tags or embedded Javascript.</p>
+<p>Golang’s <code>text/template</code> package provides a fast templating language that is used to generate things like HTML on-the-fly. When generating HTML, CSS, or Javascript documents, Diecast understands that it is working with these languages and performs automatic escaping of code to ensure the output is safe against many common code injection techniques. This is especially useful when using templates to render user-defined input that may contain HTML tags or embedded Javascript.</p>
 <h4 id="intro-to-text-template">Intro to <code>text/template</code></h4>
-<p>The built-in templating language will be familiar to those coming from a background in other templating languages like <a href="https://jekyllrb.com/" rel="nofollow">Jekyll</a>, <a href="http://jinja.pocoo.org/docs/2.10/" rel="nofollow">Jinja2</a>, and <a href="https://mustache.github.io/" rel="nofollow">Mustache</a>.  Below is a quick guide on how to accomplish certain common tasks when writing templates for Diecast.  For detailed information, check out the <a href="https://golang.org/pkg/text/template/#pkg-overview" rel="nofollow">Golang <code>text/template</code> Language Overview</a>.</p>
+<p>The built-in templating language will be familiar to those coming from a background in other templating languages like <a href="https://jekyllrb.com/" rel="nofollow">Jekyll</a>, <a href="http://jinja.pocoo.org/docs/2.10/" rel="nofollow">Jinja2</a>, and <a href="https://mustache.github.io/" rel="nofollow">Mustache</a>. Below is a quick guide on how to accomplish certain common tasks when writing templates for Diecast. For detailed information, check out the <a href="https://golang.org/pkg/text/template/#pkg-overview" rel="nofollow">Golang <code>text/template</code> Language Overview</a>.</p>
 <h5 id="output-text">Output Text</h5>
 <pre><code>Hello {{ $name }}! Today is {{ $date }}.
 </code></pre>
@@ -163,13 +163,13 @@ Access Denied
 There are {{ count $names }} members.
 </code></pre>
 <h3 id="layouts">Layouts</h3>
-<p>In addition to rendering individual files as standalone pages, Diecast also supports layouts.  Layouts serve as wrapper templates for the files being rendered in a directory tree.  Their primary purpose is to eliminate copying and boilerplate code.  Layouts are stored in a top-level directory called <code>_layouts</code>.  If the layout <code>_layouts/default.html</code> is present, it will automatically be used by default (e.g.: without explicitly specifying it in the Front Matter) on all pages.  The layout for any page can be specified in the <code>layout</code> Front Matter property, and the special value <code>layout: none</code> will disable layouts entirely for that page.</p>
+<p>In addition to rendering individual files as standalone pages, Diecast also supports layouts. Layouts serve as wrapper templates for the files being rendered in a directory tree. Their primary purpose is to eliminate copying and boilerplate code. Layouts are stored in a top-level directory called <code>_layouts</code>. If the layout <code>_layouts/default.html</code> is present, it will automatically be used by default (e.g.: without explicitly specifying it in the Front Matter) on all pages. The layout for any page can be specified in the <code>layout</code> Front Matter property, and the special value <code>layout: none</code> will disable layouts entirely for that page.</p>
 <h3 id="page-object">Page Object</h3>
-<p>Diecast defines a global data structure in the <code>$.page</code> variable that can be used to provide site-wide values to templates.  You can define the <code>page</code> structure in multiple places, which lets you explicitly provide data when serving templates that doesn’t come from a data binding.  The <code>page</code> structure is inherited by child templates, and all values are merged together to form a single data structure.  For example, given the following files:</p>
+<p>Diecast defines a global data structure in the <code>$.page</code> variable that can be used to provide site-wide values to templates. You can define the <code>page</code> structure in multiple places, which lets you explicitly provide data when serving templates that doesn’t come from a data binding. The <code>page</code> structure is inherited by child templates, and all values are merged together to form a single data structure. For example, given the following files:</p>
 <pre><code># diecast.yml
 header:
-    page:
-        site_title: WELCOME TO MY WEBSITE
+  page:
+    site_title: WELCOME TO MY WEBSITE
 </code></pre>
 <pre><code>---
 # _layouts/default.html
@@ -202,30 +202,30 @@ page:
 </code></pre>
 <p>The final <code>page</code> data structure would look like this immediately before processing <code>index.html</code>:</p>
 <pre><code>page:
-    site_title: WELCOME TO MY WEBSITE
-    colors:
+  site_title: WELCOME TO MY WEBSITE
+  colors:
     - red
     - green
     - blue
-    title: Home
+  title: Home
 </code></pre>
 <p>…and the rendered output for <code>index.html</code> would look like this:</p>
 <pre><code>&lt;html&gt;
-&lt;head&gt;
-    &lt;title&gt;Home :: WELCOME TO MY WEBSITE&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;h1&gt;Hello World!&lt;/h1&gt;
-    &lt;ul&gt;
-        &lt;li style=&#34;color: red&#34;&gt;red&lt;/li&gt;
-        &lt;li style=&#34;color: green&#34;&gt;green&lt;/li&gt;
-        &lt;li style=&#34;color: blue&#34;&gt;blue&lt;/li&gt;
-    &lt;/ul&gt;
-&lt;/body&gt;
+	&lt;head&gt;
+		&lt;title&gt;Home :: WELCOME TO MY WEBSITE&lt;/title&gt;
+	&lt;/head&gt;
+	&lt;body&gt;
+		&lt;h1&gt;Hello World!&lt;/h1&gt;
+		&lt;ul&gt;
+			&lt;li style=&#34;color: red&#34;&gt;red&lt;/li&gt;
+			&lt;li style=&#34;color: green&#34;&gt;green&lt;/li&gt;
+			&lt;li style=&#34;color: blue&#34;&gt;blue&lt;/li&gt;
+		&lt;/ul&gt;
+	&lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
 <h2 id="conditional-template-loading-switches">Conditional Template Loading (Switches)</h2>
-<p>Diecast templates have a feature that allows you to conditionally switch to loading different templates based on conditions you specify.  This is extremely useful for things like loading a different homepage for logged-in users vs. logged out ones.</p>
+<p>Diecast templates have a feature that allows you to conditionally switch to loading different templates based on conditions you specify. This is extremely useful for things like loading a different homepage for logged-in users vs. logged out ones.</p>
 <pre><code>switch:
     - condition: &#39;{{ not (isEmpty $.bindings.current_user) }}&#39;
       use: &#34;/logged-in-homepage.html&#34;
@@ -256,9 +256,9 @@ page:
 </tbody>
 </table>
 <h2 id="data-bindings">Data Bindings</h2>
-<p>Data Bindings (or just <em>bindings</em>) are one of the most important concepts in Diecast.  Bindings are directives you add to the Front Matter of layouts and templates that specify remote URLs to retrieve (via an HTTP client built in to <code>diecast</code>), as well as how to handle parsing the response data and what to do about errors.  This concept is extremely powerful, in that it allows you to create complex data-driven sites easily and cleanly by treating remote data from RESTful APIs and other sources as first-class citizens in the templating language.</p>
+<p>Data Bindings (or just <em>bindings</em>) are one of the most important concepts in Diecast. Bindings are directives you add to the Front Matter of layouts and templates that specify remote URLs to retrieve (via an HTTP client built in to <code>diecast</code>), as well as how to handle parsing the response data and what to do about errors. This concept is extremely powerful, in that it allows you to create complex data-driven sites easily and cleanly by treating remote data from RESTful APIs and other sources as first-class citizens in the templating language.</p>
 <h3 id="overview">Overview</h3>
-<p>Bindings are specified in the <code>bindings</code> array in the Front Matter of layouts and template files.  Here is a basic example that will perform an HTTP GET against a URL, parse the output, and store the parsed results in a variable that can be used anywhere inside the template.</p>
+<p>Bindings are specified in the <code>bindings</code> array in the Front Matter of layouts and template files. Here is a basic example that will perform an HTTP GET against a URL, parse the output, and store the parsed results in a variable that can be used anywhere inside the template.</p>
 <pre><code>---
 bindings:
 -   name:     todos
@@ -278,7 +278,7 @@ bindings:
 &lt;/ul&gt;
 </code></pre>
 <h3 id="controlling-the-request">Controlling the Request</h3>
-<p>The <code>name</code> and <code>resource</code> properties are required for a binding to run, but there are many other optional values supported that allow you to control how the request is performed, how the response if parsed (if at all), as well as what to do if an error occurs (e.g.: connection errors, timeouts, non-2xx HTTP statuses).  These properties are as follows:</p>
+<p>The <code>name</code> and <code>resource</code> properties are required for a binding to run, but there are many other optional values supported that allow you to control how the request is performed, how the response if parsed (if at all), as well as what to do if an error occurs (e.g.: connection errors, timeouts, non-2xx HTTP statuses). These properties are as follows:</p>
 <table class="table table-sm table-striped">
 <thead>
 <tr>
@@ -299,7 +299,7 @@ bindings:
 <td><code>resource</code></td>
 <td>String</td>
 <td>-</td>
-<td>The URL to retrieve.  This can be a complete URL (e.g.: “https://…”) or a relative path.  If a path is specified, the value [bindingPrefix] will be prepended to the path before making the request.</td>
+<td>The URL to retrieve. This can be a complete URL (e.g.: “https://…”) or a relative path. If a path is specified, the value [bindingPrefix] will be prepended to the path before making the request.</td>
 </tr>
 <tr>
 <td><code>body</code></td>
@@ -401,7 +401,7 @@ bindings:
 <td><code>params</code></td>
 <td>Object</td>
 <td>-</td>
-<td>An object representing the query string parameters to append to the URL in <code>resource</code>.  Keys may be any scalar value or array of scalar values.</td>
+<td>An object representing the query string parameters to append to the URL in <code>resource</code>. Keys may be any scalar value or array of scalar values.</td>
 </tr>
 <tr>
 <td><code>parser</code></td>
@@ -430,15 +430,15 @@ bindings:
 </tbody>
 </table>
 <h3 id="handling-response-codes-and-errors">Handling Response Codes and Errors</h3>
-<p>By default, the response to a binding’s HTTP request must be a <a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success" rel="nofollow">200-series HTTP status code</a>.  If it is not (e.g. returns an 404 or 500 error), Diecast will return an error page instead.  Custom error pages live in a top-level <code>_errors</code> folder.  This folder will be checked for specially-named files that are to be used for handling different error types.  These filenames will be checked, in order, in the event of a binding error:</p>
+<p>By default, the response to a binding’s HTTP request must be a <a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success" rel="nofollow">200-series HTTP status code</a>. If it is not (e.g. returns an 404 or 500 error), Diecast will return an error page instead. Custom error pages live in a top-level <code>_errors</code> folder. This folder will be checked for specially-named files that are to be used for handling different error types. These filenames will be checked, in order, in the event of a binding error:</p>
 <p><strong><code>/_errors/404.html</code></strong></p>
-<p>Uses the exact HTTP status code that was encountered.  Use this to handle specific, well-known error cases like “404 Not Found” or “500 Internal Server Error”.</p>
+<p>Uses the exact HTTP status code that was encountered. Use this to handle specific, well-known error cases like “404 Not Found” or “500 Internal Server Error”.</p>
 <p><strong><code>/_errors/4xx.html</code></strong></p>
-<p>Specifies an error page that is used for an entire range of error types.  HTTP errors are grouped by type; e.g.: status codes between 400-499 indiciate a <em>client</em> error that the user can fix, whereas 500-599 describes <em>server</em> errors the user cannot do anything about.</p>
+<p>Specifies an error page that is used for an entire range of error types. HTTP errors are grouped by type; e.g.: status codes between 400-499 indiciate a <em>client</em> error that the user can fix, whereas 500-599 describes <em>server</em> errors the user cannot do anything about.</p>
 <p><strong><code>/_errors/default.html</code></strong></p>
 <p>Specifies an error page that is used to handle <em>any</em> non-2xx HTTP status, as well as deeper problems like connection issues, SSL security violations, and DNS lookup problems.</p>
 <h3 id="conditional-evaluation">Conditional Evaluation</h3>
-<p>By default, all bindings specified in a template are evaluated in the order they appear.  It is sometimes useful to place conditions on whether a binding will evaluate.  You can specify these conditions using the <code>only_if</code> and <code>not_if</code> properties on a binding.  These properties take a string containing an inline template.  If the template in an <code>only_if</code> property returns a “truthy” value (non-empty, non-zero, or “true”), that binding will be run.  Otherwise, it will be skipped.  The inverse is true for <code>not_if</code>: if truthy, the binding is not evaluated.</p>
+<p>By default, all bindings specified in a template are evaluated in the order they appear. It is sometimes useful to place conditions on whether a binding will evaluate. You can specify these conditions using the <code>only_if</code> and <code>not_if</code> properties on a binding. These properties take a string containing an inline template. If the template in an <code>only_if</code> property returns a “truthy” value (non-empty, non-zero, or “true”), that binding will be run. Otherwise, it will be skipped. The inverse is true for <code>not_if</code>: if truthy, the binding is not evaluated.</p>
 <pre><code>---
 bindings:
 #   --------------------------------------------------------------------------------
@@ -480,56 +480,56 @@ bindings:
 ---
 </code></pre>
 <h3 id="jsonpath-expressions">JSONPath Expressions</h3>
-<p>Bindings support a flexible mechanism for transforming response data as read from the binding resource.  JSONPath is similar to XPath expressions that allow for data to be selected and filtered from objects and arrays.</p>
+<p>Bindings support a flexible mechanism for transforming response data as read from the binding resource. JSONPath is similar to XPath expressions that allow for data to be selected and filtered from objects and arrays.</p>
 <ul>
 <li><a href="https://goessner.net/articles/JsonPath/" rel="nofollow">JSONPath Overview</a></li>
 <li><a href="https://jsonpath.com/" rel="nofollow">Expression Tester</a></li>
 </ul>
 <h3 id="postprocessors">Postprocessors</h3>
-<p>Postprocessors are routines that are run after the template is rendered for a request, but before the response is returned to the client.  This allows for actions to be taken on the final output, processing it in various ways.</p>
+<p>Postprocessors are routines that are run after the template is rendered for a request, but before the response is returned to the client. This allows for actions to be taken on the final output, processing it in various ways.</p>
 <h4 id="prettify-html">Prettify HTML</h4>
-<p>The <code>prettify-html</code> postprocessor will treat the incoming document as HTML, running it through an autoformatter and autoindent routine.  This is useful for ensuring that well-formed and visually pleasing HTML is emitted from Diecast.</p>
+<p>The <code>prettify-html</code> postprocessor will treat the incoming document as HTML, running it through an autoformatter and autoindent routine. This is useful for ensuring that well-formed and visually pleasing HTML is emitted from Diecast.</p>
 <h4 id="trim-empty-lines">Trim Empty Lines</h4>
-<p>The <code>trim-empty-lines</code> postprocessor removes all lines from the final document that are zero-length or only contain whitespace.  This is especially useful when producing responses encoded as Tab-Separated Values (TSV) or Comma-Separated Values (CSV).</p>
+<p>The <code>trim-empty-lines</code> postprocessor removes all lines from the final document that are zero-length or only contain whitespace. This is especially useful when producing responses encoded as Tab-Separated Values (TSV) or Comma-Separated Values (CSV).</p>
 <h3 id="renderers">Renderers</h3>
-<p>Diecast supports various methods of converting the output of the rendered templates and layouts into a finished product that can be delivered to the client.  Renderers receive the rendered template as input and are responsible for writing <em>something</em> to the client.</p>
+<p>Diecast supports various methods of converting the output of the rendered templates and layouts into a finished product that can be delivered to the client. Renderers receive the rendered template as input and are responsible for writing <em>something</em> to the client.</p>
 <h4 id="html">HTML</h4>
-<p>The HTML renderer ensures that external template content, that is, template data sourced from a variable or function, is escaped properly within the context of the type of file being processed (HTML, CSS, or Javascript.)  This makes user-defined content safe to use in Diecast because it will always be sanitized before being returned to the client.  The <code>html</code> renderer is the default renderer if no other renderer is specified.</p>
+<p>The HTML renderer ensures that external template content, that is, template data sourced from a variable or function, is escaped properly within the context of the type of file being processed (HTML, CSS, or Javascript.) This makes user-defined content safe to use in Diecast because it will always be sanitized before being returned to the client. The <code>html</code> renderer is the default renderer if no other renderer is specified.</p>
 <h4 id="pdf">PDF</h4>
 <p>The <code>pdf</code> renderer is used in tandem with the HTML renderer to convert the HTML page into a PDF document that is then returned to the client.</p>
 <h4 id="sass">Sass</h4>
-<p>The <code>sass</code> renderer takes file or template output and compiles it on the fly using the <code>libsass</code> library.  This is the default renderer for files matching the pattern <code>*.scss</code>.</p>
+<p>The <code>sass</code> renderer takes file or template output and compiles it on the fly using the <code>libsass</code> library. This is the default renderer for files matching the pattern <code>*.scss</code>.</p>
 <h4 id="image-png-jpg-gif">[ Image / PNG / JPG / GIF ]</h4>
 <h3 id="mounts">Mounts</h3>
-<p>Another useful feature of Diecast is its ability to expose multiple, overlapping file trees in one logical namespace.  These alternative file trees (called <em>mounts</em>) can be located locally or remotely, and through careful configuration of the scope and order of mounts, fairly complex serving configurations can be achieved.</p>
-<p>For example, lets take a GET request to the path <code>/assets/js/my-lib.js</code>.  By default, Diecast will look for this path relative to the working directory, and if the file is not found, will return an error.  However, a mount can be configured to handle this path (or its parent folder(s)), serving the file from another directory outside of the working directory, or from another server entirely.</p>
-<p>Mounts can also be stacked, in which the URL path they handle refers to multiple possible locations.  When multiple mounts are eligible to handle a request, the requested file is passed to each mount in the order they are defined.  The first mount to successfully handle the file will do so.  This setup can be used to present multiple directories as a single logical one, as well as providing useful fallbacks and proxying capabilities granular to the individual file level.</p>
+<p>Another useful feature of Diecast is its ability to expose multiple, overlapping file trees in one logical namespace. These alternative file trees (called <em>mounts</em>) can be located locally or remotely, and through careful configuration of the scope and order of mounts, fairly complex serving configurations can be achieved.</p>
+<p>For example, lets take a GET request to the path <code>/assets/js/my-lib.js</code>. By default, Diecast will look for this path relative to the working directory, and if the file is not found, will return an error. However, a mount can be configured to handle this path (or its parent folder(s)), serving the file from another directory outside of the working directory, or from another server entirely.</p>
+<p>Mounts can also be stacked, in which the URL path they handle refers to multiple possible locations. When multiple mounts are eligible to handle a request, the requested file is passed to each mount in the order they are defined. The first mount to successfully handle the file will do so. This setup can be used to present multiple directories as a single logical one, as well as providing useful fallbacks and proxying capabilities granular to the individual file level.</p>
 <h4 id="file">File</h4>
-<p>The file mount type is used for mount sources that do not begin with a URL scheme.  This means paths like <code>/usr/share/www/</code> or <code>./some/other/path</code>.  Consider the following mount configuration:</p>
+<p>The file mount type is used for mount sources that do not begin with a URL scheme. This means paths like <code>/usr/share/www/</code> or <code>./some/other/path</code>. Consider the following mount configuration:</p>
 <pre><code>mounts:
--   mount: /usr/share/www/
-    to:    /assets/
+  - mount: /usr/share/www/
+    to: /assets/
 </code></pre>
-<p>A request for the file <code>/assets/js/my-lib.js</code> would first attempt to find that file at the path <code>/usr/share/www/js/my-lib.js</code>.  Note that the <code>/assets/</code> part of the URL path was substituted for the value of the <code>mount</code> key.</p>
+<p>A request for the file <code>/assets/js/my-lib.js</code> would first attempt to find that file at the path <code>/usr/share/www/js/my-lib.js</code>. Note that the <code>/assets/</code> part of the URL path was substituted for the value of the <code>mount</code> key.</p>
 <h4 id="http">HTTP</h4>
-<p>The HTTP (aka <em>proxy</em>) mount type is used for sources starting with <code>http://</code> or <code>https://</code>.  In this configuration, the behavior matches that of the File type, except the content is sourced by making an HTTP request to a URL.  Consider the following mount configuration:</p>
+<p>The HTTP (aka <em>proxy</em>) mount type is used for sources starting with <code>http://</code> or <code>https://</code>. In this configuration, the behavior matches that of the File type, except the content is sourced by making an HTTP request to a URL. Consider the following mount configuration:</p>
 <pre><code>mounts:
--   mount: https://assets.example.com/
-    to:    /assets/
+  - mount: https://assets.example.com/
+    to: /assets/
 </code></pre>
-<p>A request for the file <code>/assets/js/my-lib.js</code> here would result in an HTTP GET request to <code>https://assets.example.com/assets/js/my-lib.js</code>.  If the response is a 2xx-series status code, the response body will be sent to the client as if the file resided on the server itself.  Note that in this case, the entire original URL path is sent along to the remote server.</p>
-<p>This is useful because it allows Diecast to act as a proxy server, while still layering on features like additional mounts and authenticators.  This means Diecast can be configured to proxy a website, but intercept and substitute requests for specific files on a case-by-case basis.  For example:</p>
+<p>A request for the file <code>/assets/js/my-lib.js</code> here would result in an HTTP GET request to <code>https://assets.example.com/assets/js/my-lib.js</code>. If the response is a 2xx-series status code, the response body will be sent to the client as if the file resided on the server itself. Note that in this case, the entire original URL path is sent along to the remote server.</p>
+<p>This is useful because it allows Diecast to act as a proxy server, while still layering on features like additional mounts and authenticators. This means Diecast can be configured to proxy a website, but intercept and substitute requests for specific files on a case-by-case basis. For example:</p>
 <pre><code>mounts:
--   mount: /usr/share/custom-google-logos/
-    to:    /logos/
--   mount: https://google.com
-    to:    /
+  - mount: /usr/share/custom-google-logos/
+    to: /logos/
+  - mount: https://google.com
+    to: /
 </code></pre>
-<p>In this configuration, a request to <code>http://localhost:28419/</code> will load Google’s homepage, but when the browser attempts to load the logo (typically located at <code>/logos/...</code>), <em>that</em> request will be routed to the local <code>/usr/share/custom-google-logos/</code> directory.  So if the logo for that day is at <code>/logos/doodles/2018/something.png</code>, and the file <code>/usr/share/custom-google-logos/doodles/2018/something.png</code> exists, that file will be served in lieu of the version on Google’s servers.</p>
+<p>In this configuration, a request to <code>http://localhost:28419/</code> will load Google’s homepage, but when the browser attempts to load the logo (typically located at <code>/logos/...</code>), <em>that</em> request will be routed to the local <code>/usr/share/custom-google-logos/</code> directory. So if the logo for that day is at <code>/logos/doodles/2018/something.png</code>, and the file <code>/usr/share/custom-google-logos/doodles/2018/something.png</code> exists, that file will be served in lieu of the version on Google’s servers.</p>
 <h2 id="authenticators">Authenticators</h2>
-<p>Diecast exposes the capability to add authentication and authorization to your applications through the use of configurable <em>authenticators</em>.  These are added to the <code>diecast.yml</code> configuration file, and provide a very flexible mechanism for protecting parts or all of the application using a variety of backends for verifying users and user access.</p>
+<p>Diecast exposes the capability to add authentication and authorization to your applications through the use of configurable <em>authenticators</em>. These are added to the <code>diecast.yml</code> configuration file, and provide a very flexible mechanism for protecting parts or all of the application using a variety of backends for verifying users and user access.</p>
 <h3 id="example-basic-http-authentication-for-the-whole-site">Example: Basic HTTP Authentication for the Whole Site</h3>
-<p>Here is a configuration example that shows how to prompt a client for a username and password when accessing any part of the current site.  The permitted users are stored in a standard <a href="http://www.htaccess-guide.com/" rel="nofollow">Apache <code>.htaccess</code> file</a>, which is consulted every time a requested path matches.  If specific path patterns aren’t included or excluded, all paths will be protected.</p>
+<p>Here is a configuration example that shows how to prompt a client for a username and password when accessing any part of the current site. The permitted users are stored in a standard <a href="http://www.htaccess-guide.com/" rel="nofollow">Apache <code>.htaccess</code> file</a>, which is consulted every time a requested path matches. If specific path patterns aren’t included or excluded, all paths will be protected.</p>
 <pre><code>authenticators:
 -   type: basic
     options:
@@ -579,7 +579,7 @@ bindings:
 </tbody>
 </table>
 <h3 id="type-oauth2"><code>type: &#34;oauth2&#34;</code></h3>
-<p>Allows for third-party authentication providers (Google, Facebook, GitHub, etc.) to be used for authenticating a user session.  This authenticator requires the <code>callback</code> configuration option, which specifies a complete URL that the third-party will send users to upon successful login using their service.</p>
+<p>Allows for third-party authentication providers (Google, Facebook, GitHub, etc.) to be used for authenticating a user session. This authenticator requires the <code>callback</code> configuration option, which specifies a complete URL that the third-party will send users to upon successful login using their service.</p>
 <h4 id="supported-options-1">Supported Options</h4>
 <table class="table table-sm table-striped">
 <thead>
@@ -591,7 +591,7 @@ bindings:
 <tbody>
 <tr>
 <td><code>provider</code></td>
-<td>The name of a built-in OAuth2 provider, or “custom”.  Built-in providers include: <code>amazon</code>, <code>facebook</code>, <code>github</code>, <code>gitlab</code>, <code>google</code>, <code>microsoft-live</code>, <code>slack</code>, <code>spotify</code>.</td>
+<td>The name of a built-in OAuth2 provider, or “custom”. Built-in providers include: <code>amazon</code>, <code>facebook</code>, <code>github</code>, <code>gitlab</code>, <code>google</code>, <code>microsoft-live</code>, <code>slack</code>, <code>spotify</code>.</td>
 </tr>
 <tr>
 <td><code>client_id</code></td>
@@ -624,18 +624,18 @@ bindings:
 </tbody>
 </table>
 <h2 id="actions">Actions</h2>
-<p>In addition to serving file and processing templates, Diecast also includes support for performing basic server-side actions.  These actions are exposed and triggered by a RESTful web API that is implemented in the <code>diecast.yml</code> configuration file.  The data made available through these custom API endpoints is gathered by executing shell commands server-side, and as such comes with certain innate risks that need to be addressed in order to maintain a secure application environment.</p>
+<p>In addition to serving file and processing templates, Diecast also includes support for performing basic server-side actions. These actions are exposed and triggered by a RESTful web API that is implemented in the <code>diecast.yml</code> configuration file. The data made available through these custom API endpoints is gathered by executing shell commands server-side, and as such comes with certain innate risks that need to be addressed in order to maintain a secure application environment.</p>
 <h3 id="warning-danger-zone">WARNING: Danger Zone</h3>
-<p>Be advised that this feature can <em>very easily</em> be misused or implemented in an insecure way.  This feature is intended to provide extremely basic reactive capabilities in an otherwise constrained deployment environment.  Diecast will take some measures to sanitize user inputs before inserting them into shell commands, and will not allow the program to even start as the <code>root</code> user if actions are defined (unless the <code>DIECAST_ALLOW_ROOT_ACTIONS</code> environment variable is set to “true”).  However, none of this is a substitute for strictly controlling the scope and use of this feature.</p>
+<p>Be advised that this feature can <em>very easily</em> be misused or implemented in an insecure way. This feature is intended to provide extremely basic reactive capabilities in an otherwise constrained deployment environment. Diecast will take some measures to sanitize user inputs before inserting them into shell commands, and will not allow the program to even start as the <code>root</code> user if actions are defined (unless the <code>DIECAST_ALLOW_ROOT_ACTIONS</code> environment variable is set to “true”). However, none of this is a substitute for strictly controlling the scope and use of this feature.</p>
 <p>Some tips for making the most effective use of this feature:</p>
 <ul>
-<li><strong>Use sparingly.</strong>  The most secure code is the code that is never written.</li>
-<li><strong>Use <a href="#authenticators" rel="nofollow">Authenticators</a>.</strong>  Protect your action endpoints with some form of authentication.</li>
-<li><strong>Keep it simple.</strong>  If you find your logic getting too complex or too clever, re-evaluate your needs and approach.</li>
+<li><strong>Use sparingly.</strong> The most secure code is the code that is never written.</li>
+<li><strong>Use <a href="#authenticators" rel="nofollow">Authenticators</a>.</strong> Protect your action endpoints with some form of authentication.</li>
+<li><strong>Keep it simple.</strong> If you find your logic getting too complex or too clever, re-evaluate your needs and approach.</li>
 </ul>
 <p>Be careful out there.</p>
 <h3 id="paths-and-steps">Paths and Steps</h3>
-<p>Actions are defined under the <code>actions</code> configuration key, and are an array of definitions that specify a URL path that, when requested, will execute a sequence of steps and respond with the resulting output.  In this way, data can be retrieved, manipulated, and returned to the user.  Below is a very basic example that will return the server’s current time:</p>
+<p>Actions are defined under the <code>actions</code> configuration key, and are an array of definitions that specify a URL path that, when requested, will execute a sequence of steps and respond with the resulting output. In this way, data can be retrieved, manipulated, and returned to the user. Below is a very basic example that will return the server’s current time:</p>
 <pre><code>actions:
 - path:   /api/time
   method: get
@@ -647,18 +647,23 @@ bindings:
 <p>The output a user would see if they visit <a href="http://localhost:28419/api/time" rel="nofollow">http://localhost:28419/api/time</a> would look like this:</p>
 <pre><code>[&#34;Tue Jan 02 15:04:05 MST 2006&#34;]
 </code></pre>
-<p>Steps are defined as an array of specific actions, be it executing a shell script, converting output from one format to another, or sorting and filtering data.  Steps are designed to be chained together to create composable data processing pipelines.</p>
+<p>Steps are defined as an array of specific actions, be it executing a shell script, converting output from one format to another, or sorting and filtering data. Steps are designed to be chained together to create composable data processing pipelines.</p>
 <h4 id="step-type-shell">Step Type <code>shell</code></h4>
-<p>The shell step is used to execute a server-side program and return the output.  A successful program will run, optionally using the environment variables provided to make use of request-specific details, and print the results to standard output (by default, a JSON-encoded document, but this can be controlled with the <code>parser</code> option).  The program should exit with a status of zero (0) to indicate success, and non-zero to indicate failure.  If the program exits with a non-zero status, the standard output is assumed to be a descriptive error.</p>
+<p>The shell step is used to execute a server-side program and return the output. A successful program will run, optionally using the environment variables provided to make use of request-specific details, and print the results to standard output (by default, a JSON-encoded document, but this can be controlled with the <code>parser</code> option). The program should exit with a status of zero (0) to indicate success, and non-zero to indicate failure. If the program exits with a non-zero status, the standard output is assumed to be a descriptive error.</p>
 <h5 id="shell-environment">Shell Environment</h5>
 <p>Below are the environment variables made available to the <code>shell</code> step on invocation:</p>
 <ul>
-<li><p><em>REQ_HEADER_NAME_OF_HTTP_REQUEST_HEADER</em>: Represents all HTTP headers supplied by the user, prefixed with <code>REQ_HEADER_</code>, with the header name upper-cased and all non-alphanumeric characters converted to an underscore (<code>_</code>).</p></li>
-<li><p><em>REQ_PARAM_NAME_OF_QUERY_STRING_PARAM</em>: Represents all query string parameters on the request URL, also upper-cased and underscore-separated.</p></li>
-<li><p><em>REQ_PARAM_NAME_OF_URL_PARAMETER</em>: Represents positional parameters in the URL, specified in the <code>path</code> configuration in the action.  For example, if <code>path: &#39;/api/actions/:action-name&#39;</code>, then the script will be called with the environment variable <code>REQ_PARAM_ACTION_NAME</code>.  If both a URL parameter and query string parameter have the same name, the URL parameter will overwrite the query string parameter.</p></li>
+<li><p><code>REQ_HEADER_*</code>: Represents all HTTP headers supplied by the user, prefixed with <code>REQ_HEADER_</code>, with the header name upper-cased and all non-alphanumeric characters converted to an underscore (<code>_</code>).</p></li>
+<li><p><code>REQ_PARAM_*</code>: Represents all query string parameters on the request URL, also upper-cased and underscore-separated.</p>
+<ul>
+<li>Example: <code>/api/test?is_enabled=true&amp;hello=there</code> will yield two environment variables:</li>
+<li><code>REQ_PARAM_IS_ENABLED=true</code></li>
+<li><code>REQ_PARAM_HELLO=there</code></li>
+</ul></li>
+<li><p><code>REQ_PARAM_*</code>: Represents positional parameters in the URL, specified in the <code>path</code> configuration in the action. For example, if <code>path: &#39;/api/actions/:action-name&#39;</code>, then the script will be called with the environment variable <code>REQ_PARAM_ACTION_NAME</code>. If both a URL parameter and query string parameter have the same name, the URL parameter will overwrite the query string parameter.</p></li>
 </ul>
 <h4 id="step-type-process">Step Type <code>process</code></h4>
-<p>The process step is used to manipulate the output from a previous step in some way.  This can be used to convert script output into complex nested data structures, sort lines of text, or perform other operations on the data.</p>
+<p>The process step is used to manipulate the output from a previous step in some way. This can be used to convert script output into complex nested data structures, sort lines of text, or perform other operations on the data.</p>
 <h5 id="process-operation">Process Operation</h5>
 <p>What action to take on input data is specified in the step’s <code>data</code> option.</p>
 <table class="table table-sm table-striped">
@@ -679,7 +684,7 @@ bindings:
 </tr>
 <tr>
 <td><code>diffuse</code></td>
-<td>Takes an array of strings in the format “nested.key.name=value” and converts that into a deeply-nested map (e.g.: <code>{&#34;nested&#34;: {&#34;key&#34;: {&#34;name&#34;: &#34;value&#34;}}}</code>).  Data types for values are automatically detected.</td>
+<td>Takes an array of strings in the format “nested.key.name=value” and converts that into a deeply-nested map (e.g.: <code>{&#34;nested&#34;: {&#34;key&#34;: {&#34;name&#34;: &#34;value&#34;}}}</code>). Data types for values are automatically detected.</td>
 </tr>
 </tbody>
 </table>
