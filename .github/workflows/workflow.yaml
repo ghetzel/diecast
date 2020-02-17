@@ -2,13 +2,14 @@
 on: push
 name: Test
 jobs:
-  checks:
+  run:
+    container:
+      image: ghetzel/makebox:go1.13.7
+
     name: run
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+      - uses: actions/checkout@master
 
-    - name: run
-      uses: cedrickring/golang-action@1.4.1
-      with:
-        args: make test
+      - name: Test
+        run: make test
