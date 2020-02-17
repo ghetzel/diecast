@@ -101,7 +101,7 @@ func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 					}
 				}
 			} else if typeutil.IsMap(data) {
-				return maputil.Join(item, kvjoin, sep), nil
+				return maputil.Join(maputil.M(data).MapNative(), kvjoin, sep), nil
 			}
 
 			return strings.Join(lines, sep), nil
