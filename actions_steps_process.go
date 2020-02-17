@@ -92,7 +92,7 @@ func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 			var lines []string
 
 			if typeutil.IsArray(data) {
-				for i, item := range sliceutil.Sliceify(data) {
+				for _, item := range sliceutil.Sliceify(data) {
 					if typeutil.IsMap(item) {
 						l := maputil.Join(item, kvjoin, sep)
 						lines = append(lines, strings.Split(l, sep)...)
