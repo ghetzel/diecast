@@ -86,6 +86,25 @@ func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 			} else {
 				return nil, err
 			}
+		case `join`:
+			var sep = operation.String(`separator`, "\n")
+			var kvjoin = operation.String(`joiner`, "=")
+			var lines []string
+
+			if typeutil.IsArray(data) {
+				for i, item := range sliceutil.Sliceify(data) {
+					if typeutil.IsMap(item) {
+						l := maputil.Join(item, kvjoin, sep)
+						lines = append(lines, strings.Split(l, sep)...)
+					} else if typeutil.IsScalar(item) {
+						lines = append(lines, typeutil.String(item))
+					}
+				}
+			} else if typeutil.IsMap(data) {
+				return maputil.Join(item, kvjoin, sep), nil
+			}
+
+			return strings.Join(lines, sep), nil
 		default:
 			return nil, fmt.Errorf("Unrecognized process operation %q", otype)
 		}
