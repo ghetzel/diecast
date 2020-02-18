@@ -1796,18 +1796,23 @@ func (self *Server) rp() string {
 }
 
 func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader) map[string]interface{} {
-	rv := make(map[string]interface{})
-	request := make(map[string]interface{})
-	qs := make(map[string]interface{})
-	hdr := make(map[string]interface{})
-	qj := DefaultQueryJoiner
-	hj := DefaultHeaderJoiner
+	var rv = make(map[string]interface{})
+	var request = RequestInfo{
+		Headers: make(map[string]interface{}),
+		URL: RequestUrlInfo{
+			Query:  make(map[string]interface{}),
+			Params: make(map[string]interface{}),
+		},
+	}
+
+	var qj = DefaultQueryJoiner
+	var hj = DefaultHeaderJoiner
 
 	// query strings
 	// ------------------------------------------------------------------------
 	if header != nil {
 		for dK, dV := range header.Defaults {
-			qs[dK] = stringutil.Autotype(dV)
+			request.URL.Query[dK] = stringutil.Autotype(dV)
 		}
 
 		if header.QueryJoiner != `` {
@@ -1821,7 +1826,7 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 
 	for k, v := range req.URL.Query() {
 		if vv := strings.Join(v, qj); !typeutil.IsZero(vv) {
-			qs[k] = stringutil.Autotype(vv)
+			request.URL.Query[k] = stringutil.Autotype(vv)
 		}
 	}
 
@@ -1830,110 +1835,99 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 	if header != nil {
 		for dK, dV := range header.DefaultHeaders {
 			dK = stringutil.Underscore(strings.ToLower(dK))
-			hdr[dK] = stringutil.Autotype(dV)
+			request.Headers[dK] = stringutil.Autotype(dV)
 		}
 	}
 
 	for k, v := range req.Header {
 		if vv := strings.Join(v, hj); !typeutil.IsZero(vv) {
 			k = stringutil.Underscore(strings.ToLower(k))
-			hdr[k] = stringutil.Autotype(vv)
+			request.Headers[k] = stringutil.Autotype(vv)
 		}
 	}
 
-	request[`id`] = reqid(req)
-	request[`timestamp`] = time.Now().UnixNano()
-	request[`method`] = req.Method
-	request[`protocol`] = req.Proto
-	request[`headers`] = hdr
-	request[`length`] = req.ContentLength
+	request.ID = reqid(req)
+	request.Timestamp = time.Now().UnixNano()
+	request.Method = req.Method
+	request.Protocol = req.Proto
+	request.ContentLength = req.ContentLength
 
 	if te := req.TransferEncoding; te == nil {
-		request[`encoding`] = []string{`identity`}
+		request.TransferEncoding = []string{`identity`}
 	} else {
-		request[`encoding`] = te
+		request.TransferEncoding = te
 	}
 
-	addr, port := stringutil.SplitPairRight(req.RemoteAddr, `:`)
+	addr, port, _ := net.SplitHostPort(req.RemoteAddr)
 
-	request[`remote_ip`] = addr
-	request[`remote_port`] = int(typeutil.Int(port))
-	request[`remote_address`] = req.RemoteAddr
+	request.RemoteIP = addr
+	request.RemotePort = int(typeutil.Int(port))
+	request.RemoteAddr = req.RemoteAddr
 
-	host, port := stringutil.SplitPair(sliceutil.OrString(req.URL.Host, req.Host), `:`)
+	host, port, _ := net.SplitHostPort(sliceutil.OrString(req.URL.Host, req.Host))
 
-	request[`host`] = host
+	request.Host = host
 
-	url, _ := maputil.Compact(map[string]interface{}{
-		`unmodified`: req.RequestURI,
-		`string`:     req.URL.String(),
-		`scheme`:     req.URL.Scheme,
-		`host`:       host,
-		`port`:       typeutil.Int(port),
-		`path`:       req.URL.Path,
-		`fragment`:   req.URL.Fragment,
-		`query`:      qs,
-	})
+	request.URL.Unmodified = req.RequestURI
+	request.URL.String = req.URL.String()
+	request.URL.Scheme = req.URL.Scheme
+	request.URL.Host = host
+	request.URL.Port = int(typeutil.Int(port))
+	request.URL.Path = req.URL.Path
+	request.URL.Fragment = req.URL.Fragment
 
 	if header != nil {
-		url[`params`] = header.UrlParams
-	} else {
-		url[`params`] = make(map[string]interface{})
+		request.URL.Params = header.UrlParams
 	}
 
-	ssl := make(map[string]interface{})
-
 	if state := req.TLS; state != nil {
-		sslclients := make([]map[string]interface{}, 0)
+		request.TLS = new(RequestTlsInfo)
+
+		sslclients := make([]RequestTlsCertInfo, 0)
 
 		for _, pcrt := range state.PeerCertificates {
-			sslclients = append(sslclients, map[string]interface{}{
-				`issuer`:           pkixNameToMap(pcrt.Issuer),
-				`subject`:          pkixNameToMap(pcrt.Subject),
-				`not_before`:       pcrt.NotBefore,
-				`not_after`:        pcrt.NotAfter,
-				`seconds_left`:     -1 * time.Since(pcrt.NotAfter).Round(time.Second).Seconds(),
-				`ocsp_server`:      pcrt.OCSPServer,
-				`issuing_cert_url`: pcrt.IssuingCertificateURL,
-				`version`:          pcrt.Version,
-				`serialnumber`:     pcrt.SerialNumber.String(),
-				`san`: map[string]interface{}{
-					`dns`:   pcrt.DNSNames,
-					`email`: pcrt.EmailAddresses,
-					`ip`:    pcrt.IPAddresses,
-					`uri`:   pcrt.URIs,
+			sslclients = append(sslclients, RequestTlsCertInfo{
+				Issuer:         pkixNameToMap(pcrt.Issuer),
+				Subject:        pkixNameToMap(pcrt.Subject),
+				NotBefore:      pcrt.NotBefore,
+				NotAfter:       pcrt.NotAfter,
+				SecondsLeft:    int(-1 * time.Since(pcrt.NotAfter).Round(time.Second).Seconds()),
+				OcspServer:     pcrt.OCSPServer,
+				IssuingCertUrl: pcrt.IssuingCertificateURL,
+				Version:        pcrt.Version,
+				SerialNumber:   pcrt.SerialNumber.String(),
+				SubjectAlternativeName: &RequestTlsCertSan{
+					DNSNames:       pcrt.DNSNames,
+					EmailAddresses: pcrt.EmailAddresses,
+					IPAddresses:    sliceutil.Stringify(pcrt.IPAddresses),
+					URIs:           sliceutil.Stringify(pcrt.URIs),
 				},
 			})
 		}
 
-		ssl = map[string]interface{}{
-			`version`:                       tlstext.Version(state.Version),
-			`handshake_complete`:            state.HandshakeComplete,
-			`did_resume`:                    state.DidResume,
-			`cipher_suite`:                  tlstext.CipherSuite(state.CipherSuite),
-			`negotiated_protocol`:           state.NegotiatedProtocol,
-			`negotiated_protocol_is_mutual`: state.NegotiatedProtocolIsMutual,
-			`server_name`:                   state.ServerName,
-			`tls_unique`:                    state.TLSUnique,
-			`client_chain`:                  nil,
-			`client`:                        nil,
-		}
+		request.TLS.Version = tlstext.Version(state.Version)
+		request.TLS.HandshakeComplete = state.HandshakeComplete
+		request.TLS.DidResume = state.DidResume
+		request.TLS.CipherSuite = tlstext.CipherSuite(state.CipherSuite)
+		request.TLS.NegotiatedProtocol = state.NegotiatedProtocol
+		request.TLS.NegotiatedProtocolIsMutual = state.NegotiatedProtocolIsMutual
+		request.TLS.ServerName = state.ServerName
+		request.TLS.TlsUnique = state.TLSUnique
 
 		if len(sslclients) > 0 {
-			ssl[`client_chain`] = sslclients[1:]
-			ssl[`client`] = sslclients[0]
+			request.TLS.Client = sslclients[0]
+			request.TLS.ClientChain = sslclients[1:]
 		}
 
-		url[`scheme`] = `https`
-	} else {
-		url[`scheme`] = `http`
+		if request.URL.Scheme == `` {
+			request.URL.Scheme = `https`
+		}
+	} else if request.URL.Scheme == `` {
+		request.URL.Scheme = `http`
 	}
 
-	request[`url`] = url
-	request[`tls`] = ssl
-	request[`csrftoken`] = csrftoken(req)
-
-	rv[`request`] = request
+	request.CSRFToken = csrftoken(req)
+	rv[`request`] = maputil.M(request).MapNative(`json`)
 
 	// environment variables
 	env := make(map[string]interface{})
@@ -2180,20 +2174,38 @@ func i18nTagBase(tag language.Tag) string {
 	}
 }
 
-func pkixNameToMap(name pkix.Name) map[string]interface{} {
-	out, _ := maputil.Compact(map[string]interface{}{
-		`country`:      name.Country,
-		`organization`: strings.Join(name.Organization, `,`),
-		`orgunit`:      strings.Join(name.OrganizationalUnit, `,`),
-		`locality`:     strings.Join(name.Locality, `,`),
-		`state`:        strings.Join(name.Province, `,`),
-		`street`:       strings.Join(name.StreetAddress, `,`),
-		`postalcode`:   strings.Join(name.PostalCode, `,`),
-		`serialnumber`: name.SerialNumber,
-		`common`:       name.CommonName,
-	})
+func pkixNameToMap(name pkix.Name) (certname RequestTlsCertName) {
+	if len(name.Country) > 0 {
+		certname.Country = strings.Join(name.Country, `,`)
+	}
 
-	return out
+	if len(name.Organization) > 0 {
+		certname.Organization = strings.Join(name.Organization, `,`)
+	}
+
+	if len(name.OrganizationalUnit) > 0 {
+		certname.OrganizationalUnit = strings.Join(name.OrganizationalUnit, `,`)
+	}
+
+	if len(name.Locality) > 0 {
+		certname.Locality = strings.Join(name.Locality, `,`)
+	}
+
+	if len(name.Province) > 0 {
+		certname.State = strings.Join(name.Province, `,`)
+	}
+
+	if len(name.StreetAddress) > 0 {
+		certname.StreetAddress = strings.Join(name.StreetAddress, `,`)
+	}
+
+	if len(name.PostalCode) > 0 {
+		certname.PostalCode = strings.Join(name.PostalCode, `,`)
+	}
+
+	certname.SerialNumber = name.SerialNumber
+	certname.CommonName = name.CommonName
+	return
 }
 
 func envKeyNorm(in string) string {
