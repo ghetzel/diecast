@@ -1299,6 +1299,7 @@ func (self *Server) ToTemplateName(requestPath string) string {
 // gets a FuncMap and data usable in templates and error pages alike, before bindings are evaluated.
 func (self *Server) getPreBindingData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}) {
 	data := self.requestToEvalData(req, header)
+	funcs := self.GetTemplateFunctions(data, header)
 
 	data[`vars`] = make(map[string]interface{})
 
@@ -1321,9 +1322,12 @@ func (self *Server) getPreBindingData(req *http.Request, header *TemplateHeader)
 		`mounts`:            publicMountDetails,
 	}
 
-	// these are the functions that will be available to every part of the rendering process
-	funcs := self.GetTemplateFunctions(data, header)
+	data[`page`] = self.evalPageData(false, req, header, funcs, data)
 
+	return funcs, data
+}
+
+func (self *Server) evalPageData(final bool, req *http.Request, header *TemplateHeader, funcs FuncMap, data map[string]interface{}) map[string]interface{} {
 	// Evaluate "page" data: this data is templatized, but does not have access
 	//                       to the output of bindings
 	// ---------------------------------------------------------------------------------------------
@@ -1337,6 +1341,11 @@ func (self *Server) getPreBindingData(req *http.Request, header *TemplateHeader)
 				case string:
 					value = MustEvalInline(value.(string), data, funcs)
 					value = stringutil.Autotype(value)
+
+					// not final pass + no value = leave the expression intact so that a later pass might succeed
+					if !final && value == nil {
+						return nil
+					}
 				}
 
 				maputil.DeepSet(pageData, path, value)
@@ -1355,12 +1364,10 @@ func (self *Server) getPreBindingData(req *http.Request, header *TemplateHeader)
 		// if there were override items specified (e.g.: via the command line), add them now
 		maputil.Walk(self.OverridePageObject, applyPageFn)
 
-		data[`page`] = pageData
+		return pageData
 	} else {
-		data[`page`] = make(map[string]interface{})
+		return make(map[string]interface{})
 	}
-
-	return funcs, data
 }
 
 func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}, error) {
@@ -1389,6 +1396,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		start := time.Now()
 		describeTimer(fmt.Sprintf("binding-%s", binding.Name), fmt.Sprintf("Diecast Bindings: %s", binding.Name))
 
+		// pagination data
 		if pgConfig := binding.Paginate; pgConfig != nil {
 			results := make([]map[string]interface{}, 0)
 			proceed := true
@@ -1568,6 +1576,9 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		}
 
 		reqtime(req, fmt.Sprintf("binding-%s", binding.Name), time.Since(start))
+
+		// re-evaluate page based on new binding results
+		data[`page`] = self.evalPageData(false, req, header, funcs, data)
 	}
 
 	data[`bindings`] = bindings
@@ -1588,6 +1599,9 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 
 		data[`flags`] = flags
 	}
+
+	// the final pass on page; any empty values resulting from this are final
+	data[`page`] = self.evalPageData(true, req, header, funcs, data)
 
 	return funcs, data, nil
 }
