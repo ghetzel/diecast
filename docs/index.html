@@ -1145,6 +1145,9 @@ Diecast runtime directory:</p>
     </summary>
     <ul>
         <li>
+            <a href="#fn-cookie">cookie</a>
+        </li>
+        <li>
             <a href="#fn-headers">headers</a>
         </li>
         <li>
@@ -7246,6 +7249,45 @@ Diecast runtime directory:</p>
         <p><p>These functions provide access to information contained in the original HTTP client request that led to the current template being processed.  These functions are useful for allowing user-specified data to drive how the output is generated.</p>
 </p>
     </header>
+    <section class="function" id="fn-cookie">
+        <h4 class="mt-3">
+            cookie
+            <a href="#fn-cookie" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>cookie KEY [FALLBACK]</code>
+        </div>
+        <p>Returns the value of a cookie submitted in the request.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>KEY</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name of the cookie value to retrieve.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>FALLBACK</pre></th>
+                    <td>any</td>
+                    <td>
+                        <p>The value to return of the named cookie is not present or is empty.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
     <section class="function" id="fn-headers">
         <h4 class="mt-3">
             headers
@@ -7255,9 +7297,35 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>headers</code>
+            <code>headers KEY [FALLBACK]</code>
         </div>
         <p>Returns an object containing all HTTP headers in the originating request.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>KEY</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name of the request header value to retrieve.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>FALLBACK</pre></th>
+                    <td>any</td>
+                    <td>
+                        <p>The value to return of the named request header is not present or is empty.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-i18n">
         <h4 class="mt-3">
@@ -7335,9 +7403,28 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>payload</code>
+            <code>payload [KEY]</code>
         </div>
-        <i>Undocumented</i>
+        <p>Return either the request body in its entirety, or (if a key is given), parses the body as a data structure (according to the request Content-Type) and attempts to return the value at that key.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>KEY</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The key (may be deeply.nested) to retrieve from the request body after attempting to parse it.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-qs">
         <h4 class="mt-3">
@@ -7348,9 +7435,35 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>qs</code>
+            <code>qs KEY [FALLBACK]</code>
         </div>
         <p>Returns a single querystring value from the request URL.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>KEY</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name of the query string value to retrieve.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>FALLBACK</pre></th>
+                    <td>any</td>
+                    <td>
+                        <p>The value to return of the named query string is not present or is empty.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-querystrings">
         <h4 class="mt-3">

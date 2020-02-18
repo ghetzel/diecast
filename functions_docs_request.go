@@ -8,16 +8,64 @@ func loadRuntimeFunctionsRequest(server *Server) funcGroup {
 			`to drive how the output is generated.`,
 		Functions: []funcDef{
 			{
-				Name: `payload`,
+				Name:    `payload`,
+				Summary: `Return either the request body in its entirety, or (if a key is given), parses the body as a data structure (according to the request Content-Type) and attempts to return the value at that key.`,
+				Arguments: []funcArg{
+					{
+						Name:        `key`,
+						Type:        `string`,
+						Optional:    true,
+						Description: "The key (may be deeply.nested) to retrieve from the request body after attempting to parse it.",
+					},
+				},
 			}, {
 				Name:    `querystrings`,
 				Summary: `Returns an object containing all querystrings in the request URL.`,
 			}, {
+				Name:    `cookie`,
+				Summary: `Returns the value of a cookie submitted in the request.`,
+				Arguments: []funcArg{
+					{
+						Name:        `key`,
+						Type:        `string`,
+						Description: "The name of the cookie value to retrieve.",
+					}, {
+						Name:        `fallback`,
+						Type:        `any`,
+						Optional:    true,
+						Description: `The value to return of the named cookie is not present or is empty.`,
+					},
+				},
+			}, {
 				Name:    `qs`,
 				Summary: `Returns a single querystring value from the request URL.`,
+				Arguments: []funcArg{
+					{
+						Name:        `key`,
+						Type:        `string`,
+						Description: "The name of the query string value to retrieve.",
+					}, {
+						Name:        `fallback`,
+						Type:        `any`,
+						Optional:    true,
+						Description: `The value to return of the named query string is not present or is empty.`,
+					},
+				},
 			}, {
 				Name:    `headers`,
 				Summary: `Returns an object containing all HTTP headers in the originating request.`,
+				Arguments: []funcArg{
+					{
+						Name:        `key`,
+						Type:        `string`,
+						Description: "The name of the request header value to retrieve.",
+					}, {
+						Name:        `fallback`,
+						Type:        `any`,
+						Optional:    true,
+						Description: `The value to return of the named request header is not present or is empty.`,
+					},
+				},
 			}, {
 				Name:    `param`,
 				Summary: `Returns a URL parameter from the request URL.`,

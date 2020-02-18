@@ -7323,10 +7323,20 @@
         "Name": "payload",
         "Alias": "",
         "Aliases": null,
-        "Summary": "",
+        "Summary": "Return either the request body in its entirety, or (if a key is given), parses the body as a data structure (according to the request Content-Type) and attempts to return the value at that key.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "key",
+            "Type": "string",
+            "Description": "The key (may be deeply.nested) to retrieve from the request body after attempting to parse it.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -7340,13 +7350,61 @@
         "Examples": null
       },
       {
+        "Name": "cookie",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Returns the value of a cookie submitted in the request.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "key",
+            "Type": "string",
+            "Description": "The name of the cookie value to retrieve.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "fallback",
+            "Type": "any",
+            "Description": "The value to return of the named cookie is not present or is empty.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
         "Name": "qs",
         "Alias": "",
         "Aliases": null,
         "Summary": "Returns a single querystring value from the request URL.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "key",
+            "Type": "string",
+            "Description": "The name of the query string value to retrieve.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "fallback",
+            "Type": "any",
+            "Description": "The value to return of the named query string is not present or is empty.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
@@ -7356,7 +7414,26 @@
         "Summary": "Returns an object containing all HTTP headers in the originating request.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "key",
+            "Type": "string",
+            "Description": "The name of the request header value to retrieve.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "fallback",
+            "Type": "any",
+            "Description": "The value to return of the named request header is not present or is empty.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {

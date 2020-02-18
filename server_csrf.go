@@ -34,44 +34,12 @@ var DefaultCsrfInjectMediaTypes = []string{
 	`text/html`,
 }
 
-type CookieSameSite string
-
-const (
-	SameSiteDefault CookieSameSite = ``
-	SameSiteLax                    = `lax`
-	SameSiteStrict                 = `strict`
-	SameSiteNone                   = `none`
-)
-
-func (self CookieSameSite) SameSite() http.SameSite {
-	switch self {
-	case SameSiteLax:
-		return http.SameSiteLaxMode
-	case SameSiteStrict:
-		return http.SameSiteStrictMode
-	// case SameSiteNone:
-	// 	return http.SameSiteNoneMode
-	default:
-		return http.SameSiteDefaultMode
-	}
-}
-
 type CsrfMethod string
 
 const (
 	DoubleSubmitCookie CsrfMethod = `cookie`
 	HMAC                          = `hmac`
 )
-
-type Cookie struct {
-	Name     string         `yaml:"name,omitempty"     json:"name,omitempty"`
-	Path     string         `yaml:"path,omitempty"     json:"path,omitempty"`
-	Domain   string         `yaml:"domain,omitempty"   json:"domain,omitempty"`
-	MaxAge   *int           `yaml:"maxAge,omitempty"   json:"maxAge,omitempty"`
-	Secure   *bool          `yaml:"secure,omitempty"   json:"secure,omitempty"`
-	HttpOnly *bool          `yaml:"httpOnly,omitempty" json:"httpOnly,omitempty"`
-	SameSite CookieSameSite `yaml:"sameSite,omitempty" json:"sameSite,omitempty"`
-}
 
 type CSRF struct {
 	Enable                  bool     `yaml:"enable"                  json:"enable"`                  // Whether to enable stateless CSRF protection

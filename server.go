@@ -1003,10 +1003,26 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 		return make(map[string]interface{})
 	}
 
+	// fn cookie: return a cookie value
+	funcs[`cookie`] = func(key interface{}, fallbacks ...interface{}) interface{} {
+		if len(fallbacks) == 0 {
+			fallbacks = []interface{}{``}
+		}
+
+		if cookie, ok := maputil.DeepGet(
+			data,
+			[]string{`request`, `cookies`, fmt.Sprintf("%v", key)},
+		).(Cookie); ok && !typeutil.IsZero(cookie.Value) {
+			return cookie.Value
+		} else {
+			return fallbacks[0]
+		}
+	}
+
 	// fn qs: Return the value of query string parameter *key* in the current URL, or return *fallback*.
 	funcs[`qs`] = func(key interface{}, fallbacks ...interface{}) interface{} {
 		if len(fallbacks) == 0 {
-			fallbacks = []interface{}{nil}
+			fallbacks = []interface{}{``}
 		}
 
 		return maputil.DeepGet(data, []string{`request`, `url`, `query`, fmt.Sprintf("%v", key)}, fallbacks[0])
@@ -1014,8 +1030,12 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 
 	// fn headers: Return the value of the *header* HTTP request header from the request used to
 	//             generate the current view.
-	funcs[`headers`] = func(key string) string {
-		return fmt.Sprintf("%v", maputil.DeepGet(data, []string{`request`, `headers`, key}, ``))
+	funcs[`headers`] = func(key string, fallbacks ...interface{}) string {
+		if len(fallbacks) == 0 {
+			fallbacks = []interface{}{``}
+		}
+
+		return fmt.Sprintf("%v", maputil.DeepGet(data, []string{`request`, `headers`, key}, fallbacks[0]))
 	}
 
 	// fn param: Return the value of the named or indexed URL parameter, or nil of none are present.
@@ -1799,6 +1819,7 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 	var rv = make(map[string]interface{})
 	var request = RequestInfo{
 		Headers: make(map[string]interface{}),
+		Cookies: make(map[string]Cookie),
 		URL: RequestUrlInfo{
 			Query:  make(map[string]interface{}),
 			Params: make(map[string]interface{}),
@@ -1824,13 +1845,30 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 		}
 	}
 
+	// cookie values
+	// ------------------------------------------------------------------------
+	for _, cookie := range req.Cookies() {
+		if _, ok := request.Cookies[cookie.Name]; !ok {
+			request.Cookies[cookie.Name] = Cookie{
+				Name:     cookie.Name,
+				Value:    typeutil.Auto(cookie.Value),
+				Path:     cookie.Path,
+				Domain:   cookie.Domain,
+				MaxAge:   &cookie.MaxAge,
+				Secure:   &cookie.Secure,
+				HttpOnly: &cookie.HttpOnly,
+				SameSite: MakeCookieSameSite(cookie.SameSite),
+			}
+		}
+	}
+
 	for k, v := range req.URL.Query() {
 		if vv := strings.Join(v, qj); !typeutil.IsZero(vv) {
 			request.URL.Query[k] = stringutil.Autotype(vv)
 		}
 	}
 
-	// response headers
+	// request headers
 	// ------------------------------------------------------------------------
 	if header != nil {
 		for dK, dV := range header.DefaultHeaders {

@@ -1,6 +1,55 @@
 package diecast
 
-import "time"
+import (
+	"net/http"
+	"time"
+)
+
+type Cookie struct {
+	Name     string         `yaml:"name,omitempty"     json:"name,omitempty"`
+	Value    interface{}    `yaml:"-"                  json:"value,omitempty"`
+	Path     string         `yaml:"path,omitempty"     json:"path,omitempty"`
+	Domain   string         `yaml:"domain,omitempty"   json:"domain,omitempty"`
+	MaxAge   *int           `yaml:"maxAge,omitempty"   json:"maxAge,omitempty"`
+	Secure   *bool          `yaml:"secure,omitempty"   json:"secure,omitempty"`
+	HttpOnly *bool          `yaml:"httpOnly,omitempty" json:"httpOnly,omitempty"`
+	SameSite CookieSameSite `yaml:"sameSite,omitempty" json:"sameSite,omitempty"`
+}
+
+type CookieSameSite string
+
+const (
+	SameSiteDefault CookieSameSite = ``
+	SameSiteLax                    = `lax`
+	SameSiteStrict                 = `strict`
+	SameSiteNone                   = `none`
+)
+
+func MakeCookieSameSite(sameSite http.SameSite) CookieSameSite {
+	switch sameSite {
+	case http.SameSiteDefaultMode:
+		return SameSiteDefault
+	case http.SameSiteLaxMode:
+		return SameSiteLax
+	case http.SameSiteStrictMode:
+		return SameSiteStrict
+	default:
+		return SameSiteNone
+	}
+}
+
+func (self CookieSameSite) SameSite() http.SameSite {
+	switch self {
+	case SameSiteLax:
+		return http.SameSiteLaxMode
+	case SameSiteStrict:
+		return http.SameSiteStrictMode
+	// case SameSiteNone:
+	// 	return http.SameSiteNoneMode
+	default:
+		return http.SameSiteDefaultMode
+	}
+}
 
 type RequestTlsCertName struct {
 	SerialNumber       string `json:"serialnumber"`
@@ -67,6 +116,7 @@ type RequestInfo struct {
 	ContentLength    int64                  `json:"length"`
 	TransferEncoding []string               `json:"encoding"`
 	Headers          map[string]interface{} `json:"headers"`
+	Cookies          map[string]Cookie      `json:"cookies"`
 	RemoteIP         string                 `json:"remote_ip"`
 	RemotePort       int                    `json:"remote_port"`
 	RemoteAddr       string                 `json:"remote_address"`
