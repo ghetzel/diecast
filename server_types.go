@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+type KV struct {
+	K string      `json:"key"`
+	V interface{} `json:"value"`
+}
+
 type Cookie struct {
 	Name     string         `yaml:"name,omitempty"     json:"name,omitempty"`
 	Value    interface{}    `yaml:"-"                  json:"value,omitempty"`
@@ -105,7 +110,7 @@ type RequestUrlInfo struct {
 	Path       string                 `json:"path"`
 	Fragment   string                 `json:"fragment"`
 	Query      map[string]interface{} `json:"query"`
-	Params     map[string]interface{} `json:"params"`
+	Params     []KV                   `json:"params"`
 }
 
 type RequestInfo struct {

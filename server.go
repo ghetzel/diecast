@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -732,7 +733,7 @@ func (self *Server) applyTemplate(
 	requestPath string,
 	data []byte,
 	header *TemplateHeader,
-	urlParams map[string]interface{},
+	urlParams []KV,
 	mimeType string,
 ) error {
 	fragments := make(FragmentSet, 0)
@@ -1043,11 +1044,33 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// fn param: Return the value of the named or indexed URL parameter, or nil of none are present.
-	funcs[`param`] = func(nameOrIndex interface{}) interface{} {
-		if v := maputil.DeepGet(data, []string{
-			`request`, `url`, `params`, fmt.Sprintf("%v", nameOrIndex),
-		}, nil); v != nil {
-			return stringutil.Autotype(v)
+	funcs[`param`] = func(nameOrIndex interface{}, fallbacks ...interface{}) interface{} {
+		params := sliceutil.Sliceify(maputil.DeepGet(data, []string{`request`, `url`, `params`}))
+
+		x, _ := json.MarshalIndent(params, ``, `  `)
+		log.Noticef("noot %s", string(x))
+
+		for i, item := range params {
+			kv := maputil.M(item)
+			wantKey := typeutil.String(nameOrIndex)
+			wantIndex := int(typeutil.Int(wantKey))
+
+			if sval := kv.String(`value`); sval != `` {
+				if typeutil.IsInteger(wantKey) {
+					// zero index: return all param values as an array
+					if wantIndex == 0 {
+						return maputil.Pluck(params, []string{`value`})
+					} else if i == (wantIndex - 1) {
+						return kv.Auto(`value`)
+					}
+				} else if kv.String(`key`) == wantKey {
+					return kv.Auto(`value`)
+				}
+			}
+		}
+
+		if len(fallbacks) > 0 {
+			return fallbacks[0]
 		} else {
 			return nil
 		}
@@ -1839,8 +1862,7 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 		Headers: make(map[string]interface{}),
 		Cookies: make(map[string]Cookie),
 		URL: RequestUrlInfo{
-			Query:  make(map[string]interface{}),
-			Params: make(map[string]interface{}),
+			Query: make(map[string]interface{}),
 		},
 	}
 

@@ -12,6 +12,7 @@ import (
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/sliceutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 type candidateFile struct {
@@ -24,7 +25,7 @@ type candidateFile struct {
 	RedirectTo    string
 	RedirectCode  int
 	Headers       map[string]interface{}
-	PathParams    map[string]interface{}
+	PathParams    []KV
 	ForceTemplate bool
 }
 
@@ -161,22 +162,13 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 			if serveFile != nil {
 				log.Debugf("[%s] found: %s (%v)", id, serveFile.Type, serveFile.Source)
 
-				serveFile.PathParams = make(map[string]interface{})
-
-				// TODO: better support for url parameters in filenames
-				// filename := filepath.Base(rPath)
-				// filename = strings.TrimSuffix(filename, filepath.Ext(filepath))
-				// basepath := strings.Trim(path.Base(req.URL.Path), `/`)
-
-				// for i, part := range strings.Split(filename, `__`) {
-
-				// 	urlParams[typeutil.String(i)] =
-				// 	urlParams[part] =
-				// }
-
 				if strings.Contains(serveFile.Path, `__id.`) {
-					serveFile.PathParams[`1`] = strings.Trim(path.Base(req.URL.Path), `/`)
-					serveFile.PathParams[`id`] = strings.Trim(path.Base(req.URL.Path), `/`)
+					value := strings.Trim(path.Base(req.URL.Path), `/`)
+
+					serveFile.PathParams = append(serveFile.PathParams, KV{
+						K: `id`,
+						V: typeutil.Auto(value),
+					})
 				}
 
 				if rcode := serveFile.RedirectCode; rcode > 0 {

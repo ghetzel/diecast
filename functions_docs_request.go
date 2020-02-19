@@ -68,7 +68,19 @@ func loadRuntimeFunctionsRequest(server *Server) funcGroup {
 				},
 			}, {
 				Name:    `param`,
-				Summary: `Returns a URL parameter from the request URL.`,
+				Summary: `Returns a positional parameter parsed from the request URL.`,
+				Arguments: []funcArg{
+					{
+						Name:        `keyOrIndex`,
+						Type:        `string`,
+						Description: "The name or integral position of the parameter to retrieve",
+					}, {
+						Name:        `fallback`,
+						Type:        `any`,
+						Optional:    true,
+						Description: `The value to return if the key doesn't exist or is empty.`,
+					},
+				},
 			}, {
 				Name: `read`,
 			}, {

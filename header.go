@@ -26,7 +26,7 @@ type TemplateHeader struct {
 	Layout         string                 `yaml:"layout,omitempty"          json:"layout,omitempty"`          // The name of the layout (in the _layouts folder) to apply to this template.
 	Includes       map[string]string      `yaml:"includes,omitempty"        json:"includes,omitempty"`        // An object specifying a custom name and path to other templates to include when evaluating this one.
 	Headers        map[string]interface{} `yaml:"headers,omitempty"         json:"headers,omitempty"`         // A map of HTTP Headers to include in the request
-	UrlParams      map[string]interface{} `yaml:"params,omitempty"          json:"params,omitempty"`          // A map of query string parameters to include in the request
+	UrlParams      []KV                   `yaml:"url_params,omitempty"      json:"url_params,omitempty"`      // A map of query string parameters to include in the request
 	FlagDefs       map[string]interface{} `yaml:"flags,omitempty"           json:"flags,omitempty"`           // An object containing names and expressions to add to a `$.flags` variable.
 	Postprocessors []string               `yaml:"postprocessors,omitempty"  json:"postprocessors,omitempty"`  // An array of built-in postprocessors to apply to the output before being returned to the user.
 	Renderer       string                 `yaml:"renderer,omitempty"        json:"renderer,omitempty"`        // The built-in renderer to use when generating the page.
