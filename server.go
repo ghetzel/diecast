@@ -55,6 +55,10 @@ var DefaultLocale = language.AmericanEnglish
 var DefaultLogFormat = `common`
 var DefaultProtocol = `http`
 
+func init() {
+	maputil.UnmarshalStructTag = `json`
+}
+
 var logFormats = map[string]string{
 	`common`: "${remote_address} - - [${request_started_at:%02/Jan/2006:15:04:05 -0700}] \"${method} ${url} ${protocol}\" ${status_code} ${response_length}\n",
 }
@@ -1009,11 +1013,11 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 			fallbacks = []interface{}{``}
 		}
 
-		if cookie, ok := maputil.DeepGet(
+		if v := maputil.DeepGet(
 			data,
-			[]string{`request`, `cookies`, fmt.Sprintf("%v", key)},
-		).(Cookie); ok && !typeutil.IsZero(cookie.Value) {
-			return cookie.Value
+			[]string{`request`, `cookies`, fmt.Sprintf("%v", key), `value`},
+		); !typeutil.IsZero(v) {
+			return v
 		} else {
 			return fallbacks[0]
 		}
@@ -1979,7 +1983,7 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 	}
 
 	request.CSRFToken = csrftoken(req)
-	rv[`request`] = maputil.M(request).MapNative(`json`)
+	rv[`request`] = maputil.DeepCopyStruct(request)
 
 	// environment variables
 	env := make(map[string]interface{})
