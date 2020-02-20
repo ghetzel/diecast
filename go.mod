@@ -2,6 +2,7 @@ module github.com/ghetzel/diecast
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.0
+	github.com/alecthomas/chroma v0.7.1
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/biessek/golang-ico v0.0.0-20180326222316-d348d9ea4670
 	github.com/dustin/go-humanize v0.0.0-20180713052910-9f541cc9db5d

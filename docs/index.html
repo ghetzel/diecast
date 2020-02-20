@@ -63,6 +63,7 @@
                             <a class="nav-link" href="#http-request-details">HTTP Request Details</a>
                             <a class="nav-link" href="#hashing-and-cryptography">Hashing and Cryptography</a>
                             <a class="nav-link" href="#introspection-and-reflection">Introspection and Reflection</a>
+                            <a class="nav-link" href="#language-highlighting">Language Highlighting</a>
                             <a class="nav-link" href="#math-and-statistics">Math and Statistics</a>
                             <a class="nav-link" href="#string-functions">String Functions</a>
                             <a class="nav-link" href="#time-functions">Time Functions</a>
@@ -1217,6 +1218,16 @@ Diecast runtime directory:</p>
     <ul>
         <li>
             <a href="#fn-templateKey">templateKey</a>
+        </li>
+    </ul>
+</details>
+<details>
+    <summary>
+        <a href="#language-highlighting">Language Highlighting</a>
+    </summary>
+    <ul>
+        <li>
+            <a href="#fn-highlight">highlight</a>
         </li>
     </ul>
 </details>
@@ -7390,9 +7401,35 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>param</code>
+            <code>param KEY_OR_INDEX [FALLBACK]</code>
         </div>
-        <p>Returns a URL parameter from the request URL.</p>
+        <p>Returns a positional parameter parsed from the request URL.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>KEYORINDEX</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name or integral position of the parameter to retrieve</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>FALLBACK</pre></th>
+                    <td>any</td>
+                    <td>
+                        <p>The value to return if the key doesn’t exist or is empty.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-payload">
         <h4 class="mt-3">
@@ -7861,6 +7898,52 @@ Diecast runtime directory:</p>
             <code>templateKey</code>
         </div>
         <p>Open the given file and retrieve the key from the page object defined in its header.</p>
+    </section>
+</section>
+<section class="group mt-4" id="language-highlighting">
+    <header>
+        <h3>Language Highlighting</h3>
+        <p><p>Utilities for performing syntax highlighting of source code.</p>
+</p>
+    </header>
+    <section class="function" id="fn-highlight">
+        <h4 class="mt-3">
+            highlight
+            <a href="#fn-highlight" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>highlight LANGUAGE SRC</code>
+        </div>
+        <p>Take source code in the given language and return marked up HTML that highlights language keywords and syntax.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>LANGUAGE</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name of the language expected as input.  If empty or the string “*”, a best effort will be made to detect the language.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>SRC</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The source code to highlight.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 </section>
 <section class="group mt-4" id="math-and-statistics">

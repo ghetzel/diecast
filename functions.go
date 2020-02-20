@@ -120,6 +120,9 @@ func GetFunctions(server *Server) (funcGroups, FuncMap) {
 	// Comparators
 	groups = append(groups, loadStandardFunctionsComparisons(funcs, server))
 
+	// Highlighting
+	groups = append(groups, loadStandardFunctionsLangHighlighting(funcs, server))
+
 	// Documentation for runtime functions
 	groups = append(groups, loadRuntimeFunctionsVariables(server))
 	groups = append(groups, loadRuntimeFunctionsRequest(server))

@@ -7159,6 +7159,42 @@
     "Skip": false
   },
   {
+    "Name": "Language Highlighting",
+    "Description": "Utilities for performing syntax highlighting of source code.",
+    "Functions": [
+      {
+        "Name": "highlight",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Take source code in the given language and return marked up HTML that highlights language keywords and syntax.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "language",
+            "Type": "string",
+            "Description": "The name of the language expected as input.  If empty or the string \"*\", a best effort will be made to detect the language.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "src",
+            "Type": "string",
+            "Description": "The source code to highlight.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      }
+    ],
+    "Skip": false
+  },
+  {
     "Name": "Dynamic Variables",
     "Description": "A set of functions that allow for custom data to be set, retrieved, and removed at runtime; providing greater flexibility over standard template variables. All variables created or modified using these functions are accessible under the global _$.vars_ object.  For example, a variable set with \u003ccode\u003e{{ var \"test\" 123 }}\u003c/code\u003e would be retrieved with \u003ccode\u003e{{ $.vars.test }}\u003c/code\u003e, which would contain the integer value _123_.",
     "Functions": [
@@ -7440,10 +7476,29 @@
         "Name": "param",
         "Alias": "",
         "Aliases": null,
-        "Summary": "Returns a URL parameter from the request URL.",
+        "Summary": "Returns a positional parameter parsed from the request URL.",
         "Returns": "",
         "Hidden": false,
-        "Arguments": null,
+        "Arguments": [
+          {
+            "Name": "keyOrIndex",
+            "Type": "string",
+            "Description": "The name or integral position of the parameter to retrieve",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "fallback",
+            "Type": "any",
+            "Description": "The value to return if the key doesn't exist or is empty.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
         "Examples": null
       },
       {
