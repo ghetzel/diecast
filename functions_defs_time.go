@@ -86,7 +86,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(durationString string, atI ...interface{}) (time.Time, error) {
-					at := time.Now()
+					var at = time.Now()
 
 					if len(atI) > 0 {
 						if tm, err := stringutil.ConvertToTime(atI[0]); err == nil {
@@ -128,7 +128,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(durationString string, fromTime ...time.Time) (time.Time, error) {
-					from := time.Now()
+					var from = time.Now()
 
 					if len(fromTime) > 0 {
 						from = fromTime[0]
@@ -180,7 +180,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 				},
 				Function: func(at interface{}, interval ...string) (time.Duration, error) {
 					if tm, err := stringutil.ConvertToTime(at); err == nil {
-						since := time.Since(tm)
+						var since = time.Since(tm)
 
 						if len(interval) > 0 {
 							switch strings.ToLower(interval[0]) {
@@ -293,13 +293,13 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						return ``, err
 					}
 
-					format := `timer`
+					var format = `timer`
 
 					if len(formats) > 0 {
 						format = formats[0]
 					}
 
-					basetime := time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC)
+					var basetime = time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC)
 					basetime = basetime.Add(duration)
 
 					return tmFmt(basetime, format)
@@ -359,7 +359,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(firstI interface{}, secondI interface{}, tm ...interface{}) (bool, error) {
-					now := time.Now()
+					var now = time.Now()
 
 					if len(tm) > 0 && tm[0] != nil {
 						if t, err := stringutil.ConvertToTime(tm[0]); err == nil {
@@ -401,7 +401,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 							return tm, nil
 						}
 
-						parts := strings.FieldsFunc(base, func(c rune) bool {
+						var parts = strings.FieldsFunc(base, func(c rune) bool {
 							switch c {
 							case '/':
 								return true
@@ -411,15 +411,15 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						})
 
 						for i := (len(parts) - 1); i >= 0; i-- {
-							part := parts[i]
+							var part = parts[i]
 
-							split := strings.FieldsFunc(part, func(c rune) bool {
+							var split = strings.FieldsFunc(part, func(c rune) bool {
 								return !unicode.IsLetter(c) && !unicode.IsNumber(c)
 							})
 
 							// try working backward...
 							for j := len(split); j >= 0; j-- {
-								try := strings.Join(split[0:j], `-`)
+								var try = strings.Join(split[0:j], `-`)
 
 								if tm, err := stringutil.ConvertToTime(try); err == nil {
 									return tm, nil
@@ -434,7 +434,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 
 							// ...then forward
 							for j := 0; j < len(split); j++ {
-								try := strings.Join(split[0:j], `-`)
+								var try = strings.Join(split[0:j], `-`)
 
 								if tm, err := stringutil.ConvertToTime(try); err == nil {
 									return tm, nil

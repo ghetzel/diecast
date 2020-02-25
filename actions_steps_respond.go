@@ -11,9 +11,9 @@ import (
 type RespondStep struct{}
 
 func (self *RespondStep) Perform(config *StepConfig, w http.ResponseWriter, req *http.Request, prev *StepConfig) (interface{}, error) {
-	opts := maputil.M(config.Data)
-	status := int(opts.Int(`status`))
-	data := prev.Output
+	var opts = maputil.M(config.Data)
+	var status = int(opts.Int(`status`))
+	var data = prev.Output
 
 	config.logstep("prev=%v input=%T", prev, data)
 

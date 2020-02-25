@@ -56,7 +56,7 @@ func GetRenderer(name string, server *Server) (Renderer, error) {
 
 func GetRendererForFilename(filename string, server *Server) (Renderer, bool) {
 	if server != nil && len(server.RendererMappings) > 0 {
-		ext := filepath.Ext(filename)
+		var ext = filepath.Ext(filename)
 		ext = strings.TrimPrefix(ext, `.`)
 
 		if rname, ok := server.RendererMappings[ext]; ok {

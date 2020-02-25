@@ -46,7 +46,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(value interface{}, indent ...string) (string, error) {
-					indentString := `  `
+					var indentString = `  `
 
 					if len(indent) > 0 {
 						indentString = indent[0]
@@ -126,8 +126,8 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(value interface{}, extensions ...string) (template.HTML, error) {
-					input := typeutil.String(value)
-					output := blackfriday.Run(
+					var input = typeutil.String(value)
+					var output = blackfriday.Run(
 						[]byte(input),
 						blackfriday.WithExtensions(toMarkdownExt(extensions...)),
 					)
@@ -244,7 +244,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 				},
 				Function: func(url string) (template.HTML, error) {
 					if article, err := readability.FromURL(url, 10*time.Second); err == nil {
-						buf := bytes.NewBuffer(nil)
+						var buf = bytes.NewBuffer(nil)
 
 						if err := html.Render(buf, article.Node); err == nil {
 							return template.HTML(buf.String()), nil
@@ -755,7 +755,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(input interface{}, encoding ...string) ([]byte, error) {
-					s := typeutil.String(input)
+					var s = typeutil.String(input)
 
 					if len(encoding) == 0 {
 						if strings.Contains(s, `=`) {

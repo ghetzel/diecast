@@ -20,7 +20,7 @@ type Protocol interface {
 type ProtocolConfig map[string]interface{}
 
 func (self ProtocolConfig) Get(key string, fallbacks ...interface{}) typeutil.Variant {
-	v := maputil.M(self).Get(key)
+	var v = maputil.M(self).Get(key)
 
 	if v.IsNil() {
 		if len(fallbacks) > 0 {
@@ -92,7 +92,7 @@ type ProtocolResponse struct {
 }
 
 func (self *ProtocolResponse) PeekLen() (int64, error) {
-	buf := bytes.NewBuffer(nil)
+	var buf = bytes.NewBuffer(nil)
 
 	if n, err := io.Copy(buf, self.data); err == nil {
 		self.data = ioutil.NopCloser(buf)

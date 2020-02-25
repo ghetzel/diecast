@@ -12,7 +12,7 @@ import (
 )
 
 func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
-	group := funcGroup{
+	var group = funcGroup{
 		Name:        `Math and Statistics`,
 		Description: `These functions implement basic mathematical and statistical operations on numbers.`,
 		Functions: []funcDef{
@@ -159,14 +159,14 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(max interface{}, starts ...interface{}) []int {
-					start := 0
+					var start = 0
 
 					if len(starts) > 0 {
 						start = int(typeutil.Int(starts[0]))
 					}
 
 					if v, err := stringutil.ConvertToInteger(max); err == nil {
-						seq := make([]int, v)
+						var seq = make([]int, v)
 
 						for i, _ := range seq {
 							seq[i] = start + i
@@ -189,7 +189,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 				},
 				Function: func(in interface{}, places ...int) (float64, error) {
 					if inF, err := stringutil.ConvertToFloat(in); err == nil {
-						n := 0
+						var n = 0
 
 						if len(places) > 0 {
 							n = places[0]
@@ -416,7 +416,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 			Function: stats.Sum,
 		},
 	} {
-		docName := obj.Name
+		var docName = obj.Name
 
 		switch docName {
 		case `minimum_nz`:

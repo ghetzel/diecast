@@ -122,7 +122,7 @@ func (self *Template) ParseString(input string) error {
 
 	switch self.engine {
 	case TextEngine:
-		tmpl := text.New(self.name)
+		var tmpl = text.New(self.name)
 
 		if self.funcs != nil {
 			tmpl.Funcs(text.FuncMap(self.funcs))
@@ -135,7 +135,7 @@ func (self *Template) ParseString(input string) error {
 		}
 
 	case HtmlEngine:
-		tmpl := html.New(self.name)
+		var tmpl = html.New(self.name)
 
 		if self.funcs != nil {
 			tmpl.Funcs(html.FuncMap(self.funcs))
@@ -155,11 +155,11 @@ func (self *Template) ParseString(input string) error {
 }
 
 func (self *Template) ParseFragments(fragments FragmentSet) error {
-	hasLayout := fragments.HasLayout()
+	var hasLayout = fragments.HasLayout()
 
 	switch self.engine {
 	case TextEngine:
-		tmpl := text.New(self.name)
+		var tmpl = text.New(self.name)
 
 		if self.funcs != nil {
 			tmpl.Funcs(text.FuncMap(self.funcs))
@@ -182,7 +182,7 @@ func (self *Template) ParseFragments(fragments FragmentSet) error {
 		self.tmpl = tmpl
 
 	case HtmlEngine:
-		tmpl := html.New(self.name)
+		var tmpl = html.New(self.name)
 
 		if self.funcs != nil {
 			tmpl.Funcs(html.FuncMap(self.funcs))
@@ -219,7 +219,7 @@ func (self *Template) prepareError(err error) error {
 	if err == nil {
 		return nil
 	} else {
-		msg := err.Error()
+		var msg = err.Error()
 
 		// get the filename to look like a relative path
 		if match := rxutil.Match(`^template: ([^:]+)`, msg); match != nil {
@@ -264,7 +264,7 @@ func (self *Template) renderWithRequest(req *http.Request, w io.Writer, data int
 		return fmt.Errorf("No template input provided")
 	}
 
-	output := bytes.NewBuffer(nil)
+	var output = bytes.NewBuffer(nil)
 	var err error
 
 	switch self.engine {
@@ -299,7 +299,7 @@ func (self *Template) renderWithRequest(req *http.Request, w io.Writer, data int
 	}
 
 	if err == nil {
-		outstr := output.String()
+		var outstr = output.String()
 
 		for n, postprocessor := range self.postprocessors {
 			if out, err := postprocessor(outstr, req); err == nil {
@@ -349,9 +349,9 @@ func (self *Template) prepareNode(tree *parse.Tree, node parse.Node, depth int) 
 			self.prepareNode(tree, cmd, depth+1)
 		}
 	case *parse.VariableNode:
-		varnode := node.(*parse.VariableNode)
+		var varnode = node.(*parse.VariableNode)
 		repr = node.(*parse.VariableNode).String()
-		idents := varnode.Ident
+		var idents = varnode.Ident
 
 		for i, ident := range idents {
 			log.Debugf("%v%d: %v", strings.Repeat(`  `, depth+1), i, ident)

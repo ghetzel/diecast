@@ -41,7 +41,7 @@ func (self *FileMount) OpenWithType(name string, req *http.Request, requestBody 
 		}
 	}
 
-	newPath := path.Join(strings.TrimSuffix(self.Path, `/`), strings.TrimPrefix(name, self.MountPoint))
+	var newPath = path.Join(strings.TrimSuffix(self.Path, `/`), strings.TrimPrefix(name, self.MountPoint))
 
 	var file http.File
 	var err error
@@ -57,7 +57,7 @@ func (self *FileMount) OpenWithType(name string, req *http.Request, requestBody 
 	} else if file == nil {
 		return nil, fmt.Errorf("Invalid file object for '%v'", name)
 	} else if stat, err := file.Stat(); err == nil {
-		response := NewMountResponse(stat.Name(), stat.Size(), file)
+		var response = NewMountResponse(stat.Name(), stat.Size(), file)
 
 		if mimetype, err := figureOutMimeType(newPath, file); err == nil {
 			response.ContentType = mimetype

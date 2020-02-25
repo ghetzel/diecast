@@ -8,10 +8,10 @@ import (
 )
 
 func TestCollectionFunctions(t *testing.T) {
-	assert := require.New(t)
-	fns := GetStandardFunctions(nil)
+	var assert = require.New(t)
+	var fns = GetStandardFunctions(nil)
 
-	page := fns[`page`].(func(interface{}, interface{}) int)
+	var page = fns[`page`].(func(interface{}, interface{}) int)
 
 	assert.Zero(page(0, 0))
 	assert.Zero(page(0, -25))
@@ -25,8 +25,8 @@ func TestCollectionFunctions(t *testing.T) {
 	assert.Equal(75, page(4, 25))
 	assert.Equal(100, page(5, 25))
 
-	isLastElement := fns[`isLastElement`].(func(index interface{}, array interface{}) bool)
-	arr := []string{`a`, `b`, `c`}
+	var isLastElement = fns[`isLastElement`].(func(index interface{}, array interface{}) bool)
+	var arr = []string{`a`, `b`, `c`}
 
 	assert.False(isLastElement(-1, arr), arr)
 	assert.False(isLastElement(0, arr), arr)
@@ -34,7 +34,7 @@ func TestCollectionFunctions(t *testing.T) {
 	assert.True(isLastElement(2, arr), arr)
 	assert.False(isLastElement(3, arr), arr)
 
-	longestString := fns[`longestString`].(func(interface{}) string)
+	var longestString = fns[`longestString`].(func(interface{}) string)
 	assert.Equal(`three`, longestString([]string{`one`, `two`, `three`, `four`, `five`}))
 	assert.Equal(`four`, longestString([]string{`one`, `two`, `four`, `five`}))
 	assert.Equal(`five`, longestString([]string{`one`, `two`, `five`}))
@@ -42,44 +42,44 @@ func TestCollectionFunctions(t *testing.T) {
 }
 
 func TestCollectionFunctionsCodecs(t *testing.T) {
-	assert := require.New(t)
-	fns := GetStandardFunctions(nil)
+	var assert = require.New(t)
+	var fns = GetStandardFunctions(nil)
 
-	chr2str := fns[`chr2str`].(func(codepoints interface{}) string)
+	var chr2str = fns[`chr2str`].(func(codepoints interface{}) string)
 
 	assert.Equal(`HELLO`, chr2str([]uint8{72, 69, 76, 76, 79}))
 	assert.Equal(`THERE`, chr2str([]uint8{84, 72, 69, 82, 69}))
 }
 
 func TestMiscFunctions(t *testing.T) {
-	assert := require.New(t)
-	fns := GetStandardFunctions(nil)
+	var assert = require.New(t)
+	var fns = GetStandardFunctions(nil)
 
-	fn_switch := fns[`switch`].(func(input interface{}, fallback interface{}, pairs ...interface{}) interface{})
+	var fn_switch = fns[`switch`].(func(input interface{}, fallback interface{}, pairs ...interface{}) interface{})
 
 	assert.Equal(`1`, fn_switch(`a`, `fallback`, `a`, `1`, `b`, `2`))
 	assert.Equal(`2`, fn_switch(`b`, `fallback`, `a`, `1`, `b`, `2`))
 	assert.Equal(`fallback`, fn_switch(`c`, `fallback`, `a`, `1`, `b`, `2`))
 
-	fn_random := fns[`random`].(func(bounds ...interface{}) int64)
+	var fn_random = fns[`random`].(func(bounds ...interface{}) int64)
 
 	for i := 0; i < 100000; i++ {
-		v := fn_random()
+		var v = fn_random()
 		assert.True(v >= 0 && v < math.MaxInt64)
 	}
 
 	for i := 0; i < 100000; i++ {
-		v := fn_random(42)
+		var v = fn_random(42)
 		assert.True(v >= 42 && v < math.MaxInt64)
 	}
 
 	for i := 0; i < 100000; i++ {
-		v := fn_random(42, 96)
+		var v = fn_random(42, 96)
 		assert.True(v >= 42 && v < 96)
 	}
 
 	for i := 0; i < 100000; i++ {
-		v := fn_random(-100, 101)
+		var v = fn_random(-100, 101)
 		assert.True(v >= -100 && v < 101)
 	}
 }

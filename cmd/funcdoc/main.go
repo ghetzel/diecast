@@ -43,17 +43,17 @@ func (self functionDocSet) Less(i, j int) bool {
 }
 
 func GenerateFunctionDocs(funcs diecast.FuncMap, sourcefile string) (functionDocSet, error) {
-	docs := make(functionDocSet, 0)
+	var docs = make(functionDocSet, 0)
 
 	if source, err := parser.ParseFile(token.NewFileSet(), sourcefile, nil, parser.ParseComments); err == nil {
 	NextComment:
 		for _, group := range source.Comments {
-			doc := &functionDoc{}
+			var doc = &functionDoc{}
 
 			for _, comment := range group.List {
 				if match := rxutil.Match(rxFnDocString, comment.Text); match != nil {
-					fnname := match.Group(`func`)
-					docstring := match.Group(`docstring`)
+					var fnname = match.Group(`func`)
+					var docstring = match.Group(`docstring`)
 
 					// if the comment refers to a function we know about, and the docstring
 					// portion is not empty, start building the functionDoc struct
@@ -100,12 +100,12 @@ func getFnSignature(fn interface{}, inArgNames []string) (string, string, error)
 		var args []string
 		var outs []string
 
-		fnT := reflect.TypeOf(fn)
+		var fnT = reflect.TypeOf(fn)
 
 		// figure out input arguments
 		for in := 0; in < fnT.NumIn(); in++ {
-			inT := fnT.In(in)
-			typename := inT.Name()
+			var inT = fnT.In(in)
+			var typename = inT.Name()
 
 			switch typename {
 			case `interface{}`, ``:
@@ -125,8 +125,8 @@ func getFnSignature(fn interface{}, inArgNames []string) (string, string, error)
 
 		// figure out output arguments
 		for o := 0; o < fnT.NumOut(); o++ {
-			outT := fnT.Out(o)
-			typename := outT.Name()
+			var outT = fnT.Out(o)
+			var typename = outT.Name()
 
 			switch typename {
 			case `interface{}`:
@@ -136,8 +136,8 @@ func getFnSignature(fn interface{}, inArgNames []string) (string, string, error)
 			outs = append(outs, typename)
 		}
 
-		inArgs := strings.Join(args, ` `)
-		outArgs := strings.Join(outs, ` `)
+		var inArgs = strings.Join(args, ` `)
+		var outArgs = strings.Join(outs, ` `)
 
 		return inArgs, outArgs, nil
 	} else {
@@ -188,10 +188,10 @@ func main() {
 	fmt.Printf("## Function Usage\n\n")
 
 	for _, doc := range docs {
-		returnSignature := doc.Returns
+		var returnSignature = doc.Returns
 
 		if returnSignature != `` {
-			outSig := strings.Split(returnSignature, `,`)
+			var outSig = strings.Split(returnSignature, `,`)
 
 			if outSig[len(outSig)-1] == `error` {
 				outSig = outSig[:len(outSig)-1]

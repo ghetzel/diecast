@@ -7,10 +7,10 @@ import (
 )
 
 func TestProtocolRequest(t *testing.T) {
-	assert := require.New(t)
-	fns := GetStandardFunctions(nil)
+	var assert = require.New(t)
+	var fns = GetStandardFunctions(nil)
 
-	req := &ProtocolRequest{
+	var req = &ProtocolRequest{
 		TemplateData: map[string]interface{}{
 			`a`: 123,
 		},

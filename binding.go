@@ -176,7 +176,7 @@ func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface
 }
 
 func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data map[string]interface{}, funcs FuncMap) (interface{}, error) {
-	id := reqid(req)
+	var id = reqid(req)
 	log.Debugf("[%s] Evaluating binding %q", id, self.Name)
 
 	if req.Header.Get(`X-Diecast-Binding`) == self.Name {
@@ -184,14 +184,14 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		return nil, fmt.Errorf("Loop detected")
 	}
 
-	method := strings.ToUpper(self.Method)
+	var method = strings.ToUpper(self.Method)
 
 	if method == `` {
 		method = http.MethodGet
 	}
 
 	method = strings.ToUpper(method)
-	uri := MustEvalInline(self.Resource, data, funcs)
+	var uri = MustEvalInline(self.Resource, data, funcs)
 
 	// bindings may specify that a request should be made to the currently server address by
 	// prefixing the URL path with a colon (":") or slash ("/").
@@ -262,14 +262,14 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		}); err == nil {
 			defer response.Close()
 
-			onError := BindingErrorAction(MustEvalInline(string(self.OnError), data, funcs))
+			var onError = BindingErrorAction(MustEvalInline(string(self.OnError), data, funcs))
 
 			// handle per-http-status response handlers
 			if len(self.IfStatus) > 0 && response.StatusCode > 0 {
 				var statusAction BindingErrorAction
-				nxx := typeutil.String(response.StatusCode - (response.StatusCode % 100))
+				var nxx = typeutil.String(response.StatusCode - (response.StatusCode % 100))
 				nxx = strings.Replace(nxx, `0`, `x`, -1)
-				nXX := strings.Replace(nxx, `0`, `X`, -1)
+				var nXX = strings.Replace(nxx, `0`, `X`, -1)
 
 				// get the action for this code
 				if sa, ok := self.IfStatus[typeutil.String(response.StatusCode)]; ok && sa != `` {
@@ -289,7 +289,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					case ActionIgnore:
 						onError = ActionIgnore
 					default:
-						redirect := string(statusAction)
+						var redirect = string(statusAction)
 
 						if !self.NoTemplate {
 							redirect = MustEvalInline(redirect, data, funcs)
@@ -305,7 +305,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				}
 			}
 
-			data, err := ioutil.ReadAll(response)
+			var data, err = ioutil.ReadAll(response)
 
 			if response.StatusCode >= 400 {
 				err = fmt.Errorf(string(data))
@@ -322,7 +322,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				case ActionIgnore:
 					break
 				default:
-					redirect := string(onError)
+					var redirect = string(onError)
 
 					// if a url or path was specified, redirect the parent request to it
 					if strings.HasPrefix(redirect, `http`) || strings.HasPrefix(redirect, `/`) {
@@ -432,19 +432,22 @@ func MustEvalInline(input string, data map[string]interface{}, funcs FuncMap, na
 }
 
 func EvalInline(input string, data map[string]interface{}, funcs FuncMap, names ...string) (string, error) {
-	suffix := strings.Join(names, `-`)
+	var suffix = strings.Join(names, `-`)
 
 	if suffix != `` {
 		suffix = `:` + suffix
 	}
 
-	tmpl := NewTemplate(`inline`+suffix, TextEngine)
+	var tmpl = NewTemplate(`inline`+suffix, TextEngine)
+
+	if funcs == nil {
+		funcs = GetStandardFunctions(nil)
+	}
+
 	tmpl.Funcs(funcs)
 
-	// input = stringutil.WrapIf(input, `{{`, `}}`)
-
 	if err := tmpl.ParseString(input); err == nil {
-		output := bytes.NewBuffer(nil)
+		var output = bytes.NewBuffer(nil)
 
 		if err := tmpl.Render(output, data, ``); err == nil {
 			// since this data may have been entity escaped by html/template, unescape it here

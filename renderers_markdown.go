@@ -29,7 +29,7 @@ func (self *MarkdownRenderer) Render(w http.ResponseWriter, req *http.Request, o
 	defer options.Input.Close()
 
 	if input, err := ioutil.ReadAll(options.Input); err == nil {
-		output := blackfriday.Run(
+		var output = blackfriday.Run(
 			input,
 			blackfriday.WithExtensions(blackfriday.CommonExtensions),
 		)

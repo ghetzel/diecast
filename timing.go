@@ -64,7 +64,7 @@ func writeRequestTimerHeaders(server *Server, w http.ResponseWriter, req *http.R
 		return
 	}
 
-	timings := make([]string, 0)
+	var timings = make([]string, 0)
 
 	if id := reqid(req); id != `` {
 		if v, ok := reqTimes.Load(id); ok {
@@ -72,8 +72,8 @@ func writeRequestTimerHeaders(server *Server, w http.ResponseWriter, req *http.R
 				for tk, dur := range timer.Times {
 					var timing string
 
-					outkey := stringutil.Hyphenate(tk)
-					outdur := float64(dur/time.Microsecond) / 1000.0
+					var outkey = stringutil.Hyphenate(tk)
+					var outdur = float64(dur/time.Microsecond) / 1000.0
 
 					if desc, ok := timerDescriptions.Load(tk); ok {
 						timing = fmt.Sprintf("%s;desc=%q;dur=%.2f", outkey, typeutil.String(desc), outdur)

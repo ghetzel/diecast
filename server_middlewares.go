@@ -54,7 +54,7 @@ func (self *Server) setupServer() error {
 
 // setup request (generate ID, intercept ResponseWriter to get status code, set context variables)
 func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Request) bool {
-	requestId := base58.Encode(stringutil.UUID().Bytes())
+	var requestId = base58.Encode(stringutil.UUID().Bytes())
 
 	log.Debugf("[%s] %s", requestId, strings.Repeat(`-`, 69))
 	log.Debugf("[%s] %s %s (%s)", requestId, req.Method, req.RequestURI, req.RemoteAddr)
@@ -188,14 +188,14 @@ func (self *Server) configureTls() error {
 // adds routes for things like favicon and actions.
 func (self *Server) registerInternalRoutes() error {
 	// add favicon.ico handler (if specified)
-	faviconRoute := `/` + filepath.Join(self.rp(), `favicon.ico`)
+	var faviconRoute = `/` + filepath.Join(self.rp(), `favicon.ico`)
 
 	self.mux.HandleFunc(faviconRoute, func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
 		case http.MethodGet:
 			defer req.Body.Close()
 
-			recorder := httptest.NewRecorder()
+			var recorder = httptest.NewRecorder()
 			recorder.Body = bytes.NewBuffer(nil)
 
 			// before we do anything, make sure this file wouldn't be served
@@ -228,7 +228,7 @@ func (self *Server) registerInternalRoutes() error {
 					}
 
 					if img, _, err := image.Decode(icon); err == nil {
-						buf := bytes.NewBuffer(nil)
+						var buf = bytes.NewBuffer(nil)
 
 						if err := ico.Encode(buf, img); err == nil {
 							self.faviconImageIco = buf.Bytes()
@@ -250,7 +250,7 @@ func (self *Server) registerInternalRoutes() error {
 
 	// add action handlers
 	for i, action := range self.Actions {
-		hndPath := filepath.Join(self.rp(), action.Path)
+		var hndPath = filepath.Join(self.rp(), action.Path)
 
 		if executil.IsRoot() && !executil.EnvBool(`DIECAST_ALLOW_ROOT_ACTIONS`) {
 			return fmt.Errorf("Refusing to start as root with actions specified.  Override with the environment variable DIECAST_ALLOW_ROOT_ACTIONS=true")

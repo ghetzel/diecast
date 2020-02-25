@@ -150,7 +150,7 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 				Name:    `concat`,
 				Summary: `Return the string that results in stringifying and joining all of the given arguments.`,
 				Function: func(in ...interface{}) string {
-					out := make([]string, len(in))
+					var out = make([]string, len(in))
 
 					for i, v := range in {
 						out[i] = fmt.Sprintf("%v", v)
@@ -249,7 +249,7 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 				},
 				Function: func(input interface{}, delimiter string, outerDelimiter ...string) string {
 					if typeutil.IsMap(input) {
-						od := ``
+						var od = ``
 
 						if len(outerDelimiter) > 0 {
 							od = outerDelimiter[0]
@@ -257,7 +257,7 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 
 						return maputil.Join(input, delimiter, od)
 					} else {
-						inStr := sliceutil.Stringify(input)
+						var inStr = sliceutil.Stringify(input)
 						return strings.Join(inStr, delimiter)
 					}
 				},
@@ -274,7 +274,7 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 				Name:    `camelize`,
 				Summary: `Reformat the given string by changing it into camelCase capitalization.`,
 				Function: func(s interface{}) string {
-					str := stringutil.Camelize(s)
+					var str = stringutil.Camelize(s)
 
 					for i, v := range str {
 						return string(unicode.ToLower(v)) + str[i+1:]
@@ -371,7 +371,7 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(in interface{}, cuts ...string) string {
-					cutset := ``
+					var cutset = ``
 
 					if len(cuts) > 0 {
 						cutset = strings.Join(cuts, ``)
@@ -466,8 +466,8 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 				Summary: `Takes an integer or decimal value and returns it formatted as a percentage.`,
 				Function: func(value interface{}, args ...interface{}) (string, error) {
 					if v, err := stringutil.ConvertToFloat(value); err == nil {
-						outOf := 100.0
-						format := "%.f"
+						var outOf = 100.0
+						var format = "%.f"
 
 						if len(args) > 0 {
 							if o, err := stringutil.ConvertToFloat(args[0]); err == nil {
@@ -481,7 +481,7 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 							format = fmt.Sprintf("%v", args[1])
 						}
 
-						percent := float64((float64(v) / float64(outOf)) * 100.0)
+						var percent = float64((float64(v) / float64(outOf)) * 100.0)
 
 						return fmt.Sprintf(format, percent), nil
 					} else {
@@ -602,7 +602,7 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 				Name:    `elide`,
 				Summary: `Takes an input string and ensures it is no longer than a given number of characters.`,
 				Function: func(in interface{}, charcount int) string {
-					inS := fmt.Sprintf("%v", in)
+					var inS = fmt.Sprintf("%v", in)
 
 					if len(inS) > charcount {
 						inS = inS[0:charcount]

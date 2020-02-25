@@ -42,12 +42,12 @@ type ShellStep struct{}
 func (self *ShellStep) Perform(config *StepConfig, w http.ResponseWriter, req *http.Request, prev *StepConfig) (interface{}, error) {
 	var cmd *executil.Cmd
 	var command interface{}
-	inherit := true
-	env := make(map[string]interface{})
+	var inherit = true
+	var env = make(map[string]interface{})
 
 	// parse options format
 	if typeutil.IsMap(config.Data) {
-		cfg := maputil.M(config.Data)
+		var cfg = maputil.M(config.Data)
 		command = cfg.Get(`command`).Value
 	} else {
 		command = config.Data
@@ -59,7 +59,7 @@ func (self *ShellStep) Perform(config *StepConfig, w http.ResponseWriter, req *h
 	if typeutil.IsArray(command) {
 		args = sliceutil.Stringify(command)
 	} else {
-		script := typeutil.String(command)
+		var script = typeutil.String(command)
 
 		// put multiline strings into a temp file and execute it as a standalone script
 		if strings.Contains(script, "\n") {
@@ -123,7 +123,7 @@ func (self *ShellStep) Perform(config *StepConfig, w http.ResponseWriter, req *h
 		// positional URL parameters (prefixed with REQ_PARAM_)
 		for _, k := range vestigo.ParamNames(req) {
 			k = strings.TrimPrefix(k, `:`)
-			kName := stringutil.Underscore(k)
+			var kName = stringutil.Underscore(k)
 			kName = strings.ToUpper(kName)
 			cmd.SetEnv(fmt.Sprintf("REQ_PARAM_%s", kName), vestigo.Param(req, k))
 		}

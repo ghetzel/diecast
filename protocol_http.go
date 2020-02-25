@@ -29,20 +29,20 @@ type HttpProtocol struct {
 }
 
 func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, error) {
-	id := reqid(rr.Request)
+	var id = reqid(rr.Request)
 
 	if request, err := http.NewRequest(rr.Verb, rr.URL.String(), nil); err == nil {
 		// build request querystring
 		// -------------------------------------------------------------------------------------
 
 		// eval and add query string parameters to request
-		qs := request.URL.Query()
+		var qs = request.URL.Query()
 
 		for k, v := range rr.Binding.Params {
 			var vS string
 
 			if typeutil.IsArray(v) {
-				joiner := DefaultParamJoiner
+				var joiner = DefaultParamJoiner
 
 				if j := rr.Binding.ParamJoiner; j != `` {
 					joiner = j
@@ -72,14 +72,14 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 		var body bytes.Buffer
 
 		if rr.Binding.BodyParams != nil {
-			bodyParams := make(map[string]interface{})
+			var bodyParams = make(map[string]interface{})
 
 			if len(rr.Binding.BodyParams) > 0 {
 				// evaluate each body param value as a template (unless explicitly told not to)
 				if err := maputil.Walk(rr.Binding.BodyParams, func(value interface{}, path []string, isLeaf bool) error {
 					if isLeaf {
 						if !rr.Binding.NoTemplate {
-							rendered := rr.Template(value)
+							var rendered = rr.Template(value)
 
 							if typeutil.IsScalar(rendered.Value) {
 								value = rendered.Auto()
@@ -113,7 +113,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 					request.Header.Set(`Content-Type`, `application/json`)
 
 				case `form`:
-					form := url.Values{}
+					var form = url.Values{}
 
 					// add params to form values
 					for k, v := range bodyParams {
@@ -134,7 +134,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 				}
 			}
 		} else if rr.Binding.RawBody != `` {
-			payload := rr.Template(rr.Binding.RawBody).Bytes()
+			var payload = rr.Template(rr.Binding.RawBody).Bytes()
 			log.Debugf("[%s]  binding %q: rawbody (%d bytes)", id, rr.Binding.Name, len(payload))
 			request.Body = ioutil.NopCloser(bytes.NewBuffer(payload))
 		}
@@ -145,7 +145,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 		// if specified, have the binding request inherit the headers from the initiating request
 		if !rr.Binding.SkipInheritHeaders {
 			for k, _ := range rr.Request.Header {
-				v := rr.Request.Header.Get(k)
+				var v = rr.Request.Header.Get(k)
 				log.Debugf("[%s]  binding %q: inherit %v=%v", id, rr.Binding.Name, k, v)
 				request.Header.Set(k, v)
 			}
@@ -165,7 +165,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 
 		// big block of custom TLS override setup
 		// -------------------------------------------------------------------------------------
-		newTCC := &tls.Config{
+		var newTCC = &tls.Config{
 			InsecureSkipVerify: rr.Binding.Insecure,
 			RootCAs:            rr.Binding.server.altRootCaPool,
 		}
@@ -266,7 +266,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 			}
 
 			// stub out the response
-			response := &ProtocolResponse{
+			var response = &ProtocolResponse{
 				Raw:        res,
 				StatusCode: res.StatusCode,
 			}

@@ -27,7 +27,7 @@ type ShellAuthenticator struct {
 }
 
 func NewShellAuthenticator(config *AuthenticatorConfig) (*ShellAuthenticator, error) {
-	auth := &ShellAuthenticator{
+	var auth = &ShellAuthenticator{
 		config: config,
 	}
 
@@ -63,10 +63,10 @@ func (self *ShellAuthenticator) Callback(w http.ResponseWriter, req *http.Reques
 }
 
 func (self *ShellAuthenticator) Authenticate(w http.ResponseWriter, req *http.Request) bool {
-	id := reqid(req)
-	config := self.config
+	var id = reqid(req)
+	var config = self.config
 
-	disableCookies := config.O(`disable_cookies`).Bool()
+	var disableCookies = config.O(`disable_cookies`).Bool()
 	var action string
 	var stdin io.Reader
 	var body map[string]interface{}
@@ -78,8 +78,8 @@ func (self *ShellAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 		}
 	}
 
-	stdout := bytes.NewBuffer(nil)
-	stderr := bytes.NewBuffer(nil)
+	var stdout = bytes.NewBuffer(nil)
+	var stderr = bytes.NewBuffer(nil)
 
 	// retrieve the session token data. if it's not present or we've disabled cookies, authenticate. else, validate.
 	if cookie, err := req.Cookie(config.O(`cookie_name`, DefaultShellSessionCookieName).String()); disableCookies || err == http.ErrNoCookie {
@@ -96,7 +96,7 @@ func (self *ShellAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 	var cmd *exec.Cmd
 
 	if v := config.O(`command`); typeutil.IsArray(v.Value) {
-		args := v.Strings()
+		var args = v.Strings()
 		cmd = exec.Command(args[0], args[1:]...)
 	} else if cmdline := v.String(); cmdline != `` {
 		if args, err := shellwords.Parse(cmdline); err == nil {
@@ -153,7 +153,7 @@ func (self *ShellAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 		}
 
 		// prep the cookie
-		cookie := &http.Cookie{
+		var cookie = &http.Cookie{
 			Name:     config.O(`cookie_name`, DefaultShellSessionCookieName).String(),
 			Path:     config.O(`cookie_path`).String(),
 			Domain:   config.O(`cookie_domain`).String(),

@@ -91,7 +91,7 @@ type RedisProtocol struct {
 }
 
 func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, error) {
-	pid := rr.URL.Host
+	var pid = rr.URL.Host
 
 	if pid == `` {
 		pid = rr.Conf(`redis`, `default_host`, `localhost:6379`).String()
@@ -130,7 +130,7 @@ func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, err
 	}
 
 	// setup context and load it up with cancel functions and timeouts and cool stuff like that
-	ctx := context.Background()
+	var ctx = context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 
 	if timeout := typeutil.V(rr.Binding.Timeout).Duration(); timeout > 0 {
@@ -142,12 +142,12 @@ func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, err
 	if conn, err := pool.GetContext(ctx); err == nil {
 		defer conn.Close()
 
-		args := strings.Split(strings.TrimPrefix(rr.URL.Path, `/`), `/`)
+		var args = strings.Split(strings.TrimPrefix(rr.URL.Path, `/`), `/`)
 		args = sliceutil.CompactString(args)
 
 		if reply, err := conn.Do(rr.Verb, sliceutil.Sliceify(args)...); err == nil {
-			buf := bytes.NewBuffer(nil)
-			response := &ProtocolResponse{
+			var buf = bytes.NewBuffer(nil)
+			var response = &ProtocolResponse{
 				Raw:        reply,
 				StatusCode: 200,
 				data:       ioutil.NopCloser(buf),
@@ -165,8 +165,8 @@ func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, err
 
 				// handles H-series replies (maps represented as arrays of alternating keys, values)
 				if strings.HasPrefix(rr.Verb, `H`) {
-					obj := make(map[string]interface{})
-					values := sliceutil.Stringify(reply)
+					var obj = make(map[string]interface{})
+					var values = sliceutil.Stringify(reply)
 
 					for i, value := range values {
 						if i%2 == 0 {
@@ -180,7 +180,7 @@ func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, err
 
 					reply = obj
 				} else {
-					values := reply.([]interface{})
+					var values = reply.([]interface{})
 
 					switch rr.Verb {
 					case `TIME`:

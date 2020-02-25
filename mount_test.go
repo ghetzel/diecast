@@ -23,7 +23,7 @@ func (self TestFileSystem) Open(name string) (http.File, error) {
 }
 
 func getTestMounts(tt *require.Assertions) []Mount {
-	mounts := []Mount{
+	var mounts = []Mount{
 		&FileMount{
 			Path:       `./tests/external_path/js`,
 			MountPoint: `/js`,
@@ -54,8 +54,8 @@ func getTestMounts(tt *require.Assertions) []Mount {
 }
 
 func TestMounts(t *testing.T) {
-	assert := require.New(t)
-	mounts := getTestMounts(assert)
+	var assert = require.New(t)
+	var mounts = getTestMounts(assert)
 
 	var mount Mount
 	var file http.File

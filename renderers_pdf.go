@@ -50,27 +50,27 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 		defer www.Stop()
 		var buffer bytes.Buffer
 
-		subaddr := self.server.Address
+		var subaddr = self.server.Address
 
 		if strings.HasPrefix(subaddr, `:`) {
 			subaddr = `127.0.0.1` + subaddr
 		}
 
 		// start a headless chromium-browser instance that we can interact with
-		env := webfriend.NewEnvironment(www)
+		var env = webfriend.NewEnvironment(www)
 
 		// mangle the URL to be a strictly-localhost affair
 		suburl, _ := url.Parse(req.URL.String())
 		suburl.Scheme = `http`
 		suburl.Host = subaddr
-		subqs := suburl.Query()
+		var subqs = suburl.Query()
 		subqs.Set(`__subrender`, `true`)
 		suburl.RawQuery = subqs.Encode()
 
 		log.Debugf("Rendering %v as PDF", suburl)
 
-		core := env.MustModule(`core`).(*wfcore.Commands)
-		page := env.MustModule(`page`).(*wfpage.Commands)
+		var core = env.MustModule(`core`).(*wfcore.Commands)
+		var page = env.MustModule(`page`).(*wfpage.Commands)
 
 		var timeout time.Duration
 
@@ -92,7 +92,7 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 		if err := page.Pdf(&buffer, nil); err == nil {
 			w.Header().Set(`Content-Type`, `application/pdf`)
 
-			rewrittenFilename := strings.TrimSuffix(
+			var rewrittenFilename = strings.TrimSuffix(
 				filepath.Base(options.RequestedPath),
 				filepath.Ext(options.RequestedPath),
 			) + `.pdf`

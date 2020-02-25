@@ -61,7 +61,7 @@ func (self *StepConfig) String() string {
 func (self *StepConfig) postprocess() {
 	switch self.Parser {
 	case ``, `json`:
-		out := typeutil.Bytes(self.Output)
+		var out = typeutil.Bytes(self.Output)
 
 		if len(out) > 0 {
 			if stringutil.IsSurroundedBy(out, `[`, `]`) {
@@ -87,7 +87,7 @@ func (self *StepConfig) postprocess() {
 				if err := json.Unmarshal(out, &outI); err == nil {
 					self.Output = outI
 				} else if log.ErrHasPrefix(err, `invalid character`) {
-					lines := strings.Split(string(out), "\n")
+					var lines = strings.Split(string(out), "\n")
 
 					var outA []interface{}
 					var asLines bool
@@ -192,8 +192,8 @@ type Action struct {
 // responsible for generating and manipulating output.  The output of the last step will be returned,
 // or an error will be returned if not nil.
 func (self *Action) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	started := time.Now()
-	name := self.Name
+	var started = time.Now()
+	var name = self.Name
 
 	if name == `` {
 		name = fmt.Sprintf("%s %s", req.Method, req.URL.Path)
@@ -215,7 +215,7 @@ func (self *Action) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		initData = req.Body
 	}
 
-	prev := &StepConfig{
+	var prev = &StepConfig{
 		Type:   `input`,
 		Output: initData,
 		index:  -1,

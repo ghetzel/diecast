@@ -43,7 +43,7 @@ type OauthAuthenticator struct {
 }
 
 func NewOauthAuthenticator(config *AuthenticatorConfig) (*OauthAuthenticator, error) {
-	auth := &OauthAuthenticator{
+	var auth = &OauthAuthenticator{
 		config:          config,
 		cookieName:      config.O(`cookie_name`, DefaultOauth2SessionCookieName).String(),
 		sessionDuration: config.O(`lifetime`).Duration(),
@@ -122,8 +122,8 @@ func (self *OauthAuthenticator) IsCallback(u *url.URL) bool {
 
 // OAuth2: Leg 2: receive callback from consent page, validate session, and set session cookie
 func (self *OauthAuthenticator) Callback(w http.ResponseWriter, req *http.Request) {
-	sid := httputil.Q(req, `state`)
-	code := httputil.Q(req, `code`)
+	var sid = httputil.Q(req, `state`)
+	var code = httputil.Q(req, `code`)
 
 	if sessionI, ok := oauthSessions.Load(sid); ok {
 		if session, ok := sessionI.(*oauthSession); ok {
@@ -133,7 +133,7 @@ func (self *OauthAuthenticator) Callback(w http.ResponseWriter, req *http.Reques
 					session.Token = token
 
 					// give the client their session ID
-					cookie := &http.Cookie{
+					var cookie = &http.Cookie{
 						Name:     self.cookieName,
 						Value:    session.State,
 						Path:     `/`,
@@ -178,7 +178,7 @@ func (self *OauthAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 		}
 	} else if err == http.ErrNoCookie {
 		// OAuth2: Leg 1: generate session ID and redirect to auth page
-		sid := stringutil.UUID().Base58()
+		var sid = stringutil.UUID().Base58()
 
 		// store the session pre-authenticated stub
 		oauthSessions.Store(sid, &oauthSession{

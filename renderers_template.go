@@ -32,7 +32,7 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 	}
 
 	// create the template and make it aware of our custom functions
-	tmpl := NewTemplate(
+	var tmpl = NewTemplate(
 		self.server.ToTemplateName(options.RequestedPath),
 		GetEngineForFile(options.RequestedPath),
 	)
@@ -92,7 +92,7 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 				w.Write([]byte(fmt.Sprintf("{{/* COMBINED HEADER: error: %v */}}\n", err)))
 			}
 
-			dV := options.Data
+			var dV = options.Data
 			delete(dV, `bindings`)
 
 			if data, err := yaml.Marshal(dV); err == nil {
@@ -118,8 +118,8 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 		}
 	} else if self.server.ShouldReturnSource(req) {
 		var tplstr string
-		lines := strings.Split(string(options.Fragments.DebugOutput()), "\n")
-		lineNoSpaces := fmt.Sprintf("%d", len(fmt.Sprintf("%d", len(lines)))+1)
+		var lines = strings.Split(string(options.Fragments.DebugOutput()), "\n")
+		var lineNoSpaces = fmt.Sprintf("%d", len(fmt.Sprintf("%d", len(lines)))+1)
 
 		for i, line := range lines {
 			tplstr += fmt.Sprintf("% "+lineNoSpaces+"d | %s\n", i+1, line)

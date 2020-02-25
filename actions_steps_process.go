@@ -18,13 +18,13 @@ import (
 type ProcessStep struct{}
 
 func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req *http.Request, prev *StepConfig) (interface{}, error) {
-	operations := sliceutil.Sliceify(config.Data)
-	data := prev.Output
+	var operations = sliceutil.Sliceify(config.Data)
+	var data = prev.Output
 
 	config.logstep("prev=%v input=%T", prev, data)
 
 	for _, o := range operations {
-		operation := maputil.M(nil)
+		var operation = maputil.M(nil)
 		var otype string
 
 		if typeutil.IsMap(o) {
@@ -39,7 +39,7 @@ func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 		switch otype {
 		case `sort`, `rsort`:
 			if typeutil.IsArray(data) {
-				dataS := sliceutil.Sliceify(data)
+				var dataS = sliceutil.Sliceify(data)
 
 				sort.Slice(dataS, func(i int, j int) bool {
 					if otype == `rsort` {
@@ -56,9 +56,9 @@ func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 				return nil, fmt.Errorf("Can only sort arrays, got %T", data)
 			}
 		case `diffuse`:
-			sep := operation.String(`separator`, `.`)
-			joiner := operation.String(`joiner`, `=`)
-			dataM := make(map[string]interface{})
+			var sep = operation.String(`separator`, `.`)
+			var joiner = operation.String(`joiner`, `=`)
+			var dataM = make(map[string]interface{})
 
 			if typeutil.IsArray(data) {
 				for i, item := range sliceutil.Sliceify(data) {
@@ -94,7 +94,7 @@ func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 			if typeutil.IsArray(data) {
 				for _, item := range sliceutil.Sliceify(data) {
 					if typeutil.IsMap(item) {
-						l := maputil.Join(item, kvjoin, sep)
+						var l = maputil.Join(item, kvjoin, sep)
 						lines = append(lines, strings.Split(l, sep)...)
 					} else if typeutil.IsScalar(item) {
 						lines = append(lines, typeutil.String(item))

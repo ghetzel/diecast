@@ -62,7 +62,7 @@ func (self *ProxyMount) WillRespondTo(name string, req *http.Request, requestBod
 }
 
 func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (*MountResponse, error) {
-	id := reqid(req)
+	var id = reqid(req)
 
 	var proxyURI string
 	var timeout time.Duration
@@ -120,7 +120,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			}
 
 			// merge incoming query strings with proxy query strings
-			qs := req.URL.Query()
+			var qs = req.URL.Query()
 
 			for newQs, newVs := range newURL.Query() {
 				for _, v := range newVs {
@@ -141,7 +141,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		}, `/`)
 	}
 
-	method := strings.ToUpper(self.Method)
+	var method = strings.ToUpper(self.Method)
 
 	if method == `` {
 		if req != nil {
@@ -227,8 +227,8 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 			}
 		}
 
-		from := req.Method + ` ` + req.URL.String()
-		to := newReq.Method + ` ` + newReq.URL.String()
+		var from = req.Method + ` ` + req.URL.String()
+		var to = newReq.Method + ` ` + newReq.URL.String()
 
 		if from == to {
 			log.Debugf("[%s] proxy: %s", id, from)
@@ -250,7 +250,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		// perform the request
 		// -----------------------------------------------------------------------------------------
 		log.Debugf("[%s] proxy: sending request to %s://%s", id, newReq.URL.Scheme, newReq.URL.Host)
-		reqStartAt := time.Now()
+		var reqStartAt = time.Now()
 		response, err := self.Client.Do(newReq)
 		log.Debugf("[%s] proxy: responded in %v", id, time.Since(reqStartAt))
 
@@ -310,13 +310,13 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 				}
 
 				if data, err := ioutil.ReadAll(responseBody); err == nil {
-					payload := bytes.NewReader(data)
+					var payload = bytes.NewReader(data)
 
 					// correct the length, which is now potentially decompressed and longer
 					// than the original response claims
 					response.Header.Set(`Content-Length`, typeutil.String(payload.Size()))
 
-					mountResponse := NewMountResponse(name, payload.Size(), payload)
+					var mountResponse = NewMountResponse(name, payload.Size(), payload)
 					mountResponse.StatusCode = response.StatusCode
 					mountResponse.ContentType = response.Header.Get(`Content-Type`)
 
@@ -348,7 +348,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 }
 
 func (self *ProxyMount) url() string {
-	uri := self.URL
+	var uri = self.URL
 
 	if from := self.urlRewriteFrom; from != `` {
 		if to := self.urlRewriteTo; to != `` {

@@ -227,7 +227,7 @@ func NewServer(root interface{}, patterns ...string) *Server {
 
 	describeTimer(`tpl`, `Diecast Template Rendering`)
 
-	server := &Server{
+	var server = &Server{
 		Address:            DefaultAddress,
 		Authenticators:     make([]AuthenticatorConfig, 0),
 		AutolayoutPatterns: DefaultAutolayoutPatterns,
@@ -289,10 +289,10 @@ func (self *Server) LoadConfig(filename string) error {
 					// apply environment-specific overrides
 					if self.Environment != `` {
 						eDir, eFile := filepath.Split(filename)
-						base := strings.TrimSuffix(eFile, filepath.Ext(eFile))
-						ext := filepath.Ext(eFile)
+						var base = strings.TrimSuffix(eFile, filepath.Ext(eFile))
+						var ext = filepath.Ext(eFile)
 						eFile = fmt.Sprintf("%s.%s%s", base, self.Environment, ext)
-						envPath := filepath.Join(eDir, eFile)
+						var envPath = filepath.Join(eDir, eFile)
 
 						if fileutil.IsNonemptyFile(envPath) {
 							if err := self.LoadConfig(envPath); err != nil {
@@ -304,7 +304,7 @@ func (self *Server) LoadConfig(filename string) error {
 					// process mount configs into mount instances
 					for i, config := range self.MountConfigs {
 						if mount, err := NewMountFromSpec(fmt.Sprintf("%s:%s", config.Mount, config.To)); err == nil {
-							mountOverwriteIndex := -1
+							var mountOverwriteIndex = -1
 
 							for i, existing := range self.Mounts {
 								if IsSameMount(mount, existing) {
@@ -455,8 +455,8 @@ func (self *Server) prestart() error {
 // then exit.
 func (self *Server) RenderPath(w io.Writer, path string) error {
 	path = `/` + strings.TrimPrefix(path, `/`)
-	rw := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, path, nil)
+	var rw = httptest.NewRecorder()
+	var req = httptest.NewRequest(http.MethodGet, path, nil)
 	self.ServeHTTP(rw, req)
 
 	if !rw.Flushed {
@@ -486,7 +486,7 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 		return err
 	}
 
-	srv := &http.Server{
+	var srv = &http.Server{
 		Handler: self,
 	}
 
@@ -499,7 +499,7 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 
 	// setup TLSConfig
 	if ssl := self.TLS; ssl != nil && ssl.Enable {
-		tc := new(tls.Config)
+		var tc = new(tls.Config)
 
 		ssl.CertFile = fileutil.MustExpandUser(ssl.CertFile)
 		ssl.KeyFile = fileutil.MustExpandUser(ssl.KeyFile)
@@ -555,12 +555,12 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 	case ``, `http`:
 		serveable = srv
 	case `http2`:
-		h2s := new(http2.Server)
+		var h2s = new(http2.Server)
 
 		if useTLS {
 			http2.ConfigureServer(srv, h2s)
 		} else {
-			hnd := srv.Handler
+			var hnd = srv.Handler
 			srv.Handler = h2c.NewHandler(hnd, h2s)
 		}
 
@@ -568,7 +568,7 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 
 	case `quic`, `http3`:
 		useUDP = true
-		h3s := &http3.Server{
+		var h3s = &http3.Server{
 			Server:     srv,
 			QuicConfig: nil,
 		}
@@ -588,7 +588,7 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 			return err
 		}
 
-		network := `unix`
+		var network = `unix`
 
 		if useUDP {
 			network = `unixpacket`
@@ -661,7 +661,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	// setup a ResponseWriter interceptor that catches status code and bytes written
 	// but passes through the Body without buffering it (like httptest.ResponseRecorder does)
-	interceptor := intercept(w)
+	var interceptor = intercept(w)
 	httputil.RequestSetValue(req, ContextResponseKey, interceptor)
 
 	// process the before stack
@@ -690,7 +690,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // return whether the request path matches any of the configured TemplatePatterns.
 func (self *Server) shouldApplyTemplate(requestPath string) bool {
-	baseName := filepath.Base(requestPath)
+	var baseName = filepath.Base(requestPath)
 
 	for _, pattern := range self.TemplatePatterns {
 		if strings.HasPrefix(pattern, `/`) {
@@ -709,7 +709,7 @@ func (self *Server) shouldApplyTemplate(requestPath string) bool {
 
 // return whether the request path should automatically have layouts applied
 func (self *Server) shouldApplyLayout(requestPath string) bool {
-	baseName := filepath.Base(requestPath)
+	var baseName = filepath.Base(requestPath)
 
 	for _, pattern := range self.AutolayoutPatterns {
 		if strings.HasPrefix(pattern, `/`) {
@@ -736,9 +736,9 @@ func (self *Server) applyTemplate(
 	urlParams []KV,
 	mimeType string,
 ) error {
-	fragments := make(FragmentSet, 0)
-	forceSkipLayout := false
-	layouts := make([]string, 0)
+	var fragments = make(FragmentSet, 0)
+	var forceSkipLayout = false
+	var layouts = make([]string, 0)
 
 	// start building headers stack and calculate line offsets (for error reporting)
 	if header != nil {
@@ -756,10 +756,10 @@ func (self *Server) applyTemplate(
 		}
 	}
 
-	earlyData := self.requestToEvalData(req, header)
+	var earlyData = self.requestToEvalData(req, header)
 
 	// get a reference to a set of standard functions that won't have a scope yet
-	earlyFuncs := self.GetTemplateFunctions(earlyData, header)
+	var earlyFuncs = self.GetTemplateFunctions(earlyData, header)
 
 	// only process layouts if we're supposed to
 	if self.EnableLayouts && !forceSkipLayout && self.shouldApplyLayout(requestPath) {
@@ -799,7 +799,7 @@ func (self *Server) applyTemplate(
 	}
 
 	// get the merged header from all layouts, includes, and the template we're rendering
-	finalHeader := fragments.Header(self)
+	var finalHeader = fragments.Header(self)
 
 	// add all includes
 	if err := self.appendIncludes(&fragments, &finalHeader); err != nil {
@@ -813,7 +813,7 @@ func (self *Server) applyTemplate(
 	finalHeader.Locale = MustEvalInline(finalHeader.Locale, earlyData, earlyFuncs)
 
 	if funcs, data, err := self.GetTemplateData(req, &finalHeader); err == nil {
-		start := time.Now()
+		var start = time.Now()
 
 		// switches allow the template processing to be hijacked/redirected mid-evaluation
 		// based on data already evaluated
@@ -826,7 +826,7 @@ func (self *Server) applyTemplate(
 
 				if swcase.UsePath != `` {
 					// if a condition is specified, it must evaluate to a truthy value to proceed
-					cond := MustEvalInline(swcase.Condition, data, funcs)
+					var cond = MustEvalInline(swcase.Condition, data, funcs)
 					checkType, checkTypeArg := stringutil.SplitPair(swcase.CheckType, `:`)
 
 					switch checkType {
@@ -929,10 +929,10 @@ func (self *Server) applyTemplate(
 				if postTemplateRenderer.ShouldPrerender() || httputil.QBool(req, `__subrender`) {
 					// we use an httptest.ResponseRecorder to intercept the default template's output
 					// and pass it as input to the final renderer.
-					intercept := httptest.NewRecorder()
+					var intercept = httptest.NewRecorder()
 
 					err = baseRenderer.Render(intercept, req, renderOpts)
-					res := intercept.Result()
+					var res = intercept.Result()
 					renderOpts.MimeType = res.Header.Get(`Content-Type`)
 					renderOpts.Input = res.Body
 				}
@@ -976,7 +976,7 @@ func (self *Server) applyTemplate(
 // Retrieves the set of standard template functions, as well as functions for working
 // with data in the current request.
 func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *TemplateHeader) FuncMap {
-	funcs := make(FuncMap)
+	var funcs = make(FuncMap)
 
 	for k, v := range GetStandardFunctions(self) {
 		funcs[k] = v
@@ -1045,15 +1045,15 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 
 	// fn param: Return the value of the named or indexed URL parameter, or nil of none are present.
 	funcs[`param`] = func(nameOrIndex interface{}, fallbacks ...interface{}) interface{} {
-		params := sliceutil.Sliceify(maputil.DeepGet(data, []string{`request`, `url`, `params`}))
+		var params = sliceutil.Sliceify(maputil.DeepGet(data, []string{`request`, `url`, `params`}))
 
 		x, _ := json.MarshalIndent(params, ``, `  `)
 		log.Noticef("noot %s", string(x))
 
 		for i, item := range params {
-			kv := maputil.M(item)
-			wantKey := typeutil.String(nameOrIndex)
-			wantIndex := int(typeutil.Int(wantKey))
+			var kv = maputil.M(item)
+			var wantKey = typeutil.String(nameOrIndex)
+			var wantIndex = int(typeutil.Int(wantKey))
 
 			if sval := kv.String(`value`); sval != `` {
 				if typeutil.IsInteger(wantKey) {
@@ -1096,7 +1096,7 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	// fn varset: Treat the runtime variable *name* as a map, setting *key* to *value*.
 	funcs[`varset`] = func(name string, key string, vI ...interface{}) interface{} {
 		var value interface{}
-		path := makeVarKey(name)
+		var path = makeVarKey(name)
 
 		switch len(vI) {
 		case 0:
@@ -1114,7 +1114,7 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	// fn push: Append to variable *name* to *value*.
 	funcs[`push`] = func(name string, vI ...interface{}) interface{} {
 		var values []interface{}
-		key := makeVarKey(name)
+		var key = makeVarKey(name)
 
 		if existing := maputil.DeepGet(data, key); existing != nil {
 			values = append(values, sliceutil.Sliceify(existing)...)
@@ -1129,10 +1129,10 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	// fn pop: Remove the last item from *name* and return it.
 	funcs[`pop`] = func(name string) interface{} {
 		var out interface{}
-		key := makeVarKey(name)
+		var key = makeVarKey(name)
 
 		if existing := maputil.DeepGet(data, key); existing != nil {
-			values := sliceutil.Sliceify(existing)
+			var values = sliceutil.Sliceify(existing)
 
 			switch len(values) {
 			case 0:
@@ -1152,8 +1152,8 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 
 	// fn increment: Increment a named variable by an amount.
 	funcs[`increment`] = func(name string, incr ...int) interface{} {
-		key := makeVarKey(name)
-		count := 0
+		var key = makeVarKey(name)
+		var count = 0
 
 		if existing := maputil.DeepGet(data, key); existing != nil {
 			count = int(typeutil.V(existing).Int())
@@ -1172,8 +1172,8 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 
 	// fn incrementByValue: Add a number to a counter tracking the number of occurrences of a specific value.
 	funcs[`incrementByValue`] = func(name string, value interface{}, incr ...int) interface{} {
-		key := makeVarKey(name, fmt.Sprintf("%v", value))
-		count := 0
+		var key = makeVarKey(name, fmt.Sprintf("%v", value))
+		var count = 0
 
 		if existing := maputil.DeepGet(data, key); existing != nil {
 			count = int(typeutil.V(existing).Int())
@@ -1202,7 +1202,7 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	// read a file from the serving path and parse it as a template, returning the output.
 	funcs[`render`] = func(filename string, overrides ...map[string]interface{}) (string, error) {
 		if tpl, err := readFromFS(self.fs, filename); err == nil {
-			d := data
+			var d = data
 
 			if len(overrides) > 0 && overrides[0] != nil {
 				d = overrides[0]
@@ -1224,7 +1224,7 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	//	- compile-time default locale
 	funcs[`i18n`] = func(key string, locales ...string) (string, error) {
 		key = strings.Join(strings.Split(key, `.`), `.`)
-		kparts := strings.Split(key, `.`)
+		var kparts = strings.Split(key, `.`)
 
 		if header != nil && header.Locale != `` {
 			if tag, err := language.Parse(header.Locale); err == nil {
@@ -1307,7 +1307,7 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 }
 
 func makeVarKey(key string, post ...string) []string {
-	output := []string{`vars`}
+	var output = []string{`vars`}
 
 	output = append(output, strings.Split(key, `.`)...)
 	output = append(output, post...)
@@ -1325,12 +1325,12 @@ func (self *Server) ToTemplateName(requestPath string) string {
 
 // gets a FuncMap and data usable in templates and error pages alike, before bindings are evaluated.
 func (self *Server) getPreBindingData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}) {
-	data := self.requestToEvalData(req, header)
-	funcs := self.GetTemplateFunctions(data, header)
+	var data = self.requestToEvalData(req, header)
+	var funcs = self.GetTemplateFunctions(data, header)
 
 	data[`vars`] = make(map[string]interface{})
 
-	publicMountDetails := make([]map[string]interface{}, 0)
+	var publicMountDetails = make([]map[string]interface{}, 0)
 
 	for _, mount := range self.MountConfigs {
 		publicMountDetails = append(publicMountDetails, map[string]interface{}{
@@ -1359,9 +1359,9 @@ func (self *Server) evalPageData(final bool, req *http.Request, header *Template
 	//                       to the output of bindings
 	// ---------------------------------------------------------------------------------------------
 	if header != nil {
-		pageData := make(map[string]interface{})
+		var pageData = make(map[string]interface{})
 
-		applyPageFn := func(value interface{}, path []string, isLeaf bool) error {
+		var applyPageFn = func(value interface{}, path []string, isLeaf bool) error {
 
 			if isLeaf {
 				switch value.(type) {
@@ -1404,8 +1404,8 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	//                      to all binding output that preceded it.  This allows bindings to be
 	//                      pipelined, using the output of one request as the input of the next.
 	// ---------------------------------------------------------------------------------------------
-	bindings := make(map[string]interface{})
-	bindingsToEval := make([]Binding, 0)
+	var bindings = make(map[string]interface{})
+	var bindingsToEval = make([]Binding, 0)
 
 	bindingsToEval = append(bindingsToEval, self.Bindings...)
 
@@ -1420,27 +1420,27 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 
 		binding.server = self
 
-		start := time.Now()
+		var start = time.Now()
 		describeTimer(fmt.Sprintf("binding-%s", binding.Name), fmt.Sprintf("Diecast Bindings: %s", binding.Name))
 
 		// pagination data
 		if pgConfig := binding.Paginate; pgConfig != nil {
-			results := make([]map[string]interface{}, 0)
-			proceed := true
+			var results = make([]map[string]interface{}, 0)
+			var proceed = true
 
 			var total int64
 			var count int64
 			var soFar int64
 
-			page := 1
+			var page = 1
 
-			lastPage := maputil.M(&ResultsPage{
+			var lastPage = maputil.M(&ResultsPage{
 				Page:    page,
 				Counter: soFar,
 			}).MapNative(`json`)
 
 			for proceed {
-				suffix := fmt.Sprintf("binding(%s):page(%d)", binding.Name, page+1)
+				var suffix = fmt.Sprintf("binding(%s):page(%d)", binding.Name, page+1)
 
 				bindings[binding.Name] = binding.Fallback
 				data[`page`] = lastPage
@@ -1469,7 +1469,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 				v, err := binding.Evaluate(req, header, data, funcs)
 
 				if err == nil {
-					asMap := maputil.M(v)
+					var asMap = maputil.M(v)
 
 					total = typeutil.Int(MustEvalInline(pgConfig.Total, asMap.MapNative(), funcs, suffix))
 					count = typeutil.Int(MustEvalInline(pgConfig.Count, asMap.MapNative(), funcs, suffix))
@@ -1487,7 +1487,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 						log.Debugf("[%v] paginated binding %q: proceed is false, this is the last loop", reqid(req), binding.Name)
 					}
 
-					thisPage := maputil.M(&ResultsPage{
+					var thisPage = maputil.M(&ResultsPage{
 						Total:   total,
 						Page:    page,
 						Last:    !proceed,
@@ -1557,12 +1557,12 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 				}
 			}
 		} else {
-			results := make([]interface{}, 0)
+			var results = make([]interface{}, 0)
 
-			repeatExpr := fmt.Sprintf("{{ range $index, $item := (%v) }}\n", binding.Repeat)
+			var repeatExpr = fmt.Sprintf("{{ range $index, $item := (%v) }}\n", binding.Repeat)
 			repeatExpr += fmt.Sprintf("%v\n", binding.Resource)
 			repeatExpr += "{{ end }}"
-			repeatExprOut := rxEmptyLine.ReplaceAllString(
+			var repeatExprOut = rxEmptyLine.ReplaceAllString(
 				strings.TrimSpace(
 					MustEvalInline(repeatExpr, data, funcs),
 				),
@@ -1570,7 +1570,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			)
 
 			log.Debugf("Repeater: \n%v\nOutput:\n%v", repeatExpr, repeatExprOut)
-			repeatIters := strings.Split(repeatExprOut, "\n")
+			var repeatIters = strings.Split(repeatExprOut, "\n")
 
 			for i, resource := range repeatIters {
 				binding.Resource = strings.TrimSpace(resource)
@@ -1613,7 +1613,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	// Evaluate "flags" data: this data is templatized, and has access to $.page and $.bindings
 	// ---------------------------------------------------------------------------------------------
 	if header != nil {
-		flags := make(map[string]bool)
+		var flags = make(map[string]bool)
 
 		for name, def := range header.FlagDefs {
 			switch def.(type) {
@@ -1718,7 +1718,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 }
 
 func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resErr error, code int) {
-	tmpl := NewTemplate(`error`, HtmlEngine)
+	var tmpl = NewTemplate(`error`, HtmlEngine)
 
 	if resErr == nil {
 		resErr = fmt.Errorf("Unknown Error")
@@ -1764,10 +1764,10 @@ func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resEr
 func SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, error) {
 	if data, err := ioutil.ReadAll(reader); err == nil {
 		if bytes.HasPrefix(data, HeaderSeparator) {
-			parts := bytes.SplitN(data, HeaderSeparator, 3)
+			var parts = bytes.SplitN(data, HeaderSeparator, 3)
 
 			if len(parts) == 3 {
-				header := TemplateHeader{
+				var header = TemplateHeader{
 					QueryJoiner: DefaultQueryJoiner,
 				}
 
@@ -1827,13 +1827,13 @@ func reqres(req *http.Request) *statusInterceptor {
 }
 
 func (self *Server) actionForRequest(req *http.Request) http.HandlerFunc {
-	route := req.URL.Path
+	var route = req.URL.Path
 
 	for _, action := range self.Actions {
-		actionPath := filepath.Join(self.rp(), action.Path)
+		var actionPath = filepath.Join(self.rp(), action.Path)
 
 		if actionPath == route {
-			methods := sliceutil.Stringify(action.Method)
+			var methods = sliceutil.Stringify(action.Method)
 
 			if len(methods) == 0 && req.Method == http.MethodGet {
 				log.Debugf("Action handler: %s %s", http.MethodGet, action.Path)
@@ -1961,7 +1961,7 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 	if state := req.TLS; state != nil {
 		request.TLS = new(RequestTlsInfo)
 
-		sslclients := make([]RequestTlsCertInfo, 0)
+		var sslclients = make([]RequestTlsCertInfo, 0)
 
 		for _, pcrt := range state.PeerCertificates {
 			sslclients = append(sslclients, RequestTlsCertInfo{
@@ -2008,7 +2008,7 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 	rv[`request`] = maputil.DeepCopyStruct(request)
 
 	// environment variables
-	env := make(map[string]interface{})
+	var env = make(map[string]interface{})
 
 	for _, pair := range os.Environ() {
 		key, value := stringutil.SplitPair(pair, `=`)
@@ -2033,7 +2033,7 @@ func (self *Server) RunStartCommand(scmds []*StartCommand, waitForCommand bool) 
 					Setpgid: true,
 				}
 
-				env := make(map[string]interface{})
+				var env = make(map[string]interface{})
 
 				for _, pair := range os.Environ() {
 					key, value := stringutil.SplitPair(pair, `=`)
@@ -2076,7 +2076,7 @@ func (self *Server) RunStartCommand(scmds []*StartCommand, waitForCommand bool) 
 				}
 
 				if wait, err := timeutil.ParseDuration(scmd.Wait); err == nil {
-					waitchan := make(chan error)
+					var waitchan = make(chan error)
 
 					go func() {
 						log.Infof("Executing command: %v", strings.Join(scmd.cmd.Args, ` `))
@@ -2145,7 +2145,7 @@ func (self *Server) cleanupCommands() {
 // called by the cleanup middleware to log the completed request according to LogFormat.
 func (self *Server) logreq(w http.ResponseWriter, req *http.Request) {
 	if tm := getRequestTimer(req); tm != nil {
-		format := logFormats[self.Log.Format]
+		var format = logFormats[self.Log.Format]
 
 		if format == `` {
 			if self.Log.Format != `` {
@@ -2185,9 +2185,9 @@ func (self *Server) logreq(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-		interceptor := reqres(req)
+		var interceptor = reqres(req)
 		rh, rp := stringutil.SplitPair(req.RemoteAddr, `:`)
-		code := typeutil.String(interceptor.code)
+		var code = typeutil.String(interceptor.code)
 
 		if self.isTerminalOutput && self.Log.Colorize {
 			if interceptor.code < 300 {
@@ -2201,7 +2201,7 @@ func (self *Server) logreq(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-		logContext := maputil.M(map[string]interface{}{
+		var logContext = maputil.M(map[string]interface{}{
 			`host`:                req.Host,
 			`method`:              req.Method,
 			`protocol_major`:      req.ProtoMajor,
@@ -2295,15 +2295,15 @@ func envKeyNorm(in string) string {
 func formatRequest(req *http.Request) string {
 	var request []string // Add the request string
 
-	url := fmt.Sprintf("%s %v %v", req.Method, req.URL, req.Proto)
+	var url = fmt.Sprintf("%s %v %v", req.Method, req.URL, req.Proto)
 
 	request = append(request, url)
 	request = append(request, fmt.Sprintf("host: %s", req.Host))
-	headerNames := maputil.StringKeys(req.Header)
+	var headerNames = maputil.StringKeys(req.Header)
 	sort.Strings(headerNames)
 
 	for _, name := range headerNames {
-		headers := req.Header[name]
+		var headers = req.Header[name]
 		name = strings.ToLower(name)
 
 		for _, h := range headers {

@@ -370,7 +370,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(value interface{}) string {
-					mmh3 := murmur3.New64().Sum([]byte(typeutil.V(value).String()))
+					var mmh3 = murmur3.New64().Sum([]byte(typeutil.V(value).String()))
 
 					if len(mmh3) >= 3 {
 						return `#` + strings.ToUpper(hex.EncodeToString(mmh3[0:3]))
@@ -405,21 +405,21 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(index interface{}, paletteName ...string) (string, error) {
-					name := DefaultColorPalette
+					var name = DefaultColorPalette
 
 					if len(paletteName) > 0 && paletteName[0] != `` {
 						name = paletteName[0]
 					}
 
 					if palette, ok := palettes[name]; ok {
-						idx := typeutil.Int(index)
-						i := int(idx) % len(palette)
+						var idx = typeutil.Int(index)
+						var i = int(idx) % len(palette)
 
 						if i < 0 {
 							i = len(palette) + i
 						}
 
-						color := palette[i]
+						var color = palette[i]
 						return color, nil
 					} else {
 						return ``, fmt.Errorf("Unknown color palette %q", name)

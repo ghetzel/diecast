@@ -19,9 +19,9 @@ func req(method string, path string) *http.Request {
 }
 
 func TestBindingShouldEvaluate(t *testing.T) {
-	assert := require.New(t)
+	var assert = require.New(t)
 
-	b := &Binding{}
+	var b = &Binding{}
 	assert.NoError(b.shouldEvaluate(req(`get`, `/`), nil, nil))
 
 	b = &Binding{
@@ -51,10 +51,10 @@ func TestBindingShouldEvaluate(t *testing.T) {
 }
 
 func TestBindingHttp(t *testing.T) {
-	assert := require.New(t)
-	mux := http.NewServeMux()
-	dc := NewServer(`./tests/hello`)
-	funcs := dc.GetTemplateFunctions(make(map[string]interface{}), nil)
+	var assert = require.New(t)
+	var mux = http.NewServeMux()
+	var dc = NewServer(`./tests/hello`)
+	var funcs = dc.GetTemplateFunctions(make(map[string]interface{}), nil)
 
 	mux.HandleFunc(`/test/thing.json`, func(w http.ResponseWriter, req *http.Request) {
 		httputil.RespondJSON(w, map[string]interface{}{
@@ -63,7 +63,7 @@ func TestBindingHttp(t *testing.T) {
 	})
 
 	mux.HandleFunc(`/test/code/`, func(w http.ResponseWriter, req *http.Request) {
-		code := typeutil.Int(strings.TrimPrefix(req.URL.Path, `/test/code/`))
+		var code = typeutil.Int(strings.TrimPrefix(req.URL.Path, `/test/code/`))
 
 		httputil.RespondJSON(w, map[string]interface{}{
 			`code`: code,
@@ -71,13 +71,13 @@ func TestBindingHttp(t *testing.T) {
 
 	})
 
-	server := httptest.NewServer(mux)
+	var server = httptest.NewServer(mux)
 
 	// status code tests
 	// ---------------------------------------------------------------------------------------------
 	log.Noticef("%v/test/code/200", server.URL)
 
-	binding := &Binding{
+	var binding = &Binding{
 		Name:     `test1`,
 		Resource: fmt.Sprintf("%v/test/code/200", server.URL),
 		server:   dc,
@@ -97,14 +97,14 @@ func TestBindingHttp(t *testing.T) {
 }
 
 func TestBindingRedis(t *testing.T) {
-	assert := require.New(t)
+	var assert = require.New(t)
 	redis, err := miniredis.Run()
 	assert.NoError(err)
 	assert.NotNil(redis)
 	defer redis.Close()
 
-	dc := NewServer(`./tests/hello`)
-	funcs := dc.GetTemplateFunctions(make(map[string]interface{}), nil)
+	var dc = NewServer(`./tests/hello`)
+	var funcs = dc.GetTemplateFunctions(make(map[string]interface{}), nil)
 
 	redis.Set(`key.1`, `foo`)
 	redis.Set(`key.2`, `bar`)
@@ -112,7 +112,7 @@ func TestBindingRedis(t *testing.T) {
 
 	redis.HSet(`obj`, `key1`, `foof`)
 
-	binding := &Binding{
+	var binding = &Binding{
 		Name:   `testR1`,
 		server: dc,
 	}

@@ -56,18 +56,18 @@ func xmlToMap(in []byte) (map[string]interface{}, error) {
 }
 
 func xmlNodeToMap(node *xmlNode) map[string]interface{} {
-	out := make(map[string]interface{})
+	var out = make(map[string]interface{})
 
-	attrs := make(map[string]interface{})
-	children := make(map[string]interface{})
+	var attrs = make(map[string]interface{})
+	var children = make(map[string]interface{})
 
 	for _, attr := range node.Attrs {
 		attrs[xmlNtoS(attr.Name)] = typeutil.Auto(attr.Value)
 	}
 
 	for _, child := range node.Children {
-		key := xmlNtoS(child.XMLName)
-		value := xmlNodeToMap(&child)
+		var key = xmlNtoS(child.XMLName)
+		var value = xmlNodeToMap(&child)
 
 		if existing, ok := children[key]; ok {
 			if !typeutil.IsArray(existing) {
@@ -97,14 +97,14 @@ func xmlNodeToMap(node *xmlNode) map[string]interface{} {
 }
 
 func xsvToArray(data []byte, delim rune) (map[string]interface{}, error) {
-	recs := make([][]interface{}, 0)
+	var recs = make([][]interface{}, 0)
 
-	out := map[string]interface{}{
+	var out = map[string]interface{}{
 		`headers`: make([]string, 0),
 		`records`: recs,
 	}
 
-	reader := csv.NewReader(bytes.NewBuffer(data))
+	var reader = csv.NewReader(bytes.NewBuffer(data))
 	reader.Comma = delim
 
 	if records, err := reader.ReadAll(); err == nil {
@@ -112,7 +112,7 @@ func xsvToArray(data []byte, delim rune) (map[string]interface{}, error) {
 			if i == 0 {
 				out[`headers`] = row
 			} else {
-				outrec := make([]interface{}, len(row))
+				var outrec = make([]interface{}, len(row))
 
 				for j, col := range row {
 					outrec[j] = typeutil.Auto(col)
@@ -162,7 +162,7 @@ type multiReadCloser struct {
 }
 
 func MultiReadCloser(readers ...io.Reader) *multiReadCloser {
-	closers := make([]io.Closer, 0)
+	var closers = make([]io.Closer, 0)
 
 	for _, r := range readers {
 		if closer, ok := r.(io.Closer); ok {
@@ -236,16 +236,17 @@ func (self *h3serveable) ServeTLS(l net.Listener, _ string, _ string) error {
 }
 
 func fancyMapJoin(in interface{}) string {
-	m := maputil.M(in)
+	var m = maputil.M(in)
 
 	// extract formatting directives from map keys, which uses in-band signalling that i don't *love*,
 	// but it seems simpler-for-the-user than the alternatives right now.
-	kvjoin := m.String(`_kvjoin`, `=`)
-	vvjoin := m.String(`_join`, `&`)
-	kformat := m.String(`_kformat`, "%v")
-	vformat := m.String(`_vformat`, "%v")
+	var kvjoin = m.String(`_kvjoin`, `=`)
+	var vvjoin = m.String(`_join`, `&`)
+	var kformat = m.String(`_kformat`, "%v")
+	var vformat = m.String(`_vformat`, "%v")
 
-	data := m.MapNative()
+	var data = m.MapNative()
+	var deletes []string
 
 	delete(data, `_kvjoin`)
 	delete(data, `_join`)
@@ -253,9 +254,17 @@ func fancyMapJoin(in interface{}) string {
 	delete(data, `_vformat`)
 
 	// rekey according to the formatting directives
-	for kk, vv := range data {
-		delete(data, kk)
-		data[fmt.Sprintf(kformat, kk)] = fmt.Sprintf(vformat, vv)
+	for key, value := range data {
+		if newkey := fmt.Sprintf(kformat, key); newkey != key {
+			deletes = append(deletes, key)
+			key = newkey
+		}
+
+		data[key] = fmt.Sprintf(vformat, value)
+	}
+
+	for _, dk := range deletes {
+		delete(data, dk)
 	}
 
 	var pairs []string

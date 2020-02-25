@@ -46,14 +46,14 @@ func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, optio
 		// log.Debugf("%T: libsass v%v", self, C.GoString(C.libsass_version())
 
 		// setup Sass_Data_Context with the file contents we've been given
-		dctx := C.sass_make_data_context(C.CString(string(data)))
+		var dctx = C.sass_make_data_context(C.CString(string(data)))
 		defer C.sass_delete_data_context(dctx)
 
 		// get the Sass_Context from said Sass_Data_Context
-		ctx := C.sass_data_context_get_context(dctx)
+		var ctx = C.sass_data_context_get_context(dctx)
 
 		// get Sass_Options
-		opt := C.sass_data_context_get_options(dctx)
+		var opt = C.sass_data_context_get_options(dctx)
 
 		// set compile options
 		C.sass_option_set_precision(opt, C.int(10))
@@ -66,9 +66,9 @@ func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, optio
 		// C.SASS_STYLE_COMPRESSED
 		C.sass_option_set_output_style(opt, C.SASS_STYLE_EXPANDED)
 
-		implist := C.sass_make_importer_list(C.ulong(1))
-		importer := C.sass_make_importer((C.Sass_Importer_Fn)(C.diecast_sass_importer), C.double(0), nil)
-		cookie := C.sass_importer_get_cookie(importer)
+		var implist = C.sass_make_importer_list(C.ulong(1))
+		var importer = C.sass_make_importer((C.Sass_Importer_Fn)(C.diecast_sass_importer), C.double(0), nil)
+		var cookie = C.sass_importer_get_cookie(importer)
 		callbackMap.Store(cookie, self)
 
 		C.sass_importer_set_list_entry(implist, C.ulong(0), importer)
@@ -78,7 +78,7 @@ func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, optio
 		C.sass_data_context_set_options(dctx, opt)
 
 		if status := int(C.sass_compile_data_context(dctx)); status == 0 {
-			output := C.GoString(C.sass_context_get_output_string(ctx))
+			var output = C.GoString(C.sass_context_get_output_string(ctx))
 
 			w.Header().Set(`Content-Type`, `text/css; charset=utf-8`)
 
@@ -89,7 +89,7 @@ func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, optio
 			_, err := w.Write([]byte(output))
 			return err
 		} else {
-			err := errors.New(C.GoString(C.sass_context_get_error_message(ctx)))
+			var err = errors.New(C.GoString(C.sass_context_get_error_message(ctx)))
 			return fmt.Errorf("Cannot render Sass: %v (status: %d)", err, status)
 		}
 	} else {
@@ -120,7 +120,7 @@ func go_retrievePath(cookie unsafe.Pointer, url *C.char, output **C.char) C.int 
 	if path := C.GoString(url); path != `` {
 		if v, ok := callbackMap.Load(cookie); ok {
 			if renderer, ok := v.(*SassRenderer); ok {
-				candidates := []string{path}
+				var candidates = []string{path}
 
 				// if the requested import path does not have a file extension, in addition to the
 				// path given, also try with the .scss and .css extensions.

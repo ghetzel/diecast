@@ -24,13 +24,13 @@ import (
 )
 
 func main() {
-	app := cli.NewApp()
+	var app = cli.NewApp()
 	app.Name = diecast.ApplicationName
 	app.Usage = diecast.ApplicationSummary
 	app.Version = diecast.ApplicationVersion
 	app.EnableBashCompletion = true
 
-	server := diecast.NewServer(``)
+	var server = diecast.NewServer(``)
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
@@ -216,7 +216,7 @@ func main() {
 	}
 
 	app.Action = func(c *cli.Context) {
-		servePath := filepath.Clean(c.Args().First())
+		var servePath = filepath.Clean(c.Args().First())
 
 		server.RootPath = servePath
 		server.BinPath, _ = filepath.Abs(os.Args[0])
@@ -273,7 +273,7 @@ func main() {
 			}
 		}
 
-		mounts := make([]diecast.Mount, 0)
+		var mounts = make([]diecast.Mount, 0)
 
 		for i, mountSpec := range c.StringSlice(`mount`) {
 			if mount, err := diecast.NewMountFromSpec(mountSpec); err == nil {
@@ -300,7 +300,7 @@ func main() {
 			log.Debugf("mount %T: %+v", mount, mount)
 		}
 
-		renderSingleFile := c.String(`render`)
+		var renderSingleFile = c.String(`render`)
 
 		// is it hacky? sure.  but it works
 		if renderSingleFile != `` {
@@ -320,8 +320,8 @@ func main() {
 		}
 
 		if err := server.Initialize(); err == nil {
-			scheme := `http`
-			addr := server.Address
+			var scheme = `http`
+			var addr = server.Address
 
 			if ssl := server.TLS; ssl != nil && ssl.Enable {
 				scheme = `https`
@@ -332,7 +332,7 @@ func main() {
 				addr = strings.TrimPrefix(addr, `unix:`)
 			}
 
-			errchan := make(chan error)
+			var errchan = make(chan error)
 
 			log.Infof(
 				"diecast v%v listening at %s://%s (protocol: %s)",
@@ -348,11 +348,11 @@ func main() {
 
 			if c.Bool(`build-site`) {
 				log.Infof("Rendering site in %v", servePath)
-				paths := make([]string, 0)
+				var paths = make([]string, 0)
 
 				if err := filepath.Walk(servePath, func(path string, info os.FileInfo, err error) error {
-					base := filepath.Base(path)
-					ext := filepath.Ext(path)
+					var base = filepath.Base(path)
+					var ext = filepath.Ext(path)
 
 					if strings.HasPrefix(base, `_`) {
 						if info.IsDir() {
@@ -361,7 +361,7 @@ func main() {
 					} else if strings.HasSuffix(strings.TrimSuffix(base, ext), `__id`) {
 						return nil
 					} else if !info.IsDir() {
-						urlPath := strings.TrimPrefix(path, servePath)
+						var urlPath = strings.TrimPrefix(path, servePath)
 						urlPath = strings.TrimPrefix(urlPath, `/`)
 						urlPath = `/` + urlPath
 
@@ -375,14 +375,14 @@ func main() {
 					log.Fatalf("build error: %v", err)
 				}
 
-				destinationPath := c.String(`build-destination`)
+				var destinationPath = c.String(`build-destination`)
 
 				if err := os.RemoveAll(destinationPath); err != nil {
 					log.Fatalf("Failed to cleanup destination: %v", err)
 				}
 
 				sort.Strings(paths)
-				client := &http.Client{
+				var client = &http.Client{
 					Timeout: time.Duration(10) * time.Second,
 				}
 
@@ -394,7 +394,7 @@ func main() {
 					}
 
 					if err == nil {
-						destFile := filepath.Join(destinationPath, path)
+						var destFile = filepath.Join(destinationPath, path)
 
 						if err := os.MkdirAll(filepath.Dir(destFile), 0755); err != nil {
 							log.Fatalf("Failed to create destination: %v", err)
@@ -446,14 +446,14 @@ func appendDataFile(data *maputil.Map, baseK string, filename string) {
 		var parsed interface{}
 		var err error
 
-		ext := filepath.Ext(filename)
+		var ext = filepath.Ext(filename)
 		ext = strings.ToLower(ext)
 
 		switch ext {
 		case `.yaml`:
 			err = yaml.NewDecoder(file).Decode(&parsed)
 		case `.txt`:
-			pM := maputil.M(nil)
+			var pM = maputil.M(nil)
 
 			if b, err := ioutil.ReadAll(file); err == nil {
 				for _, line := range strings.Split(string(b), "\n") {

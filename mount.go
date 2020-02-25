@@ -63,7 +63,7 @@ func NewMountFromSpec(spec string) (Mount, error) {
 }
 
 func mountSummary(mount Mount) string {
-	mtype := fmt.Sprintf("%T", mount)
+	var mtype = fmt.Sprintf("%T", mount)
 	mtype = strings.TrimPrefix(mtype, `*diecast.`)
 	mtype = strings.TrimSuffix(mtype, `Mount`)
 	mtype = strings.ToLower(mtype)

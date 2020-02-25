@@ -141,7 +141,7 @@ func loadStandardFunctionsPath(funcs FuncMap, server *Server) funcGroup {
 				},
 				Function: func(dirs ...string) ([]*fileInfo, error) {
 					var dir string
-					entries := make([]*fileInfo, 0)
+					var entries = make([]*fileInfo, 0)
 
 					if len(dirs) == 0 || dirs[0] == `` || dirs[0] == `.` || dirs[0] == `/` {
 						if server != nil {
@@ -259,7 +259,7 @@ func loadStandardFunctionsPath(funcs FuncMap, server *Server) funcGroup {
 				},
 				Function: func(filename string) map[string]interface{} {
 					_, params := stringutil.SplitPair(fileutil.GetMimeType(path.Ext(filename)), `;`)
-					kv := make(map[string]interface{})
+					var kv = make(map[string]interface{})
 
 					for _, paramPair := range strings.Split(params, `;`) {
 						key, value := stringutil.SplitPair(paramPair, `=`)

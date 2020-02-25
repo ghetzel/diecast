@@ -39,9 +39,9 @@ type fileInfo struct {
 }
 
 func (self *fileInfo) MarshalJSON() ([]byte, error) {
-	full := path.Join(self.Parent, self.Name())
+	var full = path.Join(self.Parent, self.Name())
 
-	data := map[string]interface{}{
+	var data = map[string]interface{}{
 		`name`:          self.Name(),
 		`path`:          full,
 		`size`:          self.Size(),
@@ -78,8 +78,8 @@ func MinNonZero(data stats.Float64Data) (float64, error) {
 }
 
 func GetFunctions(server *Server) (funcGroups, FuncMap) {
-	funcs := make(FuncMap)
-	groups := make(funcGroups, 0)
+	var funcs = make(FuncMap)
+	var groups = make(funcGroups, 0)
 
 	// String Processing
 	groups = append(groups, loadStandardFunctionsString(funcs, server))
@@ -140,17 +140,17 @@ func GetStandardFunctions(server *Server) FuncMap {
 type statsTplFunc func(in interface{}) (float64, error) // {}
 
 func delimited(comma rune, header []interface{}, lines []interface{}) (string, error) {
-	output := bytes.NewBufferString(``)
-	csvwriter := csv.NewWriter(output)
+	var output = bytes.NewBufferString(``)
+	var csvwriter = csv.NewWriter(output)
 	csvwriter.Comma = comma
 	csvwriter.UseCRLF = true
-	input := make([][]string, 0)
+	var input = make([][]string, 0)
 
-	columnNames := sliceutil.Stringify(header)
+	var columnNames = sliceutil.Stringify(header)
 	input = append(input, columnNames)
 
 	for _, line := range lines {
-		lineslice := sliceutil.Sliceify(line)
+		var lineslice = sliceutil.Sliceify(line)
 
 		for i, value := range lineslice {
 			if typeutil.IsArray(value) && len(sliceutil.Compact(sliceutil.Sliceify(value))) == 0 {
@@ -160,7 +160,7 @@ func delimited(comma rune, header []interface{}, lines []interface{}) (string, e
 					lineslice = lineslice[:i]
 				}
 			} else if typeutil.IsMap(value) {
-				m := maputil.M(value)
+				var m = maputil.M(value)
 
 				for j, col := range columnNames {
 					if j < len(lineslice) {
@@ -266,7 +266,7 @@ func tmFmt(value interface{}, format ...string) (string, error) {
 }
 
 func calcFn(op string, values ...interface{}) (float64, error) {
-	valuesF := make([]float64, len(values))
+	var valuesF = make([]float64, len(values))
 
 	for i, v := range values {
 		if vF, err := stringutil.ConvertToFloat(v); err == nil {
@@ -282,7 +282,7 @@ func calcFn(op string, values ...interface{}) (float64, error) {
 	case 1:
 		return valuesF[0], nil
 	default:
-		out := valuesF[0]
+		var out = valuesF[0]
 
 		for _, v := range valuesF[1:] {
 			switch op {
@@ -314,20 +314,20 @@ func calcFn(op string, values ...interface{}) (float64, error) {
 }
 
 func filterByKey(funcs FuncMap, input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
-	out := make([]interface{}, 0)
-	expr := sliceutil.First(exprs)
-	exprStr := fmt.Sprintf("%v", expr)
+	var out = make([]interface{}, 0)
+	var expr = sliceutil.First(exprs)
+	var exprStr = fmt.Sprintf("%v", expr)
 
 	for i, mapitem := range sliceutil.Sliceify(input) {
-		submap := maputil.M(mapitem)
+		var submap = maputil.M(mapitem)
 
 		if item := submap.Get(key); !item.IsNil() {
 			if stringutil.IsSurroundedBy(exprStr, `{{`, `}}`) {
-				tmpl := NewTemplate(`inline`, TextEngine)
+				var tmpl = NewTemplate(`inline`, TextEngine)
 				tmpl.Funcs(funcs)
 
 				if err := tmpl.ParseString(exprStr); err == nil {
-					output := bytes.NewBuffer(nil)
+					var output = bytes.NewBuffer(nil)
 
 					if err := tmpl.Render(output, item.Value, ``); err == nil {
 						if evalValue := stringutil.Autotype(output.String()); !typeutil.IsZero(evalValue) {
@@ -358,10 +358,10 @@ func filterByKey(funcs FuncMap, input interface{}, key string, exprs ...interfac
 }
 
 func uniqByKey(funcs FuncMap, input interface{}, key string, saveLast bool, exprs ...interface{}) ([]interface{}, error) {
-	out := make([]interface{}, 0)
-	expr := sliceutil.First(exprs)
-	exprStr := fmt.Sprintf("%v", expr)
-	valuesEncountered := make(map[string]int)
+	var out = make([]interface{}, 0)
+	var expr = sliceutil.First(exprs)
+	var exprStr = fmt.Sprintf("%v", expr)
+	var valuesEncountered = make(map[string]int)
 
 	for i, submap := range sliceutil.Sliceify(input) {
 		if typeutil.IsMap(submap) {
@@ -369,11 +369,11 @@ func uniqByKey(funcs FuncMap, input interface{}, key string, saveLast bool, expr
 				var valkey string
 
 				if stringutil.IsSurroundedBy(exprStr, `{{`, `}}`) {
-					tmpl := NewTemplate(`inline`, TextEngine)
+					var tmpl = NewTemplate(`inline`, TextEngine)
 					tmpl.Funcs(funcs)
 
 					if err := tmpl.ParseString(exprStr); err == nil {
-						output := bytes.NewBuffer(nil)
+						var output = bytes.NewBuffer(nil)
 
 						if err := tmpl.Render(output, item, ``); err == nil {
 							valkey = output.String()
@@ -410,7 +410,7 @@ func uniqByKey(funcs FuncMap, input interface{}, key string, saveLast bool, expr
 }
 
 func sorter(input interface{}, reverse bool, keys ...string) []interface{} {
-	out := sliceutil.Sliceify(input)
+	var out = sliceutil.Sliceify(input)
 
 	sort.Slice(out, func(i, j int) bool {
 		var iVal, jVal string
@@ -434,7 +434,7 @@ func sorter(input interface{}, reverse bool, keys ...string) []interface{} {
 }
 
 func commonses(slice interface{}, cmp string) (interface{}, error) {
-	counts := make(map[interface{}]int)
+	var counts = make(map[interface{}]int)
 
 	if err := sliceutil.Each(slice, func(i int, value interface{}) error {
 		if c, ok := counts[value]; ok {
@@ -476,12 +476,12 @@ func commonses(slice interface{}, cmp string) (interface{}, error) {
 }
 
 func htmlNodeToMap(node *html.Node) map[string]interface{} {
-	output := make(map[string]interface{})
+	var output = make(map[string]interface{})
 
 	if node != nil && node.Type == html.ElementNode {
-		text := ``
-		children := make([]map[string]interface{}, 0)
-		attrs := make(map[string]interface{})
+		var text = ``
+		var children = make([]map[string]interface{}, 0)
+		var attrs = make(map[string]interface{})
 
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			switch child.Type {
@@ -538,7 +538,7 @@ func getSunriseSunset(latitude float64, longitude float64, atTime ...interface{}
 
 	_, offset := at.Zone()
 
-	p := sunrisesunset.Parameters{
+	var p = sunrisesunset.Parameters{
 		Latitude:  latitude,
 		Longitude: longitude,
 		UtcOffset: (float64(offset) / 60.0 / 60.0),
@@ -599,8 +599,8 @@ func cmp(op string, first interface{}, second interface{}) (bool, error) {
 			return false, fmt.Errorf("Invalid operator %q", op)
 		}
 	} else {
-		fVal := typeutil.Float(first)
-		sVal := typeutil.Float(second)
+		var fVal = typeutil.Float(first)
+		var sVal = typeutil.Float(second)
 
 		switch op {
 		case `gt`:

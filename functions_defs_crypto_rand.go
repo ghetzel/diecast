@@ -17,26 +17,26 @@ import (
 )
 
 func hashTheThing(fn string, input interface{}) (string, error) {
-	data := []byte(typeutil.String(input))
+	var data = []byte(typeutil.String(input))
 
 	switch fn {
 	case `md5`:
-		out := md5.Sum(data)
+		var out = md5.Sum(data)
 		return hex.EncodeToString(out[:]), nil
 	case `sha1`:
-		out := sha1.Sum(data)
+		var out = sha1.Sum(data)
 		return hex.EncodeToString(out[:]), nil
 	case `sha224`:
-		out := sha256.Sum224(data)
+		var out = sha256.Sum224(data)
 		return hex.EncodeToString(out[:]), nil
 	case `sha256`:
-		out := sha256.Sum256(data)
+		var out = sha256.Sum256(data)
 		return hex.EncodeToString(out[:]), nil
 	case `sha384`:
-		out := sha512.Sum384(data)
+		var out = sha512.Sum384(data)
 		return hex.EncodeToString(out[:]), nil
 	case `sha512`:
-		out := sha512.Sum512(data)
+		var out = sha512.Sum512(data)
 		return hex.EncodeToString(out[:]), nil
 	default:
 		return ``, fmt.Errorf("Unimplemented hashing function %q", fn)
@@ -186,8 +186,8 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(bounds ...interface{}) int64 {
-					min := int64(0)
-					max := int64(math.MaxInt64)
+					var min = int64(0)
+					var max = int64(math.MaxInt64)
 
 					switch len(bounds) {
 					case 2:
@@ -197,7 +197,7 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server *Server) funcGroup {
 						min = typeutil.Int(bounds[0])
 					}
 
-					delta := (max - min)
+					var delta = (max - min)
 
 					return (mrand.Int63n(delta) + min)
 				},
@@ -213,7 +213,7 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(count int) ([]byte, error) {
-					output := make([]byte, count)
+					var output = make([]byte, count)
 					if _, err := rand.Read(output); err == nil {
 						return output, nil
 					} else {

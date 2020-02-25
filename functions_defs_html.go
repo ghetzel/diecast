@@ -10,7 +10,7 @@ import (
 )
 
 func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGroup {
-	group := funcGroup{
+	var group = funcGroup{
 		Name:        `HTML Processing`,
 		Description: `Used to parse and modify HTML documents.`,
 		Functions: []funcDef{
@@ -20,7 +20,7 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 					`textual content of the nodes. Only text nodes are preserved; attribute names ` +
 					`and values, and comments, will be omitted.`,
 				Function: func(in interface{}) string {
-					stripped := strip.StripTags(fmt.Sprintf("%v", in))
+					var stripped = strip.StripTags(fmt.Sprintf("%v", in))
 					stripped = htmlmain.UnescapeString(stripped)
 					return stripped
 				},
@@ -42,7 +42,7 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 					},
 				},
 				Function: func(docI interface{}, selector string) ([]map[string]interface{}, error) {
-					elements := make([]map[string]interface{}, 0)
+					var elements = make([]map[string]interface{}, 0)
 
 					if doc, err := htmldoc(docI); err == nil {
 						doc.Find(selector).Each(func(i int, match *goquery.Selection) {

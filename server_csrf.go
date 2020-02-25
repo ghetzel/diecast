@@ -94,7 +94,7 @@ func (self *CSRF) Handle(w http.ResponseWriter, req *http.Request) bool {
 				// if we're validating the request, then we've "consumed" this token and
 				// should force-regenerate a new one
 				self.generateTokenForRequest(w, req, true)
-				creq := req.Clone(req.Context())
+				var creq = req.Clone(req.Context())
 
 				if req.Body != nil {
 					if body, err := ioutil.ReadAll(req.Body); err == nil {
@@ -176,7 +176,7 @@ func (self *CSRF) Verify(req *http.Request) bool {
 }
 
 func (self *CSRF) cookieFor(token string) *http.Cookie {
-	cookie := new(http.Cookie)
+	var cookie = new(http.Cookie)
 	cookie.Name = self.GetCookieName()
 	cookie.Value = token
 	cookie.Path = `/`
@@ -224,7 +224,7 @@ func (self *CSRF) generateTokenForRequest(w http.ResponseWriter, req *http.Reque
 		}
 	}
 
-	token := b58encode(data)
+	var token = b58encode(data)
 
 	// attach token to the current request context so other things involved in
 	// generating the response can see it
@@ -233,13 +233,13 @@ func (self *CSRF) generateTokenForRequest(w http.ResponseWriter, req *http.Reque
 	// set the cookie
 	w.Header().Set(`Vary`, `Cookie`)
 	w.Header().Set(self.GetHeaderName(), token)
-	cookie := self.cookieFor(token)
+	var cookie = self.cookieFor(token)
 	http.SetCookie(w, cookie)
 }
 
 func (self *CSRF) shouldPostprocessRequest(w http.ResponseWriter, req *http.Request) bool {
-	mediaTypes := DefaultCsrfInjectMediaTypes
-	resMediaType := w.Header().Get(`Content-Type`)
+	var mediaTypes = DefaultCsrfInjectMediaTypes
+	var resMediaType = w.Header().Get(`Content-Type`)
 
 	if len(self.InjectableMediaTypes) > 0 {
 		mediaTypes = self.InjectableMediaTypes
@@ -304,7 +304,7 @@ func (self *Server) middlewareCsrf(w http.ResponseWriter, req *http.Request) boo
 			//
 			RegisterPostprocessor(`__diecast_csrf`, func(in string, req *http.Request) (string, error) {
 				if req != nil {
-					w := reqres(req)
+					var w = reqres(req)
 
 					if csrf.shouldPostprocessRequest(w, req) {
 						if csrf.InjectFormFields {
@@ -318,7 +318,7 @@ func (self *Server) middlewareCsrf(w http.ResponseWriter, req *http.Request) boo
 
 							log.Debugf("[%s] injecting form field", reqid(req))
 
-							start := time.Now()
+							var start = time.Now()
 							defer reqtime(req, `csrf-inject`, time.Since(start))
 
 							if doc, err := htmldoc(in); err == nil {

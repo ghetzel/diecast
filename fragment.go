@@ -22,7 +22,7 @@ func (self FragmentSet) Header(server *Server) TemplateHeader {
 		baseHeader.Translations = server.Translations
 	}
 
-	finalHeader := &baseHeader
+	var finalHeader = &baseHeader
 
 	for _, frag := range self {
 		if frag.Header != nil {

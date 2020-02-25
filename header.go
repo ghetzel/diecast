@@ -43,7 +43,7 @@ func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error
 		return self, nil
 	}
 
-	newHeader := &TemplateHeader{
+	var newHeader = &TemplateHeader{
 		Bindings:       append(self.Bindings, other.Bindings...),             // ours first, then other's
 		Layout:         sliceutil.OrString(other.Layout, self.Layout),        // prefer other, fallback to ours
 		Renderer:       sliceutil.OrString(other.Renderer, self.Renderer),    // prefer other, fallback to ours

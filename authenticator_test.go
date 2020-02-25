@@ -20,9 +20,9 @@ func musturl(in string) *url.URL {
 }
 
 func TestAuthenticatorConfigs(t *testing.T) {
-	assert := require.New(t)
+	var assert = require.New(t)
 
-	auth0 := AuthenticatorConfig{
+	var auth0 = AuthenticatorConfig{
 		Name: `admin`,
 		Type: `always`,
 		Paths: []string{
@@ -34,7 +34,7 @@ func TestAuthenticatorConfigs(t *testing.T) {
 		},
 	}
 
-	auth1 := AuthenticatorConfig{
+	var auth1 = AuthenticatorConfig{
 		Name: `primary`,
 		Type: `always`,
 		Except: []string{
@@ -43,7 +43,7 @@ func TestAuthenticatorConfigs(t *testing.T) {
 		},
 	}
 
-	auths := AuthenticatorConfigs{auth0, auth1}
+	var auths = AuthenticatorConfigs{auth0, auth1}
 
 	auth, err := auths.Authenticator(httptest.NewRequest(`GET`, `/`, nil))
 	assert.NoError(err)
@@ -59,7 +59,7 @@ func TestAuthenticatorConfigs(t *testing.T) {
 }
 
 func TestBasicAuthenticator(t *testing.T) {
-	assert := require.New(t)
+	var assert = require.New(t)
 	auth, err := NewBasicAuthenticator(&AuthenticatorConfig{
 		Options: map[string]interface{}{
 			`credentials`: map[string]interface{}{
@@ -73,7 +73,7 @@ func TestBasicAuthenticator(t *testing.T) {
 	assert.NotNil(htp)
 	assert.True(htp.MatchesPassword(`t3st`))
 
-	req := httptest.NewRequest(`GET`, `/`, nil)
+	var req = httptest.NewRequest(`GET`, `/`, nil)
 	req.Header.Set(`Authorization`, `Basic `+base64.StdEncoding.EncodeToString(
 		[]byte(url.UserPassword(`tester01`, `t3st`).String()),
 	))

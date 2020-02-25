@@ -22,12 +22,12 @@ type BasicAuthenticator struct {
 }
 
 func NewBasicAuthenticator(config *AuthenticatorConfig) (*BasicAuthenticator, error) {
-	auth := &BasicAuthenticator{
+	var auth = &BasicAuthenticator{
 		config: config,
 		realm:  config.O(`realm`, fmt.Sprintf("diecast/%v", ApplicationVersion)).String(),
 	}
 
-	htpasswds := sliceutil.Stringify(sliceutil.Compact(config.O(`htpasswd`).Value))
+	var htpasswds = sliceutil.Stringify(sliceutil.Compact(config.O(`htpasswd`).Value))
 
 	if len(htpasswds) > 0 {
 		for _, filename := range htpasswds {
@@ -92,7 +92,7 @@ func (self *BasicAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 			// match against statically-configured user:passhash pairs
 			for authUser, passhash := range self.credentials {
 				if username == authUser {
-					ph := typeutil.String(passhash)
+					var ph = typeutil.String(passhash)
 
 					if enc, err := htpasswd.AcceptBcrypt(ph); err == nil && enc != nil {
 						return enc.MatchesPassword(password)
@@ -113,7 +113,7 @@ func (self *BasicAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 		w.Write([]byte(`Authorization Failed`))
 		return false
 	} else {
-		wwwauth := `Basic`
+		var wwwauth = `Basic`
 
 		if self.realm != `` {
 			wwwauth += ` realm=` + self.realm

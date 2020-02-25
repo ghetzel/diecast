@@ -9,7 +9,7 @@ import (
 )
 
 func loadStandardFunctionsTypes(funcs FuncMap, server *Server) funcGroup {
-	group := funcGroup{
+	var group = funcGroup{
 		Name:        `Type Detection and Manipulation`,
 		Description: `Used to detect and convert discrete values into different data types.`,
 		Functions: []funcDef{

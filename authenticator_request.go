@@ -22,7 +22,7 @@ type RequestAuthenticator struct {
 }
 
 func NewRequestAuthenticator(config *AuthenticatorConfig) (*RequestAuthenticator, error) {
-	auth := &RequestAuthenticator{
+	var auth = &RequestAuthenticator{
 		config: config,
 		methods: sliceutil.MapString(config.O(`methods`).Strings(), func(i int, value string) string {
 			return strings.ToUpper(value)

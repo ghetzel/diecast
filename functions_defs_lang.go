@@ -12,7 +12,7 @@ import (
 var HighlightTheme = `monokai`
 
 func loadStandardFunctionsLangHighlighting(funcs FuncMap, server *Server) funcGroup {
-	group := funcGroup{
+	var group = funcGroup{
 		Name:        `Language Highlighting`,
 		Description: `Utilities for performing syntax highlighting of source code.`,
 		Functions: []funcDef{

@@ -41,8 +41,8 @@ type candidateFile struct {
 //        b.
 //
 func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
-	id := reqid(req)
-	prefix := fmt.Sprintf("%s/", self.rp())
+	var id = reqid(req)
+	var prefix = fmt.Sprintf("%s/", self.rp())
 
 	var lastErr error
 	var serveFile *candidateFile
@@ -51,7 +51,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 		defer req.Body.Close()
 
 		// get a sequence of paths to search
-		requestPaths := self.candidatePathsForRequest(req)
+		var requestPaths = self.candidatePathsForRequest(req)
 
 		var localCandidate *candidateFile
 		var mountCandidate *candidateFile
@@ -163,7 +163,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 				log.Debugf("[%s] found: %s (%v)", id, serveFile.Type, serveFile.Source)
 
 				if strings.Contains(serveFile.Path, `__id.`) {
-					value := strings.Trim(path.Base(req.URL.Path), `/`)
+					var value = strings.Trim(path.Base(req.URL.Path), `/`)
 
 					serveFile.PathParams = append(serveFile.PathParams, KV{
 						K: `id`,
@@ -198,7 +198,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 }
 
 func (self *Server) candidatePathsForRequest(req *http.Request) []string {
-	requestPaths := []string{
+	var requestPaths = []string{
 		req.URL.Path,
 	}
 
@@ -207,7 +207,7 @@ func (self *Server) candidatePathsForRequest(req *http.Request) []string {
 		requestPaths = append(requestPaths, path.Join(req.URL.Path, self.IndexFile))
 
 		for _, ext := range self.TryExtensions {
-			base := filepath.Base(self.IndexFile)
+			var base = filepath.Base(self.IndexFile)
 			base = strings.TrimSuffix(base, filepath.Ext(self.IndexFile))
 
 			requestPaths = append(requestPaths, path.Join(req.URL.Path, fmt.Sprintf("%s.%s", base, ext)))

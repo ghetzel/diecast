@@ -7,7 +7,7 @@ import (
 )
 
 func TestFancyMapJoin(t *testing.T) {
-	assert := require.New(t)
+	var assert = require.New(t)
 
 	assert.Equal(`hello=there`, fancyMapJoin(map[string]interface{}{
 		`hello`: `there`,
