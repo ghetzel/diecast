@@ -1,4 +1,3 @@
-# Dockerfile for diecast
 FROM ubuntu:bionic
 MAINTAINER Gary Hetzel <its@gary.cool>
 
