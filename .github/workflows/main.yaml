@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - master
-    paths:
-      - "Dockerfile"
-      - "Makefile"
-      - "version.go"
 jobs:
   build:
     runs-on: ubuntu-latest
