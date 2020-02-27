@@ -1,15 +1,25 @@
 ---
-on: push
-name: Test
+name: build
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "/Dockerfile"
+      - "/Makefile"
+      - "/version.go"
 jobs:
-  run:
-    container:
-      image: ghetzel/makebox:go1.13.7
-
-    name: run
+  build:
     runs-on: ubuntu-latest
+    name: Build and Push Docker images
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v1
 
-      - name: Test
+      - name: Run Tests
         run: make test
+
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      - name: Build and Push Dockerfiles
+        run: make docker
