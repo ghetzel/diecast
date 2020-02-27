@@ -4,7 +4,7 @@
 GO111MODULE ?= on
 LOCALS      := $(shell find . -type f -name '*.go')
 BIN         ?= diecast-$(shell go env GOOS)-$(shell go env GOARCH)
-VERSION      = $(grep 'const ApplicationVersion' version.go | cut -d= -f2 | tr -d '`' | tr -d ' ')
+VERSION      = $(shell grep 'const ApplicationVersion' version.go | cut -d= -f2 | tr -d '`' | tr -d ' ')
 
 all: deps test build docs
 
