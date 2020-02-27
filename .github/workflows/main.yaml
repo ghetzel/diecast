@@ -11,6 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
+      - name: Install packages
+        run: apt-get install -qqy git bzr
+
       - name: Run Tests
         run: make test
 
