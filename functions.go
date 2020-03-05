@@ -183,6 +183,10 @@ func delimited(comma rune, header []interface{}, lines []interface{}) (string, e
 }
 
 func tmFmt(value interface{}, format ...string) (string, error) {
+	if value == nil || typeutil.String(value) == `` {
+		return ``, nil
+	}
+
 	if v, err := stringutil.ConvertToTime(value); err == nil {
 		var tmFormat string
 		var formatName string
