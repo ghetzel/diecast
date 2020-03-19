@@ -57,7 +57,7 @@ func (self *ProtocolRequest) Template(input interface{}) (typeutil.Variant, erro
 	// only do template evaluation if the input is a string that contains "{{" and "}}"
 	if vS := typeutil.String(input); strings.Contains(vS, `{{`) && strings.Contains(vS, `}}`) {
 		if len(self.TemplateFuncs) > 0 {
-			if v, err := EvalInline(typeutil.String(input), self.TemplateData, self.TemplateFuncs); err == nil {
+			if v, err := EvalInline(vS, self.TemplateData, self.TemplateFuncs); err == nil {
 				return typeutil.V(v), nil
 			} else {
 				return typeutil.V(nil), err

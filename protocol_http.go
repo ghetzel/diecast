@@ -57,7 +57,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 				if p, err := rr.Template(vS); err == nil {
 					vS = p.String()
 				} else {
-					return nil, fmt.Errorf("params: %v", err)
+					return nil, fmt.Errorf("param %q: %v", k, err)
 				}
 			}
 
