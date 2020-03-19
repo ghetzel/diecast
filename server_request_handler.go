@@ -281,15 +281,24 @@ func (self *Server) handleCandidateFile(
 		if header, templateData, err := SplitTemplateHeaderContent(file.Data); err == nil {
 			if header != nil {
 				if redirect := header.Redirect; redirect != nil {
-					w.Header().Set(`Location`, redirect.URL)
+					funcs, data := self.getPreBindingData(req, header)
 
-					if redirect.Code > 0 {
-						w.WriteHeader(redirect.Code)
+					if u, err := EvalInline(redirect.URL, data, funcs); err == nil {
+						if strings.TrimSpace(u) != `` {
+							w.Header().Set(`Location`, strings.TrimSpace(u))
+
+							if redirect.Code > 0 {
+								w.WriteHeader(redirect.Code)
+							} else {
+								w.WriteHeader(http.StatusMovedPermanently)
+							}
+
+							return true
+						}
 					} else {
-						w.WriteHeader(http.StatusMovedPermanently)
+						self.respondError(w, req, fmt.Errorf("parse template: %v", err), http.StatusInternalServerError)
+						return true
 					}
-
-					return true
 				}
 			}
 

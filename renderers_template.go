@@ -60,11 +60,15 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 		if hdr := options.Header; hdr != nil {
 			// include any configured response headers now
 			for name, value := range hdr.Headers {
-				w.Header().Set(name, MustEvalInline(
+				if v, err := EvalInline(
 					fmt.Sprintf("%v", value),
 					options.Data,
 					options.FunctionSet,
-				))
+				); err == nil {
+					w.Header().Set(name, v)
+				} else {
+					return fmt.Errorf("headers: %v", err)
+				}
 			}
 
 			if hdr.StatusCode > 0 {

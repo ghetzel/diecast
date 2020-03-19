@@ -54,7 +54,11 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 			}
 
 			if !rr.Binding.NoTemplate {
-				vS = rr.Template(vS).String()
+				if p, err := rr.Template(vS); err == nil {
+					vS = p.String()
+				} else {
+					return nil, fmt.Errorf("params: %v", err)
+				}
 			}
 
 			log.Debugf("[%s]  binding %q: param %v=%v", id, rr.Binding.Name, k, vS)
@@ -79,7 +83,13 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 				if err := maputil.Walk(rr.Binding.BodyParams, func(value interface{}, path []string, isLeaf bool) error {
 					if isLeaf {
 						if !rr.Binding.NoTemplate {
-							var rendered = rr.Template(value)
+							var rendered typeutil.Variant
+
+							if r, err := rr.Template(value); err == nil {
+								rendered = r
+							} else {
+								return fmt.Errorf("body param: %v", err)
+							}
 
 							if typeutil.IsScalar(rendered.Value) {
 								value = rendered.Auto()
@@ -134,7 +144,14 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 				}
 			}
 		} else if rr.Binding.RawBody != `` {
-			var payload = rr.Template(rr.Binding.RawBody).Bytes()
+			var payload []byte
+
+			if b, err := rr.Template(rr.Binding.RawBody); err == nil {
+				payload = b.Bytes()
+			} else {
+				return nil, fmt.Errorf("rawbody: %v", err)
+			}
+
 			log.Debugf("[%s]  binding %q: rawbody (%d bytes)", id, rr.Binding.Name, len(payload))
 			request.Body = ioutil.NopCloser(bytes.NewBuffer(payload))
 		}
@@ -154,7 +171,11 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 		// add headers to request
 		for k, v := range rr.Binding.Headers {
 			if !rr.Binding.NoTemplate {
-				v = rr.Template(v).String()
+				if vv, err := rr.Template(v); err == nil {
+					v = vv.String()
+				} else {
+					return nil, fmt.Errorf("headers: %v", err)
+				}
 			}
 
 			log.Debugf("[%s]  binding %q:  header %v=%v", id, rr.Binding.Name, k, v)

@@ -774,17 +774,19 @@ func (self *Server) applyTemplate(
 
 			if len(layouts) > 0 {
 				for _, layoutName := range layouts {
-					layoutName = MustEvalInline(layoutName, nil, earlyFuncs)
+					if layoutName, err := EvalInline(layoutName, nil, earlyFuncs); err == nil {
+						if layoutFile, err := self.LoadLayout(layoutName); err == nil {
+							if err := fragments.Parse(LayoutTemplateName, layoutFile); err != nil {
+								return err
+							}
 
-					if layoutFile, err := self.LoadLayout(layoutName); err == nil {
-						if err := fragments.Parse(LayoutTemplateName, layoutFile); err != nil {
+							break
+						} else if layoutName != `default` {
+							// we don't care if the default layout is missing
 							return err
 						}
-
-						break
-					} else if layoutName != `default` {
-						// we don't care if the default layout is missing
-						return err
+					} else {
+						return fmt.Errorf("layout: %v", err)
 					}
 				}
 			}
@@ -810,7 +812,11 @@ func (self *Server) applyTemplate(
 	finalHeader.UrlParams = urlParams
 
 	// render locale from template
-	finalHeader.Locale = MustEvalInline(finalHeader.Locale, earlyData, earlyFuncs)
+	if locale, err := EvalInline(finalHeader.Locale, earlyData, earlyFuncs); err == nil {
+		finalHeader.Locale = locale
+	} else {
+		return fmt.Errorf("locale: %v", err)
+	}
 
 	if funcs, data, err := self.GetTemplateData(req, &finalHeader); err == nil {
 		var start = time.Now()
@@ -826,7 +832,14 @@ func (self *Server) applyTemplate(
 
 				if swcase.UsePath != `` {
 					// if a condition is specified, it must evaluate to a truthy value to proceed
-					var cond = MustEvalInline(swcase.Condition, data, funcs)
+					var cond string
+
+					if c, err := EvalInline(swcase.Condition, data, funcs); err == nil {
+						cond = c
+					} else {
+						return fmt.Errorf("switch: %v", err)
+					}
+
 					checkType, checkTypeArg := stringutil.SplitPair(swcase.CheckType, `:`)
 
 					switch checkType {
@@ -904,7 +917,11 @@ func (self *Server) applyTemplate(
 		}
 
 		// if specified, get the FINAL renderer that the template output will be passed to
-		finalHeader.Renderer = MustEvalInline(finalHeader.Renderer, data, funcs)
+		if renderer, err := EvalInline(finalHeader.Renderer, data, funcs); err == nil {
+			finalHeader.Renderer = renderer
+		} else {
+			return fmt.Errorf("renderer: %v", err)
+		}
 
 		switch finalHeader.Renderer {
 		case ``, `html`:
@@ -1366,7 +1383,12 @@ func (self *Server) evalPageData(final bool, req *http.Request, header *Template
 			if isLeaf {
 				switch value.(type) {
 				case string:
-					value = MustEvalInline(value.(string), data, funcs)
+					if v, err := EvalInline(value.(string), data, funcs); err == nil {
+						value = v
+					} else {
+						return err
+					}
+
 					value = stringutil.Autotype(value)
 
 					// not final pass + no value = leave the expression intact so that a later pass might succeed
@@ -1454,16 +1476,28 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 				}
 
 				// eval the URL
-				binding.Resource = MustEvalInline(binding.Resource, data, funcs, suffix)
+				if r, err := EvalInline(binding.Resource, data, funcs, suffix); err == nil {
+					binding.Resource = r
+				} else {
+					return nil, nil, fmt.Errorf("resource: %v", err)
+				}
 
 				// eval / set querystring params
 				for qsk, qsv := range pgConfig.QueryStrings {
-					binding.Params[qsk] = typeutil.Auto(MustEvalInline(qsv, data, funcs, suffix))
+					if t, err := EvalInline(qsv, data, funcs, suffix); err == nil {
+						binding.Params[qsk] = typeutil.Auto(t)
+					} else {
+						return nil, nil, fmt.Errorf("param: %v", err)
+					}
 				}
 
 				// eval / set request headers
 				for hk, hv := range pgConfig.Headers {
-					binding.Headers[hk] = MustEvalInline(hv, data, funcs, suffix)
+					if t, err := EvalInline(hv, data, funcs, suffix); err == nil {
+						binding.Headers[hk] = t
+					} else {
+						return nil, nil, fmt.Errorf("headers: %v", err)
+					}
 				}
 
 				v, err := binding.Evaluate(req, header, data, funcs)
@@ -1471,13 +1505,27 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 				if err == nil {
 					var asMap = maputil.M(v)
 
-					total = typeutil.Int(MustEvalInline(pgConfig.Total, asMap.MapNative(), funcs, suffix))
-					count = typeutil.Int(MustEvalInline(pgConfig.Count, asMap.MapNative(), funcs, suffix))
+					if v, err := EvalInline(pgConfig.Total, asMap.MapNative(), funcs, suffix); err == nil {
+						total = typeutil.Int(v)
+					} else {
+						return nil, nil, fmt.Errorf("paginate: %v", err)
+					}
+
+					if v, err := EvalInline(pgConfig.Count, asMap.MapNative(), funcs, suffix); err == nil {
+						count = typeutil.Int(v)
+					} else {
+						return nil, nil, fmt.Errorf("paginate: %v", err)
+					}
+
 					soFar += count
 
 					log.Debugf("[%v] paginated binding %q: total=%v count=%v soFar=%v", reqid(req), binding.Name, total, count, soFar)
 
-					proceed = !typeutil.Bool(MustEvalInline(pgConfig.Done, asMap.MapNative(), funcs, suffix))
+					if v, err := EvalInline(pgConfig.Done, asMap.MapNative(), funcs, suffix); err == nil {
+						proceed = !typeutil.Bool(v)
+					} else {
+						return nil, nil, fmt.Errorf("paginate: %v", err)
+					}
 
 					if pgConfig.Maximum > 0 && soFar >= pgConfig.Maximum {
 						proceed = false
@@ -1562,12 +1610,13 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			var repeatExpr = fmt.Sprintf("{{ range $index, $item := (%v) }}\n", binding.Repeat)
 			repeatExpr += fmt.Sprintf("%v\n", binding.Resource)
 			repeatExpr += "{{ end }}"
-			var repeatExprOut = rxEmptyLine.ReplaceAllString(
-				strings.TrimSpace(
-					MustEvalInline(repeatExpr, data, funcs),
-				),
-				``,
-			)
+			var repeatExprOut string
+
+			if v, err := EvalInline(repeatExpr, data, funcs); err == nil {
+				repeatExprOut = rxEmptyLine.ReplaceAllString(strings.TrimSpace(v), ``)
+			} else {
+				return nil, nil, fmt.Errorf("repeater: %v", err)
+			}
 
 			log.Debugf("Repeater: \n%v\nOutput:\n%v", repeatExpr, repeatExprOut)
 			var repeatIters = strings.Split(repeatExprOut, "\n")
@@ -1620,7 +1669,11 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			case bool:
 				flags[name] = def.(bool)
 			default:
-				flags[name] = typeutil.V(MustEvalInline(fmt.Sprintf("%v", def), data, funcs)).Bool()
+				if flag, err := EvalInline(fmt.Sprintf("%v", def), data, funcs); err == nil {
+					flags[name] = typeutil.V(flag).Bool()
+				} else {
+					return nil, nil, fmt.Errorf("flags: %v", err)
+				}
 			}
 		}
 

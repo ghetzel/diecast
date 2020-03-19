@@ -17,10 +17,16 @@ func TestProtocolRequest(t *testing.T) {
 		TemplateFuncs: fns,
 	}
 
-	assert.EqualValues(123, req.Template(`{{ 123 }}`).Auto())
+	v, err := req.Template(`{{ 123 }}`)
+	assert.NoError(err)
+	assert.EqualValues(123, v.Auto())
+
+	v, err = req.Template([]string{
+		`1`, `2`, `3`,
+	})
+
+	assert.NoError(err)
 	assert.EqualValues([]string{
 		`1`, `2`, `3`,
-	}, req.Template([]string{
-		`1`, `2`, `3`,
-	}).Value)
+	}, v.Value)
 }

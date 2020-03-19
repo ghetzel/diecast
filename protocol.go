@@ -53,17 +53,19 @@ func (self *ProtocolRequest) ReadFile(filename string) ([]byte, error) {
 	return nil, fmt.Errorf("no such file or directory")
 }
 
-func (self *ProtocolRequest) Template(input interface{}) typeutil.Variant {
+func (self *ProtocolRequest) Template(input interface{}) (typeutil.Variant, error) {
 	// only do template evaluation if the input is a string that contains "{{" and "}}"
 	if vS := typeutil.String(input); strings.Contains(vS, `{{`) && strings.Contains(vS, `}}`) {
 		if len(self.TemplateFuncs) > 0 {
-			return typeutil.V(
-				MustEvalInline(typeutil.String(input), self.TemplateData, self.TemplateFuncs),
-			)
+			if v, err := EvalInline(typeutil.String(input), self.TemplateData, self.TemplateFuncs); err == nil {
+				return typeutil.V(v), nil
+			} else {
+				return typeutil.V(nil), err
+			}
 		}
 	}
 
-	return typeutil.V(input)
+	return typeutil.V(input), nil
 }
 
 func (self *ProtocolRequest) Conf(proto string, key string, fallbacks ...interface{}) typeutil.Variant {

@@ -156,18 +156,26 @@ func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface
 		}
 
 		if self.OnlyIfExpr != `` {
-			if v := MustEvalInline(self.OnlyIfExpr, data, funcs); !typeutil.Bool(v) {
-				self.Optional = true
-				log.Debugf("[%s] Binding %q not being evaluated because only_if expression was false", id, self.Name)
-				return ErrSkipEval
+			if v, err := EvalInline(self.OnlyIfExpr, data, funcs); err == nil {
+				if !typeutil.Bool(v) {
+					self.Optional = true
+					log.Debugf("[%s] Binding %q not being evaluated because only_if expression was false", id, self.Name)
+					return ErrSkipEval
+				}
+			} else {
+				return fmt.Errorf("only_if: %v", err)
 			}
 		}
 
 		if self.NotIfExpr != `` {
-			if v := MustEvalInline(self.NotIfExpr, data, funcs); typeutil.Bool(v) {
-				self.Optional = true
-				log.Debugf("[%s] Binding %q not being evaluated because not_if expression was truthy", id, self.Name)
-				return ErrSkipEval
+			if v, err := EvalInline(self.NotIfExpr, data, funcs); err == nil {
+				if typeutil.Bool(v) {
+					self.Optional = true
+					log.Debugf("[%s] Binding %q not being evaluated because not_if expression was truthy", id, self.Name)
+					return ErrSkipEval
+				}
+			} else {
+				return fmt.Errorf("not_if: %v", err)
 			}
 		}
 	}
@@ -191,7 +199,13 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	}
 
 	method = strings.ToUpper(method)
-	var uri = MustEvalInline(self.Resource, data, funcs)
+	var uri string
+
+	if u, err := EvalInline(self.Resource, data, funcs); err == nil {
+		uri = u
+	} else {
+		return nil, fmt.Errorf("resource: %v", err)
+	}
 
 	// bindings may specify that a request should be made to the currently server address by
 	// prefixing the URL path with a colon (":") or slash ("/").
@@ -262,7 +276,13 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		}); err == nil {
 			defer response.Close()
 
-			var onError = BindingErrorAction(MustEvalInline(string(self.OnError), data, funcs))
+			var onError BindingErrorAction
+
+			if oe, err := EvalInline(string(self.OnError), data, funcs); err == nil {
+				onError = BindingErrorAction(oe)
+			} else {
+				return nil, fmt.Errorf("on_error: %v", err)
+			}
 
 			// handle per-http-status response handlers
 			if len(self.IfStatus) > 0 && response.StatusCode > 0 {
@@ -283,7 +303,11 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				}
 
 				if statusAction != `` {
-					statusAction = BindingErrorAction(MustEvalInline(string(statusAction), data, funcs))
+					if se, err := EvalInline(string(statusAction), data, funcs); err == nil {
+						statusAction = BindingErrorAction(se)
+					} else {
+						return nil, fmt.Errorf("if_status: %v", err)
+					}
 
 					switch statusAction {
 					case ActionIgnore:
@@ -292,7 +316,11 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						var redirect = string(statusAction)
 
 						if !self.NoTemplate {
-							redirect = MustEvalInline(redirect, data, funcs)
+							if r, err := EvalInline(redirect, data, funcs); err == nil {
+								redirect = r
+							} else {
+								return nil, fmt.Errorf("redirect: %v", err)
+							}
 						}
 
 						// if a url or path was specified, redirect the parent request to it
@@ -423,14 +451,6 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	}
 }
 
-func MustEvalInline(input string, data map[string]interface{}, funcs FuncMap, names ...string) string {
-	if out, err := EvalInline(input, data, funcs); err == nil {
-		return out
-	} else {
-		panic(err.Error())
-	}
-}
-
 func EvalInline(input string, data map[string]interface{}, funcs FuncMap, names ...string) (string, error) {
 	var suffix = strings.Join(names, `-`)
 
@@ -461,7 +481,7 @@ func EvalInline(input string, data map[string]interface{}, funcs FuncMap, names 
 }
 
 func ApplyJPath(data interface{}, jpath string) (interface{}, error) {
-	if jpath != `` {
+	if typeutil.IsMap(data) && jpath != `` {
 		var err error
 
 		for i, line := range strings.Split(jpath, "\n") {
