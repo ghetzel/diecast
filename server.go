@@ -1445,6 +1445,14 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		var start = time.Now()
 		describeTimer(fmt.Sprintf("binding-%s", binding.Name), fmt.Sprintf("Diecast Bindings: %s", binding.Name))
 
+		if header != nil {
+			if v, err := maputil.Merge(header.DefaultHeaders, binding.Headers); err == nil {
+				binding.Headers = maputil.Stringify(v)
+			} else {
+				return nil, nil, fmt.Errorf("merge headers: %v", err)
+			}
+		}
+
 		// pagination data
 		if pgConfig := binding.Paginate; pgConfig != nil {
 			var results = make([]map[string]interface{}, 0)
@@ -1469,10 +1477,6 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 
 				if len(binding.Params) == 0 {
 					binding.Params = make(map[string]interface{})
-				}
-
-				if len(binding.Headers) == 0 {
-					binding.Headers = make(map[string]string)
 				}
 
 				// eval the URL
