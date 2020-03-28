@@ -152,10 +152,10 @@ type TlsConfig struct {
 }
 
 type LogConfig struct {
-	Format      string `yaml:"format"               json:"format"`             // configure the output format for logging requests
-	Destination string `yaml:"destination"                 json:"destination"` // specify where logs should be written to
-	Truncate    bool   `yaml:"truncate"             json:"truncate"`           // if true, the output log file will be truncated on startup
-	Colorize    bool   `yaml:"colorize"             json:"colorize"`           // if false, log output will not be colorized
+	Format      string `yaml:"format"               json:"format"`      // configure the output format for logging requests
+	Destination string `yaml:"destination"          json:"destination"` // specify where logs should be written to
+	Truncate    bool   `yaml:"truncate"             json:"truncate"`    // if true, the output log file will be truncated on startup
+	Colorize    bool   `yaml:"colorize"             json:"colorize"`    // if false, log output will not be colorized
 }
 
 type Server struct {

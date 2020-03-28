@@ -311,6 +311,11 @@ func main() {
 					server.TemplatePatterns = append(server.TemplatePatterns, `/`+filepath.Base(abspath))
 					server.Address = fmt.Sprintf("127.0.0.1:%d", port)
 					server.BindingPrefix = fmt.Sprintf("http://%s", server.Address)
+					server.Log.Destination = `/dev/null`
+
+					if !c.IsSet(`log-level`) {
+						log.SetLevelString(`warning`)
+					}
 				} else {
 					log.Fatalf("cannot allocate ephemeral port: %v", err)
 				}
