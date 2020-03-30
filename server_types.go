@@ -3,6 +3,8 @@ package diecast
 import (
 	"net/http"
 	"time"
+
+	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 type KV struct {
@@ -113,6 +115,16 @@ type RequestUrlInfo struct {
 	Params     []KV                   `json:"params"`
 }
 
+func (self RequestUrlInfo) ParamsSlice() []interface{} {
+	var params []interface{}
+
+	for _, kv := range self.Params {
+		params = append(params, kv.V)
+	}
+
+	return params
+}
+
 type RequestInfo struct {
 	ID               string                 `json:"id"`
 	Timestamp        int64                  `json:"timestamp"`
@@ -129,4 +141,20 @@ type RequestInfo struct {
 	URL              RequestUrlInfo         `json:"url"`
 	TLS              *RequestTlsInfo        `json:"tls"`
 	CSRFToken        string                 `json:"csrftoken,omitempty"`
+}
+
+func (self *RequestInfo) Header(key string) typeutil.Variant {
+	if v, ok := self.Headers[key]; ok {
+		return typeutil.V(v)
+	}
+
+	return typeutil.V(nil)
+}
+
+func (self *RequestInfo) Cookie(key string) *Cookie {
+	if c, ok := self.Cookies[key]; ok {
+		return &c
+	}
+
+	return nil
 }

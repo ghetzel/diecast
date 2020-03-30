@@ -1016,10 +1016,8 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 
 	// fn querystrings: Return a map of all of the query string parameters in the current URL.
 	funcs[`querystrings`] = func() map[string]interface{} {
-		if v := maputil.DeepGet(data, []string{`request`, `url`, `query`}, nil); v != nil {
-			if vMap, ok := v.(map[string]interface{}); ok {
-				return vMap
-			}
+		if reqinfo, ok := data[`_request`].(*RequestInfo); ok {
+			return reqinfo.URL.Query
 		}
 
 		return make(map[string]interface{})
@@ -1031,14 +1029,15 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 			fallbacks = []interface{}{``}
 		}
 
-		if v := maputil.DeepGet(
-			data,
-			[]string{`request`, `cookies`, fmt.Sprintf("%v", key), `value`},
-		); !typeutil.IsZero(v) {
-			return v
-		} else {
-			return fallbacks[0]
+		if reqinfo, ok := data[`_request`].(*RequestInfo); ok {
+			if cookie := reqinfo.Cookie(typeutil.String(key)); cookie != nil {
+				if cookie.Value != nil {
+					return cookie.Value
+				}
+			}
 		}
+
+		return fallbacks[0]
 	}
 
 	// fn qs: Return the value of query string parameter *key* in the current URL, or return *fallback*.
@@ -1047,7 +1046,15 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 			fallbacks = []interface{}{``}
 		}
 
-		return maputil.DeepGet(data, []string{`request`, `url`, `query`, fmt.Sprintf("%v", key)}, fallbacks[0])
+		if reqinfo, ok := data[`_request`].(*RequestInfo); ok {
+			if v, ok := reqinfo.URL.Query[typeutil.String(key)]; ok {
+				if typeutil.String(v) != `` {
+					return v
+				}
+			}
+		}
+
+		return fallbacks[0]
 	}
 
 	// fn headers: Return the value of the *header* HTTP request header from the request used to
@@ -1057,12 +1064,24 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 			fallbacks = []interface{}{``}
 		}
 
-		return fmt.Sprintf("%v", maputil.DeepGet(data, []string{`request`, `headers`, key}, fallbacks[0]))
+		if reqinfo, ok := data[`_request`].(*RequestInfo); ok {
+			if v, ok := reqinfo.Headers[key]; ok {
+				if vS := typeutil.String(v); vS != `` {
+					return vS
+				}
+			}
+		}
+
+		return typeutil.String(fallbacks[0])
 	}
 
 	// fn param: Return the value of the named or indexed URL parameter, or nil of none are present.
 	funcs[`param`] = func(nameOrIndex interface{}, fallbacks ...interface{}) interface{} {
-		var params = sliceutil.Sliceify(maputil.DeepGet(data, []string{`request`, `url`, `params`}))
+		var params []interface{}
+
+		if reqinfo, ok := data[`_request`].(*RequestInfo); ok {
+			params = reqinfo.URL.ParamsSlice()
+		}
 
 		x, _ := json.MarshalIndent(params, ``, `  `)
 		log.Noticef("noot %s", string(x))
@@ -1264,18 +1283,19 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 		}
 
 		// add user-preferred languages via Accept-Language header
-		if al := typeutil.String(maputil.DeepGet(data, []string{
-			`request`,
-			`headers`,
-			`accept_language`,
-		}, ``)); al != `` {
-			if tags, _, err := language.ParseAcceptLanguage(al); err == nil {
+		var acceptLanguage string
+
+		if reqinfo, ok := data[`_request`].(*RequestInfo); ok {
+			acceptLanguage = reqinfo.Header(`accept_language`).String()
+		}
+		if acceptLanguage != `` {
+			if tags, _, err := language.ParseAcceptLanguage(acceptLanguage); err == nil {
 				for _, tag := range tags {
 					locales = append(locales, tag.String())
 					locales = append(locales, i18nTagBase(tag))
 				}
 			} else {
-				log.Warningf("i18n: invalid Accept-Language value %q", al)
+				log.Warningf("i18n: invalid Accept-Language value %q", acceptLanguage)
 			}
 		}
 
@@ -2062,7 +2082,8 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 	}
 
 	request.CSRFToken = csrftoken(req)
-	rv[`request`] = maputil.DeepCopyStruct(request)
+	rv[`request`] = maputil.M(request).MapNative(`json`)
+	rv[`_request`] = &request
 
 	// environment variables
 	var env = make(map[string]interface{})
