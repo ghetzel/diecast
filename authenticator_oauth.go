@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ghetzel/go-stockutil/httputil"
-	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/amazon"
@@ -142,8 +141,6 @@ func (self *OauthAuthenticator) Callback(w http.ResponseWriter, req *http.Reques
 						HttpOnly: true,
 						SameSite: http.SameSiteStrictMode,
 					}
-
-					log.Noticef("oauth token %v", token)
 
 					if self.sessionDuration > 0 {
 						cookie.Expires = time.Now().Add(self.sessionDuration)

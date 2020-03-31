@@ -43,8 +43,6 @@ func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, optio
 	defer options.Input.Close()
 
 	if data, err := ioutil.ReadAll(options.Input); err == nil {
-		// log.Debugf("%T: libsass v%v", self, C.GoString(C.libsass_version())
-
 		// setup Sass_Data_Context with the file contents we've been given
 		var dctx = C.sass_make_data_context(C.CString(string(data)))
 		defer C.sass_delete_data_context(dctx)

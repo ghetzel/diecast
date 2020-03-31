@@ -7,6 +7,14 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
+func kvValues(kv []KV) (values []interface{}) {
+	for _, item := range kv {
+		values = append(values, item.V)
+	}
+
+	return
+}
+
 type KV struct {
 	K string      `json:"key"`
 	V interface{} `json:"value"`

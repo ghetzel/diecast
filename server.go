@@ -8,7 +8,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -1077,30 +1076,26 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 
 	// fn param: Return the value of the named or indexed URL parameter, or nil of none are present.
 	funcs[`param`] = func(nameOrIndex interface{}, fallbacks ...interface{}) interface{} {
-		var params []interface{}
+		var params []KV
 
 		if reqinfo, ok := data[`_request`].(*RequestInfo); ok {
-			params = reqinfo.URL.ParamsSlice()
+			params = reqinfo.URL.Params
 		}
 
-		x, _ := json.MarshalIndent(params, ``, `  `)
-		log.Noticef("noot %s", string(x))
-
-		for i, item := range params {
-			var kv = maputil.M(item)
+		for i, kv := range params {
 			var wantKey = typeutil.String(nameOrIndex)
 			var wantIndex = int(typeutil.Int(wantKey))
 
-			if sval := kv.String(`value`); sval != `` {
+			if sval := typeutil.String(kv.V); sval != `` {
 				if typeutil.IsInteger(wantKey) {
 					// zero index: return all param values as an array
 					if wantIndex == 0 {
-						return maputil.Pluck(params, []string{`value`})
+						return kvValues(params)
 					} else if i == (wantIndex - 1) {
-						return kv.Auto(`value`)
+						return typeutil.Auto(kv.V)
 					}
-				} else if kv.String(`key`) == wantKey {
-					return kv.Auto(`value`)
+				} else if kv.K == wantKey {
+					return typeutil.Auto(kv.V)
 				}
 			}
 		}
