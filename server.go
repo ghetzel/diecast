@@ -2077,8 +2077,13 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 	}
 
 	request.CSRFToken = csrftoken(req)
-	rv[`request`] = maputil.M(request).MapNative(`json`)
-	rv[`_request`] = &request
+
+	if m, err := request.asMap(); err == nil {
+		rv[`request`] = m
+		rv[`_request`] = &request
+	} else {
+		panic(err.Error())
+	}
 
 	// environment variables
 	var env = make(map[string]interface{})

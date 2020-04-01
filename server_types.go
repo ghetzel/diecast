@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -149,6 +150,20 @@ type RequestInfo struct {
 	URL              RequestUrlInfo         `json:"url"`
 	TLS              *RequestTlsInfo        `json:"tls"`
 	CSRFToken        string                 `json:"csrftoken,omitempty"`
+}
+
+func (self *RequestInfo) asMap() (map[string]interface{}, error) {
+	var rv map[string]interface{}
+
+	if data, err := json.Marshal(self); err == nil {
+		if err := json.Unmarshal(data, &rv); err == nil {
+			return rv, nil
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
 }
 
 func (self *RequestInfo) Header(key string) typeutil.Variant {
