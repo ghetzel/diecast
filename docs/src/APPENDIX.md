@@ -25,33 +25,32 @@ function, as well as additional commonly-used formats.
 | `slash-dmy`   | "02/01/2006"                          |
 | `ymd`         | "2006-01-02"                          |
 | `ruby`        | "Mon Jan 02 15:04:05 -0700 2006"      |
-| `ansic`       | "Mon Jan _2 15:04:05 2006"            |
+| `ansic`       | "Mon Jan \_2 15:04:05 2006"           |
 | `ruby`        | "Mon Jan 02 15:04:05 -0700 2006"      |
-| `unixdate`    | "Mon Jan _2 15:04:05 MST 2006"        |
-| `stamp`       | "Jan _2 15:04:05"                     |
-| `stamp-ms`    | "Jan _2 15:04:05.000"                 |
-| `stamp-us`    | "Jan _2 15:04:05.000000"              |
-| `stamp-ns`    | "Jan _2 15:04:05.000000000"           |
+| `unixdate`    | "Mon Jan \_2 15:04:05 MST 2006"       |
+| `stamp`       | "Jan \_2 15:04:05"                    |
+| `stamp-ms`    | "Jan \_2 15:04:05.000"                |
+| `stamp-us`    | "Jan \_2 15:04:05.000000"             |
+| `stamp-ns`    | "Jan \_2 15:04:05.000000000"          |
 
 #### Custom Formats
 
 You can also specify a custom format string by using the components the the _reference date_ as an
-example to Diecast on how to translate the given date into the output you want.  The reference
-date/time is: `Mon Jan 2 15:04:05 MST 2006`.  In the predefined formats above, the examples given all
+example to Diecast on how to translate the given date into the output you want. The reference
+date/time is: `Mon Jan 2 15:04:05 MST 2006`. In the predefined formats above, the examples given all
 use this reference date/time, and you can refer to those formats for building your own strings.
 
-For example, given the date 2018-03-10T16:30:00, and the custom format string "Mon, January _1, 2006",
-that date would be displayed as "Sat, March 10, 2018".  The format was built by providing examples
-from the reference date on how to do the conversion.  The values used in the reference date have been
+For example, given the date 2018-03-10T16:30:00, and the custom format string "Mon, January \_1, 2006",
+that date would be displayed as "Sat, March 10, 2018". The format was built by providing examples
+from the reference date on how to do the conversion. The values used in the reference date have been
 carefully chosen to avoid any ambiguity when specifying custom formats.
-
 
 ### Wildcard Patterns
 
-Throughout the application, certain configuration options support a way to specify wildcard patterns that match more than just a specific string.  These types of patterns are especially useful when working with URLs, where it is common to want settings to apply to all URLs that start with or otherwise contain a specific string.  Below is a description of the wildcard support Diecast implements:
+Throughout the application, certain configuration options support a way to specify wildcard patterns that match more than just a specific string. These types of patterns are especially useful when working with URLs, where it is common to want settings to apply to all URLs that start with or otherwise contain a specific string. Below is a description of the wildcard support Diecast implements:
 
-| Pattern | Example    | Description |
-| ------- | ---------- | ----------- |
-| `*`     | `/api/*`   | Match zero or more _non-separator_ characters (`/`). |
-| `**`    | `/api/**`  | Match zero or more characters, including separators. |
-| `?`     | `/api/?`   | Match zero or one character. |
+| Pattern | Example   | Description                                          |
+| ------- | --------- | ---------------------------------------------------- |
+| `*`     | `/api/*`  | Match zero or more _non-separator_ characters (`/`). |
+| `**`    | `/api/**` | Match zero or more characters, including separators. |
+| `?`     | `/api/?`  | Match zero or one character.                         |

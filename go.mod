@@ -2,6 +2,7 @@ module github.com/ghetzel/diecast
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.0
+	github.com/ahmedash95/ratelimit v0.0.0-20180306211640-c1fee8927478
 	github.com/alecthomas/chroma v0.7.1
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/biessek/golang-ico v0.0.0-20180326222316-d348d9ea4670
@@ -34,6 +35,7 @@ require (
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1
 	golang.org/x/text v0.3.0
+	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1
 	gopkg.in/yaml.v2 v2.2.2
 )
 
