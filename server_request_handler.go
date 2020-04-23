@@ -279,29 +279,6 @@ func (self *Server) handleCandidateFile(
 	if self.shouldApplyTemplate(file.Path) || file.ForceTemplate {
 		// tease the template header out of the file
 		if header, templateData, err := SplitTemplateHeaderContent(file.Data); err == nil {
-			if header != nil {
-				if redirect := header.Redirect; redirect != nil {
-					funcs, data := self.getPreBindingData(req, header)
-
-					if u, err := EvalInline(redirect.URL, data, funcs); err == nil {
-						if strings.TrimSpace(u) != `` {
-							w.Header().Set(`Location`, strings.TrimSpace(u))
-
-							if redirect.Code > 0 {
-								w.WriteHeader(redirect.Code)
-							} else {
-								w.WriteHeader(http.StatusMovedPermanently)
-							}
-
-							return true
-						}
-					} else {
-						self.respondError(w, req, fmt.Errorf("parse template: %v", err), http.StatusInternalServerError)
-						return true
-					}
-				}
-			}
-
 			// render the final template and write it out
 			if err := self.applyTemplate(
 				w,

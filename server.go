@@ -28,6 +28,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ahmedash95/ratelimit"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
@@ -157,6 +158,21 @@ type LogConfig struct {
 	Colorize    bool   `yaml:"colorize"             json:"colorize"`    // if false, log output will not be colorized
 }
 
+type RateLimitConfig struct {
+	Enable    bool   `yaml:"enable"     json:"enable"`
+	Limit     string `yaml:"limit"      json:"limit"`      // Specify a rate limit string (e.g.: "1r/s", "200r/m")
+	PerClient bool   `yaml:"per_client" json:"per_client"` // Specify that the limit should be applied per-client instead of globally.
+	Penalty   string `yaml:"penalty"    json:"penalty"`    // An amount of time to sleep instead of returning an HTTP 429 error on rate limited requests
+}
+
+func (self *RateLimitConfig) KeyFor(req *http.Request) string {
+	if self.PerClient {
+		return req.RemoteAddr
+	} else {
+		return `__global__`
+	}
+}
+
 type Server struct {
 	Actions             []*Action                 `yaml:"actions"                 json:"actions"`                 // Configure routes and actions to execute when those routes are requested.
 	AdditionalFunctions template.FuncMap          `yaml:"-"                       json:"-"`                       // Allow for the programmatic addition of extra functions for use in templates.
@@ -207,6 +223,7 @@ type Server struct {
 	BeforeHandlers      []Middleware              `yaml:"-"                       json:"-"`                       // contains a stack of Middleware functions that are run before handling the request
 	AfterHandlers       []http.HandlerFunc        `yaml:"-"                       json:"-"`                       // contains a stack of HandlerFuncs that are run after handling the request.  These functions cannot stop the request, as it's already been written to the client.
 	Protocol            string                    `yaml:"protocol"                json:"protocol"`                // Specify which HTTP protocol to use ("http", "http2", "quic", "http3")
+	RateLimit           *RateLimitConfig          `yaml:"ratelimit"               json:"ratelimit"`               // Specify a rate limiting configuration.
 	altRootCaPool       *x509.CertPool
 	faviconImageIco     []byte
 	fs                  http.FileSystem
@@ -217,6 +234,7 @@ type Server struct {
 	userRouter          *vestigo.Router
 	logwriter           io.Writer
 	isTerminalOutput    bool
+	rateLimiter         *ratelimit.Limit
 }
 
 func NewServer(root interface{}, patterns ...string) *Server {
@@ -658,6 +676,31 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	// perform rate limiting check
+	if rl := self.RateLimit; rl != nil && rl.Enable && rl.Limit != `` {
+		if self.rateLimiter == nil {
+			var lim = ratelimit.CreateLimit(rl.Limit)
+			self.rateLimiter = &lim
+		}
+
+		if err := self.rateLimiter.Hit(rl.KeyFor(req)); err != nil {
+			var didPenalty bool
+
+			// impose sleep penalty if specified
+			if penalty := rl.Penalty; penalty != `` {
+				if pd := typeutil.Duration(penalty); pd > 0 {
+					time.Sleep(pd)
+					didPenalty = true
+				}
+			}
+
+			if !didPenalty {
+				self.respondError(w, req, err, http.StatusTooManyRequests)
+				return
+			}
+		}
+	}
+
 	// setup a ResponseWriter interceptor that catches status code and bytes written
 	// but passes through the Body without buffering it (like httptest.ResponseRecorder does)
 	var interceptor = intercept(w)
@@ -902,6 +945,24 @@ func (self *Server) applyTemplate(
 						return err
 					}
 				}
+			}
+		}
+
+		if redirect := finalHeader.Redirect; redirect != nil {
+			if u, err := EvalInline(redirect.URL, data, funcs); err == nil {
+				if strings.TrimSpace(u) != `` {
+					w.Header().Set(`Location`, strings.TrimSpace(u))
+
+					if redirect.Code > 0 {
+						w.WriteHeader(redirect.Code)
+					} else {
+						w.WriteHeader(http.StatusMovedPermanently)
+					}
+
+					return nil
+				}
+			} else {
+				return err
 			}
 		}
 
