@@ -84,6 +84,21 @@ csrf:
   # Override the format string that will be used to add the <input> tags containing the current CSRF token.
   formTokenTagFormat: '<input type="hidden" name="csrf_token" value="%s">'
 
+
+# Enable request rate limiting globally
+# --------------------------------------------------------------------------------------------------
+ratelimit:
+  # Enable rate limiting
+  enable: true
+
+  # Limit to ten (10) requests per second.  Also accepts (#r/m) for request/minute.
+  limit: "10r/s"
+
+  # Imposes a 100 millisecond sleep on request handling if the rate limit is exceeded.  If this is empty
+  # or the key is not set, requests that exceed the rate limit will immediately return an HTTP 429 response.
+  penalty: "100ms"
+
+
 # An array of bindings that will be evaluated before every template.
 # --------------------------------------------------------------------------------------------------
 bindings:
