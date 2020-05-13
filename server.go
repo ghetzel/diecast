@@ -28,7 +28,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ahmedash95/ratelimit"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
@@ -39,6 +38,7 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/timeutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/ghetzel/ratelimit"
 	"github.com/gobwas/glob"
 	"github.com/husobee/vestigo"
 	"github.com/lucas-clemente/quic-go/http3"
