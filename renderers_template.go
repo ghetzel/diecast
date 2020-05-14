@@ -66,6 +66,10 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 					options.FunctionSet,
 				); err == nil {
 					w.Header().Set(name, v)
+
+					if http.CanonicalHeaderKey(name) == http.CanonicalHeaderKey(`content-type`) {
+						options.MimeType = v
+					}
 				} else {
 					return fmt.Errorf("headers: %v", err)
 				}
