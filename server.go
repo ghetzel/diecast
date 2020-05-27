@@ -1880,6 +1880,10 @@ func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resEr
 			if err := tmpl.ParseFrom(f); err == nil {
 				w.Header().Set(`Content-Type`, fileutil.GetMimeType(filename, `text/html; charset=utf-8`))
 
+				if code >= 400 {
+					w.WriteHeader(code)
+				}
+
 				if err := tmpl.renderWithRequest(req, w, errorData, ``); err == nil {
 					return
 				} else {
