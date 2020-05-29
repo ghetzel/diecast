@@ -2938,6 +2938,64 @@
         "Examples": null
       },
       {
+        "Name": "isOlderThan",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return whether the time between now and the given time is greater than now minus the given duration.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "time",
+            "Type": "string, time",
+            "Description": "The time being checked.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "duration",
+            "Type": "string, duration",
+            "Description": "The duration being checked.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
+        "Name": "isNewerThan",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return whether the time between now and the given time is less than or equal to now minus the given duration.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "time",
+            "Type": "string, time",
+            "Description": "The time being checked.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "duration",
+            "Type": "string, duration",
+            "Description": "The duration being checked.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
         "Name": "extractTime",
         "Alias": "",
         "Aliases": null,

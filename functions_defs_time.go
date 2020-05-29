@@ -8,6 +8,7 @@ import (
 
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/timeutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
@@ -384,6 +385,48 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 					}
 
 					return false, nil
+				},
+			}, {
+				Name:    `isOlderThan`,
+				Summary: `Return whether the time between now and the given time is greater than now minus the given duration.`,
+				Arguments: []funcArg{
+					{
+						Name:        `time`,
+						Type:        `string, time`,
+						Description: `The time being checked.`,
+					}, {
+						Name:        `duration`,
+						Type:        `string, duration`,
+						Description: `The duration being checked.`,
+					},
+				},
+				Function: func(t interface{}, d interface{}) (bool, error) {
+					return timeDelta(
+						typeutil.Time(t),
+						typeutil.Duration(d),
+						false,
+					)
+				},
+			}, {
+				Name:    `isNewerThan`,
+				Summary: `Return whether the time between now and the given time is less than or equal to now minus the given duration.`,
+				Arguments: []funcArg{
+					{
+						Name:        `time`,
+						Type:        `string, time`,
+						Description: `The time being checked.`,
+					}, {
+						Name:        `duration`,
+						Type:        `string, duration`,
+						Description: `The duration being checked.`,
+					},
+				},
+				Function: func(t interface{}, d interface{}) (bool, error) {
+					return timeDelta(
+						typeutil.Time(t),
+						typeutil.Duration(d),
+						true,
+					)
 				},
 			}, {
 				Name:    `extractTime`,

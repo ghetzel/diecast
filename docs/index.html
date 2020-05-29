@@ -1449,6 +1449,12 @@ Diecast runtime directory:</p>
             <a href="#fn-isBetweenTimes">isBetweenTimes</a>
         </li>
         <li>
+            <a href="#fn-isNewerThan">isNewerThan</a>
+        </li>
+        <li>
+            <a href="#fn-isOlderThan">isOlderThan</a>
+        </li>
+        <li>
             <a href="#fn-now">now</a>
         </li>
         <li>
@@ -10537,6 +10543,84 @@ Diecast runtime directory:</p>
                     <td>string, time</td>
                     <td>
                         <p>If provided, this time will be used to check the given times instead of the current time.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-isNewerThan">
+        <h4 class="mt-3">
+            isNewerThan
+            <a href="#fn-isNewerThan" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>isNewerThan TIME DURATION</code>
+        </div>
+        <p>Return whether the time between now and the given time is less than or equal to now minus the given duration.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>TIME</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>The time being checked.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>DURATION</pre></th>
+                    <td>string, duration</td>
+                    <td>
+                        <p>The duration being checked.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="function" id="fn-isOlderThan">
+        <h4 class="mt-3">
+            isOlderThan
+            <a href="#fn-isOlderThan" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>isOlderThan TIME DURATION</code>
+        </div>
+        <p>Return whether the time between now and the given time is greater than now minus the given duration.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>TIME</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>The time being checked.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>DURATION</pre></th>
+                    <td>string, duration</td>
+                    <td>
+                        <p>The duration being checked.</p>
                     </td>
                 </tr>
             </tbody>

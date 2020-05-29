@@ -585,6 +585,22 @@ func timeCmp(before bool, first interface{}, secondI ...interface{}) (bool, erro
 	}
 }
 
+func timeDelta(tm time.Time, dur time.Duration, lte bool) (bool, error) {
+	if tm.IsZero() {
+		return false, fmt.Errorf("invalid time value")
+	} else if dur == 0 {
+		return false, fmt.Errorf("invalid duration value")
+	}
+
+	var threshold = time.Now().Add(time.Duration(-1) * dur)
+
+	if lte {
+		return (tm.Equal(threshold) || tm.After(threshold)), nil
+	} else {
+		return tm.Before(threshold), nil
+	}
+}
+
 func cmp(op string, first interface{}, second interface{}) (bool, error) {
 	fStr, ok1 := first.(string)
 	sStr, ok2 := second.(string)

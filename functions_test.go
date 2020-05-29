@@ -3,6 +3,7 @@ package diecast
 import (
 	"math"
 	"testing"
+	"time"
 
 	"github.com/ghetzel/testify/require"
 )
@@ -49,6 +50,30 @@ func TestCollectionFunctionsCodecs(t *testing.T) {
 
 	assert.Equal(`HELLO`, chr2str([]uint8{72, 69, 76, 76, 79}))
 	assert.Equal(`THERE`, chr2str([]uint8{84, 72, 69, 82, 69}))
+}
+
+func TestTimeFunctions(t *testing.T) {
+	var assert = require.New(t)
+	var fns = GetStandardFunctions(nil)
+
+	var isOlderThan = fns[`isOlderThan`].(func(t interface{}, d interface{}) (bool, error))
+	var isNewerThan = fns[`isNewerThan`].(func(t interface{}, d interface{}) (bool, error))
+
+	b, err := isOlderThan(time.Now().Add(-1*time.Hour), "30m")
+	assert.NoError(err)
+	assert.True(b)
+
+	b, err = isOlderThan(time.Now().Add(-1*time.Hour), "2h")
+	assert.NoError(err)
+	assert.False(b)
+
+	b, err = isNewerThan(time.Now().Add(-1*time.Hour), "30m")
+	assert.NoError(err)
+	assert.False(b)
+
+	b, err = isNewerThan(time.Now().Add(-1*time.Hour), "2h")
+	assert.NoError(err)
+	assert.True(b)
 }
 
 func TestMiscFunctions(t *testing.T) {
