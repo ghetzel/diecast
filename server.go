@@ -1306,6 +1306,42 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 		}
 	}
 
+	funcs[`locale`] = func(fallback ...string) (string, error) {
+		if header.Locale != `` {
+			if tag, err := language.Parse(header.Locale); err == nil {
+				if l := tag.String(); l != `` {
+					return l, nil
+				}
+			} else {
+				return ``, err
+			}
+		}
+
+		if len(fallback) > 0 {
+			return fallback[0], nil
+		} else {
+			return ``, nil
+		}
+	}
+
+	funcs[`localeBase`] = func(fallback ...string) (string, error) {
+		if header.Locale != `` {
+			if tag, err := language.Parse(header.Locale); err == nil {
+				if l := i18nTagBase(tag); l != `` {
+					return l, nil
+				}
+			} else {
+				return ``, err
+			}
+		}
+
+		if len(fallback) > 0 {
+			return fallback[0], nil
+		} else {
+			return ``, nil
+		}
+	}
+
 	// fn i18n: Return the translated text corresponding to the given key.
 	//	Order of Preference:
 	//	- Explicitly requested locale via the second argument to this function
@@ -1994,7 +2030,8 @@ func (self *Server) rp() string {
 }
 
 func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader) map[string]interface{} {
-	var rv = make(map[string]interface{})
+	var rv = map[string]interface{}{}
+
 	var request = RequestInfo{
 		Headers: make(map[string]interface{}),
 		Cookies: make(map[string]Cookie),
