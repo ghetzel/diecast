@@ -1376,6 +1376,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				},
 				Function: func(input interface{}, keys ...interface{}) map[string]interface{} {
 					var out = maputil.DeepCopy(input)
+					keys = sliceutil.Flatten(keys)
 
 					for _, key := range sliceutil.Stringify(keys) {
 						delete(out, key)
