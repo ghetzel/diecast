@@ -585,10 +585,10 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`Bob`, `Mallory`, `Alice`},
 					},
 				},
-				Function: func(input interface{}, key string, additionalKeys ...string) []interface{} {
+				Function: func(input interface{}, key string, additionalKeys ...interface{}) []interface{} {
 					var out = maputil.Pluck(input, strings.Split(key, `.`))
 
-					for _, ak := range additionalKeys {
+					for _, ak := range sliceutil.Stringify(additionalKeys) {
 						out = append(out, maputil.Pluck(input, strings.Split(ak, `.`))...)
 					}
 
@@ -1374,10 +1374,10 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						},
 					},
 				},
-				Function: func(input interface{}, keys ...string) map[string]interface{} {
+				Function: func(input interface{}, keys ...interface{}) map[string]interface{} {
 					var out = maputil.DeepCopy(input)
 
-					for _, key := range keys {
+					for _, key := range sliceutil.Stringify(keys) {
 						delete(out, key)
 					}
 
@@ -1422,12 +1422,13 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						},
 					},
 				},
-				Function: func(sliceOfMaps interface{}, key string, valueTpls ...string) (map[string][]interface{}, error) {
+				Function: func(sliceOfMaps interface{}, key string, tpls ...interface{}) (map[string][]interface{}, error) {
 					if !typeutil.IsArray(sliceOfMaps) {
 						return nil, fmt.Errorf("groupBy only works on arrays of objects, got %T", sliceOfMaps)
 					}
 
 					var output = make(map[string][]interface{})
+					var valueTpls = sliceutil.Stringify(tpls)
 
 					if items := sliceutil.Sliceify(sliceOfMaps); len(items) > 0 {
 						if !typeutil.IsMap(items[0]) {
