@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -88,9 +90,15 @@ func IsSameMount(first Mount, second Mount) bool {
 func IsHardStop(err error) bool {
 	if err == MountHaltErr {
 		return true
+	} else if _, ok := err.(*url.Error); ok {
+		return true
+	} else if _, ok := err.(net.Error); ok {
+		return true
 	} else if log.ErrContains(err, `request canceled`) {
 		return true
 	} else if log.ErrContains(err, `x509:`) {
+		return true
+	} else if log.ErrHasPrefix(err, `dial `) {
 		return true
 	}
 
