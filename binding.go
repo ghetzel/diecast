@@ -26,7 +26,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var DefaultBindingTimeout = 10 * time.Second
+var DefaultBindingTimeout = 60 * time.Second
 
 var registeredProtocols = map[string]Protocol{
 	``:      new(HttpProtocol),
@@ -266,13 +266,14 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		log.Infof("[%s] Binding: > %s %+v ? %s", id, strings.ToUpper(sliceutil.OrString(method, `get`)), reqUrl.String(), reqUrl.RawQuery)
 
 		if response, err := protocol.Retrieve(&ProtocolRequest{
-			Verb:          method,
-			URL:           reqUrl,
-			Binding:       self,
-			Request:       req,
-			Header:        header,
-			TemplateData:  data,
-			TemplateFuncs: funcs,
+			Verb:           method,
+			URL:            reqUrl,
+			Binding:        self,
+			Request:        req,
+			Header:         header,
+			TemplateData:   data,
+			TemplateFuncs:  funcs,
+			DefaultTimeout: self.server.bindingTimeout(),
 		}); err == nil {
 			defer response.Close()
 

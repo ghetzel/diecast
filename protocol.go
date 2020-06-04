@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -34,13 +35,14 @@ func (self ProtocolConfig) Get(key string, fallbacks ...interface{}) typeutil.Va
 }
 
 type ProtocolRequest struct {
-	Verb          string
-	URL           *url.URL
-	Binding       *Binding
-	Request       *http.Request
-	Header        *TemplateHeader
-	TemplateData  map[string]interface{}
-	TemplateFuncs FuncMap
+	Verb           string
+	URL            *url.URL
+	Binding        *Binding
+	Request        *http.Request
+	Header         *TemplateHeader
+	TemplateData   map[string]interface{}
+	TemplateFuncs  FuncMap
+	DefaultTimeout time.Duration
 }
 
 func (self *ProtocolRequest) ReadFile(filename string) ([]byte, error) {

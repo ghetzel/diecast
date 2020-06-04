@@ -82,7 +82,7 @@ csrf:
   injectFormFieldSelector: 'form[method="post"], form[method="POST"], form[method="Post"]'
 
   # Override the format string that will be used to add the <input> tags containing the current CSRF token.
-  formTokenTagFormat: '<input type="hidden" name="csrf_token" value="%s">'
+  injectFormFieldTemplate: '<input type="hidden" name="csrf_token" value="%s">'
 
 
 # Enable request rate limiting globally
@@ -233,18 +233,18 @@ translations:
 # A list of glob patterns matching environment variable names that should never be exposed to templates.
 # Below is the default list of filters if none are specified.
 filterEnvVars:
-	- "_"                     # Treat vars starting with "_" as internal/hidden
-	- "*KEY"                  # Omit api keys and whatnot
-	- "*PASSWORD"             # Omit things that explicitly call themselves a "password"
-	- "*PID"                  # Avoid PIDs
-	- "*HOST"                 # Don't leak hostnames
-	- "*URL"                  # Don't leak URLs
-	- "*SECRET"               # Avoid anything claiming to be a "secret"
-	- "*TOKEN"                # Avoid anything claiming to be a "token"
-	- "AWS_ACCESS_KEY_ID"     # Omit AWS credentials
-	- "AWS_SECRET_ACCESS_KEY" # Omit AWS credentials
-	- "PROMPT_COMMAND"        # This can occasionally contain sensitive data.
-	- "PWD"                   # No need for this by default.
+  - "_"                     # Treat vars starting with "_" as internal/hidden
+  - "*KEY"                  # Omit api keys and whatnot
+  - "*PASSWORD"             # Omit things that explicitly call themselves a "password"
+  - "*PID"                  # Avoid PIDs
+  - "*HOST"                 # Don't leak hostnames
+  - "*URL"                  # Don't leak URLs
+  - "*SECRET"               # Avoid anything claiming to be a "secret"
+  - "*TOKEN"                # Avoid anything claiming to be a "token"
+  - "AWS_ACCESS_KEY_ID"     # Omit AWS credentials
+  - "AWS_SECRET_ACCESS_KEY" # Omit AWS credentials
+  - "PROMPT_COMMAND"        # This can occasionally contain sensitive data.
+  - "PWD"                   # No need for this by default.
 
 # A list of glob patterns matching environment variable names that should always be exposed to templates.  Use this to
 # explicitly whitelist certain variables or groups of variables that would otherwise be caught by filterEnvVars.
