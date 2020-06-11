@@ -8,4 +8,5 @@ RUN echo 'bindingPrefix: "http://localhost:28419"' > /config/diecast.yml
 COPY bin/diecast-linux-amd64 /usr/bin/diecast
 
 EXPOSE 28419
+ENV DIECAST_ALLOW_ROOT_ACTIONS true
 CMD ["/usr/bin/diecast", "-a", ":28419", "-c", "/config/diecast.yml", "/webroot"]
