@@ -7,7 +7,7 @@ require (
 	github.com/biessek/golang-ico v0.0.0-20180326222316-d348d9ea4670
 	github.com/dustin/go-humanize v0.0.0-20180713052910-9f541cc9db5d
 	github.com/ghetzel/cli v1.17.0
-	github.com/ghetzel/go-stockutil v1.8.67	
+	github.com/ghetzel/go-stockutil v1.8.67
 	github.com/ghetzel/go-webfriend v0.9.60
 	github.com/ghetzel/ratelimit v0.0.0-20200513232932-b28727c55ae1
 	github.com/ghetzel/testify v1.4.1
