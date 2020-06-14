@@ -1,8 +1,7 @@
-FROM ubuntu:eoan
+FROM alpine:3.12
 MAINTAINER Gary Hetzel <its@gary.cool>
 
-RUN apt-get -qq update && apt-get install -qq -y libsass1 ca-certificates curl wget iputils-ping net-tools dnsutils make socat bzr git jq
-RUN apt-get clean all
+RUN apk update && apk add libsass ca-certificates curl wget make socat git jq
 ADD https://storage.googleapis.com/kubernetes-release/release/v1.18.3/bin/linux/amd64/kubectl /usr/bin/kubectl
 RUN chmod -v 0755 /usr/bin/kubectl
 RUN mkdir /config
