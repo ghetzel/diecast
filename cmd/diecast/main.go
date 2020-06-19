@@ -308,7 +308,7 @@ func main() {
 				if port, err := netutil.EphemeralPort(); err == nil {
 					server.RootPath = filepath.Dir(abspath)
 					server.VerifyFile = filepath.Base(abspath)
-					server.TemplatePatterns = append(server.TemplatePatterns, `/`+filepath.Base(abspath))
+					server.TemplatePatterns = []string{`*`}
 					server.Address = fmt.Sprintf("127.0.0.1:%d", port)
 					server.BindingPrefix = fmt.Sprintf("http://%s", server.Address)
 					server.Log.Destination = `/dev/null`

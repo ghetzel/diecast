@@ -19,7 +19,7 @@ fmt:
 
 test:
 	go test -count=1 ./...
-#	cd tests/render && make
+	@cd tests/env-render && make --quiet --always-make
 
 favicon.go:
 	@convert -background transparent -define icon:auto-resize=16 contrib/diecast-ico-source.svg contrib/favicon.ico

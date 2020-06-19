@@ -58,6 +58,7 @@ var DefaultProtocol = `http`
 
 func init() {
 	maputil.UnmarshalStructTag = `json`
+	stringutil.ExpandEnvPreserveIfEmpty = true
 }
 
 var logFormats = map[string]string{
