@@ -96,10 +96,10 @@ docker-build:
 	docker build -t ghetzel/diecast:build -f Dockerfile.build .
 	docker run --rm -it -v ${PWD}:/project -v ${HOME}/pkg:/go/pkg -v ${HOME}/src:/go/src ghetzel/diecast:build
 
-docker: docker-build
+docker:
 	@echo "Building Docker image for v$(VERSION)"
 	docker build -t ghetzel/diecast:$(VERSION) .
-	docker tag ghetzel/diecast:$(VERSION) ghetzel/diecast:latest
-	docker push ghetzel/diecast:$(VERSION)
-	docker push ghetzel/diecast:latest
-	sudo rm bin/$(BIN) bin/$(BIN)-nocgo
+	#docker tag ghetzel/diecast:$(VERSION) ghetzel/diecast:latest
+	#docker push ghetzel/diecast:$(VERSION)
+	#docker push ghetzel/diecast:latest
+	#sudo rm bin/$(BIN) bin/$(BIN)-nocgo
