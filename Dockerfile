@@ -16,4 +16,5 @@ RUN test -x /usr/bin/kubectl
 EXPOSE 28419
 ENV DIECAST_ALLOW_ROOT_ACTIONS true
 WORKDIR /webroot
-CMD ["/usr/bin/diecast", "-a", ":28419", "-c", "/config/diecast.yml", "/webroot"]
+ENTRYPOINT ["/usr/bin/diecast"]
+CMD ["-a", ":28419", "-c", "/config/diecast.yml", "/webroot"]
