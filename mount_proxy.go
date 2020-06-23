@@ -17,6 +17,7 @@ import (
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 var DefaultProxyMountTimeout = time.Duration(10) * time.Second
@@ -61,9 +62,53 @@ func (self *ProxyMount) WillRespondTo(name string, req *http.Request, requestBod
 	return strings.HasPrefix(name, self.GetMountPoint())
 }
 
-func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (*MountResponse, error) {
-	var id = reqid(req)
+func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (res *MountResponse, err error) {
+	var tracer opentracing.Tracer
+	var spanopts []opentracing.StartSpanOption
+	var childSpan opentracing.Span
 
+	// if the originating request has a tracing span, we're going to create a child span of that
+	// to trace this binding evaluation
+	if parentSpan, ok := httputil.RequestGetValue(req, JaegerSpanKey).Value.(opentracing.Span); ok {
+		tracer = opentracing.GlobalTracer()
+		spanopts = append(spanopts, opentracing.ChildOf(parentSpan.Context()))
+		spanopts = append(spanopts, opentracing.Tag{
+			Key:   `diecast.mount`,
+			Value: self.MountPoint,
+		})
+	} else {
+		tracer = new(opentracing.NoopTracer)
+	}
+
+	var traceName = fmt.Sprintf("Mount: %s", self.MountPoint)
+	var traceHeaders = make(http.Header)
+
+	childSpan = tracer.StartSpan(traceName, spanopts...)
+	childSpan.Tracer().Inject(
+		childSpan.Context(),
+		opentracing.HTTPHeaders,
+		opentracing.HTTPHeadersCarrier(traceHeaders),
+	)
+
+	res, err = self.openWithType(name, req, requestBody, traceHeaders)
+
+	if err == nil {
+		if res.RedirectTo != `` {
+			childSpan.SetTag(`http.status_code`, res.RedirectCode)
+			childSpan.SetTag(`http.redirect`, res.RedirectTo)
+		} else {
+			childSpan.SetTag(`http.status_code`, res.StatusCode)
+		}
+	} else {
+		childSpan.SetTag(`error`, err.Error())
+	}
+
+	childSpan.Finish()
+	return
+}
+
+func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody io.Reader, xhdr http.Header) (*MountResponse, error) {
+	var id = reqid(req)
 	var proxyURI string
 	var timeout time.Duration
 
