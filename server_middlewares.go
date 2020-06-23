@@ -22,6 +22,8 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	base58 "github.com/jbenet/go-base58"
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 )
 
 // A function that receives the current request, ResponseWriter, and returns whether to call the next middleware
@@ -52,6 +54,18 @@ func (self *Server) setupServer() error {
 	return nil
 }
 
+func (self *Server) traceNameForRequest(req *http.Request) string {
+	if jc := self.JaegerConfig; jc != nil && jc.Enable {
+		for _, mapping := range jc.OperationsMappings {
+			if newName, matched := mapping.TraceNameFromRequest(req); matched {
+				return newName
+			}
+		}
+	}
+
+	return fmt.Sprintf("%s %s", req.Method, req.URL.Path)
+}
+
 // setup request (generate ID, intercept ResponseWriter to get status code, set context variables)
 func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Request) bool {
 	var requestId = base58.Encode(stringutil.UUID().Bytes())
@@ -59,6 +73,32 @@ func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Requ
 	log.Debugf("[%s] %s", requestId, strings.Repeat(`-`, 69))
 	log.Debugf("[%s] %s %s (%s)", requestId, req.Method, req.RequestURI, req.RemoteAddr)
 	log.Debugf("[%s] middleware: request id", requestId)
+
+	// setup opentracing for this request (if we should)
+	if self.opentrace != nil {
+		var traceName = self.traceNameForRequest(req)
+
+		if traceName != `` {
+			var span opentracing.Span
+
+			// continue an existing span or start a new one
+			if wctx, err := self.opentrace.Extract(
+				opentracing.HTTPHeaders,
+				opentracing.HTTPHeadersCarrier(req.Header),
+			); err == nil {
+				span = self.opentrace.StartSpan(traceName, ext.RPCServerOption(wctx))
+			} else {
+				span = self.opentrace.StartSpan(traceName)
+			}
+
+			if span != nil {
+				httputil.RequestSetValue(req, JaegerSpanKey, span)
+			}
+
+			log.Debugf("[%s] middleware: trace operation: %s", requestId, traceName)
+		}
+	}
+
 	httputil.RequestSetValue(req, ContextRequestKey, requestId)
 	w.Header().Set(`X-Diecast-Request-ID`, requestId)
 
@@ -150,6 +190,14 @@ func (self *Server) afterFinalizeAndLog(w http.ResponseWriter, req *http.Request
 		took = time.Since(tm.StartedAt).Round(time.Microsecond)
 		log.Debugf("[%s] completed: %v", tm.ID, took)
 		httputil.RequestSetValue(req, `duration`, took)
+	}
+
+	// finish up and close out trace
+	if ot, ok := httputil.RequestGetValue(req, JaegerSpanKey).Value.(opentracing.Span); ok {
+		var interceptor = reqres(req)
+		ot.SetTag(`http.status_code`, interceptor.code)
+		ot.SetTag(`http.response_content_length`, interceptor.bytesWritten)
+		ot.Finish()
 	}
 
 	self.logreq(w, req)

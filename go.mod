@@ -5,6 +5,7 @@ require (
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/biessek/golang-ico v0.0.0-20180326222316-d348d9ea4670
+	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ghetzel/cli v1.17.0
 	github.com/ghetzel/go-stockutil v1.8.72
@@ -25,11 +26,15 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.1
 	github.com/montanaflynn/stats v0.0.0-20151014174947-eeaced052adb
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
+	github.com/opentracing/opentracing-go v1.1.0
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/signalsciences/tlstext v1.2.0
 	github.com/spaolacci/murmur3 v0.0.0-20170819071325-9f5d223c6079
 	github.com/tg123/go-htpasswd v0.0.0-20190305225429-d38e564730bf
+	github.com/uber/jaeger-client-go v2.24.0+incompatible
+	github.com/uber/jaeger-lib v2.2.0+incompatible // indirect
 	github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8
+	go.uber.org/atomic v1.6.0 // indirect
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2

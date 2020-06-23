@@ -23,6 +23,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"syscall"
@@ -43,7 +44,10 @@ import (
 	"github.com/husobee/vestigo"
 	"github.com/lucas-clemente/quic-go/http3"
 	"github.com/mattn/go-shellwords"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/signalsciences/tlstext"
+	"github.com/uber/jaeger-client-go"
+	jaegercfg "github.com/uber/jaeger-client-go/config"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"golang.org/x/text/language"
@@ -86,6 +90,7 @@ const LayoutTemplateName = `layout`
 const ContentTemplateName = `content`
 const ContextRequestKey = `diecast-request-id`
 const ContextResponseKey = `diecast-response`
+const JaegerSpanKey = `jaeger-span`
 
 var HeaderSeparator = []byte{'-', '-', '-'}
 var DefaultIndexFile = `index.html`
@@ -174,6 +179,54 @@ func (self *RateLimitConfig) KeyFor(req *http.Request) string {
 	}
 }
 
+type TraceMapping struct {
+	Match   string `yaml:"match"   json:"match"`   // A regular expression used to match candidate trace operation names
+	Replace string `yaml:"replace" json:"replace"` // A string that will replace matching operation names.
+	rx      *regexp.Regexp
+}
+
+// Takes an http.Request and modifies it according to the given match and replace criteria.
+// As a special case, if a request matches these criteria but is replaced with an empty string, this will
+// prevent the trace from being emitted.  This is a canonical way to omit certain requests from being traced
+// (for example, healthcheck or status endpoints that happen frequently but would add little).
+func (self *TraceMapping) TraceNameFromRequest(req *http.Request) (string, bool) {
+	var traceName string = fmt.Sprintf("%s %s", req.Method, req.URL.Path)
+
+	if self.Match != `` {
+		if self.rx == nil {
+			if rx, err := regexp.Compile(self.Match); err == nil {
+				self.rx = rx
+			}
+		}
+	}
+
+	if self.rx != nil {
+		if self.rx.MatchString(traceName) {
+			return self.rx.ReplaceAllString(traceName, self.Replace), true
+		}
+	}
+
+	return ``, false
+}
+
+type JaegerConfig struct {
+	Enable                  bool                   `yaml:"enable"                  json:"enable"`                  // Explicitly enable or disable Jaeger tracing
+	ServiceName             string                 `yaml:"service"                 json:"service"`                 // Set the service name that traces will fall under.
+	Agent                   string                 `yaml:"agent"                   json:"agent"`                   // Specify the host:port of a local UDP agent to send traces to.
+	Collector               string                 `yaml:"collector"               json:"collector"`               // Specify the collector address to sent traces to.  Overrides "agent" if set.
+	Username                string                 `yaml:"username"                json:"username"`                // Provides a username to authenticate with the collector.
+	Password                string                 `yaml:"password"                json:"password"`                // Provides a password to authenticate with the collector.
+	QueueSize               int                    `yaml:"queueSize"               json:"queueSize"`               // Specify the size of the queue for outgoing reports.
+	FlushInterval           string                 `yaml:"flushInterval"           json:"flushInterval"`           // Duration specifying how frequently queued reports should be flushed.
+	Tags                    map[string]interface{} `yaml:"tags"                    json:"tags"`                    // A set of key-value pairs that are included in every trace.
+	SamplingType            string                 `yaml:"sampling"                json:"sampling"`                // Specifies the type of sampling to use: const, probabilistic, rateLimiting, or remote.
+	SamplingParam           float64                `yaml:"samplingParam"           json:"samplingParam"`           // A type-specific parameter used to configure that type of sampling; const: 0 or 1, probabilistic: 0.0-1.0, rateLimiting: max number of spans per seconds, remote: same as probabilistic.
+	SamplingServerURL       string                 `yaml:"samplingUrl"             json:"samplingUrl"`             // The sampling server URL for the "remote" sampling type.
+	SamplingRefreshInterval string                 `yaml:"samplingRefreshInterval" json:"samplingRefreshInterval"` // How frequently to poll the remote sampling server.
+	SamplingMaxOperations   int                    `yaml:"samplingMaxOps"          json:"samplingMaxOps"`          // A maximum number of operations for certain sampling modes.
+	OperationsMappings      []*TraceMapping        `yaml:"operations"              json:"operations"`              // Maps regular expressions used to match specific routes to the operation name that will be emitted in traces. Without a matching expression, traces will be named by the calling HTTP method and Request URI.  The string being tested by these regular expressions is the one that would be emitted otherwise; so "GET /path/to/file"
+}
+
 type Server struct {
 	Actions             []*Action                 `yaml:"actions"                 json:"actions"`                 // Configure routes and actions to execute when those routes are requested.
 	AdditionalFunctions template.FuncMap          `yaml:"-"                       json:"-"`                       // Allow for the programmatic addition of extra functions for use in templates.
@@ -226,6 +279,7 @@ type Server struct {
 	Protocol            string                    `yaml:"protocol"                json:"protocol"`                // Specify which HTTP protocol to use ("http", "http2", "quic", "http3")
 	RateLimit           *RateLimitConfig          `yaml:"ratelimit"               json:"ratelimit"`               // Specify a rate limiting configuration.
 	BindingTimeout      interface{}               `yaml:"bindingTimeout"          json:"bindingTimeout"`          // Sets the default timeout for bindings that don't explicitly set one.
+	JaegerConfig        *JaegerConfig             `yaml:"jaeger"                  json:"jaeger"`                  // Configures distributed tracing using Jaeger.
 	altRootCaPool       *x509.CertPool
 	faviconImageIco     []byte
 	fs                  http.FileSystem
@@ -237,6 +291,9 @@ type Server struct {
 	logwriter           io.Writer
 	isTerminalOutput    bool
 	rateLimiter         *ratelimit.Limit
+	jaegerCfg           *jaegercfg.Configuration
+	opentrace           opentracing.Tracer
+	otcloser            io.Closer
 }
 
 func NewServer(root interface{}, patterns ...string) *Server {
@@ -416,6 +473,10 @@ func (self *Server) Initialize() error {
 		}
 	}
 
+	if err := self.initJaegerTracing(); err != nil {
+		return fmt.Errorf("jaeger: %v", err)
+	}
+
 	// if configured, this path must exist (relative to RootPath or the root filesystem) or Diecast will refuse to start
 	if self.VerifyFile != `` {
 		if verify, err := self.fs.Open(self.VerifyFile); err == nil {
@@ -467,6 +528,125 @@ func (self *Server) prestart() error {
 			log.Errorf("start command failed: %v", err)
 		}
 	}()
+
+	return nil
+}
+
+func (self *Server) initJaegerTracing() error {
+	// if enabled, initialize tracing (Jaeger/OpenTracing)
+	if jc := self.JaegerConfig; jc != nil && jc.Enable {
+		if cfg, err := jaegercfg.FromEnv(); err == nil {
+			self.jaegerCfg = cfg
+		} else {
+			return fmt.Errorf("config: %v", err)
+		}
+
+		if self.jaegerCfg.ServiceName == `` {
+			self.jaegerCfg.ServiceName = sliceutil.OrString(jc.ServiceName, `diecast`)
+		}
+
+		if self.jaegerCfg.Sampler == nil {
+			self.jaegerCfg.Sampler = new(jaegercfg.SamplerConfig)
+		}
+
+		if self.jaegerCfg.Reporter == nil {
+			self.jaegerCfg.Reporter = new(jaegercfg.ReporterConfig)
+		}
+
+		if r := self.jaegerCfg.Reporter; r != nil {
+			if jc.QueueSize > 0 {
+				r.QueueSize = jc.QueueSize
+			}
+
+			if jc.Agent != `` {
+				r.LocalAgentHostPort = jc.Agent
+			}
+
+			if jc.Collector != `` {
+				r.CollectorEndpoint = jc.Collector
+			}
+
+			if jc.Username != `` {
+				r.User = jc.Username
+			}
+
+			if jc.Password != `` {
+				r.Password = jc.Password
+			}
+		}
+
+		if s := self.jaegerCfg.Sampler; s != nil {
+			if s.Type == `` {
+				s.Type = jaeger.SamplerTypeConst
+				s.Param = 1
+			} else if jc.SamplingType != `` {
+				s.Type = jc.SamplingType
+				s.Param = jc.SamplingParam
+			}
+
+			if jc.SamplingServerURL != `` {
+				s.SamplingServerURL = jc.SamplingServerURL
+			}
+
+			if jc.SamplingMaxOperations > 0 {
+				s.MaxOperations = jc.SamplingMaxOperations
+			}
+
+			if jc.SamplingRefreshInterval != `` {
+				s.SamplingRefreshInterval = typeutil.Duration(jc.SamplingRefreshInterval)
+			}
+		}
+
+		if jc.FlushInterval != `` {
+			if bfi := typeutil.Duration(jc.FlushInterval); bfi >= (1 * time.Millisecond) {
+				self.jaegerCfg.Reporter.BufferFlushInterval = bfi
+			} else {
+				return fmt.Errorf("invalid flush interval (minimum: 1ms)")
+			}
+		}
+
+		if len(jc.Tags) > 0 {
+			for k, v := range jc.Tags {
+				self.jaegerCfg.Tags = append(self.jaegerCfg.Tags, opentracing.Tag{
+					Key:   k,
+					Value: v,
+				})
+			}
+		}
+
+		self.jaegerCfg.Tags = append(self.jaegerCfg.Tags, opentracing.Tag{
+			Key:   `diecast-version`,
+			Value: ApplicationVersion,
+		})
+
+		if ott, otc, err := self.jaegerCfg.NewTracer(); err == nil {
+			self.opentrace = ott
+			self.otcloser = otc
+
+			opentracing.SetGlobalTracer(self.opentrace)
+
+			var logline string
+
+			if v := self.jaegerCfg.Reporter.CollectorEndpoint; v != `` {
+				logline = fmt.Sprintf("collector at %s", v)
+			} else if v := self.jaegerCfg.Reporter.LocalAgentHostPort; v != `` {
+				logline = fmt.Sprintf("agent at %s", v)
+			}
+
+			if logline != `` {
+				log.Debugf("trace: Jaeger tracing enabled: service=%s send to %s", self.jaegerCfg.ServiceName, logline)
+
+				if len(self.jaegerCfg.Tags) > 0 {
+					log.Debugf("trace: global tags:")
+					for _, tag := range self.jaegerCfg.Tags {
+						log.Debugf("trace: + %s: %v", tag.Key, typeutil.V(tag.Value))
+					}
+				}
+			}
+		} else {
+			return err
+		}
+	}
 
 	return nil
 }
