@@ -23,6 +23,7 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/oliveagle/jsonpath"
+	opentracing "github.com/opentracing/opentracing-go"
 	"gopkg.in/yaml.v2"
 )
 
@@ -183,6 +184,59 @@ func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface
 	return nil
 }
 
+func (self *Binding) tracedEvaluate(req *http.Request, header *TemplateHeader, data map[string]interface{}, funcs FuncMap) (out interface{}, err error) {
+	var tracer opentracing.Tracer
+	var spanopts []opentracing.StartSpanOption
+
+	// if the originating request has a tracing span, we're going to create a child span of that
+	// to trace this binding evaluation
+	if parentSpan, ok := httputil.RequestGetValue(req, JaegerSpanKey).Value.(opentracing.Span); ok {
+		tracer = self.server.opentrace
+		spanopts = append(spanopts, opentracing.ChildOf(parentSpan.Context()))
+		spanopts = append(spanopts, opentracing.Tag{
+			Key:   `diecast.binding`,
+			Value: self.Name,
+		})
+	} else {
+		tracer = new(opentracing.NoopTracer)
+	}
+
+	var childSpan opentracing.Span
+
+	if traceName := self.server.traceName(fmt.Sprintf("Binding: %s", self.Name)); traceName != `` {
+		var traceHeaders = make(http.Header)
+
+		childSpan = tracer.StartSpan(traceName, spanopts...)
+		childSpan.Tracer().Inject(
+			childSpan.Context(),
+			opentracing.HTTPHeaders,
+			opentracing.HTTPHeadersCarrier(traceHeaders),
+		)
+
+		if len(header.additionalHeaders) == 0 {
+			header.additionalHeaders = make(map[string]interface{})
+		}
+
+		for k, vv := range traceHeaders {
+			for _, v := range vv {
+				header.additionalHeaders[k] = v
+			}
+		}
+	}
+
+	out, err = self.Evaluate(req, header, data, funcs)
+
+	if childSpan != nil {
+		if err != nil {
+			childSpan.SetTag(`error`, err.Error())
+		}
+
+		childSpan.Finish()
+	}
+
+	return
+}
+
 func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data map[string]interface{}, funcs FuncMap) (interface{}, error) {
 	var id = reqid(req)
 	log.Debugf("[%s] Evaluating binding %q", id, self.Name)
@@ -266,14 +320,15 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		log.Infof("[%s] Binding: > %s %+v ? %s", id, strings.ToUpper(sliceutil.OrString(method, `get`)), reqUrl.String(), reqUrl.RawQuery)
 
 		if response, err := protocol.Retrieve(&ProtocolRequest{
-			Verb:           method,
-			URL:            reqUrl,
-			Binding:        self,
-			Request:        req,
-			Header:         header,
-			TemplateData:   data,
-			TemplateFuncs:  funcs,
-			DefaultTimeout: self.server.bindingTimeout(),
+			Verb:              method,
+			URL:               reqUrl,
+			Binding:           self,
+			Request:           req,
+			Header:            header,
+			TemplateData:      data,
+			TemplateFuncs:     funcs,
+			DefaultTimeout:    self.server.bindingTimeout(),
+			AdditionalHeaders: header.additionalHeaders,
 		}); err == nil {
 			defer response.Close()
 

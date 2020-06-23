@@ -182,6 +182,13 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 			request.Header.Add(k, v)
 		}
 
+		// finally, tack on any request-specific headers
+		if len(rr.AdditionalHeaders) > 0 {
+			for k, v := range rr.AdditionalHeaders {
+				request.Header.Add(k, typeutil.String(v))
+			}
+		}
+
 		request.Header.Set(`X-Diecast-Binding`, rr.Binding.Name)
 
 		// big block of custom TLS override setup

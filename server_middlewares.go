@@ -54,16 +54,20 @@ func (self *Server) setupServer() error {
 	return nil
 }
 
-func (self *Server) traceNameForRequest(req *http.Request) string {
+func (self *Server) traceName(candidate string) string {
 	if jc := self.JaegerConfig; jc != nil && jc.Enable {
 		for _, mapping := range jc.OperationsMappings {
-			if newName, matched := mapping.TraceNameFromRequest(req); matched {
+			if newName, matched := mapping.TraceName(candidate); matched {
 				return newName
 			}
 		}
 	}
 
-	return fmt.Sprintf("%s %s", req.Method, req.URL.Path)
+	return candidate
+}
+
+func (self *Server) traceNameFromRequest(req *http.Request) string {
+	return self.traceName(fmt.Sprintf("%s %s", req.Method, req.URL.Path))
 }
 
 // setup request (generate ID, intercept ResponseWriter to get status code, set context variables)
@@ -76,9 +80,7 @@ func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Requ
 
 	// setup opentracing for this request (if we should)
 	if self.opentrace != nil {
-		var traceName = self.traceNameForRequest(req)
-
-		if traceName != `` {
+		if traceName := self.traceNameFromRequest(req); traceName != `` {
 			var span opentracing.Span
 
 			// continue an existing span or start a new one
@@ -92,6 +94,7 @@ func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Requ
 			}
 
 			if span != nil {
+				span.SetBaggageItem(`diecast.request_id`, requestId)
 				httputil.RequestSetValue(req, JaegerSpanKey, span)
 			}
 

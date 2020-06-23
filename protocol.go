@@ -35,14 +35,15 @@ func (self ProtocolConfig) Get(key string, fallbacks ...interface{}) typeutil.Va
 }
 
 type ProtocolRequest struct {
-	Verb           string
-	URL            *url.URL
-	Binding        *Binding
-	Request        *http.Request
-	Header         *TemplateHeader
-	TemplateData   map[string]interface{}
-	TemplateFuncs  FuncMap
-	DefaultTimeout time.Duration
+	Verb              string
+	URL               *url.URL
+	Binding           *Binding
+	Request           *http.Request
+	Header            *TemplateHeader
+	TemplateData      map[string]interface{}
+	TemplateFuncs     FuncMap
+	DefaultTimeout    time.Duration
+	AdditionalHeaders map[string]interface{}
 }
 
 func (self *ProtocolRequest) ReadFile(filename string) ([]byte, error) {

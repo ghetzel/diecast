@@ -185,13 +185,7 @@ type TraceMapping struct {
 	rx      *regexp.Regexp
 }
 
-// Takes an http.Request and modifies it according to the given match and replace criteria.
-// As a special case, if a request matches these criteria but is replaced with an empty string, this will
-// prevent the trace from being emitted.  This is a canonical way to omit certain requests from being traced
-// (for example, healthcheck or status endpoints that happen frequently but would add little).
-func (self *TraceMapping) TraceNameFromRequest(req *http.Request) (string, bool) {
-	var traceName string = fmt.Sprintf("%s %s", req.Method, req.URL.Path)
-
+func (self *TraceMapping) TraceName(candidate string) (string, bool) {
 	if self.Match != `` {
 		if self.rx == nil {
 			if rx, err := regexp.Compile(self.Match); err == nil {
@@ -201,8 +195,8 @@ func (self *TraceMapping) TraceNameFromRequest(req *http.Request) (string, bool)
 	}
 
 	if self.rx != nil {
-		if self.rx.MatchString(traceName) {
-			return self.rx.ReplaceAllString(traceName, self.Replace), true
+		if self.rx.MatchString(candidate) {
+			return self.rx.ReplaceAllString(candidate, self.Replace), true
 		}
 	}
 
@@ -1799,7 +1793,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 					}
 				}
 
-				v, err := binding.Evaluate(req, header, data, funcs)
+				v, err := binding.tracedEvaluate(req, header, data, funcs)
 
 				if err == nil {
 					var asMap = maputil.M(v)
@@ -1885,7 +1879,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			bindings[binding.Name] = binding.Fallback
 			data[`bindings`] = bindings
 
-			v, err := binding.Evaluate(req, header, data, funcs)
+			v, err := binding.tracedEvaluate(req, header, data, funcs)
 
 			if err == nil && v != nil {
 				bindings[binding.Name] = v
@@ -1925,7 +1919,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 				binding.Repeat = ``
 				bindings[binding.Name] = binding.Fallback
 
-				v, err := binding.Evaluate(req, header, data, funcs)
+				v, err := binding.tracedEvaluate(req, header, data, funcs)
 
 				if err == nil {
 					results = append(results, v)
