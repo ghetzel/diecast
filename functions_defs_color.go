@@ -275,8 +275,8 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 						Return: `#8A3360`,
 					},
 				},
-				Function: func(color interface{}, percent float64) (string, error) {
-					if c, err := colorutil.Saturate(color, int(percent)); err == nil {
+				Function: func(first interface{}, second interface{}, weight float64) (string, error) {
+					if c, err := colorutil.MixN(first, second, weight); err == nil {
 						return c.String(), nil
 					} else {
 						return ``, err
