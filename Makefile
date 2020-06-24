@@ -93,7 +93,7 @@ sign-client: clients.crt
 		-out $(NAME).p12
 
 docker-build:
-	docker build -t ghetzel/diecast:build -f Dockerfile.build .
+	docker build --no-cache -t ghetzel/diecast:build -f Dockerfile.build .
 	docker run --rm -it -v ${PWD}:/project -v ${HOME}/pkg:/go/pkg -v ${HOME}/src:/go/src ghetzel/diecast:build
 
 docker:
