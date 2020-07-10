@@ -273,8 +273,6 @@ func (self *Server) registerInternalRoutes() error {
 					}
 
 					if icon == nil {
-						w.Header().Set(`Content-Type`, `image/x-icon`)
-						w.Write(DefaultFavicon())
 						return
 					}
 
