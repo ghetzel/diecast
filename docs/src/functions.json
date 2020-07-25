@@ -927,6 +927,26 @@
           }
         ],
         "Examples": null
+      },
+      {
+        "Name": "lipsum",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the given number of words from the \"Lorem ipsum\" example text.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "words",
+            "Type": "integer",
+            "Description": "The number of words to return.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
       }
     ],
     "Skip": false

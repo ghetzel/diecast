@@ -6,8 +6,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
-	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -102,24 +100,7 @@ func (f *_escFile) Close() error {
 }
 
 func (f *_escFile) Readdir(count int) ([]os.FileInfo, error) {
-	if !f.isDir {
-		return nil, fmt.Errorf(" escFile.Readdir: '%s' is not directory", f.name)
-	}
-
-	fis, ok := _escDirs[f.local]
-	if !ok {
-		return nil, fmt.Errorf(" escFile.Readdir: '%s' is directory, but we have no info about content of this dir, local=%s", f.name, f.local)
-	}
-	limit := count
-	if count <= 0 || limit > len(fis) {
-		limit = len(fis)
-	}
-
-	if len(fis) == 0 && count > 0 {
-		return nil, io.EOF
-	}
-
-	return fis[0:limit], nil
+	return nil, nil
 }
 
 func (f *_escFile) Stat() (os.FileInfo, error) {
@@ -210,7 +191,6 @@ func FSMustString(useLocal bool, name string) string {
 var _escData = map[string]*_escFile{
 
 	"/autoindex.html": {
-		name:    "autoindex.html",
 		local:   "ui/autoindex.html",
 		size:    2202,
 		modtime: 1500000000,
@@ -229,15 +209,7 @@ hyUEp+E8Cc5AvBG+pc7FoSR/pTw4G52wnLUX0MPl2IGcdX9BfgUAAP//2RsgypoIAAA=
 	},
 
 	"/": {
-		name:  "/",
-		local: `ui`,
 		isDir: true,
-	},
-}
-
-var _escDirs = map[string][]os.FileInfo{
-
-	"ui": {
-		_escData["/autoindex.html"],
+		local: "ui",
 	},
 }
