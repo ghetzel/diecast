@@ -441,6 +441,14 @@ func (self *Server) IsInRootPath(path string) bool {
 }
 
 func (self *Server) Initialize() error {
+	if self.mux == nil {
+		self.mux = http.NewServeMux()
+	}
+
+	if self.userRouter == nil {
+		self.userRouter = vestigo.NewRouter()
+	}
+
 	if v, err := fileutil.ExpandUser(self.RootPath); err == nil {
 		self.RootPath = v
 	}

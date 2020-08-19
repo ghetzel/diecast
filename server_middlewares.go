@@ -31,12 +31,6 @@ import (
 type Middleware func(w http.ResponseWriter, req *http.Request) bool
 
 func (self *Server) setupServer() error {
-	if !self.initialized {
-		if err := self.Initialize(); err != nil {
-			return err
-		}
-	}
-
 	if err := self.configureTls(); err != nil {
 		return err
 	}
