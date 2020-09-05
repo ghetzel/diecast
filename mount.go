@@ -48,6 +48,12 @@ func NewMountFromSpec(spec string) (Mount, error) {
 			MountPoint: mountPoint,
 		}
 
+	case `s3`, `aws+s3`:
+		mount = &S3Mount{
+			MountPoint: mountPoint,
+			Path:       strings.TrimPrefix(source, scheme+`://`),
+		}
+
 	default:
 		if absPath, err := filepath.Abs(source); err == nil {
 			source = absPath

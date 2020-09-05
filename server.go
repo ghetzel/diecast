@@ -449,20 +449,30 @@ func (self *Server) Initialize() error {
 		self.userRouter = vestigo.NewRouter()
 	}
 
-	if v, err := fileutil.ExpandUser(self.RootPath); err == nil {
-		self.RootPath = v
-	}
-
-	if v, err := filepath.Abs(self.RootPath); err == nil {
-		self.RootPath = v
-	} else {
-		return fmt.Errorf("root path: %v", err)
-	}
-
 	// if we haven't explicitly set a filesystem, create it
 	if self.fs == nil {
-		self.SetFileSystem(http.Dir(self.RootPath))
+		if strings.Contains(self.RootPath, `://`) {
+			if mnt, err := NewMountFromSpec(`/:` + self.RootPath); err == nil {
+				self.SetFileSystem(mnt)
+			} else {
+				return fmt.Errorf("root mount: %v", err)
+			}
+		} else {
+			if v, err := fileutil.ExpandUser(self.RootPath); err == nil {
+				self.RootPath = v
+			}
+
+			if v, err := filepath.Abs(self.RootPath); err == nil {
+				self.RootPath = v
+			} else {
+				return fmt.Errorf("root path: %v", err)
+			}
+
+			self.SetFileSystem(http.Dir(self.RootPath))
+		}
 	}
+
+	log.Debugf("rootfs: %T", self.fs)
 
 	// allocate ephemeral address if we're supposed to
 	if addr, port, err := net.SplitHostPort(self.Address); err == nil {

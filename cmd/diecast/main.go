@@ -216,7 +216,7 @@ func main() {
 	}
 
 	app.Action = func(c *cli.Context) {
-		var servePath = filepath.Clean(c.Args().First())
+		var servePath = c.Args().First()
 
 		server.RootPath = servePath
 		server.BinPath, _ = filepath.Abs(os.Args[0])

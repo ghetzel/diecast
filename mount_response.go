@@ -45,7 +45,7 @@ func (self *MountResponse) GetFile() http.File {
 func (self *MountResponse) Read(p []byte) (int, error) {
 	if self.payload == nil {
 		return 0, fmt.Errorf("Cannot read from closed response")
-	} else if reader, ok := self.payload.(io.ReadSeeker); ok {
+	} else if reader, ok := self.payload.(io.Reader); ok {
 		return reader.Read(p)
 	} else {
 		return 0, fmt.Errorf("Payload does not implement io.ReadSeeker")
@@ -53,14 +53,20 @@ func (self *MountResponse) Read(p []byte) (int, error) {
 }
 
 func (self *MountResponse) Seek(offset int64, whence int) (int64, error) {
-	if readSeeker, ok := self.payload.(io.ReadSeeker); ok {
-		return readSeeker.Seek(offset, whence)
+	if seeker, ok := self.payload.(io.Seeker); ok {
+		return seeker.Seek(offset, whence)
 	} else {
 		return 0, fmt.Errorf("Payload is not seekable")
 	}
 }
 
 func (self *MountResponse) Close() error {
+	if closer, ok := self.payload.(io.Closer); ok {
+		if err := closer.Close(); err != nil {
+			return err
+		}
+	}
+
 	self.payload = nil
 	return nil
 }

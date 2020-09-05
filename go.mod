@@ -4,6 +4,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.5.0
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alicebob/miniredis v2.5.0+incompatible
+	github.com/aws/aws-sdk-go v1.34.13
 	github.com/biessek/golang-ico v0.0.0-20180326222316-d348d9ea4670
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/dustin/go-humanize v1.0.0
