@@ -353,60 +353,67 @@ func (self *Server) ShouldReturnSource(req *http.Request) bool {
 func (self *Server) LoadConfig(filename string) error {
 	if pathutil.FileExists(filename) {
 		if file, err := os.Open(filename); err == nil {
-			if data, err := ioutil.ReadAll(file); err == nil && len(data) > 0 {
-				data = []byte(stringutil.ExpandEnv(string(data)))
+			defer file.Close()
+			return self.LoadConfigFromReader(file, filename)
+		} else {
+			return err
+		}
+	}
 
-				if err := yaml.UnmarshalStrict(data, self); err == nil {
-					// apply environment-specific overrides
-					if self.Environment != `` {
-						eDir, eFile := filepath.Split(filename)
-						var base = strings.TrimSuffix(eFile, filepath.Ext(eFile))
-						var ext = filepath.Ext(eFile)
-						eFile = fmt.Sprintf("%s.%s%s", base, self.Environment, ext)
-						var envPath = filepath.Join(eDir, eFile)
+	return nil
+}
 
-						if fileutil.IsNonemptyFile(envPath) {
-							if err := self.LoadConfig(envPath); err != nil {
-								return fmt.Errorf("failed to load %s: %v", eFile, err)
-							}
+func (self *Server) LoadConfigFromReader(file io.Reader, filename string) error {
+	if data, err := ioutil.ReadAll(file); err == nil && len(data) > 0 {
+		data = []byte(stringutil.ExpandEnv(string(data)))
+
+		if err := yaml.UnmarshalStrict(data, self); err == nil {
+			// apply environment-specific overrides
+			if self.Environment != `` && filename != `` {
+				eDir, eFile := filepath.Split(filename)
+				var base = strings.TrimSuffix(eFile, filepath.Ext(eFile))
+				var ext = filepath.Ext(eFile)
+				eFile = fmt.Sprintf("%s.%s%s", base, self.Environment, ext)
+				var envPath = filepath.Join(eDir, eFile)
+
+				if fileutil.IsNonemptyFile(envPath) {
+					if err := self.LoadConfig(envPath); err != nil {
+						return fmt.Errorf("failed to load %s: %v", eFile, err)
+					}
+				}
+			}
+
+			// process mount configs into mount instances
+			for i, config := range self.MountConfigs {
+				if mount, err := NewMountFromSpec(fmt.Sprintf("%s:%s", config.Mount, config.To)); err == nil {
+					var mountOverwriteIndex = -1
+
+					for i, existing := range self.Mounts {
+						if IsSameMount(mount, existing) {
+							mountOverwriteIndex = i
+							break
 						}
 					}
 
-					// process mount configs into mount instances
-					for i, config := range self.MountConfigs {
-						if mount, err := NewMountFromSpec(fmt.Sprintf("%s:%s", config.Mount, config.To)); err == nil {
-							var mountOverwriteIndex = -1
+					if err := maputil.TaggedStructFromMap(config.Options, mount, `json`); err != nil {
+						return fmt.Errorf("mount %d options: %v", i, err)
+					}
 
-							for i, existing := range self.Mounts {
-								if IsSameMount(mount, existing) {
-									mountOverwriteIndex = i
-									break
-								}
-							}
-
-							if err := maputil.TaggedStructFromMap(config.Options, mount, `json`); err != nil {
-								return fmt.Errorf("mount %d options: %v", i, err)
-							}
-
-							if mountOverwriteIndex >= 0 {
-								log.Debugf("mount: overwriting mountpoint with new configuration: %v", mount)
-								self.Mounts[mountOverwriteIndex] = mount
-							} else {
-								self.Mounts = append(self.Mounts, mount)
-							}
-						} else {
-							return fmt.Errorf("invalid mount %d: %v", i, err)
-						}
+					if mountOverwriteIndex >= 0 {
+						log.Debugf("mount: overwriting mountpoint with new configuration: %v", mount)
+						self.Mounts[mountOverwriteIndex] = mount
+					} else {
+						self.Mounts = append(self.Mounts, mount)
 					}
 				} else {
-					return err
+					return fmt.Errorf("invalid mount %d: %v", i, err)
 				}
-			} else {
-				return err
 			}
 		} else {
 			return err
 		}
+	} else {
+		return err
 	}
 
 	return nil
