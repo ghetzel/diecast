@@ -1012,7 +1012,7 @@ func (self *Server) applyTemplate(
 			// if no layouts were explicitly specified, and a layout named "default" exists, add it to the list
 			if len(layouts) == 0 {
 				if _, err := self.LoadLayout(`default`); err == nil {
-					layouts = append(layouts, `default`)
+					layouts = append([]string{`default`}, layouts...)
 				}
 			}
 
@@ -1020,11 +1020,9 @@ func (self *Server) applyTemplate(
 				for _, layoutName := range layouts {
 					if layoutName, err := EvalInline(layoutName, nil, earlyFuncs); err == nil {
 						if layoutFile, err := self.LoadLayout(layoutName); err == nil {
-							if err := fragments.Parse(LayoutTemplateName, layoutFile); err != nil {
+							if err := fragments.Parse(layoutName, layoutFile); err != nil {
 								return err
 							}
-
-							break
 						} else if layoutName != `default` {
 							// we don't care if the default layout is missing
 							return err
@@ -2168,12 +2166,20 @@ func SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, erro
 
 func (self *Server) appendIncludes(fragments *FragmentSet, header *TemplateHeader) error {
 	if header != nil {
-		for name, includePath := range header.Includes {
+		for kv := range maputil.M(header.Includes).Iter(maputil.IterOptions{
+			SortKeys: true,
+		}) {
+			var name string = kv.K
+			var includePath string = kv.V.String()
+
 			if includeFile, err := self.fs.Open(includePath); err == nil {
 				defer includeFile.Close()
 
 				log.Debugf("Include template %q from file %s", name, includePath)
-				fragments.Parse(name, includeFile)
+
+				if err := fragments.Parse(name, includeFile); err != nil {
+					return err
+				}
 			} else {
 				return err
 			}

@@ -155,7 +155,12 @@ func (self *Template) ParseString(input string) error {
 }
 
 func (self *Template) ParseFragments(fragments FragmentSet) error {
-	var hasLayout = fragments.HasLayout()
+	if err := fragments.ChainLayouts(); err != nil {
+		return err
+	}
+
+	var firstLayoutName = fragments.FirstLayout()
+	var hasLayout = (firstLayoutName != ``)
 
 	switch self.engine {
 	case TextEngine:

@@ -3,6 +3,7 @@ package diecast
 import (
 	"fmt"
 	"io"
+	"regexp"
 )
 
 type Fragment struct {
@@ -37,14 +38,14 @@ func (self FragmentSet) Header(server *Server) TemplateHeader {
 	return *finalHeader
 }
 
-func (self FragmentSet) HasLayout() bool {
+func (self FragmentSet) FirstLayout() string {
 	for _, fragment := range self {
-		if fragment.Name == LayoutTemplateName {
-			return true
+		if fragment.Name != ContentTemplateName {
+			return fragment.Name
 		}
 	}
 
-	return false
+	return ``
 }
 
 func (self FragmentSet) Get(name string) (*Fragment, bool) {
@@ -87,6 +88,30 @@ func (self *FragmentSet) Parse(name string, source io.Reader) error {
 	} else {
 		return err
 	}
+}
+
+func (self *FragmentSet) ChainLayouts() error {
+	// loop through the fragments, holding a reference to each one
+	// for the next iteration.
+	// the next fragment (if there is one) should be what the previous
+	// fragment includes IFF it is specifying a "content" include
+	//
+	// this effectively implements layout single inheritence
+	//
+	var prevFrag *Fragment
+
+	for _, fragment := range *self {
+		if prevFrag == nil {
+			prevFrag = fragment
+		} else {
+			prevFrag.Data = regexp.MustCompile(`\{\{\s+template\s+"`+ContentTemplateName+`"\s+(\S+)\s+\}\}`).ReplaceAll(
+				prevFrag.Data,
+				[]byte(fmt.Sprintf("{{ template %q $1 }}", fragment.Name)),
+			)
+		}
+	}
+
+	return nil
 }
 
 func (self FragmentSet) DebugOutput() []byte {

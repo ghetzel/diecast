@@ -85,7 +85,11 @@ func (self *S3Mount) Open(name string) (http.File, error) {
 		}); err == nil {
 			var mr = NewMountResponse(name, *obj.ContentLength, obj.Body)
 
-			mr.ContentType = *obj.ContentType
+			// trust our MIME type guess more than Amazon's because we definitely have more types
+			mr.ContentType = fileutil.GetMimeType(
+				filepath.Base(name),
+				*obj.ContentType,
+			)
 
 			return mr, nil
 		} else {
