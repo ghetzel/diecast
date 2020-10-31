@@ -18,7 +18,7 @@ body > nav {
     height: 24px;
 }
 
-.code, pre > code, .group .function .examples .example code, .group .function .examples .example .returns {
+.code, .group .function .examples .example code, .group .function .examples .example .returns, pre > code {
     border-radius: 0.25em;
     background-color: #333333;
     color: #EEEEEE;
@@ -34,7 +34,7 @@ body > nav {
     color: rgba(255, 255, 255, 0.4);
 }
 
-.box-label, .group .function .examples .example code::before, .group .function .examples .example .returns::before {
+.box-label, .group .function .examples .example .returns::before, .group .function .examples .example code::before {
     position: absolute;
     top: 0;
     left: 0;

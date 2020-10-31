@@ -1,4 +1,3 @@
-.PHONY: test deps docs
 .EXPORT_ALL_VARIABLES:
 
 GO111MODULE ?= on
@@ -102,3 +101,5 @@ docker:
 	docker tag ghetzel/diecast:$(VERSION) ghetzel/diecast:latest
 	docker push ghetzel/diecast:$(VERSION)
 	docker push ghetzel/diecast:latest
+
+.PHONY: test deps docs build
