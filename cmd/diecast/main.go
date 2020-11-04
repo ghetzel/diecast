@@ -326,7 +326,17 @@ func main() {
 		}
 
 		if !isatty.IsTerminal(os.Stdin.Fd()) {
-			if err := json.NewDecoder(os.Stdin).Decode(&server.DefaultPageObject); err != nil {
+			var input interface{}
+
+			if err := json.NewDecoder(os.Stdin).Decode(&input); err == nil {
+				if typeutil.IsMap(input) {
+					server.DefaultPageObject = typeutil.MapNative(input)
+				} else {
+					server.DefaultPageObject = map[string]interface{}{
+						`data`: input,
+					}
+				}
+			} else {
 				log.Fatalf("invalid input data: %v", err)
 			}
 		}
