@@ -9,7 +9,7 @@ require (
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ghetzel/cli v1.17.0
-	github.com/ghetzel/go-stockutil v1.8.81
+	github.com/ghetzel/go-stockutil v1.8.82
 	github.com/ghetzel/go-webfriend v0.9.60
 	github.com/ghetzel/ratelimit v0.0.0-20200513232932-b28727c55ae1
 	github.com/ghetzel/testify v1.4.1
@@ -23,6 +23,7 @@ require (
 	github.com/kelvins/sunrisesunset v0.0.0-20170601204625-14f1915ad4b4
 	github.com/kyokomi/emoji v2.1.0+incompatible
 	github.com/lucas-clemente/quic-go v0.18.1
+	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-shellwords v1.0.9
 	github.com/microcosm-cc/bluemonday v1.0.1
 	github.com/montanaflynn/stats v0.0.0-20151014174947-eeaced052adb

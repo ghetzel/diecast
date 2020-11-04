@@ -20,6 +20,7 @@ import (
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	isatty "github.com/mattn/go-isatty"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -321,6 +322,12 @@ func main() {
 				}
 			} else {
 				log.Fatalf("cannot get abspath: %v", err)
+			}
+		}
+
+		if !isatty.IsTerminal(os.Stdin.Fd()) {
+			if err := json.NewDecoder(os.Stdin).Decode(&server.DefaultPageObject); err != nil {
+				log.Fatalf("invalid input data: %v", err)
 			}
 		}
 
