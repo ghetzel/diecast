@@ -2138,6 +2138,16 @@ func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resEr
 
 func SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, error) {
 	if data, err := ioutil.ReadAll(reader); err == nil {
+		// chop off shebang line
+		if bytes.HasPrefix(data, []byte("#!")) {
+			// first possible position for a \n after the shebang is nl=2
+			if nl := bytes.Index(data, []byte("\n")); nl > 1 {
+				if (nl + 1) < len(data) {
+					data = data[nl+1:]
+				}
+			}
+		}
+
 		if bytes.HasPrefix(data, HeaderSeparator) {
 			var parts = bytes.SplitN(data, HeaderSeparator, 3)
 
