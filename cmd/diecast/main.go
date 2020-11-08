@@ -354,7 +354,7 @@ func main() {
 						`data`: input,
 					}
 				}
-			} else {
+			} else if err != io.EOF {
 				log.Fatalf("invalid input data: %v", err)
 			}
 		}
