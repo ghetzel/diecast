@@ -83,6 +83,11 @@ func main() {
 			Name:  `override, o`,
 			Usage: `A key=value pair that will be inserted into the global page object, overriding any prior values.`,
 		},
+		cli.StringFlag{
+			Name:   `page-data-file`,
+			Usage:  `Specify a JSON-encoded file that will be parsed for global page object data.`,
+			EnvVar: `DIECAST_PAGE_DATA_FILE`,
+		},
 		cli.StringSliceFlag{
 			Name:  `mount, m`,
 			Usage: `Expose a given as MOUNT and SOURCE when requested from the server (formatted as "MOUNT:SOURCE"; e.g. "/js:/usr/share/javascript")`,
@@ -256,6 +261,19 @@ func main() {
 				server.StartCommands = append(server.StartCommands, &diecast.StartCommand{
 					Command: cmdline,
 				})
+			}
+		}
+
+		if pageDataFile := c.String(`page-data-file`); pageDataFile != `` {
+			if file, err := os.Open(pageDataFile); err == nil {
+				var err = json.NewDecoder(file).Decode(&server.DefaultPageObject)
+				file.Close()
+
+				if err != nil {
+					log.Fatalf("invalid page data: %v", err)
+				}
+			} else {
+				log.Fatalf("invalid page data: %v", err)
 			}
 		}
 
