@@ -10,7 +10,6 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
@@ -30,10 +29,30 @@ type HttpProtocol struct {
 
 func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, error) {
 	var id = reqid(rr.Request)
+	var trueHost string
+
+	// Okay...so...
+	//
+	// We want the ability to support requests to vanilla HTTP(S) connections exposed via local Unix
+	// sockets.  Conventionally, HTTP URL schemes don't really support this, but the "protocol+transport"
+	// convention allows for us to kinda fake it a bit.
+	//
+	// However, the path to the local Unix socket is *not* guaranteed to be a valid hostname.  So we're
+	// going to put that value into the request context and use "localhost" just to pass muster when
+	// parsing the URL.  The http.RoundTripper used below will be looking for this context value.
+	//
+	switch rr.URL.Scheme {
+	case `http+unix`, `https+unix`:
+		rr.URL.Scheme = strings.TrimSuffix(rr.URL.Scheme, `+unix`)
+		trueHost = strings.ReplaceAll(rr.URL.Host, weirdPathsInHostnamesPlaceholder, `/`)
+		rr.URL.Host = `localhost`
+	}
 
 	if request, err := http.NewRequest(rr.Verb, rr.URL.String(), nil); err == nil {
+		httputil.RequestSetValue(request, `diecastSocketPath`, trueHost)
+
 		// build request querystring
-		// -------------------------------------------------------------------------------------
+		// ---------------------------------------------------------------------------------------------
 
 		// eval and add query string parameters to request
 		var qs = request.URL.Query()
@@ -68,7 +87,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 		request.URL.RawQuery = qs.Encode()
 
 		// build request body
-		// -------------------------------------------------------------------------------------
+		// ---------------------------------------------------------------------------------------------
 		// binding body content can be specified either as key-value pairs encoded using a
 		// set of pre-defined encoders, or as a raw string (Content-Type can be explicitly set
 		// via Headers).
@@ -157,7 +176,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 		}
 
 		// build request headers
-		// -------------------------------------------------------------------------------------
+		// ---------------------------------------------------------------------------------------------
 
 		// if specified, have the binding request inherit the headers from the initiating request
 		if !rr.Binding.SkipInheritHeaders {
@@ -192,7 +211,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 		request.Header.Set(`X-Diecast-Binding`, rr.Binding.Name)
 
 		// big block of custom TLS override setup
-		// -------------------------------------------------------------------------------------
+		// ---------------------------------------------------------------------------------------------
 		var newTCC = &tls.Config{
 			InsecureSkipVerify: rr.Binding.Insecure,
 			RootCAs:            rr.Binding.server.altRootCaPool,
@@ -258,25 +277,11 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 		}
 
 		// end TLS setup
-		// -------------------------------------------------------------------------------------
+		// ---------------------------------------------------------------------------------------------
 
-		// handle HTTP proxying
-		if transport, ok := BindingClient.Transport.(*http.Transport); ok {
-			var purl string
-
-			if url := os.Getenv(`HTTP_PROXY`); url != `` && request.URL.Scheme != `https` {
-				purl = url
-			} else if url := os.Getenv(`HTTPS_PROXY`); url != `` && request.URL.Scheme == `https` {
-				purl = url
-			}
-
-			if purl != `` {
-				if u, err := url.Parse(purl); err == nil {
-					transport.Proxy = http.ProxyURL(u)
-					log.Noticef("[%s] Proxy URL is: %v", id, u)
-				} else {
-					return nil, fmt.Errorf("invalid proxy URL: %v", err)
-				}
+		if t, ok := BindingClient.Transport.(*http.Transport); ok {
+			BindingClient.Transport = &transportAwareRoundTripper{
+				transport: t,
 			}
 		}
 
@@ -284,7 +289,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 		request.Close = true
 
 		// perform binding request
-		// -------------------------------------------------------------------------------------
+		// ---------------------------------------------------------------------------------------------
 		if res, err := BindingClient.Do(request); err == nil {
 			log.Infof("[%s] Binding: < HTTP %d (body: %d bytes)", id, res.StatusCode, res.ContentLength)
 

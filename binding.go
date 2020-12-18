@@ -30,10 +30,12 @@ import (
 var DefaultBindingTimeout = 60 * time.Second
 
 var registeredProtocols = map[string]Protocol{
-	``:      new(HttpProtocol),
-	`http`:  new(HttpProtocol),
-	`https`: new(HttpProtocol),
-	`redis`: new(RedisProtocol),
+	``:           new(HttpProtocol),
+	`http`:       new(HttpProtocol),
+	`https`:      new(HttpProtocol),
+	`http+unix`:  new(HttpProtocol),
+	`https+unix`: new(HttpProtocol),
+	`redis`:      new(RedisProtocol),
 }
 
 // Register a new protocol handler that will handle URLs with the given scheme.
@@ -265,13 +267,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	// prefixing the URL path with a colon (":") or slash ("/").
 	//
 	if strings.HasPrefix(uri, `:`) || strings.HasPrefix(uri, `/`) {
-		var prefix string
-
-		if self.server.BindingPrefix != `` {
-			prefix = self.server.BindingPrefix
-		} else {
-			prefix = fmt.Sprintf("http://%s", req.Host)
-		}
+		var prefix = self.server.bestInternalLoopbackUrl(req)
 
 		prefix = strings.TrimSuffix(prefix, `/`)
 		uri = strings.TrimPrefix(uri, `:`)
@@ -294,11 +290,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 							break
 						}
 					}
-				} else {
-					log.Warningf("binding loopback TLS (%q): %v", bpu.Hostname(), err)
 				}
-			} else {
-				log.Warningf("binding loopback TLS: bad URI: %v", err)
 			}
 		}
 	}
@@ -308,6 +300,8 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	}
 
 	if reqUrl, err := url.Parse(uri); err == nil {
+		reqUrl.Scheme = strings.ToLower(reqUrl.Scheme)
+
 		var protocol Protocol
 
 		if p, ok := registeredProtocols[reqUrl.Scheme]; ok && p != nil {
@@ -439,6 +433,10 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 							self.Parser = `html`
 						case `text/xml`:
 							self.Parser = `xml`
+						case `text/plain`:
+							self.Parser = `text`
+						case `application/octet-stream`:
+							self.Parser = `literal`
 						}
 					}
 
@@ -477,6 +475,9 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 					case `raw`:
 						rv, err = template.HTML(string(data)), nil
+
+					case `literal`:
+						rv = data
 
 					default:
 						return nil, fmt.Errorf("[%s] Unknown response parser %q", id, self.Parser)

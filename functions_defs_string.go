@@ -863,15 +863,38 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(in interface{}) string {
-					var largest string
+					var longest string
 
 					for _, item := range sliceutil.Stringify(in) {
-						if len(item) > len(largest) {
-							largest = item
+						if len(item) > len(longest) {
+							longest = item
 						}
 					}
 
-					return largest
+					return longest
+				},
+			}, {
+				Name:    `shortestString`,
+				Summary: `Return the string in the given array that is shortest (excluding empty strings).`,
+				Arguments: []funcArg{
+					{
+						Name:        `array`,
+						Type:        `string`,
+						Description: `The array of strings to scan.`,
+					},
+				},
+				Function: func(in interface{}) string {
+					var shortest string
+
+					for _, item := range sliceutil.Stringify(in) {
+						if item != `` {
+							if shortest == `` || len(item) < len(shortest) {
+								shortest = item
+							}
+						}
+					}
+
+					return shortest
 				},
 			}, {
 				Name:    `lipsum`,

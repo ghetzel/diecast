@@ -60,6 +60,8 @@ var DefaultLocale = language.AmericanEnglish
 var DefaultLogFormat = `common`
 var DefaultProtocol = `http`
 
+const weirdPathsInHostnamesPlaceholder = "\u2044"
+
 func init() {
 	maputil.UnmarshalStructTag = `json`
 	stringutil.ExpandEnvPreserveIfEmpty = true
@@ -2625,6 +2627,41 @@ func (self *Server) bindingTimeout() time.Duration {
 		return t
 	} else {
 		return DefaultBindingTimeout
+	}
+}
+
+func (self *Server) bestInternalLoopbackUrl(req *http.Request) string {
+	if self.BindingPrefix != `` {
+		return self.BindingPrefix
+	}
+
+	var proto string
+
+	if self.TLS != nil && self.TLS.Enable {
+		proto = `https`
+	} else {
+		proto = `http`
+	}
+
+	if strings.HasPrefix(self.Address, `unix:`) {
+		var path = self.Address
+
+		path = strings.TrimPrefix(path, `unix:`)
+		path = strings.ReplaceAll(path, `/`, weirdPathsInHostnamesPlaceholder)
+
+		return proto + `+unix://` + path
+
+	} else if h, p, err := net.SplitHostPort(self.Address); err == nil {
+		switch h {
+		case `0.0.0.0`, `::/0`, `[::/0]`:
+			return proto + `://localhost:` + p
+		}
+	}
+
+	if req != nil && req.Host != `` {
+		return proto + `://` + req.Host
+	} else {
+		return proto + `://` + self.Address
 	}
 }
 

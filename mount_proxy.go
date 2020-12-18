@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -22,6 +23,7 @@ import (
 
 var DefaultProxyMountTimeout = time.Duration(10) * time.Second
 var MaxBufferedBodySize int64 = 16535
+var zeroDialer net.Dialer
 
 type ProxyMount struct {
 	MountPoint              string                 `json:"-"`
@@ -129,6 +131,7 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 		}
 
 		self.Client = &http.Client{
+			// TODO: things and stuff to make this use *transportAwareRoundTripper
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: self.Insecure,

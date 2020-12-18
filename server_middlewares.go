@@ -76,7 +76,6 @@ func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Requ
 
 	log.Debugf("[%s] %s", requestId, strings.Repeat(`-`, 69))
 	log.Debugf("[%s] %s %s (%s)", requestId, req.Method, req.RequestURI, req.RemoteAddr)
-	log.Debugf("[%s] middleware: request id", requestId)
 
 	// setup opentracing for this request (if we should)
 	if self.opentrace != nil {
@@ -164,20 +163,22 @@ func (self *Server) middlewareInjectHeaders(w http.ResponseWriter, req *http.Req
 
 // process authenticators
 func (self *Server) middlewareProcessAuthenticators(w http.ResponseWriter, req *http.Request) bool {
-	log.Debugf("[%s] middleware: process authenticators", reqid(req))
+	if len(self.Authenticators) > 0 {
+		log.Debugf("[%s] middleware: process authenticators", reqid(req))
 
-	if auth, err := self.Authenticators.Authenticator(req); err == nil {
-		if auth != nil {
-			if auth.IsCallback(req.URL) {
-				auth.Callback(w, req)
-				return false
-			} else if !auth.Authenticate(w, req) {
-				httputil.RequestSetValue(req, ContextStatusKey, http.StatusForbidden)
-				return false
+		if auth, err := self.Authenticators.Authenticator(req); err == nil {
+			if auth != nil {
+				if auth.IsCallback(req.URL) {
+					auth.Callback(w, req)
+					return false
+				} else if !auth.Authenticate(w, req) {
+					httputil.RequestSetValue(req, ContextStatusKey, http.StatusForbidden)
+					return false
+				}
 			}
+		} else {
+			self.respondError(w, req, err, http.StatusInternalServerError)
 		}
-	} else {
-		self.respondError(w, req, err, http.StatusInternalServerError)
 	}
 
 	// fallback to proceeding down the middleware chain
@@ -186,7 +187,7 @@ func (self *Server) middlewareProcessAuthenticators(w http.ResponseWriter, req *
 
 // cleanup request tracing info
 func (self *Server) afterFinalizeAndLog(w http.ResponseWriter, req *http.Request) {
-	log.Debugf("[%s] after: finalize and log request", reqid(req))
+	// log.Debugf("[%s] after: finalize and log request", reqid(req))
 	var took time.Duration
 
 	if tm := getRequestTimer(req); tm != nil {
