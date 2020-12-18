@@ -701,6 +701,7 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 	var useTLS bool
 	var useUDP bool
 	var useSocket string
+	var servechan = make(chan error)
 
 	// fire off some goroutines for the prestart and start commands (if configured)
 	if err := self.prestart(); err != nil {
@@ -714,6 +715,10 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 	// work out if we're starting a UNIX socket server
 	if addr := self.Address; strings.HasPrefix(addr, `unix:`) {
 		useSocket = strings.TrimPrefix(addr, `unix:`)
+
+		if useSocket == `` {
+			useSocket = `diecast.` + typeutil.String(os.Getpid()) + `.sock`
+		}
 	} else {
 		srv.Addr = addr
 	}
@@ -822,39 +827,37 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 		}
 
 		if listener, err := net.Listen(network, useSocket); err == nil {
-			if useTLS {
-				return serveable.ServeTLS(listener, self.TLS.CertFile, self.TLS.KeyFile)
-			} else {
-				return serveable.Serve(listener)
-			}
+			go func() {
+				if useTLS {
+					servechan <- serveable.ServeTLS(listener, self.TLS.CertFile, self.TLS.KeyFile)
+				} else {
+					servechan <- serveable.Serve(listener)
+				}
+
+				os.Remove(useSocket)
+			}()
 		} else {
 			return fmt.Errorf("bad socket: %v", err)
 		}
 	} else {
-		var errchan = make(chan error)
-
 		go func() {
 			if useTLS {
-				errchan <- serveable.ListenAndServeTLS(self.TLS.CertFile, self.TLS.KeyFile)
+				servechan <- serveable.ListenAndServeTLS(self.TLS.CertFile, self.TLS.KeyFile)
 			} else {
-				errchan <- serveable.ListenAndServe()
+				servechan <- serveable.ListenAndServe()
 			}
 		}()
-
-		if len(workers) > 0 {
-			// add a slight delay (until the listen port is confirmed open or 1 second, whichever comes first)
-			// this is for the benefit of worker functions, so we only do it if there are any
-			netutil.WaitForOpen(`tcp`, self.Address, time.Second)
-
-			for _, worker := range workers {
-				go func(w ServeFunc) {
-					errchan <- w(self)
-				}(worker)
-			}
-		}
-
-		return <-errchan
 	}
+
+	if len(workers) > 0 {
+		for _, worker := range workers {
+			go func(w ServeFunc) {
+				servechan <- w(self)
+			}(worker)
+		}
+	}
+
+	return <-servechan
 }
 
 func (self *Server) ListenAndServe(address string) error {
