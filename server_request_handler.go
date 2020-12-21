@@ -43,7 +43,6 @@ type candidateFile struct {
 func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 	var id = reqid(req)
 	var prefix = fmt.Sprintf("%s/", self.rp())
-
 	var lastErr error
 	var serveFile *candidateFile
 
@@ -52,7 +51,6 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 
 		// get a sequence of paths to search
 		var requestPaths = self.candidatePathsForRequest(req)
-
 		var localCandidate *candidateFile
 		var mountCandidate *candidateFile
 		var autoindexCandidate *candidateFile

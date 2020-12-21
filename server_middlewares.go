@@ -239,6 +239,9 @@ func (self *Server) configureTls() error {
 
 // adds routes for things like favicon and actions.
 func (self *Server) registerInternalRoutes() error {
+	// setup handler for template tree
+	self.mux.HandleFunc(self.rp()+`/`, self.handleRequest)
+
 	// add favicon.ico handler (if specified)
 	var faviconRoute = `/` + filepath.Join(self.rp(), `favicon.ico`)
 

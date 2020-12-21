@@ -290,54 +290,34 @@ type Server struct {
 	jaegerCfg           *jaegercfg.Configuration
 	opentrace           opentracing.Tracer
 	otcloser            io.Closer
+	viaConstructor      bool
 }
 
 func NewServer(root interface{}, patterns ...string) *Server {
-	if len(patterns) == 0 {
-		patterns = DefaultTemplatePatterns
-	}
-
 	describeTimer(`tpl`, `Diecast Template Rendering`)
 
 	var server = &Server{
-		Address:            DefaultAddress,
-		Authenticators:     make([]AuthenticatorConfig, 0),
-		AutolayoutPatterns: DefaultAutolayoutPatterns,
+		RootPath:           `.`,
+		TemplatePatterns:   patterns,
+		Authenticators:     make(AuthenticatorConfigs, 0),
 		Bindings:           make([]Binding, 0),
 		DefaultPageObject:  make(map[string]interface{}),
-		EnableLayouts:      true,
-		ErrorsPath:         DefaultErrorsPath,
-		IndexFile:          DefaultIndexFile,
-		LayoutPath:         DefaultLayoutsPath,
 		Mounts:             make([]Mount, 0),
 		OverridePageObject: make(map[string]interface{}),
-		RendererMappings:   DefaultRendererMappings,
-		RootPath:           `.`,
-		RoutePrefix:        DefaultRoutePrefix,
-		TemplatePatterns:   patterns,
-		TryExtensions:      DefaultTryExtensions,
-		VerifyFile:         DefaultVerifyFile,
-		AutoindexTemplate:  DefaultAutoindexFilename,
-		FilterEnvVars:      DefaultFilterEnvVars,
 		GlobalHeaders:      make(map[string]interface{}),
-		Protocol:           DefaultProtocol,
-		BindingTimeout:     DefaultBindingTimeout,
-		Log: LogConfig{
-			Format:      logFormats[`common`],
-			Destination: `-`,
-			Colorize:    true,
-		},
-		mux:        http.NewServeMux(),
-		userRouter: vestigo.NewRouter(),
+		EnableLayouts:      true,
+		mux:                http.NewServeMux(),
+		userRouter:         vestigo.NewRouter(),
+		viaConstructor:     true,
 	}
+
+	server.populateDefaults()
 
 	if str, ok := root.(string); ok {
 		server.RootPath = str
 	} else if fs, ok := root.(http.FileSystem); ok {
 		server.SetFileSystem(fs)
 	}
-
-	server.mux.HandleFunc(server.rp()+`/`, server.handleRequest)
 
 	return server
 }
@@ -449,7 +429,7 @@ func (self *Server) IsInRootPath(path string) bool {
 	return false
 }
 
-func (self *Server) Initialize() error {
+func (self *Server) populateDefaults() {
 	if self.mux == nil {
 		self.mux = http.NewServeMux()
 	}
@@ -457,6 +437,76 @@ func (self *Server) Initialize() error {
 	if self.userRouter == nil {
 		self.userRouter = vestigo.NewRouter()
 	}
+
+	if self.Log.Format == `` {
+		self.Log.Format = logFormats[`common`]
+		self.Log.Destination = `-`
+		self.Log.Colorize = true
+	}
+
+	if !self.viaConstructor {
+		self.EnableLayouts = true
+	}
+
+	if len(self.AutolayoutPatterns) == 0 {
+		self.AutolayoutPatterns = DefaultAutolayoutPatterns
+	}
+
+	if len(self.TemplatePatterns) == 0 {
+		self.TemplatePatterns = DefaultTemplatePatterns
+	}
+
+	if len(self.RendererMappings) == 0 {
+		self.RendererMappings = DefaultRendererMappings
+	}
+
+	if len(self.TryExtensions) == 0 {
+		self.TryExtensions = DefaultTryExtensions
+	}
+
+	if len(self.FilterEnvVars) == 0 {
+		self.FilterEnvVars = DefaultFilterEnvVars
+	}
+
+	if self.Address == `` {
+		self.Address = DefaultAddress
+	}
+
+	if self.ErrorsPath == `` {
+		self.ErrorsPath = DefaultErrorsPath
+	}
+
+	if self.IndexFile == `` {
+		self.IndexFile = DefaultIndexFile
+	}
+
+	if self.LayoutPath == `` {
+		self.LayoutPath = DefaultLayoutsPath
+	}
+
+	if self.RoutePrefix == `` {
+		self.RoutePrefix = DefaultRoutePrefix
+	}
+
+	if self.VerifyFile == `` {
+		self.VerifyFile = DefaultVerifyFile
+	}
+
+	if self.AutoindexTemplate == `` {
+		self.AutoindexTemplate = DefaultAutoindexFilename
+	}
+
+	if self.Protocol == `` {
+		self.Protocol = DefaultProtocol
+	}
+
+	if self.BindingTimeout == `` {
+		self.BindingTimeout = DefaultBindingTimeout
+	}
+}
+
+func (self *Server) Initialize() error {
+	self.populateDefaults()
 
 	// if we haven't explicitly set a filesystem, create it
 	if self.fs == nil {
@@ -481,7 +531,7 @@ func (self *Server) Initialize() error {
 		}
 	}
 
-	log.Debugf("rootfs: %T", self.fs)
+	log.Debugf("rootfs: %T(%v)", self.fs, self.RootPath)
 
 	// allocate ephemeral address if we're supposed to
 	if addr, port, err := net.SplitHostPort(self.Address); err == nil {
@@ -676,6 +726,7 @@ func (self *Server) initJaegerTracing() error {
 // then exit.
 func (self *Server) RenderPath(w io.Writer, path string) error {
 	path = `/` + strings.TrimPrefix(path, `/`)
+
 	var rw = httptest.NewRecorder()
 	var req = httptest.NewRequest(http.MethodGet, path, nil)
 	self.ServeHTTP(rw, req)
@@ -691,6 +742,30 @@ func (self *Server) RenderPath(w io.Writer, path string) error {
 		errbody, _ := ioutil.ReadAll(res.Body)
 		return fmt.Errorf("render failed: %v", sliceutil.Or(string(errbody), res.Status))
 	}
+}
+
+// Perform a single request to the server and return an http.Response.
+func (self *Server) GetResponse(method string, path string, body io.Reader, params map[string]interface{}, headers map[string]interface{}) *http.Response {
+	path = `/` + strings.TrimPrefix(path, `/`)
+
+	var rw = httptest.NewRecorder()
+	var req = httptest.NewRequest(method, path, body)
+
+	for k, v := range params {
+		httputil.SetQ(req.URL, k, v)
+	}
+
+	for k, v := range headers {
+		req.Header.Set(k, typeutil.String(v))
+	}
+
+	self.ServeHTTP(rw, req)
+
+	if !rw.Flushed {
+		rw.Flush()
+	}
+
+	return rw.Result()
 }
 
 // Start a long-running webserver.  If provided, the functions provided will be run in parallel
