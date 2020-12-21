@@ -96,6 +96,14 @@ type ProtocolResponse struct {
 	data       io.ReadCloser
 }
 
+func NewProtocolResponse(data io.ReadCloser) *ProtocolResponse {
+	return &ProtocolResponse{
+		MimeType:   `application/octet-stream`,
+		StatusCode: http.StatusOK,
+		data:       data,
+	}
+}
+
 func (self *ProtocolResponse) PeekLen() (int64, error) {
 	var buf = bytes.NewBuffer(nil)
 
