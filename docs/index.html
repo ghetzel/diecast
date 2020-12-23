@@ -836,6 +836,9 @@ Diecast runtime directory:</p>
             <a href="#fn-shuffle">shuffle</a>
         </li>
         <li>
+            <a href="#fn-shuffleInPlace">shuffleInPlace</a>
+        </li>
+        <li>
             <a href="#fn-slice">slice</a>
         </li>
         <li>
@@ -3536,6 +3539,45 @@ Diecast runtime directory:</p>
 ]</p>
             </div>
         </div>
+    </section>
+    <section class="function" id="fn-shuffleInPlace">
+        <h4 class="mt-3">
+            shuffleInPlace
+            <a href="#fn-shuffleInPlace" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>shuffleInPlace INPUT [SEED]</code>
+        </div>
+        <p>Shuffle the input array in place without returning anything.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>INPUT</pre></th>
+                    <td>array</td>
+                    <td>
+                        <p>The array to shuffle.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>SEED</pre></th>
+                    <td>int64</td>
+                    <td>
+                        <p>An optional seed value to generate reproducible randomization.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-slice">
         <h4 class="mt-3">

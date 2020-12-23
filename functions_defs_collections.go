@@ -1559,12 +1559,54 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 
 					var inputS = sliceutil.Sliceify(input)
 
+					inputS = sliceutil.Flatten(inputS)
+
 					for i := range inputS {
 						var j = rand.Intn(i + 1)
 						inputS[i], inputS[j] = inputS[j], inputS[i]
 					}
 
 					return inputS
+				},
+			}, {
+				Name:    `shuffleInPlace`,
+				Summary: `Shuffle the input array in place without returning anything.`,
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `array`,
+						Description: `The array to shuffle.`,
+					}, {
+						Name:        `seed`,
+						Type:        `int64`,
+						Description: `An optional seed value to generate reproducible randomization.`,
+						Optional:    true,
+					},
+				},
+				Function: func(input interface{}, seeds ...int64) []interface{} {
+					var inlen = sliceutil.Len(input)
+
+					if typeutil.IsZero(input) {
+						return make([]interface{}, 0)
+					} else if !typeutil.IsArray(input) {
+						return make([]interface{}, 0)
+					} else if inlen == 0 {
+						return make([]interface{}, 0)
+					}
+
+					var seed int64 = rand.Int63()
+					var swap = reflect.Swapper(input)
+
+					if len(seeds) > 0 && seeds[0] != 0 {
+						seed = seeds[0]
+					}
+
+					rand.New(rand.NewSource(seed)).Shuffle(
+						inlen,
+						swap,
+					)
+
+					return sliceutil.Sliceify(input)
 				},
 			}, {
 				Name: `apply`,

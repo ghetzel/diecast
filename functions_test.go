@@ -2,6 +2,7 @@ package diecast
 
 import (
 	"math"
+	"sort"
 	"testing"
 	"time"
 
@@ -40,6 +41,18 @@ func TestCollectionFunctions(t *testing.T) {
 	assert.Equal(`four`, longestString([]string{`one`, `two`, `four`, `five`}))
 	assert.Equal(`five`, longestString([]string{`one`, `two`, `five`}))
 	assert.Equal(`one`, longestString([]string{`one`, `two`}))
+
+	var shuffle = fns[`shuffleInPlace`].(func(input interface{}, seeds ...int64) []interface{})
+	var x = []string{`a`, `b`, `c`, `d`, `e`, `f`, `g`}
+
+	shuffle(x, 42)
+	assert.Equal([]string{"b", "g", "e", "f", "d", "a", "c"}, x)
+
+	sort.Strings(x)
+	assert.Equal([]string{`a`, `b`, `c`, `d`, `e`, `f`, `g`}, x)
+
+	shuffle(x, 42)
+	assert.Equal([]string{"b", "g", "e", "f", "d", "a", "c"}, x)
 }
 
 func TestCollectionFunctionsCodecs(t *testing.T) {

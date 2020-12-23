@@ -5989,6 +5989,35 @@
         ]
       },
       {
+        "Name": "shuffleInPlace",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Shuffle the input array in place without returning anything.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "array",
+            "Description": "The array to shuffle.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "seed",
+            "Type": "int64",
+            "Description": "An optional seed value to generate reproducible randomization.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
         "Name": "apply",
         "Alias": "",
         "Aliases": null,
