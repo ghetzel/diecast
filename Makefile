@@ -100,7 +100,7 @@ docker:
 	@echo "Building Docker image for v$(VERSION)"
 	docker build -t ghetzel/diecast:$(VERSION) .
 	docker tag ghetzel/diecast:$(VERSION) ghetzel/diecast:latest
-	docker push ghetzel/diecast:$(VERSION)
-	docker push ghetzel/diecast:latest
+	docker push --format docker ghetzel/diecast:$(VERSION)
+	docker push --format docker ghetzel/diecast:latest
 
 .PHONY: test deps docs build

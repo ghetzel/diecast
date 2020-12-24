@@ -81,8 +81,8 @@ func loadStandardFunctionsTypes(funcs FuncMap, server *Server) funcGroup {
 				Aliases: []string{`i`},
 				Summary: `Attempt to convert the given *value* to an integer.`,
 				Function: func(value interface{}) (int64, error) {
-					if v, err := stringutil.ConvertToFloat(value); err == nil {
-						return int64(v), nil
+					if v, err := stringutil.ConvertToInteger(value); err == nil {
+						return v, nil
 					} else {
 						return 0, err
 					}

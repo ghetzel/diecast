@@ -5992,7 +5992,7 @@
         "Name": "shuffleInPlace",
         "Alias": "",
         "Aliases": null,
-        "Summary": "Shuffle the input array in place without returning anything.",
+        "Summary": "Shuffle the input array in place, returning the seed value used to shuffle the input.",
         "Returns": "",
         "Hidden": false,
         "Arguments": [

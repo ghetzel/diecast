@@ -1570,7 +1570,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				},
 			}, {
 				Name:    `shuffleInPlace`,
-				Summary: `Shuffle the input array in place without returning anything.`,
+				Summary: `Shuffle the input array in place, returning the seed value used to shuffle the input.`,
 				Arguments: []funcArg{
 					{
 						Name:        `input`,
@@ -1583,30 +1583,30 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Optional:    true,
 					},
 				},
-				Function: func(input interface{}, seeds ...int64) []interface{} {
+				Function: func(input interface{}, seeds ...int64) (int64, error) {
 					var inlen = sliceutil.Len(input)
-
-					if typeutil.IsZero(input) {
-						return make([]interface{}, 0)
-					} else if !typeutil.IsArray(input) {
-						return make([]interface{}, 0)
-					} else if inlen == 0 {
-						return make([]interface{}, 0)
-					}
-
 					var seed int64 = rand.Int63()
-					var swap = reflect.Swapper(input)
 
 					if len(seeds) > 0 && seeds[0] != 0 {
 						seed = seeds[0]
 					}
+
+					if typeutil.IsZero(input) {
+						return seed, nil
+					} else if inlen == 0 {
+						return seed, nil
+					} else if !typeutil.IsArray(input) {
+						return seed, fmt.Errorf("input must be an array or slice")
+					}
+
+					var swap = reflect.Swapper(input)
 
 					rand.New(rand.NewSource(seed)).Shuffle(
 						inlen,
 						swap,
 					)
 
-					return sliceutil.Sliceify(input)
+					return seed, nil
 				},
 			}, {
 				Name: `apply`,

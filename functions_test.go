@@ -42,7 +42,7 @@ func TestCollectionFunctions(t *testing.T) {
 	assert.Equal(`five`, longestString([]string{`one`, `two`, `five`}))
 	assert.Equal(`one`, longestString([]string{`one`, `two`}))
 
-	var shuffle = fns[`shuffleInPlace`].(func(input interface{}, seeds ...int64) []interface{})
+	var shuffle = fns[`shuffleInPlace`].(func(input interface{}, seeds ...int64) (int64, error))
 	var x = []string{`a`, `b`, `c`, `d`, `e`, `f`, `g`}
 
 	shuffle(x, 42)
