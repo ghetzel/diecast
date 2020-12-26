@@ -31,6 +31,16 @@ import (
 )
 
 var Base32Alphabet = base32.NewEncoding(`abcdefghijklmnopqrstuvwxyz234567`)
+var globalFunctions = make(FuncMap)
+
+// Register a function that will be available to all template expressions, wherever they appear.
+func RegisterGlobalFunction(name string, fn interface{}) {
+	if fn != nil {
+		globalFunctions[name] = fn
+	} else {
+		delete(globalFunctions, name)
+	}
+}
 
 type fileInfo struct {
 	Parent    string
@@ -78,8 +88,8 @@ func MinNonZero(data stats.Float64Data) (float64, error) {
 }
 
 func GetFunctions(server *Server) (funcGroups, FuncMap) {
-	var funcs = make(FuncMap)
-	var groups = make(funcGroups, 0)
+	var funcs FuncMap = globalFunctions
+	var groups funcGroups = make(funcGroups, 0)
 
 	// String Processing
 	groups = append(groups, loadStandardFunctionsString(funcs, server))

@@ -27,6 +27,10 @@ var awsSession = func() *session.Session {
 			},
 		}),
 	}); err == nil {
+		if ep := executil.Env(`AWS_ENDPOINT_URL`); ep != `` {
+			sess.Config.Endpoint = aws.String(ep)
+		}
+
 		return sess
 	} else {
 		log.Warningf("aws: invalid credentials: %v", err)
@@ -35,6 +39,15 @@ var awsSession = func() *session.Session {
 }()
 
 // A S3Mount exposes the contents of a given filesystem directory.
+// As is tradition with AWS client software, this package recongnizes and will
+// honor several environment variable values for specifying configuration details
+// to the client.  These variables include:
+//
+// - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` representing the credentials to authenticate with
+// - `AWS_REGION` to specify the region name
+// - `AWS_PROFILE` to specify the named profile to utilize when reading from ~/.aws/credentials and ~/.aws/config
+// - `AWS_ENDPOINT_URL` to override the HTTPS endpoint to use, namely for pointing to S3-compatible services.
+//
 type S3Mount struct {
 	MountPoint string `json:"mount"`
 	Path       string `json:"source"`
