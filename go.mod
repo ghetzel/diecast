@@ -9,7 +9,7 @@ require (
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ghetzel/cli v1.17.0
-	github.com/ghetzel/go-stockutil v1.8.83
+	github.com/ghetzel/go-stockutil v1.8.95
 	github.com/ghetzel/go-webfriend v0.9.60
 	github.com/ghetzel/ratelimit v0.0.0-20200513232932-b28727c55ae1
 	github.com/ghetzel/testify v1.4.1

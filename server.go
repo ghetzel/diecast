@@ -414,6 +414,15 @@ func (self *Server) SetFileSystem(fs http.FileSystem) {
 	self.fs = fs
 }
 
+// Read a file from the underlying root filesystem, satisfying the http.FileSystem interface.
+func (self *Server) Open(name string) (http.File, error) {
+	if self.fs == nil {
+		return nil, fmt.Errorf("no filesystem")
+	} else {
+		return self.fs.Open(name)
+	}
+}
+
 func (self *Server) IsInRootPath(path string) bool {
 	if absR, err := filepath.Abs(self.RootPath); err == nil {
 		if absP, err := filepath.Abs(path); err == nil {
