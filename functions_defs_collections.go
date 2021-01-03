@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -184,6 +185,70 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 					}
 
 					return out, nil
+				},
+			}, {
+				Name: `filterLines`,
+				Summary: `Return a subset of the lines in the given string or array of strings that ` +
+					`match the supplied regular expression.  Optionally, the match may be negated, which ` +
+					`return all lines that do NOT match the regular expression.`,
+				Arguments: []funcArg{
+					{
+						Name:        `arrayOrString`,
+						Type:        `array, string`,
+						Description: `The string or array of strings to scan.`,
+					}, {
+						Name:        `regexp`,
+						Type:        `string`,
+						Description: `A regular expression used to filter the given input.`,
+					}, {
+						Name:        `negate`,
+						Type:        `boolean`,
+						Description: `If true, only values that do not match regexp will be returned.`,
+						Optional:    true,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code: `filterLines "# Hello\n# Author: Me\necho hello\nexit 1" "^#"`,
+						Return: []string{
+							`# Hello`,
+							`# Author: Me`,
+						},
+					}, {
+						Code: `filterLines "# Hello\n# Author: Me\necho hello\nexit 1" "^#" true`,
+						Return: []string{
+							`echo hello`,
+							`exit 1`,
+						},
+					},
+				},
+				Function: func(in interface{}, expr string, negate ...bool) ([]string, error) {
+					if rx, err := regexp.Compile(expr); err == nil {
+						var lines []string
+						var doNegate bool = (len(negate) > 0 && negate[0])
+
+						if typeutil.IsArray(in) {
+							lines = sliceutil.Stringify(in)
+						} else {
+							lines = strings.Split(typeutil.String(in), "\n")
+						}
+
+						var out []string
+
+						for _, line := range lines {
+							if doNegate && rx.MatchString(line) {
+								continue
+							} else if !doNegate && !rx.MatchString(line) {
+								continue
+							}
+
+							out = append(out, line)
+						}
+
+						return out, nil
+					} else {
+						return nil, err
+					}
 				},
 			}, {
 				Name: `filterByKey`,

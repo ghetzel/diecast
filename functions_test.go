@@ -53,6 +53,30 @@ func TestCollectionFunctions(t *testing.T) {
 
 	shuffle(x, 42)
 	assert.Equal([]string{"b", "g", "e", "f", "d", "a", "c"}, x)
+
+	var filterLines = fns[`filterLines`].(func(in interface{}, expr string, negate ...bool) ([]string, error))
+	var res, err = filterLines(
+		"# Hello\n# Author: Me\necho hello\nexit 1",
+		"^#",
+	)
+
+	assert.NoError(err)
+	assert.Equal([]string{
+		`# Hello`,
+		`# Author: Me`,
+	}, res)
+
+	res, err = filterLines(
+		"# Hello\n# Author: Me\necho hello\nexit 1",
+		"^#",
+		true,
+	)
+
+	assert.NoError(err)
+	assert.Equal([]string{
+		`echo hello`,
+		`exit 1`,
+	}, res)
 }
 
 func TestCollectionFunctionsCodecs(t *testing.T) {

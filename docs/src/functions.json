@@ -4263,6 +4263,61 @@
         ]
       },
       {
+        "Name": "filterLines",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return a subset of the lines in the given string or array of strings that match the supplied regular expression.  Optionally, the match may be negated, which return all lines that do NOT match the regular expression.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "arrayOrString",
+            "Type": "array, string",
+            "Description": "The string or array of strings to scan.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "regexp",
+            "Type": "string",
+            "Description": "A regular expression used to filter the given input.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "negate",
+            "Type": "boolean",
+            "Description": "If true, only values that do not match regexp will be returned.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "filterLines \"# Hello\\n# Author: Me\\necho hello\\nexit 1\" \"^#\"",
+            "Description": "",
+            "Return": [
+              "# Hello",
+              "# Author: Me"
+            ]
+          },
+          {
+            "Code": "filterLines \"# Hello\\n# Author: Me\\necho hello\\nexit 1\" \"^#\" true",
+            "Description": "",
+            "Return": [
+              "echo hello",
+              "exit 1"
+            ]
+          }
+        ]
+      },
+      {
         "Name": "filterByKey",
         "Alias": "",
         "Aliases": null,
