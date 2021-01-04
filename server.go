@@ -26,6 +26,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -234,7 +235,7 @@ type Server struct {
 	BaseHeader          *TemplateHeader           `yaml:"header"                  json:"header"`                  // A default header that all templates will inherit from.
 	BinPath             string                    `yaml:"-"                       json:"-"`                       // Exposes the location of the diecast binary
 	BindingPrefix       string                    `yaml:"bindingPrefix"           json:"bindingPrefix"`           // Specify a string to prefix all binding resource values that start with "/"
-	Bindings            []Binding                 `yaml:"bindings"                json:"bindings"`                // Top-level bindings that apply to every rendered template
+	Bindings            SharedBindingSet          `yaml:"bindings"                json:"bindings"`                // Top-level bindings that apply to every rendered template
 	DefaultPageObject   map[string]interface{}    `yaml:"-"                       json:"-"`                       //
 	DisableCommands     bool                      `yaml:"disable_commands"        json:"disable_commands"`        // Disable the execution of PrestartCommands and StartCommand .
 	DisableTimings      bool                      `yaml:"disableTimings"          json:"disableTimings"`          // Disable emitting per-request Server-Timing headers to aid in tracing bottlenecks and performance issues.
@@ -291,6 +292,7 @@ type Server struct {
 	opentrace           opentracing.Tracer
 	otcloser            io.Closer
 	viaConstructor      bool
+	sharedBindingData   sync.Map
 }
 
 func NewServer(root interface{}, patterns ...string) *Server {
@@ -300,7 +302,7 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		RootPath:           `.`,
 		TemplatePatterns:   patterns,
 		Authenticators:     make(AuthenticatorConfigs, 0),
-		Bindings:           make([]Binding, 0),
+		Bindings:           make(SharedBindingSet, 0),
 		DefaultPageObject:  make(map[string]interface{}),
 		Mounts:             make([]Mount, 0),
 		OverridePageObject: make(map[string]interface{}),
@@ -568,6 +570,10 @@ func (self *Server) Initialize() error {
 
 	if err := self.setupServer(); err != nil {
 		return err
+	}
+
+	if err := self.Bindings.init(self); err != nil {
+		return fmt.Errorf("async bindings: %v", err)
 	}
 
 	self.initialized = true
@@ -1829,10 +1835,11 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	//                      to all binding output that preceded it.  This allows bindings to be
 	//                      pipelined, using the output of one request as the input of the next.
 	// ---------------------------------------------------------------------------------------------
-	var bindings = make(map[string]interface{})
+	var bindings = maputil.M(&self.sharedBindingData).MapNative()
 	var bindingsToEval = make([]Binding, 0)
 
-	bindingsToEval = append(bindingsToEval, self.Bindings...)
+	// only use top-level bindings that
+	bindingsToEval = append(bindingsToEval, self.Bindings.perRequestBindings()...)
 
 	if header != nil {
 		bindingsToEval = append(bindingsToEval, header.Bindings...)

@@ -388,37 +388,35 @@ Bindings support a flexible mechanism for transforming response data as read fro
 - [JSONPath Overview](https://goessner.net/articles/JsonPath/)
 - [Expression Tester](https://jsonpath.com/)
 
-### Postprocessors
+## Postprocessors
 
 Postprocessors are routines that are run after the template is rendered for a request, but before the response is returned to the client. This allows for actions to be taken on the final output, processing it in various ways.
 
-#### Prettify HTML
+### Prettify HTML
 
 The `prettify-html` postprocessor will treat the incoming document as HTML, running it through an autoformatter and autoindent routine. This is useful for ensuring that well-formed and visually pleasing HTML is emitted from Diecast.
 
-#### Trim Empty Lines
+### Trim Empty Lines
 
 The `trim-empty-lines` postprocessor removes all lines from the final document that are zero-length or only contain whitespace. This is especially useful when producing responses encoded as Tab-Separated Values (TSV) or Comma-Separated Values (CSV).
 
-### Renderers
+## Renderers
 
 Diecast supports various methods of converting the output of the rendered templates and layouts into a finished product that can be delivered to the client. Renderers receive the rendered template as input and are responsible for writing _something_ to the client.
 
-#### HTML
+### HTML
 
 The HTML renderer ensures that external template content, that is, template data sourced from a variable or function, is escaped properly within the context of the type of file being processed (HTML, CSS, or Javascript.) This makes user-defined content safe to use in Diecast because it will always be sanitized before being returned to the client. The `html` renderer is the default renderer if no other renderer is specified.
 
-#### PDF
+### PDF
 
 The `pdf` renderer is used in tandem with the HTML renderer to convert the HTML page into a PDF document that is then returned to the client.
 
-#### Sass
+### Sass
 
 The `sass` renderer takes file or template output and compiles it on the fly using the `libsass` library. This is the default renderer for files matching the pattern `*.scss`.
 
-#### [ Image / PNG / JPG / GIF ]
-
-### Mounts
+## Mounts
 
 Another useful feature of Diecast is its ability to expose multiple, overlapping file trees in one logical namespace. These alternative file trees (called _mounts_) can be located locally or remotely, and through careful configuration of the scope and order of mounts, fairly complex serving configurations can be achieved.
 
@@ -426,7 +424,7 @@ For example, lets take a GET request to the path `/assets/js/my-lib.js`. By defa
 
 Mounts can also be stacked, in which the URL path they handle refers to multiple possible locations. When multiple mounts are eligible to handle a request, the requested file is passed to each mount in the order they are defined. The first mount to successfully handle the file will do so. This setup can be used to present multiple directories as a single logical one, as well as providing useful fallbacks and proxying capabilities granular to the individual file level.
 
-#### File
+### File
 
 The file mount type is used for mount sources that do not begin with a URL scheme. This means paths like `/usr/share/www/` or `./some/other/path`. Consider the following mount configuration:
 
@@ -438,7 +436,7 @@ mounts:
 
 A request for the file `/assets/js/my-lib.js` would first attempt to find that file at the path `/usr/share/www/js/my-lib.js`. Note that the `/assets/` part of the URL path was substituted for the value of the `mount` key.
 
-#### HTTP
+### HTTP
 
 The HTTP (aka _proxy_) mount type is used for sources starting with `http://` or `https://`. In this configuration, the behavior matches that of the File type, except the content is sourced by making an HTTP request to a URL. Consider the following mount configuration:
 

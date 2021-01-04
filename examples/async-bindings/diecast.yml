@@ -1,0 +1,5 @@
+---
+bindings:
+- name:     "time"
+  resource: "https://gary-cool.garycities.com/utils/time.json"
+  interval: "1s"

@@ -46,6 +46,9 @@
                     <a class="nav-link" href="#templating">Templating</a>
                     <a class="nav-link" href="#conditional-template-loading-switches">Conditional Template Loading (Switches)</a>
                     <a class="nav-link" href="#data-bindings">Data Bindings</a>
+                    <a class="nav-link" href="#postprocessors">Postprocessors</a>
+                    <a class="nav-link" href="#renderers">Renderers</a>
+                    <a class="nav-link" href="#mounts">Mounts</a>
                     <a class="nav-link" href="#authenticators">Authenticators</a>
                     <a class="nav-link" href="#actions">Actions</a>
                     <details>
@@ -486,33 +489,32 @@ bindings:
 <li><a href="https://goessner.net/articles/JsonPath/" rel="nofollow">JSONPath Overview</a></li>
 <li><a href="https://jsonpath.com/" rel="nofollow">Expression Tester</a></li>
 </ul>
-<h3 id="postprocessors">Postprocessors</h3>
+<h2 id="postprocessors">Postprocessors</h2>
 <p>Postprocessors are routines that are run after the template is rendered for a request, but before the response is returned to the client. This allows for actions to be taken on the final output, processing it in various ways.</p>
-<h4 id="prettify-html">Prettify HTML</h4>
+<h3 id="prettify-html">Prettify HTML</h3>
 <p>The <code>prettify-html</code> postprocessor will treat the incoming document as HTML, running it through an autoformatter and autoindent routine. This is useful for ensuring that well-formed and visually pleasing HTML is emitted from Diecast.</p>
-<h4 id="trim-empty-lines">Trim Empty Lines</h4>
+<h3 id="trim-empty-lines">Trim Empty Lines</h3>
 <p>The <code>trim-empty-lines</code> postprocessor removes all lines from the final document that are zero-length or only contain whitespace. This is especially useful when producing responses encoded as Tab-Separated Values (TSV) or Comma-Separated Values (CSV).</p>
-<h3 id="renderers">Renderers</h3>
+<h2 id="renderers">Renderers</h2>
 <p>Diecast supports various methods of converting the output of the rendered templates and layouts into a finished product that can be delivered to the client. Renderers receive the rendered template as input and are responsible for writing <em>something</em> to the client.</p>
-<h4 id="html">HTML</h4>
+<h3 id="html">HTML</h3>
 <p>The HTML renderer ensures that external template content, that is, template data sourced from a variable or function, is escaped properly within the context of the type of file being processed (HTML, CSS, or Javascript.) This makes user-defined content safe to use in Diecast because it will always be sanitized before being returned to the client. The <code>html</code> renderer is the default renderer if no other renderer is specified.</p>
-<h4 id="pdf">PDF</h4>
+<h3 id="pdf">PDF</h3>
 <p>The <code>pdf</code> renderer is used in tandem with the HTML renderer to convert the HTML page into a PDF document that is then returned to the client.</p>
-<h4 id="sass">Sass</h4>
+<h3 id="sass">Sass</h3>
 <p>The <code>sass</code> renderer takes file or template output and compiles it on the fly using the <code>libsass</code> library. This is the default renderer for files matching the pattern <code>*.scss</code>.</p>
-<h4 id="image-png-jpg-gif">[ Image / PNG / JPG / GIF ]</h4>
-<h3 id="mounts">Mounts</h3>
+<h2 id="mounts">Mounts</h2>
 <p>Another useful feature of Diecast is its ability to expose multiple, overlapping file trees in one logical namespace. These alternative file trees (called <em>mounts</em>) can be located locally or remotely, and through careful configuration of the scope and order of mounts, fairly complex serving configurations can be achieved.</p>
 <p>For example, lets take a GET request to the path <code>/assets/js/my-lib.js</code>. By default, Diecast will look for this path relative to the working directory, and if the file is not found, will return an error. However, a mount can be configured to handle this path (or its parent folder(s)), serving the file from another directory outside of the working directory, or from another server entirely.</p>
 <p>Mounts can also be stacked, in which the URL path they handle refers to multiple possible locations. When multiple mounts are eligible to handle a request, the requested file is passed to each mount in the order they are defined. The first mount to successfully handle the file will do so. This setup can be used to present multiple directories as a single logical one, as well as providing useful fallbacks and proxying capabilities granular to the individual file level.</p>
-<h4 id="file">File</h4>
+<h3 id="file">File</h3>
 <p>The file mount type is used for mount sources that do not begin with a URL scheme. This means paths like <code>/usr/share/www/</code> or <code>./some/other/path</code>. Consider the following mount configuration:</p>
 <pre><code>mounts:
   - mount: /usr/share/www/
     to: /assets/
 </code></pre>
 <p>A request for the file <code>/assets/js/my-lib.js</code> would first attempt to find that file at the path <code>/usr/share/www/js/my-lib.js</code>. Note that the <code>/assets/</code> part of the URL path was substituted for the value of the <code>mount</code> key.</p>
-<h4 id="http">HTTP</h4>
+<h3 id="http">HTTP</h3>
 <p>The HTTP (aka <em>proxy</em>) mount type is used for sources starting with <code>http://</code> or <code>https://</code>. In this configuration, the behavior matches that of the File type, except the content is sourced by making an HTTP request to a URL. Consider the following mount configuration:</p>
 <pre><code>mounts:
   - mount: https://assets.example.com/

@@ -110,11 +110,18 @@ type Binding struct {
 	TlsKey             string                        `yaml:"tlskey,omitempty"               json:"tlskey,omitempty"`               // Provide the path to a TLS client certificate key to present if the server requests one.
 	OnlyPaths          []string                      `yaml:"only,omitempty"                 json:"only,omitempty"`                 // A list of request paths and glob patterns, ANY of which the binding will evaluate on.
 	ExceptPaths        []string                      `yaml:"except,omitempty"               json:"except,omitempty"`               // A list of request paths and glob patterns, ANY of which the binding will NOT evaluate on.
+	Interval           string                        `yaml:"interval,omitempty"             json:"interval,omitempty"`             // For Async Bindings, this specifies the interval on which data sources should be refreshed (if so desired).
 	Restrict           interface{}                   `yaml:"restrict,omitempty"             json:"restrict,omitempty"`             // DEPRECATED: use OnlyPaths/ExceptPaths instead.
 	server             *Server
+	lastRefreshedAt    time.Time
+	syncing            bool
 }
 
 func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface{}, funcs FuncMap) error {
+	if httputil.RequestGetValue(req, `force`).Bool() {
+		return nil
+	}
+
 	var id = reqid(req)
 
 	if !self.NoTemplate {
@@ -215,13 +222,15 @@ func (self *Binding) tracedEvaluate(req *http.Request, header *TemplateHeader, d
 			opentracing.HTTPHeadersCarrier(traceHeaders),
 		)
 
-		if len(header.additionalHeaders) == 0 {
-			header.additionalHeaders = make(map[string]interface{})
-		}
+		if header != nil {
+			if len(header.additionalHeaders) == 0 {
+				header.additionalHeaders = make(map[string]interface{})
+			}
 
-		for k, vv := range traceHeaders {
-			for _, v := range vv {
-				header.additionalHeaders[k] = v
+			for k, vv := range traceHeaders {
+				for _, v := range vv {
+					header.additionalHeaders[k] = v
+				}
 			}
 		}
 	}
@@ -276,7 +285,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		uri = fmt.Sprintf("%s/%s", prefix, uri)
 
 		// allows bindings referencing the local server to avoid TLS cert verification
-		// because the prefix is often `localhost:port`, which probably won't verify anyway.
+		// because the host is often `localhost:port`, which probably won't verify anyway.
 		if AllowInsecureLoopbackBindings {
 			if bpu, err := url.Parse(uri); err == nil {
 				// lookup the hostname of the requested URL. if and only if ALL of the
@@ -313,6 +322,12 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		log.Debugf("[%s]  binding %q: protocol=%T uri=%v", id, self.Name, protocol, uri)
 		log.Infof("[%s] Binding: > %s %+v ? %s", id, strings.ToUpper(sliceutil.OrString(method, `get`)), reqUrl.String(), reqUrl.RawQuery)
 
+		var additionalHeaders map[string]interface{}
+
+		if header != nil {
+			additionalHeaders = header.additionalHeaders
+		}
+
 		if response, err := protocol.Retrieve(&ProtocolRequest{
 			Verb:              method,
 			URL:               reqUrl,
@@ -322,7 +337,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 			TemplateData:      data,
 			TemplateFuncs:     funcs,
 			DefaultTimeout:    self.server.bindingTimeout(),
-			AdditionalHeaders: header.additionalHeaders,
+			AdditionalHeaders: additionalHeaders,
 		}); err == nil {
 			defer response.Close()
 
@@ -505,6 +520,28 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		}
 	} else {
 		return nil, fmt.Errorf("[%s] url: %v", id, err)
+	}
+}
+
+func (self *Binding) asyncEval() (interface{}, error) {
+	if s := self.server; s != nil {
+		if req, err := http.NewRequest(
+			http.MethodGet,
+			s.bestInternalLoopbackUrl(nil),
+			nil,
+		); err == nil {
+			// informs shouldEvaluate() that we should, indeed, evaluate this one.
+			httputil.RequestSetValue(req, `force`, true)
+
+			var data = make(map[string]interface{})
+			var funcs = s.GetTemplateFunctions(data, s.BaseHeader)
+
+			return self.tracedEvaluate(req, s.BaseHeader, data, funcs)
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("no server instance")
 	}
 }
 

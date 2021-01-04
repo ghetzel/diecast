@@ -18,6 +18,7 @@ import (
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
+	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -70,9 +71,25 @@ func (self *Server) traceNameFromRequest(req *http.Request) string {
 	return self.traceName(fmt.Sprintf("%s %s", req.Method, req.URL.Path))
 }
 
+func (self *Server) requestIdFromRequest(req *http.Request) string {
+	if id := req.Header.Get(`traceparent`); id != `` {
+		return id
+	} else if id := maputil.M(
+		maputil.Split(req.Header.Get(`x-amzn-trace-id`), `=`, `;`),
+	).String(`Root`); id != `` {
+		return id
+	} else if id := req.Header.Get(`uber-trace-id`); id != `` {
+		return id
+	} else if id := req.Header.Get(`apigw-requestid`); id != `` {
+		return id
+	} else {
+		return base58.Encode(stringutil.UUID().Bytes())
+	}
+}
+
 // setup request (generate ID, intercept ResponseWriter to get status code, set context variables)
 func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Request) bool {
-	var requestId = base58.Encode(stringutil.UUID().Bytes())
+	var requestId = self.requestIdFromRequest(req)
 
 	log.Debugf("[%s] %s", requestId, strings.Repeat(`-`, 69))
 	log.Debugf("[%s] %s %s (%s)", requestId, req.Method, req.RequestURI, req.RemoteAddr)
