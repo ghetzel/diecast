@@ -1845,6 +1845,23 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 
 					return (int(i) == (len(arr) - 1))
 				},
+			}, {
+				Name:    `jsonPath`,
+				Summary: `Returns the input object filtered using the given JSONPath query.`,
+				Arguments: []funcArg{
+					{
+						Name:        `query`,
+						Type:        `string`,
+						Description: `The JSONPath query to filter by.`,
+					}, {
+						Name:        `data`,
+						Type:        `object`,
+						Description: `The object being filtered.`,
+					},
+				},
+				Function: func(query string, data interface{}) (interface{}, error) {
+					return maputil.JSONPath(data, query)
+				},
 			},
 		},
 	}

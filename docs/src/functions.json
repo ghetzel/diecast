@@ -6226,6 +6226,35 @@
         "Examples": null
       },
       {
+        "Name": "jsonPath",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Returns the input object filtered using the given JSONPath query.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "query",
+            "Type": "string",
+            "Description": "The JSONPath query to filter by.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "data",
+            "Type": "object",
+            "Description": "The object being filtered.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": null
+      },
+      {
         "Name": "findkey",
         "Alias": "findKey",
         "Aliases": null,

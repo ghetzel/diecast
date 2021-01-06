@@ -799,6 +799,9 @@ Diecast runtime directory:</p>
             <a href="#fn-isortByKey">isortByKey</a>
         </li>
         <li>
+            <a href="#fn-jsonPath">jsonPath</a>
+        </li>
+        <li>
             <a href="#fn-keys">keys</a>
         </li>
         <li>
@@ -2984,6 +2987,45 @@ Diecast runtime directory:</p>
 ]</p>
             </div>
         </div>
+    </section>
+    <section class="function" id="fn-jsonPath">
+        <h4 class="mt-3">
+            jsonPath
+            <a href="#fn-jsonPath" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>jsonPath QUERY DATA</code>
+        </div>
+        <p>Returns the input object filtered using the given JSONPath query.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>QUERY</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The JSONPath query to filter by.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>DATA</pre></th>
+                    <td>object</td>
+                    <td>
+                        <p>The object being filtered.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </section>
     <section class="function" id="fn-keys">
         <h4 class="mt-3">
