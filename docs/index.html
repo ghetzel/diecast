@@ -1366,6 +1366,9 @@ Diecast runtime directory:</p>
             <a href="#fn-emoji">emoji</a>
         </li>
         <li>
+            <a href="#fn-emojis">emojis</a>
+        </li>
+        <li>
             <a href="#fn-hasPrefix">hasPrefix</a>
         </li>
         <li>
@@ -9449,6 +9452,49 @@ Diecast runtime directory:</p>
                 <p class="returns">&#34;🤔&#34;</p>
             </div>
             <div class="example" id="fn-emoji-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>emoji &#34;:not_a_real_emoji:&#34; &#34;nope&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;nope&#34;</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-emojis">
+        <h4 class="mt-3">
+            emojis
+            <a href="#fn-emojis" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>emojis [NAMES ...]</code>
+        </div>
+        <p>Return an object containing all known emoji, keyed on the well-known names used to refer to them.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>NAMES</pre></th>
+                    <td>string (1+)</td>
+                    <td>
+                        <p>A list of zero or more emoji to return from the whole list.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-emojis-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>emoji &#34;:thinking_face:&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;🤔&#34;</p>
+            </div>
+            <div class="example" id="fn-emojis-example-1">
                 <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>emoji &#34;:not_a_real_emoji:&#34; &#34;nope&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">&#34;nope&#34;</p>
             </div>

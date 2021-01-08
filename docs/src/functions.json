@@ -860,6 +860,37 @@
         ]
       },
       {
+        "Name": "emojis",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return an object containing all known emoji, keyed on the well-known names used to refer to them.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "names",
+            "Type": "string",
+            "Description": "A list of zero or more emoji to return from the whole list.",
+            "Variadic": true,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "emoji \":thinking_face:\"",
+            "Description": "",
+            "Return": "🤔"
+          },
+          {
+            "Code": "emoji \":not_a_real_emoji:\" \"nope\"",
+            "Description": "",
+            "Return": "nope"
+          }
+        ]
+      },
+      {
         "Name": "section",
         "Alias": "",
         "Aliases": null,

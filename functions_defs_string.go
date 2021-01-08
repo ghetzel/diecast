@@ -14,7 +14,34 @@ import (
 	"github.com/kyokomi/emoji"
 )
 
-var emojiCodeMap = emoji.CodeMap()
+func emojiKey(v string) string {
+	v = strings.Trim(v, `:`)
+	v = strings.ToLower(v)
+
+	switch v {
+	case `-1`:
+		return v
+	}
+
+	v = stringutil.Underscore(v)
+	v = strings.Trim(v, `_`)
+	v = stringutil.SqueezeFunc(v, func(r rune) bool {
+		return unicode.IsSpace(r) || unicode.IsPunct(r)
+	})
+
+	return v
+}
+
+var emojiCodeMap = func() map[string]string {
+	var basemap = emoji.CodeMap()
+
+	for key, value := range basemap {
+		basemap[emojiKey(key)] = value
+	}
+
+	return basemap
+}()
+
 var loremIpsum = []string{
 	`Lorem`, `ipsum`, `dolor`, `sit`, `amet,`, `consectetur`, `adipiscing`, `elit.`, `Sed`, `tempus`, `nunc`, `vel`, `mauris`, `tincidunt,`, `id`, `posuere`, `erat`, `sollicitudin.`, `Suspendisse`, `pretium`, `porta`, `mi`, `sit`, `amet`, `cursus.`, `In`, `porttitor`, `ipsum`, `et`, `sapien`, `pharetra`, `porta.`, `Nunc`, `in`, `tortor`, `risus.`, `Sed`, `facilisis`, `leo`, `eget`, `risus`, `semper,`, `bibendum`, `ullamcorper`, `dui`, `gravida.`, `Ut`, `sit`, `amet`, `malesuada`, `tellus.`, `Vivamus`, `gravida`, `malesuada`, `sodales.`, `Etiam`, `sit`, `amet`, `ligula`, `sed`, `elit`, `aliquet`, `mollis.`, `Nullam`, `sollicitudin`, `ut`, `dolor`, `nec`, `venenatis.`, `Aenean`, `vel`, `odio`, `aliquam,`, `pharetra`, `ipsum`, `eu,`, `gravida`, `mauris.`, `Mauris`, `at`, `odio`, `efficitur`, `nisi`, `vulputate`, `auctor.`, `Sed`, `sed`, `mi`, `faucibus,`, `bibendum`, `dui`, `at,`, `facilisis`, `eros.`, `Nulla`, `viverra`, `vitae`, `urna`, `tristique`, `blandit.`,
 	`Praesent`, `sem`, `lorem,`, `convallis`, `vel`, `felis`, `ac,`, `sagittis`, `elementum`, `arcu.`, `In`, `laoreet`, `nisi`, `ac`, `vestibulum`, `ullamcorper.`, `Class`, `aptent`, `taciti`, `sociosqu`, `ad`, `litora`, `torquent`, `per`, `conubia`, `nostra,`, `per`, `inceptos`, `himenaeos.`, `Nullam`, `eu`, `turpis`, `sit`, `amet`, `odio`, `imperdiet`, `sollicitudin`, `in`, `a`, `odio.`, `Nulla`, `mattis,`, `elit`, `eu`, `viverra`, `porttitor,`, `libero`, `leo`, `fringilla`, `erat,`, `vel`, `suscipit`, `leo`, `leo`, `ac`, `libero.`, `Nullam`, `id`, `eros`, `leo.`, `Mauris`, `et`, `porttitor`, `mauris,`, `at`, `placerat`, `est.`, `Maecenas`, `non`, `faucibus`, `eros.`, `Proin`, `eget`, `lectus`, `sed`, `metus`, `fermentum`, `lacinia.`, `In`, `auctor`, `mauris`, `vel`, `nisl`, `ultrices`, `convallis.`, `Nunc`, `neque`, `massa,`, `ullamcorper`, `at`, `efficitur`, `non,`, `feugiat`, `sed`, `dolor.`, `Cras`, `a`, `mi`, `nunc.`, `Lorem`, `ipsum`, `dolor`, `sit`, `amet,`, `consectetur`, `adipiscing`, `elit.`, `Suspendisse`, `convallis`, `risus`, `dapibus,`, `semper`, `augue`, `eu,`, `pharetra`, `eros.`,
@@ -781,11 +808,7 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Function: func(in interface{}, fallbacks ...string) string {
-					var name = typeutil.String(in)
-					name = strings.TrimPrefix(name, `:`)
-					name = strings.TrimSuffix(name, `:`)
-					name = `:` + stringutil.Underscore(name) + `:`
-					name = strings.ToLower(name)
+					var name = emojiKey(typeutil.String(in))
 
 					if emj, ok := emojiCodeMap[name]; ok {
 						return emj
@@ -794,6 +817,43 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 					} else {
 						return ``
 					}
+				},
+				Examples: []funcExample{
+					{
+						Code:   `emoji ":thinking_face:"`,
+						Return: "\U0001f914",
+					}, {
+						Code:   `emoji ":not_a_real_emoji:" "nope"`,
+						Return: `nope`,
+					},
+				},
+			}, {
+				Name:    `emojis`,
+				Summary: `Return an object containing all known emoji, keyed on the well-known names used to refer to them.`,
+				Arguments: []funcArg{
+					{
+						Name:        `names`,
+						Type:        `string`,
+						Description: `A list of zero or more emoji to return from the whole list.`,
+						Variadic:    true,
+					},
+				},
+				Function: func(names ...string) map[string]string {
+					var out = make(map[string]string)
+
+					for key, em := range emojiCodeMap {
+						if len(names) > 0 {
+							for _, name := range names {
+								if emojiKey(key) == emojiKey(name) {
+									out[emojiKey(key)] = em
+								}
+							}
+						} else {
+							out[emojiKey(key)] = em
+						}
+					}
+
+					return out
 				},
 				Examples: []funcExample{
 					{
