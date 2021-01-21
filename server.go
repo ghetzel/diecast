@@ -43,7 +43,6 @@ import (
 	"github.com/ghetzel/ratelimit"
 	"github.com/gobwas/glob"
 	"github.com/husobee/vestigo"
-	"github.com/lucas-clemente/quic-go/http3"
 	"github.com/mattn/go-shellwords"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/signalsciences/tlstext"
@@ -273,7 +272,7 @@ type Server struct {
 	Log                 LogConfig                 `yaml:"log"                     json:"log"`                     // configure logging
 	BeforeHandlers      []Middleware              `yaml:"-"                       json:"-"`                       // contains a stack of Middleware functions that are run before handling the request
 	AfterHandlers       []http.HandlerFunc        `yaml:"-"                       json:"-"`                       // contains a stack of HandlerFuncs that are run after handling the request.  These functions cannot stop the request, as it's already been written to the client.
-	Protocol            string                    `yaml:"protocol"                json:"protocol"`                // Specify which HTTP protocol to use ("http", "http2", "quic", "http3")
+	Protocol            string                    `yaml:"protocol"                json:"protocol"`                // Specify which HTTP protocol to use ("http", "http2")
 	RateLimit           *RateLimitConfig          `yaml:"ratelimit"               json:"ratelimit"`               // Specify a rate limiting configuration.
 	BindingTimeout      interface{}               `yaml:"bindingTimeout"          json:"bindingTimeout"`          // Sets the default timeout for bindings that don't explicitly set one.
 	JaegerConfig        *JaegerConfig             `yaml:"jaeger"                  json:"jaeger"`                  // Configures distributed tracing using Jaeger.
@@ -882,16 +881,6 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 
 		serveable = srv
 
-	case `quic`, `http3`:
-		useUDP = true
-		var h3s = &http3.Server{
-			Server:     srv,
-			QuicConfig: nil,
-		}
-
-		serveable = &h3serveable{
-			Server: h3s,
-		}
 	default:
 		return fmt.Errorf("unknown protocol %q", self.Protocol)
 	}

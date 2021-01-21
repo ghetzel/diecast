@@ -6,7 +6,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"sort"
 	"strings"
@@ -15,7 +14,6 @@ import (
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/jbenet/go-base58"
-	"github.com/lucas-clemente/quic-go/http3"
 )
 
 func bugWarning() {
@@ -218,22 +216,6 @@ func (self *statusInterceptor) Write(b []byte) (int, error) {
 type nopHandler struct{}
 
 func (self *nopHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {}
-
-type h3serveable struct {
-	*http3.Server
-}
-
-func (self *h3serveable) Serve(l net.Listener) error {
-	if pc, ok := l.(net.PacketConn); ok {
-		return self.Server.Serve(pc)
-	} else {
-		return fmt.Errorf("a packet-oriented transport is required")
-	}
-}
-
-func (self *h3serveable) ServeTLS(l net.Listener, _ string, _ string) error {
-	return self.Serve(l)
-}
 
 func fancyMapJoin(in interface{}) string {
 	var m = maputil.M(in)

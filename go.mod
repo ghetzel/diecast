@@ -1,6 +1,7 @@
 module github.com/ghetzel/diecast
 
 require (
+	cloud.google.com/go v0.37.0 // indirect
 	github.com/PuerkitoBio/goquery v1.5.0
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alicebob/miniredis v2.5.0+incompatible
@@ -22,12 +23,12 @@ require (
 	github.com/jbenet/go-base58 v0.0.0-20150317085156-6237cf65f3a6
 	github.com/kelvins/sunrisesunset v0.0.0-20170601204625-14f1915ad4b4
 	github.com/kyokomi/emoji v2.1.0+incompatible
-	github.com/lucas-clemente/quic-go v0.18.1
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-shellwords v1.0.9
 	github.com/microcosm-cc/bluemonday v1.0.1
 	github.com/montanaflynn/stats v0.0.0-20151014174947-eeaced052adb
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
+	github.com/onsi/ginkgo v1.14.0 // indirect
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/signalsciences/tlstext v1.2.0
@@ -42,7 +43,5 @@ require (
 	golang.org/x/text v0.3.2
 	gopkg.in/yaml.v2 v2.3.0
 )
-
-replace github.com/marten-seemann/qtls-go1-15 v0.1.0 => github.com/marten-seemann/qtls-go1-16 v0.1.0-beta.1.1
 
 go 1.12
