@@ -4,6 +4,8 @@ GO111MODULE ?= on
 LOCALS      := $(shell find . -type f -name '*.go')
 BIN         ?= diecast-$(shell go env GOOS)-$(shell go env GOARCH)
 VERSION      = $(shell grep 'const ApplicationVersion' version.go | cut -d= -f2 | tr -d '`' | tr -d ' ')
+CGO_CFLAGS   = -I/opt/homebrew/include
+CGO_LDFLAGS  = -L/opt/homebrew/lib
 
 all: deps test build docs
 

@@ -1,4 +1,4 @@
-TESTBIN ?= ../../bin/diecast-linux-amd64-nocgo
+TESTBIN ?= ../../bin/diecast-$(shell go env GOOS)-$(shell go env GOARCH)-nocgo
 FILES   ?= $(wildcard *.yaml)
 
 .EXPORT_ALL_VARIABLES:

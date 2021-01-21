@@ -43,4 +43,6 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 )
 
+replace github.com/marten-seemann/qtls-go1-15 v0.1.0 => github.com/marten-seemann/qtls-go1-16 v0.1.0-beta.1.1
+
 go 1.12
