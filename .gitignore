@@ -19,3 +19,4 @@
 *.crl
 *.inprogress
 /index.html
+.DS_Store
