@@ -1,6 +1,8 @@
 package diecast
 
 import (
+	"reflect"
+
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 )
@@ -11,9 +13,20 @@ type Redirect struct {
 }
 
 type SwitchCase struct {
-	CheckType string `yaml:"type,omitempty"      json:"type,omitempty"`      // The type of test to perform (one of: "expression", "querystring:<name>", "header:<name>")
-	Condition string `yaml:"condition,omitempty" json:"condition,omitempty"` // A type-specific condition value (e.g.: an expression or querystring value)
-	UsePath   string `yaml:"use,omitempty"       json:"use,omitempty"`       // The template to load if the condition matches
+	CheckType   string    `yaml:"type,omitempty"      json:"type,omitempty"`      // The type of test to perform (one of: "expression", "querystring:<name>", "header:<name>")
+	Condition   string    `yaml:"condition,omitempty" json:"condition,omitempty"` // A type-specific condition value (e.g.: an expression or querystring value)
+	UsePath     string    `yaml:"use,omitempty"       json:"use,omitempty"`       // The template to load if the condition matches
+	Redirect    *Redirect `yaml:"redirect,omitempty"  json:"redirect,omitempty"`  // An HTTP Redirect to perform if the condition matches
+	Break       bool      `yaml:"break"               json:"break"`               // If this case matches, no additional cases should be considered
+	Fallthrough bool      `yaml:"fallthrough"         json:"fallthrough"`         // If this case matches, control should fall immediately to the first fallback option.
+}
+
+func (self *SwitchCase) IsFallback() bool {
+	return (self.Condition == ``)
+}
+
+func (self *SwitchCase) Equals(other *SwitchCase) bool {
+	return reflect.DeepEqual(self, other)
 }
 
 type TemplateHeader struct {
@@ -45,11 +58,28 @@ func (self *TemplateHeader) Merge(other *TemplateHeader) (*TemplateHeader, error
 	}
 
 	var newHeader = &TemplateHeader{
-		Bindings:       append(self.Bindings, other.Bindings...),             // ours first, then other's
+		Bindings:       append(self.Bindings),                                // ours first, then other's
 		Layout:         sliceutil.OrString(other.Layout, self.Layout),        // prefer other, fallback to ours
 		Renderer:       sliceutil.OrString(other.Renderer, self.Renderer),    // prefer other, fallback to ours
 		Postprocessors: append(self.Postprocessors, other.Postprocessors...), // ours first, then other's
-		Switch:         append(self.Switch, other.Switch...),                 // ours first, then other's
+		Switch:         self.Switch,                                          // prefer other, fallback to ours
+	}
+
+	if other.Switch != nil {
+		newHeader.Switch = other.Switch
+	}
+
+	newHeader.Postprocessors = sliceutil.UniqueStrings(newHeader.Postprocessors)
+
+OtherBindingLoop:
+	for _, other := range other.Bindings {
+		for _, existing := range newHeader.Bindings {
+			if other.Name == existing.Name {
+				continue OtherBindingLoop
+			}
+		}
+
+		newHeader.Bindings = append(newHeader.Bindings, other)
 	}
 
 	// locale: latest non-empty locale wins

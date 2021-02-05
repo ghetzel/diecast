@@ -292,6 +292,7 @@ type Server struct {
 	otcloser            io.Closer
 	viaConstructor      bool
 	sharedBindingData   sync.Map
+	lockGetFunctions    sync.Mutex
 }
 
 func NewServer(root interface{}, patterns ...string) *Server {
@@ -1148,88 +1149,101 @@ func (self *Server) applyTemplate(
 
 	if funcs, data, err := self.GetTemplateData(req, &finalHeader); err == nil {
 		var start = time.Now()
+		var fallingThrough bool
 
+	SwitchCaseLoop:
 		// switches allow the template processing to be hijacked/redirected mid-evaluation
 		// based on data already evaluated
-		if len(finalHeader.Switch) > 0 {
-		SwitchCaseLoop:
-			for i, swcase := range finalHeader.Switch {
-				if swcase == nil {
+		for i, swcase := range finalHeader.Switch {
+			if swcase == nil {
+				continue SwitchCaseLoop
+			}
+
+			if !swcase.IsFallback() {
+				if fallingThrough {
 					continue SwitchCaseLoop
 				}
 
-				if swcase.UsePath != `` {
-					// if a condition is specified, it must evaluate to a truthy value to proceed
-					var cond string
+				// if a condition is specified, it must evaluate to a truthy value to proceed
+				var cond string
 
-					if c, err := EvalInline(swcase.Condition, data, funcs); err == nil {
-						cond = c
-					} else {
-						return fmt.Errorf("switch: %v", err)
-					}
+				if c, err := EvalInline(swcase.Condition, data, funcs); err == nil {
+					cond = c
+				} else {
+					return fmt.Errorf("switch: %v", err)
+				}
 
-					checkType, checkTypeArg := stringutil.SplitPair(swcase.CheckType, `:`)
+				var checkType, checkTypeArg = stringutil.SplitPair(swcase.CheckType, `:`)
 
-					switch checkType {
-					case `querystring`, `qs`:
-						if checkTypeArg != `` {
-							if cond == `` {
-								if httputil.Q(req, checkTypeArg) == `` {
-									continue SwitchCaseLoop
-								}
-							} else if httputil.Q(req, checkTypeArg) != cond {
+				switch checkType {
+				case `querystring`, `qs`:
+					if checkTypeArg != `` {
+						if cond == `` {
+							if httputil.Q(req, checkTypeArg) == `` {
 								continue SwitchCaseLoop
 							}
-						} else {
-							return fmt.Errorf("switch checktype %q must specify an argument; e.g.: %q", `querystring`, `querystring:id`)
-						}
-
-					case `header`:
-						if checkTypeArg != `` {
-							if cond == `` {
-								if req.Header.Get(checkTypeArg) == `` {
-									continue SwitchCaseLoop
-								}
-							} else if req.Header.Get(checkTypeArg) != cond {
-								continue SwitchCaseLoop
-							}
-						} else {
-							return fmt.Errorf("switch checktype %q must specify an argument; e.g.: %q", `header`, `header:X-My-Header`)
-						}
-
-					case `expression`, ``:
-						if !typeutil.V(cond).Bool() {
+						} else if httputil.Q(req, checkTypeArg) != cond {
 							continue SwitchCaseLoop
 						}
-					default:
-						return fmt.Errorf("unknown switch checktype %q", swcase.CheckType)
+					} else {
+						return fmt.Errorf("switch checktype %q must specify an argument; e.g.: %q", `querystring`, `querystring:id`)
 					}
 
-					if swTemplate, err := self.fs.Open(swcase.UsePath); err == nil {
-						if swHeader, swData, err := SplitTemplateHeaderContent(swTemplate); err == nil {
-							finalHeader.Switch[i] = nil
-
-							if fh, err := finalHeader.Merge(swHeader); err == nil {
-								log.Debugf("[%s] Switch case %d matched, switching to template %v", reqid(req), i, swcase.UsePath)
-
-								return self.applyTemplate(
-									w,
-									req,
-									requestPath,
-									swData,
-									fh,
-									urlParams,
-									mimeType,
-								)
-							} else {
-								return err
+				case `header`:
+					if checkTypeArg != `` {
+						if cond == `` {
+							if req.Header.Get(checkTypeArg) == `` {
+								continue SwitchCaseLoop
 							}
+						} else if req.Header.Get(checkTypeArg) != cond {
+							continue SwitchCaseLoop
+						}
+					} else {
+						return fmt.Errorf("switch checktype %q must specify an argument; e.g.: %q", `header`, `header:X-My-Header`)
+					}
+
+				case `expression`, ``:
+					if !typeutil.Bool(cond) {
+						continue SwitchCaseLoop
+					}
+				default:
+					return fmt.Errorf("unknown switch checktype %q", swcase.CheckType)
+				}
+
+				if swcase.Break {
+					break SwitchCaseLoop
+
+				} else if swcase.Fallthrough {
+					fallingThrough = true
+					continue SwitchCaseLoop
+
+				} else if redir := swcase.Redirect; redir != nil {
+					finalHeader.Redirect = redir
+					break SwitchCaseLoop
+
+				} else if swTemplate, err := self.fs.Open(swcase.UsePath); err == nil {
+					if swHeader, swData, err := SplitTemplateHeaderContent(swTemplate); err == nil {
+						if fh, err := finalHeader.Merge(swHeader); err == nil {
+							log.Debugf("[%s] Switch case %d matched, switching to template %v", reqid(req), i, swcase.UsePath)
+							// httputil.RequestSetValue(req, SwitchCaseKey, usePath)
+
+							return self.applyTemplate(
+								w,
+								req,
+								requestPath,
+								swData,
+								fh,
+								urlParams,
+								mimeType,
+							)
 						} else {
 							return err
 						}
 					} else {
 						return err
 					}
+				} else {
+					return err
 				}
 			}
 		}
@@ -1818,7 +1832,7 @@ func (self *Server) evalPageData(final bool, req *http.Request, header *Template
 }
 
 func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}, error) {
-	funcs, data := self.getPreBindingData(req, header)
+	var funcs, data = self.getPreBindingData(req, header)
 
 	// Evaluate "bindings": Bindings have access to $.page, and each subsequent binding has access
 	//                      to all binding output that preceded it.  This allows bindings to be
@@ -1856,11 +1870,9 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		if pgConfig := binding.Paginate; pgConfig != nil {
 			var results = make([]map[string]interface{}, 0)
 			var proceed = true
-
 			var total int64
 			var count int64
 			var soFar int64
-
 			var page = 1
 
 			var lastPage = maputil.M(&ResultsPage{
@@ -2027,9 +2039,10 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			for i, resource := range repeatIters {
 				binding.Resource = strings.TrimSpace(resource)
 				binding.Repeat = ``
+
 				bindings[binding.Name] = binding.Fallback
 
-				v, err := binding.tracedEvaluate(req, header, data, funcs)
+				var v, err = binding.tracedEvaluate(req, header, data, funcs)
 
 				if err == nil {
 					results = append(results, v)

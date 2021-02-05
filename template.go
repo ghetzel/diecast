@@ -51,8 +51,8 @@ type Template struct {
 }
 
 func GetEngineForFile(filename string) Engine {
-	switch path.Ext(filename) {
-	case `.html`:
+	switch strings.ToLower(path.Ext(filename)) {
+	case `.html`, `.htm`:
 		return HtmlEngine
 	default:
 		return TextEngine

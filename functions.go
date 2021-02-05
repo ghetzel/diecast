@@ -88,6 +88,11 @@ func MinNonZero(data stats.Float64Data) (float64, error) {
 }
 
 func GetFunctions(server *Server) (funcGroups, FuncMap) {
+	if server != nil {
+		server.lockGetFunctions.Lock()
+		defer server.lockGetFunctions.Unlock()
+	}
+
 	var funcs FuncMap = globalFunctions
 	var groups funcGroups = make(funcGroups, 0)
 

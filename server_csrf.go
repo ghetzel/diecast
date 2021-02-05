@@ -25,6 +25,7 @@ const CsrfTokenLength = 32
 const ContextCsrfToken = `csrf-token`
 const ContextStatusKey = `response-status-code`
 const ContextErrorKey = `response-error-message`
+const SwitchCaseKey = `switch-case`
 
 var DefaultCsrfHeaderName = `X-CSRF-Token`
 var DefaultCsrfFormFieldName = `csrf_token`
