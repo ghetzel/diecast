@@ -16,6 +16,7 @@ import (
 )
 
 var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
+var DefaultObjectifyKeyValueSeparator = `=`
 
 func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 	var group = funcGroup{
@@ -1861,6 +1862,94 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				},
 				Function: func(query string, data interface{}) (interface{}, error) {
 					return maputil.JSONPath(data, query)
+				},
+			}, {
+				Name:    `objectify`,
+				Summary: ``,
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `array`,
+						Description: `An array of objects or strings to parse and convert into an object`,
+					}, {
+						Name:        `keyField`,
+						Type:        `string`,
+						Description: `The name of the field in the parsed input whose value will become the keys in the resultant object.`,
+					}, {
+						Name:        `valueField`,
+						Type:        `string`,
+						Description: `The name of the field in the parsed input whose value will become the values in the resultant object.`,
+					}, {
+						Name:        `keyValueSeparator`,
+						Optional:    true,
+						Type:        `string`,
+						Description: `If given an array of strings, the first occurrence of this string will separate the key and value portions of the string.`,
+					},
+				},
+				Examples: []funcExample{
+					{
+						Code: `objectify [{"label": "First Name", "value": "firstName"}, {"label": "Last Name", "value": "lastName"}] "value" "label"`,
+						Return: map[string]interface{}{
+							`firstName`: `First Name`,
+							`lastName`:  `Last Name`,
+						},
+					}, {
+						Code: `objectify ["test=true", "hello=there"]`,
+						Return: map[string]interface{}{
+							`test`:  true,
+							`hello`: `there`,
+						},
+					},
+				},
+				Function: func(input interface{}, keyField string, valueField string, kvs ...string) map[string]interface{} {
+					var result = make(map[string]interface{})
+					var keyValueSeparator = typeutil.String(
+						sliceutil.FirstNonZero(kvs, DefaultObjectifyKeyValueSeparator),
+					)
+
+					if typeutil.IsMap(input) {
+						var m = maputil.M(input)
+
+						if key := m.String(keyField); key != `` {
+							if valueField != `` {
+								result[key] = m.Get(valueField).Value
+							} else {
+								result[key] = nil
+							}
+						}
+					} else {
+						var items = sliceutil.Sliceify(input)
+
+						for _, item := range items {
+							var key string
+							var value interface{}
+
+							if typeutil.IsMap(item) {
+								if keyField != `` {
+									var m = maputil.M(item)
+
+									if k := m.String(keyField); k != `` {
+										key = k
+
+										if valueField != `` {
+											value = m.Get(valueField).Value
+										}
+									}
+								}
+							} else {
+								key, value = stringutil.SplitPairTrimSpaceAuto(
+									typeutil.String(item),
+									keyValueSeparator,
+								)
+							}
+
+							if key != `` {
+								result[key] = value
+							}
+						}
+					}
+
+					return result
 				},
 			},
 		},

@@ -817,6 +817,9 @@ Diecast runtime directory:</p>
             <a href="#fn-mostcommon">mostcommon</a>
         </li>
         <li>
+            <a href="#fn-objectify">objectify</a>
+        </li>
+        <li>
             <a href="#fn-onlyKeys">onlyKeys</a>
         </li>
         <li>
@@ -3199,6 +3202,76 @@ Diecast runtime directory:</p>
             <div class="example" id="fn-mostcommon-example-0">
                 <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>mostcommon [&#34;a&#34;, &#34;a&#34;, &#34;b&#34;, &#34;b&#34;, &#34;b&#34;, &#34;c&#34;]<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">&#34;b&#34;</p>
+            </div>
+        </div>
+    </section>
+    <section class="function" id="fn-objectify">
+        <h4 class="mt-3">
+            objectify
+            <a href="#fn-objectify" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>objectify INPUT KEY_FIELD VALUE_FIELD [KEY_VALUE_SEPARATOR]</code>
+        </div>
+        <i>Undocumented</i>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>INPUT</pre></th>
+                    <td>array</td>
+                    <td>
+                        <p>An array of objects or strings to parse and convert into an object</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>KEYFIELD</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name of the field in the parsed input whose value will become the keys in the resultant object.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>VALUEFIELD</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The name of the field in the parsed input whose value will become the values in the resultant object.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>KEYVALUESEPARATOR</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>If given an array of strings, the first occurrence of this string will separate the key and value portions of the string.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-objectify-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>objectify [{&#34;label&#34;: &#34;First Name&#34;, &#34;value&#34;: &#34;firstName&#34;}, {&#34;label&#34;: &#34;Last Name&#34;, &#34;value&#34;: &#34;lastName&#34;}] &#34;value&#34; &#34;label&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">{
+  &#34;firstName&#34;: &#34;First Name&#34;,
+  &#34;lastName&#34;: &#34;Last Name&#34;
+}</p>
+            </div>
+            <div class="example" id="fn-objectify-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>objectify [&#34;test=true&#34;, &#34;hello=there&#34;]<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">{
+  &#34;hello&#34;: &#34;there&#34;,
+  &#34;test&#34;: true
+}</p>
             </div>
         </div>
     </section>

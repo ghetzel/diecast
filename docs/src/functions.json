@@ -6286,6 +6286,70 @@
         "Examples": null
       },
       {
+        "Name": "objectify",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "array",
+            "Description": "An array of objects or strings to parse and convert into an object",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "keyField",
+            "Type": "string",
+            "Description": "The name of the field in the parsed input whose value will become the keys in the resultant object.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "valueField",
+            "Type": "string",
+            "Description": "The name of the field in the parsed input whose value will become the values in the resultant object.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "keyValueSeparator",
+            "Type": "string",
+            "Description": "If given an array of strings, the first occurrence of this string will separate the key and value portions of the string.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "objectify [{\"label\": \"First Name\", \"value\": \"firstName\"}, {\"label\": \"Last Name\", \"value\": \"lastName\"}] \"value\" \"label\"",
+            "Description": "",
+            "Return": {
+              "firstName": "First Name",
+              "lastName": "Last Name"
+            }
+          },
+          {
+            "Code": "objectify [\"test=true\", \"hello=there\"]",
+            "Description": "",
+            "Return": {
+              "hello": "there",
+              "test": true
+            }
+          }
+        ]
+      },
+      {
         "Name": "findkey",
         "Alias": "findKey",
         "Aliases": null,
