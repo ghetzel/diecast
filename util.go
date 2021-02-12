@@ -1,12 +1,16 @@
 package diecast
 
 import (
+	"archive/zip"
 	"bytes"
 	"encoding/csv"
 	"encoding/xml"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -258,4 +262,162 @@ func fancyMapJoin(in interface{}) string {
 	sort.Strings(pairs)
 
 	return strings.Join(pairs, vvjoin)
+}
+
+// -------------------------------------------------------------------------------------------------
+type zipFS struct {
+	archive *zip.Reader
+}
+
+func newZipFsFromFile(path string) (*zipFS, error) {
+	if file, err := os.Open(path); err == nil {
+		var sz, _ = file.Stat()
+
+		if z, err := zip.NewReader(file, sz.Size()); err == nil {
+			return newZipFS(z), nil
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+}
+
+func newZipFS(archive *zip.Reader) *zipFS {
+	return &zipFS{
+		archive: archive,
+	}
+}
+
+func (self *zipFS) Open(name string) (http.File, error) {
+	name = filepath.Clean(name)
+
+	switch name {
+	case ``, `/`, `./`:
+		return newZipEntry(self, &zip.File{
+			FileHeader: zip.FileHeader{
+				Name: `/`,
+			},
+		}), nil
+	default:
+		for _, hdr := range self.archive.File {
+			if name == filepath.Clean(hdr.Name) {
+				return newZipEntry(self, hdr), nil
+			}
+		}
+	}
+
+	return nil, os.ErrNotExist
+}
+
+func (self *zipFS) entries(path string) []os.FileInfo {
+	path = filepath.Clean(path)
+	path = strings.TrimPrefix(path, `/`)
+
+	switch path {
+	case `./`, ``:
+		path = `/`
+	}
+
+	var dirs []os.FileInfo
+	var files []os.FileInfo
+
+	for _, hdr := range self.archive.File {
+		var dirname = filepath.Dir(filepath.Clean(hdr.Name))
+
+		if (path == `/` && dirname == `.`) || (dirname == path) {
+			if info := hdr.FileInfo(); info.IsDir() {
+				dirs = append(dirs, info)
+			} else {
+				files = append(files, info)
+			}
+		}
+	}
+
+	return append(dirs, files...)
+}
+
+// -------------------------------------------------------------------------------------------------
+type zipEntry struct {
+	fs      *zipFS
+	zipfile *zip.File
+	rs      io.ReadSeeker
+	entries []os.FileInfo
+	offset  int
+}
+
+func newZipEntry(fs *zipFS, file *zip.File) *zipEntry {
+	return &zipEntry{
+		fs:      fs,
+		zipfile: file,
+	}
+}
+
+func (self *zipEntry) prep() error {
+	if self.rs == nil {
+		if rc, err := self.zipfile.Open(); err == nil {
+			defer rc.Close()
+
+			if data, err := ioutil.ReadAll(rc); err == nil {
+				self.rs = bytes.NewReader(data)
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (self *zipEntry) Read(b []byte) (int, error) {
+	if err := self.prep(); err == nil {
+		return self.rs.Read(b)
+	} else {
+		return 0, err
+	}
+}
+
+func (self *zipEntry) Seek(offset int64, whence int) (int64, error) {
+	if err := self.prep(); err == nil {
+		return self.rs.Seek(offset, whence)
+	} else {
+		return 0, err
+	}
+}
+
+func (self *zipEntry) Close() error {
+	self.rs = nil
+	self.zipfile = nil
+	return nil
+}
+
+func (self *zipEntry) Readdir(count int) ([]os.FileInfo, error) {
+	if self.zipfile.FileInfo().IsDir() {
+		if self.entries == nil {
+			self.entries = self.fs.entries(self.zipfile.Name)
+		}
+
+		if self.offset <= len(self.entries) {
+			if end := (self.offset + count); end < len(self.entries) {
+				var err error
+				var sub = self.entries[self.offset:end]
+
+				if self.offset >= len(self.entries) {
+					err = io.EOF
+				}
+
+				self.offset += len(sub)
+
+				return sub, err
+			}
+		}
+	}
+
+	return nil, io.EOF
+}
+
+func (self *zipEntry) Stat() (os.FileInfo, error) {
+	return self.zipfile.FileInfo(), nil
 }
