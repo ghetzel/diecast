@@ -11,9 +11,11 @@ import (
 	"strings"
 
 	"github.com/beevik/etree"
+	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
-var allDescendants = etree.MustCompilePath(`//`)
+var ooxmlTemplatedElements = etree.MustCompilePath(`//`)
 var etreeMaxAncestors = 3
 
 type OOXMLRenderer struct {
@@ -94,8 +96,9 @@ func (self *OOXMLRenderer) Render(w http.ResponseWriter, req *http.Request, opti
 
 								var terr error
 
+								// process the files inside of the bundle in various ways
 								switch ext := strings.ToLower(filepath.Ext(inpart.Name)); ext {
-								case `.xml`:
+								case `.xml`: // XML documents are parsed as such, with templates in element text being detected and processed
 									var doc = etree.NewDocument()
 
 									var _, err = doc.ReadFrom(src)
@@ -104,29 +107,54 @@ func (self *OOXMLRenderer) Render(w http.ResponseWriter, req *http.Request, opti
 									if err == nil {
 										var multiFirst *etree.Element
 										var tmpl string
+										var overrideMap = make(map[string]interface{})
 
-										for _, el := range doc.Root().FindElementsPath(allDescendants) {
+										if overrides := maputil.M(options.Data).Get(`page.ooxml`).MapNative(); len(overrides) > 0 {
+											if oc, err := maputil.CoalesceMap(overrides, `/`); err == nil {
+												for xpath, value := range oc {
+													if !typeutil.IsEmpty(value) {
+														xpath = `/` + strings.TrimPrefix(xpath, `/`)
+														overrideMap[xpath] = value
+													}
+												}
+											}
+										}
+
+										for _, el := range doc.Root().FindElementsPath(ooxmlTemplatedElements) {
 											var txt = el.Text()
 											var flushTmpl bool
 
+											if ot, ok := overrideMap[el.GetPath()]; ok {
+												el.SetText(typeutil.String(ot))
+											}
+
+											// if el.Text() != `` {
+											// 	log.Debugf("OOXML: % -64s", el.GetPath())
+											// 	log.Debugf("OOXML:   %s %q", el.FullTag(), el.Text())
+											// }
+
 											if multiFirst == nil { // initializers
-												// aka: "index of the first occurrence of '{{' is >= 0 AND occurs before the last occurrence of '}}'"
+												// "index of the first occurrence of '{{' is >= 0 AND occurs before the last occurrence of '}}'"
+												// aka: single inline template
 												if open := strings.Index(txt, `{{`); open >= 0 && open < strings.LastIndex(txt, `}}`) {
 													multiFirst = el
 													tmpl = txt
 													flushTmpl = true
-												} else if strings.Contains(txt, `{{`) {
+												} else if strings.Contains(txt, `{{`) { // template open occurs in this element, but closes in another later element
 													multiFirst = el
 													tmpl = txt
 												}
 											} else {
+												// NOTE: this will work whether "{{" appears in the text or not
 												if strings.LastIndex(txt, `{{`) < strings.LastIndex(txt, `}}`) { // terminator
 													tmpl += txt
 													flushTmpl = true
-												} else { // intermediary
+												} else { // intermediate values
 													tmpl += txt
 												}
 
+												// clear out what's here, as the final rendered value will be placed inside
+												// the element that housed the opening "{{"
 												el.SetText(``)
 											}
 
@@ -158,37 +186,6 @@ func (self *OOXMLRenderer) Render(w http.ResponseWriter, req *http.Request, opti
 								} else {
 									return terr
 								}
-
-								// try to work out a renderer for the file
-								// if r, err := GetRenderer(``, self.server); err == nil && doRender {
-								// 	var intercept = httptest.NewRecorder()
-								// 	var subrender = options
-
-								// 	subrender.Input = src
-								// 	subrender.MimeType = inputType
-								// 	subrender.RequestedPath = filepath.Join(options.RequestedPath, inpart.Name)
-
-								// 	// render the file into the response interceptor
-								// 	if err := r.Render(intercept, req, subrender); err == nil {
-								// 		// the result sitting in the interceptor is what we want in the outgoing zip
-								// 		if res := intercept.Result(); res != nil && res.Body != nil {
-								// 			if _, err := io.Copy(dest, res.Body); err == nil {
-								// 				src.Close()
-								// 				continue
-								// 			} else {
-								// 				return err
-								// 			}
-								// 		} else {
-								// 			return fmt.Errorf("empty result from %q", inpart.Name)
-								// 		}
-								// 	} else {
-								// 		return fmt.Errorf("render failed: %v", err)
-								// 	}
-								// } else if _, err := io.Copy(dest, src); err == nil {
-								// 	continue
-								// } else {
-								// 	return fmt.Errorf("write output: %v", err)
-								// }
 							} else {
 								return fmt.Errorf("bad part %q: %v", inpart.Name, err)
 							}
@@ -210,4 +207,19 @@ func (self *OOXMLRenderer) Render(w http.ResponseWriter, req *http.Request, opti
 	} else {
 		return fmt.Errorf("empty input")
 	}
+}
+func isDescendantOrSibling(parent *etree.Element, candidate *etree.Element) bool {
+	if candidate == parent {
+		return true
+	} else if elp := candidate.Parent(); elp != nil {
+		for _, c := range elp.ChildElements() {
+			if c == parent {
+				return true
+			}
+		}
+
+		return isDescendantOrSibling(parent, elp)
+	}
+
+	return false
 }
