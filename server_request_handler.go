@@ -274,7 +274,7 @@ func (self *Server) handleCandidateFile(
 	}
 
 	// we got a real actual file here, figure out if we're templating it or not
-	if self.shouldApplyTemplate(file.Path) || file.ForceTemplate {
+	if file.ForceTemplate || self.shouldApplyTemplate(file.Path) {
 		// tease the template header out of the file
 		if header, templateData, err := SplitTemplateHeaderContent(file.Data); err == nil {
 			// render the final template and write it out

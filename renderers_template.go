@@ -2,6 +2,7 @@ package diecast
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -29,6 +30,17 @@ func (self *TemplateRenderer) SetPrewriteFunc(fn PrewriteFunc) {
 func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
 	if len(options.Fragments) == 0 {
 		return fmt.Errorf("Must specify a non-empty FragmentSet to TemplateRenderer")
+	}
+
+	if options.Input != nil {
+		var data, err = ioutil.ReadAll(options.Input)
+		options.Input.Close()
+
+		if err == nil {
+			options.Fragments.OverrideData(ContentTemplateName, data)
+		} else {
+			return fmt.Errorf("render input read: %v", err)
+		}
 	}
 
 	// create the template and make it aware of our custom functions

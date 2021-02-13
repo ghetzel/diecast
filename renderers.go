@@ -15,6 +15,7 @@ func init() {
 	RegisterRenderer(`pdf`, new(PdfRenderer))
 	RegisterRenderer(`markdown`, new(MarkdownRenderer))
 	RegisterRenderer(`sass`, new(SassRenderer))
+	RegisterRenderer(`ooxml`, new(OOXMLRenderer))
 	RegisterRenderer(`html`, new(TemplateRenderer))
 	RegisterRenderer(``, new(TemplateRenderer))
 }
@@ -55,9 +56,12 @@ func GetRenderer(name string, server *Server) (Renderer, error) {
 }
 
 func GetRendererForFilename(filename string, server *Server) (Renderer, bool) {
+
 	if server != nil && len(server.RendererMappings) > 0 {
 		var ext = filepath.Ext(filename)
+
 		ext = strings.TrimPrefix(ext, `.`)
+		ext = strings.ToLower(ext)
 
 		if rname, ok := server.RendererMappings[ext]; ok {
 			if renderer, err := GetRenderer(rname, server); err == nil {

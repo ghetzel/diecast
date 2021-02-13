@@ -20,3 +20,4 @@
 *.inprogress
 /index.html
 .DS_Store
+/tmp

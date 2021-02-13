@@ -174,8 +174,10 @@ func (self *Template) ParseFragments(fragments FragmentSet) error {
 				t = tmpl.New(fragment.Name)
 			}
 
+			fmt.Println(string(fragment.Data))
+
 			if _, err := t.Parse(string(fragment.Data)); err != nil {
-				return fmt.Errorf("error parsing fragment %s: %v", fragment.Name, err)
+				return fmt.Errorf("TextEngine: error parsing fragment %q: %v", fragment.Name, err)
 			}
 		}
 
@@ -198,7 +200,7 @@ func (self *Template) ParseFragments(fragments FragmentSet) error {
 			}
 
 			if _, err := t.Parse(string(fragment.Data)); err != nil {
-				return fmt.Errorf("error parsing fragment %s: %v", fragment.Name, err)
+				return fmt.Errorf("HtmlEngine: error parsing fragment %q: %v", fragment.Name, err)
 			}
 		}
 

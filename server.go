@@ -109,6 +109,9 @@ var DefaultAutolayoutPatterns = []string{
 var DefaultRendererMappings = map[string]string{
 	`md`:   `markdown`,
 	`scss`: `sass`,
+	`pptx`: `ooxml`,
+	`xlsx`: `ooxml`,
+	`docx`: `ooxml`,
 }
 
 var DefaultFilterEnvVars = []string{
@@ -1060,7 +1063,7 @@ func (self *Server) applyTemplate(
 	w http.ResponseWriter,
 	req *http.Request,
 	requestPath string,
-	data []byte,
+	templateData []byte,
 	header *TemplateHeader,
 	urlParams []KV,
 	mimeType string,
@@ -1125,7 +1128,7 @@ func (self *Server) applyTemplate(
 	// get the content template in place
 	// NOTE: make SURE this happens after the layout is loaded. this ensures that the layout data
 	//       and bindings are evaluated first, then are overridden/appended by the content data/bindings
-	if err := fragments.Set(ContentTemplateName, header, data); err != nil {
+	if err := fragments.Set(ContentTemplateName, header, templateData); err != nil {
 		return err
 	}
 
@@ -1312,6 +1315,8 @@ func (self *Server) applyTemplate(
 					var res = intercept.Result()
 					renderOpts.MimeType = res.Header.Get(`Content-Type`)
 					renderOpts.Input = res.Body
+				} else {
+					renderOpts.Input = ioutil.NopCloser(bytes.NewBuffer(templateData))
 				}
 
 				if err == nil {

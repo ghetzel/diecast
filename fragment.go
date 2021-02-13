@@ -71,6 +71,15 @@ func (self *FragmentSet) Set(name string, header *TemplateHeader, data []byte) e
 	return nil
 }
 
+func (self *FragmentSet) OverrideData(name string, data []byte) {
+	for _, f := range *self {
+		if f.Name == name {
+			f.Data = data
+			return
+		}
+	}
+}
+
 func (self *FragmentSet) Parse(name string, source io.Reader) error {
 	if _, ok := self.Get(name); ok {
 		return nil
