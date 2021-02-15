@@ -4,5 +4,6 @@ go 1.16
 
 require (
 	github.com/ghetzel/go-stockutil v1.9.10
+	github.com/gobwas/glob v0.2.3
 	github.com/stretchr/testify v1.6.1
 )

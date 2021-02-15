@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -74,8 +75,20 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// Intelligently respond in a consistent manner with the data provided, including error detection, redirection,
+// and status code enforcement.
+//
+//   If data is nil, and no code is provided -> HTTP 204
+//   If data is an error, write out the error text and ensure the HTTP status is >= 400
+//   If code is [300,399], an HTTP redirect will occur, redirecting to the path resulting from stringifying data.
+//   If data is a Map or Array, I will be encoded and returned as JSON with Content-Type: application/json.
+//	 All other conditions will convert the data to []byte and write that out directly.
 func (self *Server) writeResponse(w http.ResponseWriter, req *http.Request, data interface{}, code ...int) {
 	var httpStatus int = http.StatusOK
+
+	if data == nil {
+		httpStatus = http.StatusNoContent
+	}
 
 	// see if the response body itself has an opinion on what its HTTP status code should be
 	if c, ok := data.(Codeable); ok {
@@ -104,6 +117,18 @@ func (self *Server) writeResponse(w http.ResponseWriter, req *http.Request, data
 		}
 	}
 
+	// auto-jsonify complex types
+	if typeutil.IsMap(data) || typeutil.IsArray(data) {
+		if b, err := json.MarshalIndent(data, ``, `  `); err == nil {
+			data = b
+			w.Header().Set(`Content-Type`, `application/json`)
+		} else {
+			data = err.Error()
+			httpStatus = http.StatusInternalServerError
+		}
+	}
+
+	// commit to responding and write out data
 	w.WriteHeader(httpStatus)
 
 	if data != nil {
