@@ -12,22 +12,21 @@ var DefaultLayoutsDir = `/_layouts`
 var DefaultErrorsDir = `/_errors`
 
 type ServerPaths struct {
-	Root          http.Dir `yaml:"root"`
-	LayoutsDir    string   `yaml:"layouts"`
-	ErrorsDir     string   `yaml:"errors"`
-	IndexFilename string   `yaml:"indexFilename"`
+	LayoutsDir    string `yaml:"layouts"`
+	ErrorsDir     string `yaml:"errors"`
+	IndexFilename string `yaml:"indexFilename"`
 }
 
 type Server struct {
 	Paths      ServerPaths       `yaml:"paths"`
 	Validators []ValidatorConfig `yaml:"validators"`
-	vfs        VFS
+	VFS        VFS
 	ovfs       http.FileSystem
 }
 
 // Implements the http.FileSystem interface.
 func (self *Server) Open(name string) (http.File, error) {
-	return self.vfs.Open(name)
+	return self.VFS.Open(name)
 }
 
 // Implements the http.Handler interface.
@@ -139,11 +138,7 @@ func (self *Server) writeResponse(w http.ResponseWriter, req *http.Request, data
 // setup and populate any last-second things we might need to process a request
 func (self *Server) prep() error {
 	if self.ovfs != nil {
-		self.vfs.SetFallbackFS(self.ovfs)
-	} else if p := self.Paths.Root; p != `` {
-		self.vfs.SetFallbackFS(p)
-	} else {
-		self.vfs.SetFallbackFS(http.Dir(`.`))
+		self.VFS.SetFallbackFS(self.ovfs)
 	}
 
 	return nil

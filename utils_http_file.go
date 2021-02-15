@@ -25,43 +25,7 @@ func newMockHttpFile(name string, src interface{}) (*mockHttpFile, error) {
 	file.SetIsDir(false)
 	file.SetName(name)
 
-	if src == nil { // nil source
-		return nil, ErrNotFound
-	} else if f, ok := src.(http.File); ok { // http.File
-		defer f.Close()
-
-		if s, err := f.Stat(); err == nil {
-			file.SetIsDir(s.IsDir())
-			file.SetName(s.Name())
-			file.SetMode(s.Mode())
-			file.SetModTime(s.ModTime())
-			file.SetSys(s.Sys())
-		} else {
-			return nil, err
-		}
-
-		if b, err := ioutil.ReadAll(f); err == nil {
-			file.SetData(b)
-		} else {
-			return nil, err
-		}
-	} else if r, ok := src.(io.Reader); ok { // io.Reader & io.ReadCloser
-		if b, err := ioutil.ReadAll(r); err == nil {
-			file.SetData(b)
-		} else {
-			return nil, err
-		}
-
-		if c, ok := src.(io.Closer); ok {
-			defer c.Close()
-		}
-	} else if err, ok := src.(error); ok { // error
-		file.SetData([]byte(err.Error()))
-	} else {
-		file.SetData(typeutil.Bytes(src))
-	}
-
-	return file, nil
+	return file, file.SetSource(src)
 }
 
 // setup seekable internal buffer and recalculate size
@@ -71,6 +35,47 @@ func (self *mockHttpFile) prep() {
 	}
 
 	self.SetSize(int64(self.buf.Len()))
+}
+
+func (self *mockHttpFile) SetSource(src interface{}) error {
+	if src == nil { // nil source
+		self.SetData(nil)
+		return nil
+	} else if f, ok := src.(http.File); ok { // http.File
+		defer f.Close()
+
+		if s, err := f.Stat(); err == nil {
+			self.SetIsDir(s.IsDir())
+			self.SetName(s.Name())
+			self.SetMode(s.Mode())
+			self.SetModTime(s.ModTime())
+			self.SetSys(s.Sys())
+		} else {
+			return err
+		}
+
+		if b, err := ioutil.ReadAll(f); err == nil {
+			self.SetData(b)
+		} else {
+			return err
+		}
+	} else if r, ok := src.(io.Reader); ok { // io.Reader & io.ReadCloser
+		if b, err := ioutil.ReadAll(r); err == nil {
+			self.SetData(b)
+		} else {
+			return err
+		}
+
+		if c, ok := src.(io.Closer); ok {
+			defer c.Close()
+		}
+	} else if err, ok := src.(error); ok { // error
+		self.SetData([]byte(err.Error()))
+	} else {
+		self.SetData(typeutil.Bytes(src))
+	}
+
+	return nil
 }
 
 func (self *mockHttpFile) SetData(b []byte) {

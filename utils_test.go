@@ -12,8 +12,8 @@ func TestMockHttpFile(t *testing.T) {
 	var file *mockHttpFile
 	var err error
 
-	file, err = newMockHttpFile(`test.txt`, nil)
-	assert.Equal(t, ErrNotFound, err)
+	// file, err = newMockHttpFile(`test.txt`, nil)
+	// assert.Equal(t, ErrNotFound, err)
 
 	file, err = newMockHttpFile(`test.txt`, `HELLO`)
 	assert.NoError(t, err)
@@ -30,4 +30,15 @@ func TestMockHttpFile(t *testing.T) {
 	file, err = newMockHttpFile(`test.txt`, errors.New(`HELLO`))
 	assert.NoError(t, err)
 	assert.Equal(t, `HELLO`, file.String())
+}
+
+func TestIsGlobMatch(t *testing.T) {
+	assert.True(t, IsGlobMatch(`/hello/there.html`, `/hello/there.html`))
+	assert.True(t, IsGlobMatch(`/hello/there.html`, `/hello/*.html`))
+	assert.True(t, IsGlobMatch(`/hello/there.html`, `*.html`))
+
+	assert.False(t, IsGlobMatch(`/hello/there.html`, `/hello/*.yaml`))
+	assert.False(t, IsGlobMatch(`/hello/there.html`, `^/*.html`))
+
+	assert.False(t, IsGlobMatch(`/hello/there.html`, `[0-`))
 }

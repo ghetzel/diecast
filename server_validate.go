@@ -31,17 +31,17 @@ type ValidatorConfig struct {
 
 // Return whether the given request is eligible for validation under normal circumstances.
 func (self ValidatorConfig) ShouldValidateRequest(req *http.Request) bool {
-	for _, except := range sliceutil.UniqueStrings(self.Except) {
-		if IsGlobMatch(req.URL.Path, except) {
+	for _, except := range sliceutil.Stringify(self.Except) {
+		if except != `` && IsGlobMatch(req.URL.Path, except) {
 			return false
 		}
 	}
 
 	// if there are "only" paths, then we may still match something.
 	// if not, then we didn't match an "except" path, and therefore should validate
-	if onlys := sliceutil.UniqueStrings(self.Only); len(onlys) > 0 {
+	if onlys := sliceutil.Stringify(self.Only); len(onlys) > 0 {
 		for _, only := range onlys {
-			if IsGlobMatch(req.URL.Path, only) {
+			if only != `` && IsGlobMatch(req.URL.Path, only) {
 				return true
 			}
 		}

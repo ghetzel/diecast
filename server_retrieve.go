@@ -18,7 +18,7 @@ func (self *Server) Retrieve(req *http.Request) (http.File, error) {
 	var lerr error
 
 	for _, tryPath := range self.retrieveTryPaths(req) {
-		file, lerr = self.vfs.Open(tryPath)
+		file, lerr = self.VFS.Open(tryPath)
 
 		if lerr == nil {
 			break

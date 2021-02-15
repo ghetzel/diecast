@@ -21,7 +21,7 @@ deps:
 	go get ./...
 
 test: fmt deps
-	go test $(PKGS)
+	go test -count=1 $(PKGS)
 
 $(ARTIFACT):
 	go build --ldflags '-extldflags "-static"' -ldflags '-s' -o $(ARTIFACT) *.go

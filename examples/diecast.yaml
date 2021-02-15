@@ -41,5 +41,10 @@ validators:
         path:     "/auth/logout" # Specifies that all requests matching this path will remove an active session.
         redirect: "/"            # The path to redirect to after deauth is performed.
 
-retrievers:
-  - only: "/_layouts/**"
+vfs:
+  layers:
+    - paths:         "/_layouts/**"
+      haltOnMissing: false
+      haltOnError:   true
+
+  root: "."
