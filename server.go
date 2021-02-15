@@ -97,7 +97,6 @@ func (self *Server) writeResponse(w http.ResponseWriter, req *http.Request, data
 	if httpStatus >= 300 && httpStatus < 400 {
 		http.Redirect(w, req, typeutil.OrString(data, `/`), httpStatus)
 		return
-
 	}
 
 	// extract error data
