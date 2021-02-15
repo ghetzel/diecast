@@ -1,28 +1,35 @@
 package diecast
 
 import (
-	"io"
 	"net/http"
-	"path/filepath"
-	"strings"
 
-	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 var DefaultIndexFilename = `index.html`
+var DefaultLayoutsDir = `/_layouts`
+var DefaultErrorsDir = `/_errors`
 
-type Server struct {
-	ServePath     http.Dir
-	IndexFilename string
-	vfs           VFS
-	ovfs          http.FileSystem
+type ServerPaths struct {
+	Root          http.Dir `yaml:"root"`
+	LayoutsDir    string   `yaml:"layouts"`
+	ErrorsDir     string   `yaml:"errors"`
+	IndexFilename string   `yaml:"indexFilename"`
 }
 
+type Server struct {
+	Paths      ServerPaths       `yaml:"paths"`
+	Validators []ValidatorConfig `yaml:"validators"`
+	vfs        VFS
+	ovfs       http.FileSystem
+}
+
+// Implements the http.FileSystem interface.
 func (self *Server) Open(name string) (http.File, error) {
 	return self.vfs.Open(name)
 }
 
+// Implements the http.Handler interface.
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var file http.File
 	var err error
@@ -33,7 +40,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	//  ▶ perform authentication checks
 	//  ▶ any other security or data validation before causing a VFS retrieval
 	//
-	err = self.Validate(req)
+	err = self.ValidateAll(req)
 
 	if err != nil {
 		self.writeResponse(w, req, err)
@@ -108,61 +115,11 @@ func (self *Server) writeResponse(w http.ResponseWriter, req *http.Request, data
 func (self *Server) prep() error {
 	if self.ovfs != nil {
 		self.vfs.SetFallbackFS(self.ovfs)
-	} else if p := self.ServePath; p != `` {
+	} else if p := self.Paths.Root; p != `` {
 		self.vfs.SetFallbackFS(p)
 	} else {
 		self.vfs.SetFallbackFS(http.Dir(`.`))
 	}
 
 	return nil
-}
-
-// Perform the validation phase of handling a request.
-func (self *Server) Validate(req *http.Request) error {
-	if err := self.prep(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Perform the retrieval phase of handling a request.
-func (self *Server) Retrieve(req *http.Request) (http.File, error) {
-	if err := self.prep(); err != nil {
-		return nil, err
-	}
-
-	var file http.File
-	var lerr error
-
-	for _, tryPath := range self.retrieveTryPaths(req) {
-		log.Debugf("trying: %s", tryPath)
-		file, lerr = self.vfs.Open(tryPath)
-
-		if lerr == nil {
-			break
-		}
-	}
-
-	return file, lerr
-}
-
-// builds a list of filesystem objects to search for in response to the request URL path
-func (self *Server) retrieveTryPaths(req *http.Request) (paths []string) {
-	paths = append(paths, req.URL.Path)
-
-	if strings.HasSuffix(req.URL.Path, `/`) {
-		paths = append(paths, filepath.Join(
-			req.URL.Path,
-			typeutil.OrString(self.IndexFilename, DefaultIndexFilename),
-		))
-	}
-
-	return
-}
-
-// Render a retrieved file to the given response writer.
-func (self *Server) Render(w http.ResponseWriter, req *http.Request, source http.File) error {
-	_, err := io.Copy(w, source)
-	return err
 }
