@@ -1,4 +1,0 @@
-name={{ $.testkv.id }}
-{{ range $item := $.testkv.items -}}
-- {{ $item.id }}
-{{ end }}

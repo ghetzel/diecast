@@ -1,5 +1,0 @@
-type={{ underscore $.other.type }}
-{{ range $item := $.test.items -}}
-- {{ $item.id }}
-{{ end -}}
-debug={{ $.other.debug }}
