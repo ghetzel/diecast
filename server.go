@@ -1,7 +1,6 @@
 package diecast
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -22,11 +21,6 @@ type Server struct {
 	Validators []ValidatorConfig `yaml:"validators"`
 	VFS        VFS
 	ovfs       http.FileSystem
-}
-
-// Implements the http.FileSystem interface.
-func (self *Server) Open(name string) (http.File, error) {
-	return self.VFS.Open(name)
 }
 
 // Implements the http.Handler interface.
@@ -118,9 +112,9 @@ func (self *Server) writeResponse(w http.ResponseWriter, req *http.Request, data
 
 	// auto-jsonify complex types
 	if typeutil.IsMap(data) || typeutil.IsArray(data) {
-		if b, err := json.MarshalIndent(data, ``, `  `); err == nil {
+		if b, mimetype, err := AutoencodeByFilename(req.URL.Path, data); err == nil {
 			data = b
-			w.Header().Set(`Content-Type`, `application/json`)
+			w.Header().Set(`Content-Type`, mimetype)
 		} else {
 			data = err.Error()
 			httpStatus = http.StatusInternalServerError

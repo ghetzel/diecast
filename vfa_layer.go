@@ -26,7 +26,7 @@ func (self *Layer) Option(name string, fallbacks ...interface{}) typeutil.Varian
 
 // Return whether this layer is configured to respond to requests for the given filename.
 func (self *Layer) shouldConsiderOpening(name string) bool {
-	var validPatterns = sliceutil.UniqueStrings(self.Paths)
+	var validPatterns = sliceutil.Stringify(self.Paths)
 
 	if len(validPatterns) == 0 {
 		return true

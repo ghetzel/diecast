@@ -6,7 +6,7 @@ ARTIFACT       ?= bin/diecast2
 GO111MODULE  = on
 CGO_ENABLED  = 0
 
-all: go.mod deps fmt build
+all: go.mod deps fmt test
 
 go.mod:
 	go mod init github.com/ghetzel/diecast/v2

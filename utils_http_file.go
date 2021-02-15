@@ -13,9 +13,10 @@ import (
 
 type mockHttpFile struct {
 	fileutil.FileInfo
-	file http.File
-	data []byte
-	buf  *bytes.Reader
+	file   http.File
+	data   []byte
+	buf    *bytes.Reader
+	header http.Header
 }
 
 // Load data from a variety of sources and expose it with an http.File interface.
@@ -35,6 +36,18 @@ func (self *mockHttpFile) prep() {
 	}
 
 	self.SetSize(int64(self.buf.Len()))
+}
+
+func (self *mockHttpFile) SetHeader(key string, value interface{}) {
+	if self.header == nil {
+		self.header = make(http.Header)
+	}
+
+	self.header.Set(key, typeutil.String(value))
+}
+
+func (self *mockHttpFile) Header() http.Header {
+	return self.header
 }
 
 func (self *mockHttpFile) SetSource(src interface{}) error {
