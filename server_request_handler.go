@@ -306,19 +306,21 @@ func (self *Server) handleCandidateFile(
 			self.respondError(w, req, fmt.Errorf("parse template: %v", err), http.StatusInternalServerError)
 		}
 	} else {
-		// if not templated, then the file is returned outright
+		var funcs, data = self.getPreBindingData(req, nil)
+		var renderOptions = RenderOptions{
+			Input:       file.Data,
+			FunctionSet: funcs,
+			Data:        data,
+		}
+
 		if rendererName := httputil.Q(req, `renderer`); rendererName == `` {
 			io.Copy(w, file.Data)
 		} else if renderer, err := GetRenderer(rendererName, self); err == nil {
-			if err := renderer.Render(w, req, RenderOptions{
-				Input: file.Data,
-			}); err != nil {
+			if err := renderer.Render(w, req, renderOptions); err != nil {
 				self.respondError(w, req, err, http.StatusInternalServerError)
 			}
 		} else if renderer, ok := GetRendererForFilename(file.Path, self); ok {
-			if err := renderer.Render(w, req, RenderOptions{
-				Input: file.Data,
-			}); err != nil {
+			if err := renderer.Render(w, req, renderOptions); err != nil {
 				self.respondError(w, req, err, http.StatusInternalServerError)
 			}
 		} else {

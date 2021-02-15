@@ -1808,7 +1808,7 @@ func (self *Server) getPreBindingData(req *http.Request, header *TemplateHeader)
 		`mounts`:            publicMountDetails,
 	}
 
-	data[`page`] = self.evalPageData(false, req, header, funcs, data)
+	self.evalPageData(false, req, header, funcs, data)
 
 	return funcs, data
 }
@@ -1817,9 +1817,9 @@ func (self *Server) evalPageData(final bool, req *http.Request, header *Template
 	// Evaluate "page" data: this data is templatized, but does not have access
 	//                       to the output of bindings
 	// ---------------------------------------------------------------------------------------------
-	if header != nil {
-		var pageData = make(map[string]interface{})
+	var pageData = make(map[string]interface{})
 
+	if header != nil {
 		var applyPageFn = func(value interface{}, path []string, isLeaf bool) error {
 
 			if isLeaf {
@@ -1854,11 +1854,17 @@ func (self *Server) evalPageData(final bool, req *http.Request, header *Template
 
 		// if there were override items specified (e.g.: via the command line), add them now
 		maputil.Walk(self.OverridePageObject, applyPageFn)
-
-		return pageData
-	} else {
-		return make(map[string]interface{})
 	}
+
+	data[`page`] = pageData
+	data[`p`] = pageData
+
+	return pageData
+}
+
+func (self *Server) updateBindings(data map[string]interface{}, with map[string]interface{}) {
+	data[`bindings`] = with
+	data[`b`] = with
 }
 
 func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}, error) {
@@ -2003,7 +2009,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 					lastPage = thisPage
 
 					bindings[binding.Name] = results
-					data[`bindings`] = bindings
+					self.updateBindings(data, bindings)
 				} else if redir, ok := err.(RedirectTo); ok {
 					return funcs, nil, redir
 				} else {
@@ -2020,22 +2026,22 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 					}
 				}
 
-				data[`bindings`] = bindings
+				self.updateBindings(data, bindings)
 				page++
 			}
 
 			bindings[binding.Name] = results
-			data[`bindings`] = bindings
+			self.updateBindings(data, bindings)
 
 		} else if binding.Repeat == `` {
 			bindings[binding.Name] = binding.Fallback
-			data[`bindings`] = bindings
+			self.updateBindings(data, bindings)
 
 			v, err := binding.tracedEvaluate(req, header, data, funcs)
 
 			if err == nil && v != nil {
 				bindings[binding.Name] = v
-				data[`bindings`] = bindings
+				self.updateBindings(data, bindings)
 			} else if redir, ok := err.(RedirectTo); ok {
 				return funcs, nil, redir
 			} else if v == nil && binding.Fallback != nil {
@@ -2077,7 +2083,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 				if err == nil {
 					results = append(results, v)
 					bindings[binding.Name] = results
-					data[`bindings`] = bindings
+					self.updateBindings(data, bindings)
 				} else if redir, ok := err.(RedirectTo); ok {
 					return funcs, nil, redir
 				} else {
@@ -2092,7 +2098,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 					}
 				}
 
-				data[`bindings`] = bindings
+				self.updateBindings(data, bindings)
 			}
 
 		}
@@ -2100,10 +2106,10 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		reqtime(req, fmt.Sprintf("binding-%s", binding.Name), time.Since(start))
 
 		// re-evaluate page based on new binding results
-		data[`page`] = self.evalPageData(false, req, header, funcs, data)
+		self.evalPageData(false, req, header, funcs, data)
 	}
 
-	data[`bindings`] = bindings
+	self.updateBindings(data, bindings)
 
 	// Evaluate "flags" data: this data is templatized, and has access to $.page and $.bindings
 	// ---------------------------------------------------------------------------------------------
@@ -2127,7 +2133,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	}
 
 	// the final pass on page; any empty values resulting from this are final
-	data[`page`] = self.evalPageData(true, req, header, funcs, data)
+	self.evalPageData(true, req, header, funcs, data)
 
 	return funcs, data, nil
 }
@@ -2523,6 +2529,12 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 	if m, err := request.asMap(); err == nil {
 		rv[`request`] = m
 		rv[`_request`] = &request
+
+		// top-level shortcuts to otherwise more syntax-intensive common cases
+		rv[`r`] = m                  // request data
+		rv[`qs`] = request.URL.Query // query strings
+		rv[`h`] = request.Headers    // request headers
+		rv[`c`] = request.Cookies    // cookies
 	} else {
 		panic(err.Error())
 	}
