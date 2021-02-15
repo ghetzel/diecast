@@ -329,6 +329,7 @@ func (self *Server) handleCandidateFile(
 	return true
 }
 
+// recursively walks the server filesystem, copying each file into a ZIP archive that is then exposed as a candidate for the response
 func (self *Server) streamAutoArchiveDirectory(root http.File, requestPath string, req *http.Request) (http.File, string, error) {
 	if !self.shouldAutocompress(requestPath) {
 		return nil, ``, io.EOF
