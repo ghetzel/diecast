@@ -109,7 +109,7 @@ func (self *OOXMLRenderer) Render(w http.ResponseWriter, req *http.Request, opti
 										var tmpl string
 										var overrideMap = make(map[string]interface{})
 
-										if overrides := maputil.M(options.Data).Get(`page.ooxml`).MapNative(); len(overrides) > 0 {
+										if overrides := maputil.M(options.Data).Get(`page.renderers.ooxml`).MapNative(); len(overrides) > 0 {
 											if oc, err := maputil.CoalesceMap(overrides, `/`); err == nil {
 												for xpath, value := range oc {
 													if !typeutil.IsEmpty(value) {

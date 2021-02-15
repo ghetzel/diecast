@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -420,4 +421,57 @@ func (self *zipEntry) Readdir(count int) ([]os.FileInfo, error) {
 
 func (self *zipEntry) Stat() (os.FileInfo, error) {
 	return self.zipfile.FileInfo(), nil
+}
+
+// -------------------------------------------------------------------------------------------------
+type httpFile struct {
+	*fileutil.FileInfo
+	buf    *bytes.Reader
+	closed bool
+}
+
+func newHttpFile(name string, data []byte) *httpFile {
+	var f = &httpFile{
+		FileInfo: fileutil.NewFileInfo(nil),
+		buf:      bytes.NewReader(data),
+	}
+
+	f.SetSize(int64(f.buf.Len()))
+	f.SetIsDir(false)
+	f.SetName(name)
+
+	return f
+}
+
+func (self *httpFile) Close() error {
+	self.closed = true
+	return nil
+}
+
+func (self *httpFile) Read(b []byte) (int, error) {
+	if self.closed {
+		return 0, fmt.Errorf("attempted read on closed file")
+	} else if self.buf == nil {
+		return 0, io.EOF
+	} else {
+		return self.buf.Read(b)
+	}
+}
+
+func (self *httpFile) Seek(offset int64, whence int) (int64, error) {
+	if self.closed {
+		return 0, fmt.Errorf("attempted seek on closed file")
+	} else if self.buf == nil {
+		return 0, io.EOF
+	} else {
+		return self.buf.Seek(offset, whence)
+	}
+}
+
+func (self *httpFile) Readdir(count int) ([]os.FileInfo, error) {
+	return nil, io.EOF
+}
+
+func (self *httpFile) Stat() (os.FileInfo, error) {
+	return self.FileInfo, nil
 }

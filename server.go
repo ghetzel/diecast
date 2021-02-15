@@ -98,6 +98,7 @@ var HeaderSeparator = []byte{'-', '-', '-'}
 var DefaultIndexFile = `index.html`
 var DefaultVerifyFile = `/` + DefaultIndexFile
 var DefaultTemplatePatterns = []string{`*.html`, `*.md`, `*.scss`}
+var DefaultAutocompressPatterns = []string{`*.zip`, `*.docx`, `*.xlsx`, `*.pptx`}
 var DefaultTryExtensions = []string{`html`, `md`}
 var DefaultAutoindexFilename = `/autoindex.html`
 
@@ -227,75 +228,76 @@ type JaegerConfig struct {
 }
 
 type Server struct {
-	Actions             []*Action                 `yaml:"actions"                 json:"actions"`                 // Configure routes and actions to execute when those routes are requested.
-	AdditionalFunctions template.FuncMap          `yaml:"-"                       json:"-"`                       // Allow for the programmatic addition of extra functions for use in templates.
-	Address             string                    `yaml:"address"                 json:"address"`                 // The host:port address the server is listening on
-	Authenticators      AuthenticatorConfigs      `yaml:"authenticators"          json:"authenticators"`          // A set of authenticator configurations used to protect some or all routes.
-	Autoindex           bool                      `yaml:"autoindex"               json:"autoindex"`               // Specify that requests that terminate at a filesystem directory should automatically generate an index listing of that directory.
-	AutoindexTemplate   string                    `yaml:"autoindexTemplate"       json:"autoindexTemplate"`       // If Autoindex is enabled, this allows the template used to generate the index page to be customized.
-	AutolayoutPatterns  []string                  `yaml:"autolayoutPatterns"      json:"autolayoutPatterns"`      // Which types of files will automatically have layouts applied.
-	BaseHeader          *TemplateHeader           `yaml:"header"                  json:"header"`                  // A default header that all templates will inherit from.
-	BinPath             string                    `yaml:"-"                       json:"-"`                       // Exposes the location of the diecast binary
-	BindingPrefix       string                    `yaml:"bindingPrefix"           json:"bindingPrefix"`           // Specify a string to prefix all binding resource values that start with "/"
-	Bindings            SharedBindingSet          `yaml:"bindings"                json:"bindings"`                // Top-level bindings that apply to every rendered template
-	DefaultPageObject   map[string]interface{}    `yaml:"-"                       json:"-"`                       //
-	DisableCommands     bool                      `yaml:"disable_commands"        json:"disable_commands"`        // Disable the execution of PrestartCommands and StartCommand .
-	DisableTimings      bool                      `yaml:"disableTimings"          json:"disableTimings"`          // Disable emitting per-request Server-Timing headers to aid in tracing bottlenecks and performance issues.
-	EnableDebugging     bool                      `yaml:"debug"                   json:"debug"`                   // Enables additional options for debugging applications. Caution: can expose secrets and other sensitive data.
-	DebugDumpRequests   map[string]string         `yaml:"debugDumpRequests"       json:"debugDumpRequests"`       // An object keyed on path globs whose values are a directory where matching requests are dumped in their entirety as text files.
-	EnableLayouts       bool                      `yaml:"enableLayouts"           json:"enableLayouts"`           // Specifies whether layouts are enabled
-	Environment         string                    `yaml:"environment"             json:"environment"`             // Specify the environment for loading environment-specific configuration files in the form "diecast.env.yml"
-	ErrorsPath          string                    `yaml:"errors"                  json:"errors"`                  // The path to the errors template directory
-	ExposeEnvVars       []string                  `yaml:"exposeEnvVars"           json:"exposeEnvVars"`           // a list of glob patterns matching environment variable names that should always be exposed
-	FaviconPath         string                    `yaml:"favicon"                 json:"favicon"`                 // TODO: favicon autogenerator: Specifies the relative path to the file containing the /favicon.ico file.  This path can point to a Windows Icon (.ico), GIF, PNG, JPEG, or Bitmap (.bmp).  If necessary, the file will be converted and stored in memory to the ICO format.
-	FilterEnvVars       []string                  `yaml:"filterEnvVars"           json:"filterEnvVars"`           // a list of glob patterns matching environment variable names that should not be exposed
-	GlobalHeaders       map[string]interface{}    `yaml:"globalHeaders,omitempty" json:"globalHeaders,omitempty"` // A set of HTTP headers that should be added to EVERY response Diecast returns, regardless of whether it originates from a template, mount, or other configuration.
-	IndexFile           string                    `yaml:"indexFile"               json:"indexFile"`               // The name of the template file to use when a directory is requested.
-	LayoutPath          string                    `yaml:"layouts"                 json:"layouts"`                 // The path to the layouts template directory
-	Locale              string                    `yaml:"locale"                  json:"locale"`                  // Specify the default locale for pages being served.
-	MountConfigs        []MountConfig             `yaml:"mounts"                  json:"mounts"`                  // A list of mount configurations read from the diecast.yml config file.
-	Mounts              []Mount                   `yaml:"-"                       json:"-"`                       // The set of all registered mounts.
-	OnAddHandler        AddHandlerFunc            `yaml:"-"                       json:"-"`                       // A function that can be used to intercept handlers being added to the server.
-	OverridePageObject  map[string]interface{}    `yaml:"-"                       json:"-"`                       //
-	PrestartCommands    []*StartCommand           `yaml:"prestart"                json:"prestart"`                // A command that will be executed before the server is started.
-	Protocols           map[string]ProtocolConfig `yaml:"protocols"               json:"protocols"`               // Setup global configuration details for Binding Protocols
-	RendererMappings    map[string]string         `yaml:"rendererMapping"         json:"rendererMapping"`         // Map file extensions to preferred renderers for a given file type.
-	RootPath            string                    `yaml:"root"                    json:"root"`                    // The filesystem location where templates and files are served from
-	RoutePrefix         string                    `yaml:"routePrefix"             json:"routePrefix"`             // If specified, all requests must be prefixed with this string.
-	StartCommands       []*StartCommand           `yaml:"start"                   json:"start"`                   // A command that will be executed after the server is confirmed running.
-	TLS                 *TlsConfig                `yaml:"tls"                     json:"tls"`                     // where SSL/TLS configuration is stored
-	TemplatePatterns    []string                  `yaml:"patterns"                json:"patterns"`                // A set of glob patterns specifying which files will be rendered as templates.
-	Translations        map[string]interface{}    `yaml:"translations,omitempty"  json:"translations,omitempty"`  // Stores translations for use with the i18n and l10n functions.  Keys values represent the
-	TrustedRootPEMs     []string                  `yaml:"trustedRootPEMs"         json:"trustedRootPEMs"`         // List of filenames containing PEM-encoded X.509 TLS certificates that represent trusted authorities.  Use to validate certificates signed by an internal, non-public authority.
-	TryExtensions       []string                  `yaml:"tryExtensions"           json:"tryExtensions"`           // Try these file extensions when looking for default (i.e.: "index") files.  If IndexFile has an extension, it will be stripped first.
-	TryLocalFirst       bool                      `yaml:"localFirst"              json:"localFirst"`              // Whether to attempt to locate a local file matching the requested path before attempting to find a template.
-	VerifyFile          string                    `yaml:"verifyFile"              json:"verifyFile"`              // A file that must exist and be readable before starting the server.
-	PreserveConnections bool                      `yaml:"preserveConnections"     json:"preserveConnections"`     // Don't add the "Connection: close" header to every response.
-	CSRF                *CSRF                     `yaml:"csrf"                    json:"csrf"`                    // configures CSRF protection
-	Log                 LogConfig                 `yaml:"log"                     json:"log"`                     // configure logging
-	BeforeHandlers      []Middleware              `yaml:"-"                       json:"-"`                       // contains a stack of Middleware functions that are run before handling the request
-	AfterHandlers       []http.HandlerFunc        `yaml:"-"                       json:"-"`                       // contains a stack of HandlerFuncs that are run after handling the request.  These functions cannot stop the request, as it's already been written to the client.
-	Protocol            string                    `yaml:"protocol"                json:"protocol"`                // Specify which HTTP protocol to use ("http", "http2")
-	RateLimit           *RateLimitConfig          `yaml:"ratelimit"               json:"ratelimit"`               // Specify a rate limiting configuration.
-	BindingTimeout      interface{}               `yaml:"bindingTimeout"          json:"bindingTimeout"`          // Sets the default timeout for bindings that don't explicitly set one.
-	JaegerConfig        *JaegerConfig             `yaml:"jaeger"                  json:"jaeger"`                  // Configures distributed tracing using Jaeger.
-	altRootCaPool       *x509.CertPool
-	faviconImageIco     []byte
-	fs                  http.FileSystem
-	hasUserRoutes       bool
-	initialized         bool
-	precmd              *exec.Cmd
-	mux                 *http.ServeMux
-	userRouter          *vestigo.Router
-	logwriter           io.Writer
-	isTerminalOutput    bool
-	rateLimiter         *ratelimit.Limit
-	jaegerCfg           *jaegercfg.Configuration
-	opentrace           opentracing.Tracer
-	otcloser            io.Closer
-	viaConstructor      bool
-	sharedBindingData   sync.Map
-	lockGetFunctions    sync.Mutex
+	Actions              []*Action                 `yaml:"actions"                 json:"actions"`                 // Configure routes and actions to execute when those routes are requested.
+	AdditionalFunctions  template.FuncMap          `yaml:"-"                       json:"-"`                       // Allow for the programmatic addition of extra functions for use in templates.
+	Address              string                    `yaml:"address"                 json:"address"`                 // The host:port address the server is listening on
+	Authenticators       AuthenticatorConfigs      `yaml:"authenticators"          json:"authenticators"`          // A set of authenticator configurations used to protect some or all routes.
+	Autoindex            bool                      `yaml:"autoindex"               json:"autoindex"`               // Specify that requests that terminate at a filesystem directory should automatically generate an index listing of that directory.
+	AutoindexTemplate    string                    `yaml:"autoindexTemplate"       json:"autoindexTemplate"`       // If Autoindex is enabled, this allows the template used to generate the index page to be customized.
+	AutolayoutPatterns   []string                  `yaml:"autolayoutPatterns"      json:"autolayoutPatterns"`      // Which types of files will automatically have layouts applied.
+	BaseHeader           *TemplateHeader           `yaml:"header"                  json:"header"`                  // A default header that all templates will inherit from.
+	BinPath              string                    `yaml:"-"                       json:"-"`                       // Exposes the location of the diecast binary
+	BindingPrefix        string                    `yaml:"bindingPrefix"           json:"bindingPrefix"`           // Specify a string to prefix all binding resource values that start with "/"
+	Bindings             SharedBindingSet          `yaml:"bindings"                json:"bindings"`                // Top-level bindings that apply to every rendered template
+	DefaultPageObject    map[string]interface{}    `yaml:"-"                       json:"-"`                       //
+	DisableCommands      bool                      `yaml:"disable_commands"        json:"disable_commands"`        // Disable the execution of PrestartCommands and StartCommand .
+	DisableTimings       bool                      `yaml:"disableTimings"          json:"disableTimings"`          // Disable emitting per-request Server-Timing headers to aid in tracing bottlenecks and performance issues.
+	EnableDebugging      bool                      `yaml:"debug"                   json:"debug"`                   // Enables additional options for debugging applications. Caution: can expose secrets and other sensitive data.
+	DebugDumpRequests    map[string]string         `yaml:"debugDumpRequests"       json:"debugDumpRequests"`       // An object keyed on path globs whose values are a directory where matching requests are dumped in their entirety as text files.
+	EnableLayouts        bool                      `yaml:"enableLayouts"           json:"enableLayouts"`           // Specifies whether layouts are enabled
+	Environment          string                    `yaml:"environment"             json:"environment"`             // Specify the environment for loading environment-specific configuration files in the form "diecast.env.yml"
+	ErrorsPath           string                    `yaml:"errors"                  json:"errors"`                  // The path to the errors template directory
+	ExposeEnvVars        []string                  `yaml:"exposeEnvVars"           json:"exposeEnvVars"`           // a list of glob patterns matching environment variable names that should always be exposed
+	FaviconPath          string                    `yaml:"favicon"                 json:"favicon"`                 // TODO: favicon autogenerator: Specifies the relative path to the file containing the /favicon.ico file.  This path can point to a Windows Icon (.ico), GIF, PNG, JPEG, or Bitmap (.bmp).  If necessary, the file will be converted and stored in memory to the ICO format.
+	FilterEnvVars        []string                  `yaml:"filterEnvVars"           json:"filterEnvVars"`           // a list of glob patterns matching environment variable names that should not be exposed
+	GlobalHeaders        map[string]interface{}    `yaml:"globalHeaders,omitempty" json:"globalHeaders,omitempty"` // A set of HTTP headers that should be added to EVERY response Diecast returns, regardless of whether it originates from a template, mount, or other configuration.
+	IndexFile            string                    `yaml:"indexFile"               json:"indexFile"`               // The name of the template file to use when a directory is requested.
+	LayoutPath           string                    `yaml:"layouts"                 json:"layouts"`                 // The path to the layouts template directory
+	Locale               string                    `yaml:"locale"                  json:"locale"`                  // Specify the default locale for pages being served.
+	MountConfigs         []MountConfig             `yaml:"mounts"                  json:"mounts"`                  // A list of mount configurations read from the diecast.yml config file.
+	Mounts               []Mount                   `yaml:"-"                       json:"-"`                       // The set of all registered mounts.
+	OnAddHandler         AddHandlerFunc            `yaml:"-"                       json:"-"`                       // A function that can be used to intercept handlers being added to the server.
+	OverridePageObject   map[string]interface{}    `yaml:"-"                       json:"-"`                       //
+	PrestartCommands     []*StartCommand           `yaml:"prestart"                json:"prestart"`                // A command that will be executed before the server is started.
+	Protocols            map[string]ProtocolConfig `yaml:"protocols"               json:"protocols"`               // Setup global configuration details for Binding Protocols
+	RendererMappings     map[string]string         `yaml:"rendererMapping"         json:"rendererMapping"`         // Map file extensions to preferred renderers for a given file type.
+	RootPath             string                    `yaml:"root"                    json:"root"`                    // The filesystem location where templates and files are served from
+	RoutePrefix          string                    `yaml:"routePrefix"             json:"routePrefix"`             // If specified, all requests must be prefixed with this string.
+	StartCommands        []*StartCommand           `yaml:"start"                   json:"start"`                   // A command that will be executed after the server is confirmed running.
+	TLS                  *TlsConfig                `yaml:"tls"                     json:"tls"`                     // where SSL/TLS configuration is stored
+	TemplatePatterns     []string                  `yaml:"patterns"                json:"patterns"`                // A set of glob patterns specifying which files will be rendered as templates.
+	Translations         map[string]interface{}    `yaml:"translations,omitempty"  json:"translations,omitempty"`  // Stores translations for use with the i18n and l10n functions.  Keys values represent the
+	TrustedRootPEMs      []string                  `yaml:"trustedRootPEMs"         json:"trustedRootPEMs"`         // List of filenames containing PEM-encoded X.509 TLS certificates that represent trusted authorities.  Use to validate certificates signed by an internal, non-public authority.
+	TryExtensions        []string                  `yaml:"tryExtensions"           json:"tryExtensions"`           // Try these file extensions when looking for default (i.e.: "index") files.  If IndexFile has an extension, it will be stripped first.
+	TryLocalFirst        bool                      `yaml:"localFirst"              json:"localFirst"`              // Whether to attempt to locate a local file matching the requested path before attempting to find a template.
+	VerifyFile           string                    `yaml:"verifyFile"              json:"verifyFile"`              // A file that must exist and be readable before starting the server.
+	PreserveConnections  bool                      `yaml:"preserveConnections"     json:"preserveConnections"`     // Don't add the "Connection: close" header to every response.
+	CSRF                 *CSRF                     `yaml:"csrf"                    json:"csrf"`                    // configures CSRF protection
+	Log                  LogConfig                 `yaml:"log"                     json:"log"`                     // configure logging
+	BeforeHandlers       []Middleware              `yaml:"-"                       json:"-"`                       // contains a stack of Middleware functions that are run before handling the request
+	AfterHandlers        []http.HandlerFunc        `yaml:"-"                       json:"-"`                       // contains a stack of HandlerFuncs that are run after handling the request.  These functions cannot stop the request, as it's already been written to the client.
+	Protocol             string                    `yaml:"protocol"                json:"protocol"`                // Specify which HTTP protocol to use ("http", "http2")
+	RateLimit            *RateLimitConfig          `yaml:"ratelimit"               json:"ratelimit"`               // Specify a rate limiting configuration.
+	BindingTimeout       interface{}               `yaml:"bindingTimeout"          json:"bindingTimeout"`          // Sets the default timeout for bindings that don't explicitly set one.
+	JaegerConfig         *JaegerConfig             `yaml:"jaeger"                  json:"jaeger"`                  // Configures distributed tracing using Jaeger.
+	AutocompressPatterns []string                  `yaml:"autocompress"            json:"autocompress"`            // A set of glob patterns indicating directories whose contents will be delivered as ZIP files
+	altRootCaPool        *x509.CertPool
+	faviconImageIco      []byte
+	fs                   http.FileSystem
+	hasUserRoutes        bool
+	initialized          bool
+	precmd               *exec.Cmd
+	mux                  *http.ServeMux
+	userRouter           *vestigo.Router
+	logwriter            io.Writer
+	isTerminalOutput     bool
+	rateLimiter          *ratelimit.Limit
+	jaegerCfg            *jaegercfg.Configuration
+	opentrace            opentracing.Tracer
+	otcloser             io.Closer
+	viaConstructor       bool
+	sharedBindingData    sync.Map
+	lockGetFunctions     sync.Mutex
 }
 
 func NewServer(root interface{}, patterns ...string) *Server {
@@ -464,6 +466,10 @@ func (self *Server) populateDefaults() {
 
 	if len(self.AutolayoutPatterns) == 0 {
 		self.AutolayoutPatterns = DefaultAutolayoutPatterns
+	}
+
+	if len(self.AutocompressPatterns) == 0 {
+		self.AutocompressPatterns = DefaultAutocompressPatterns
 	}
 
 	if len(self.TemplatePatterns) == 0 {
@@ -1039,6 +1045,25 @@ func (self *Server) shouldApplyTemplate(requestPath string) bool {
 	return false
 }
 
+// return whether the request path matches any of the configured AutocompressPatterns.
+func (self *Server) shouldAutocompress(requestPath string) bool {
+	var baseName = filepath.Base(requestPath)
+
+	for _, pattern := range self.AutocompressPatterns {
+		if strings.HasPrefix(pattern, `/`) {
+			if match, err := filepath.Match(pattern, requestPath); err == nil && match {
+				return true
+			}
+		} else {
+			if match, err := filepath.Match(pattern, baseName); err == nil && match {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 // return whether the request path should automatically have layouts applied
 func (self *Server) shouldApplyLayout(requestPath string) bool {
 	var baseName = filepath.Base(requestPath)
@@ -1321,7 +1346,7 @@ func (self *Server) applyTemplate(
 
 				if err == nil {
 					// run the final template render and return
-					log.Debugf("[%s] Rendering using %T", reqid(req), postTemplateRenderer)
+					log.Debugf("[%s] renderer: %T", reqid(req), postTemplateRenderer)
 
 					postTemplateRenderer.SetPrewriteFunc(func(r *http.Request) {
 						reqtime(r, `tpl`, time.Since(start))
@@ -2130,10 +2155,10 @@ func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.Fi
 					return file, ``, err
 				}
 			} else {
-				return nil, ``, DirectoryErr
+				return file, ``, DirectoryErr
 			}
 		} else {
-			return nil, ``, fmt.Errorf("failed to stat file %v: %v", requestPath, err)
+			return file, ``, fmt.Errorf("failed to stat file %v: %v", requestPath, err)
 		}
 	} else {
 		return nil, ``, err

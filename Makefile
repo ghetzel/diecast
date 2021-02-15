@@ -7,7 +7,7 @@ VERSION      = $(shell grep 'const ApplicationVersion' version.go | cut -d= -f2 
 CGO_CFLAGS   = -I/opt/homebrew/include
 CGO_LDFLAGS  = -L/opt/homebrew/lib
 
-all: deps test build docs
+all: deps build test docs
 
 deps:
 	go get ./...

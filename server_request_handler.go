@@ -1,9 +1,12 @@
 package diecast
 
 import (
+	"archive/zip"
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -76,17 +79,27 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 				} else {
 					break
 				}
-			} else if IsDirectoryErr(err) && self.Autoindex {
-				if file, mimetype, ok := self.tryAutoindex(); ok {
-					if autoindexCandidate == nil {
-						// log.Debugf("[%s] found autoindex template for %s", id, rPath)
-						autoindexCandidate = &candidateFile{
-							Type:          `autoindex`,
-							Source:        httpFilename(file),
-							Path:          rPath,
-							Data:          file,
-							MimeType:      mimetype,
-							ForceTemplate: true,
+			} else if IsDirectoryErr(err) {
+				if archive, mimetype, err := self.streamAutoArchiveDirectory(file, rPath, req); err == nil {
+					localCandidate = &candidateFile{
+						Type:     `local`,
+						Source:   httpFilename(archive),
+						Path:     rPath,
+						Data:     archive,
+						MimeType: mimetype,
+					}
+				} else if self.Autoindex {
+					if file, mimetype, ok := self.tryAutoindex(); ok {
+						if autoindexCandidate == nil {
+							// log.Debugf("[%s] found autoindex template for %s", id, rPath)
+							autoindexCandidate = &candidateFile{
+								Type:          `autoindex`,
+								Source:        httpFilename(file),
+								Path:          rPath,
+								Data:          file,
+								MimeType:      mimetype,
+								ForceTemplate: true,
+							}
 						}
 					}
 				}
@@ -314,6 +327,85 @@ func (self *Server) handleCandidateFile(
 	}
 
 	return true
+}
+
+func (self *Server) streamAutoArchiveDirectory(root http.File, requestPath string, req *http.Request) (http.File, string, error) {
+	if !self.shouldAutocompress(requestPath) {
+		return nil, ``, io.EOF
+	}
+
+	// start new zip archive
+	var buf bytes.Buffer
+	var archive = zip.NewWriter(&buf)
+
+	// walk all files recursively under root
+	if err := self.walkHttpFile(requestPath, root, func(path string, f http.File, s os.FileInfo) error {
+		defer f.Close()
+
+		path = strings.TrimPrefix(path, requestPath)
+		path = strings.TrimPrefix(path, `/`)
+
+		if path != `` {
+			if file, err := archive.Create(path); err == nil {
+				if _, err := io.Copy(file, f); err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		}
+
+		return nil
+	}); err == nil {
+		if err := archive.Close(); err != nil {
+			return nil, ``, err
+		}
+
+		var filename = filepath.Base(requestPath)
+		var outfile = newHttpFile(filename, buf.Bytes())
+
+		return outfile, fileutil.GetMimeType(filename), nil
+	} else {
+		return nil, ``, err
+	}
+}
+
+func (self *Server) walkHttpFile(path string, startFile http.File, fileFn func(string, http.File, os.FileInfo) error) error {
+	if s, err := startFile.Stat(); err == nil {
+		if s.IsDir() {
+			path = strings.TrimSuffix(path, `/`) + `/`
+		}
+
+		if s.IsDir() {
+			for {
+				if children, err := startFile.Readdir(1024); err == nil {
+					if len(children) == 0 {
+						break
+					}
+
+					for _, c := range children {
+						var subpath = filepath.Join(path, c.Name())
+
+						if subfile, err := self.fs.Open(subpath); err == nil {
+							var err = self.walkHttpFile(subpath, subfile, fileFn)
+
+							subfile.Close()
+
+							if err != nil {
+								return err
+							}
+						}
+					}
+				} else {
+					break
+				}
+			}
+		} else if err := fileFn(path, startFile, s); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func httpFilename(file http.File) string {
