@@ -9,13 +9,14 @@ import (
 )
 
 func TestServerServeHTTP(t *testing.T) {
-	var server interface{} = new(Server)
+	var server Server
 	var w = httptest.NewRecorder()
 	var req = httptest.NewRequest(`GET`, `/`, nil)
 
-	// ensure that we do, in fact, implement http.Handler
-	server.(http.Handler).ServeHTTP(w, req)
+	server.vfs.OverridePath(`/index.html`, `Greetings.`)
 
-	assert.Equal(t, http.StatusNotFound, w.Code)
+	server.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, `Greetings.`, w.Body.String())
 }

@@ -46,10 +46,8 @@ func (self *VFS) SetFallbackFS(fallback http.FileSystem) {
 // Retrieve a file from the VFS.
 func (self *VFS) Open(name string) (http.File, error) {
 	if len(self.overrides) > 0 {
-		if override, ok := self.overrides[name]; ok {
-			if override == nil {
-				return nil, ErrNotFound
-			}
+		if v, ok := self.overrides[name]; ok {
+			return newMockHttpFile(name, v)
 		}
 	}
 
@@ -68,8 +66,14 @@ func (self *VFS) Open(name string) (http.File, error) {
 
 	// search fallback fs, and respond with Not Found as a last resort
 	if fs := self.fallback; fs != nil {
-		return fs.Open(name)
-	} else {
-		return nil, ErrNotFound
+		if file, err := fs.Open(name); err == nil {
+			if stat, err := file.Stat(); err == nil {
+				if !stat.IsDir() {
+					return file, nil
+				}
+			}
+		}
 	}
+
+	return nil, ErrNotFound
 }

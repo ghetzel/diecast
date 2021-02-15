@@ -3,14 +3,20 @@ package diecast
 import (
 	"io"
 	"net/http"
+	"path/filepath"
+	"strings"
 
+	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
+var DefaultIndexFilename = `index.html`
+
 type Server struct {
-	ServePath http.Dir
-	vfs       VFS
-	ovfs      http.FileSystem
+	ServePath     http.Dir
+	IndexFilename string
+	vfs           VFS
+	ovfs          http.FileSystem
 }
 
 func (self *Server) Open(name string) (http.File, error) {
@@ -92,7 +98,10 @@ func (self *Server) writeResponse(w http.ResponseWriter, req *http.Request, data
 	}
 
 	w.WriteHeader(httpStatus)
-	w.Write(typeutil.Bytes(data))
+
+	if data != nil {
+		w.Write(typeutil.Bytes(data))
+	}
 }
 
 // setup and populate any last-second things we might need to process a request
@@ -123,14 +132,33 @@ func (self *Server) Retrieve(req *http.Request) (http.File, error) {
 		return nil, err
 	}
 
-	return self.vfs.Open(req.URL.Path)
+	var file http.File
+	var lerr error
+
+	for _, tryPath := range self.retrieveTryPaths(req) {
+		log.Debugf("trying: %s", tryPath)
+		file, lerr = self.vfs.Open(tryPath)
+
+		if lerr == nil {
+			break
+		}
+	}
+
+	return file, lerr
 }
 
 // builds a list of filesystem objects to search for in response to the request URL path
-func (self *Server) retrieveTryPaths(req *http.Request) []string {
-	return []string{
-		req.URL.Path,
+func (self *Server) retrieveTryPaths(req *http.Request) (paths []string) {
+	paths = append(paths, req.URL.Path)
+
+	if strings.HasSuffix(req.URL.Path, `/`) {
+		paths = append(paths, filepath.Join(
+			req.URL.Path,
+			typeutil.OrString(self.IndexFilename, DefaultIndexFilename),
+		))
 	}
+
+	return
 }
 
 // Render a retrieved file to the given response writer.
