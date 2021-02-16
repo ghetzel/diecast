@@ -7,7 +7,7 @@ import (
 	"github.com/alecthomas/assert"
 )
 
-func TestWithRequest(t *testing.T) {
+func TestValidatorConfigWithRequest(t *testing.T) {
 	var a = ValidatorConfig{}
 
 	assert.Nil(t, a.Request)
