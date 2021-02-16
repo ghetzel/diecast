@@ -1,9 +1,7 @@
 package diecast
 
-import "net/http"
-
 type OAuth2Validator struct{}
 
-func (self *OAuth2Validator) Validate(cfg *ValidatorConfig, req *http.Request) error {
+func (self *OAuth2Validator) Validate(cfg *ValidatorConfig) error {
 	return ErrNotImplemented
 }

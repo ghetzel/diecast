@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ghetzel/go-stockutil/sliceutil"
+	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 var validators = make(map[string]Validator)
@@ -27,34 +28,30 @@ type ValidatorConfig struct {
 	Except   interface{}            `yaml:"except"`
 	Methods  interface{}            `yaml:"methods"`
 	Optional bool                   `yaml:"optional"`
+	Request  *http.Request          `yaml:"-"`
 }
 
 // Return whether the given request is eligible for validation under normal circumstances.
-func (self ValidatorConfig) ShouldValidateRequest(req *http.Request) bool {
-	for _, except := range sliceutil.Stringify(self.Except) {
-		if except != `` && IsGlobMatch(req.URL.Path, except) {
-			return false
-		}
-	}
-
-	// if there are "only" paths, then we may still match something.
-	// if not, then we didn't match an "except" path, and therefore should validate
-	if onlys := sliceutil.Stringify(self.Only); len(onlys) > 0 {
-		for _, only := range onlys {
-			if only != `` && IsGlobMatch(req.URL.Path, only) {
-				return true
-			}
-		}
-
-		return false
-	} else {
-		return true
-	}
+func (self *ValidatorConfig) ShouldApplyTo(req *http.Request) bool {
+	return ShouldApplyTo(req, self.Except, self.Only, self.Methods)
 }
+
+// Return a typeutil.Variant containing the value at the named option key, or a fallback value.
+func (self *ValidatorConfig) Option(name string, fallbacks ...interface{}) typeutil.Variant {
+	return maputil.M(self.Options).Get(name, fallbacks...)
+}
+
+func (self ValidatorConfig) WithRequest(req *http.Request) *ValidatorConfig {
+	var cfg = self
+	cfg.Request = req
+	return &cfg
+}
+
+// =====================================================================================================================
 
 // Validate the given request against all configured validators.  Will return nil if
 // the request passes all matching validations or only fails on optional ones.
-func (self *Server) ValidateAll(req *http.Request) error {
+func (self *Server) ValidateRequest(req *http.Request) error {
 	if err := self.prep(); err != nil {
 		return err
 	}
@@ -62,9 +59,9 @@ func (self *Server) ValidateAll(req *http.Request) error {
 	// check the request against each configured validator
 	for _, vc := range self.Validators {
 		if vc.Type != `` {
-			if vc.ShouldValidateRequest(req) {
+			if vc.ShouldApplyTo(req) {
 				if validator, ok := validators[vc.Type]; ok {
-					if err := validator.Validate(&vc, req); err != nil {
+					if err := validator.Validate(vc.WithRequest(req)); err != nil {
 						if !vc.Optional {
 							return fmt.Errorf("failed on %q validator: %v", vc.Type, err)
 						}

@@ -19,6 +19,7 @@ type ServerPaths struct {
 type Server struct {
 	Paths      ServerPaths       `yaml:"paths"`
 	Validators []ValidatorConfig `yaml:"validators"`
+	Renderers  []RendererConfig  `yaml:"renderers"`
 	VFS        VFS
 	ovfs       http.FileSystem
 }
@@ -34,7 +35,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	//  ▶ perform authentication checks
 	//  ▶ any other security or data validation before causing a VFS retrieval
 	//
-	err = self.ValidateAll(req)
+	err = self.ValidateRequest(req)
 
 	if err != nil {
 		self.writeResponse(w, req, err)
@@ -58,7 +59,11 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// -------------------------------------------------------------------------------------------------------------------
 	//  ▶ consume the input data found in RETRIEVE and write whatever response the requestor will receive
 	//
-	err = self.Render(w, req, file)
+	err = self.Render(&RendererConfig{
+		Response: w,
+		Request:  req,
+		Data:     file,
+	})
 
 	if err == nil {
 		return
@@ -71,11 +76,13 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // Intelligently respond in a consistent manner with the data provided, including error detection, redirection,
 // and status code enforcement.
 //
-//   If data is nil, and no code is provided -> HTTP 204
-//   If data is an error, write out the error text and ensure the HTTP status is >= 400
-//   If code is [300,399], an HTTP redirect will occur, redirecting to the path resulting from stringifying data.
-//   If data is a Map or Array, I will be encoded and returned as JSON with Content-Type: application/json.
-//	 All other conditions will convert the data to []byte and write that out directly.
+// When data is nil, and no code is provided -> HTTP 204
+// When data is an error, write out the error text and ensure the HTTP status is >= 400
+// When code is [300,399], an HTTP redirect will occur, redirecting to the path resulting from stringifying data.
+// When data is a Map or Array, I will be encoded and returned as JSON with Content-Type: application/json.
+//
+// All other conditions will convert the data to []byte and write that out directly.
+//
 func (self *Server) writeResponse(w http.ResponseWriter, req *http.Request, data interface{}, code ...int) {
 	var httpStatus int = http.StatusOK
 

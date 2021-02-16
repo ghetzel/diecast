@@ -2,11 +2,14 @@ package diecast
 
 import (
 	"encoding/json"
+	"net/http"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/ghetzel/go-stockutil/fileutil"
+	"github.com/ghetzel/go-stockutil/sliceutil"
+	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/gobwas/glob"
 	"gopkg.in/yaml.v2"
@@ -60,4 +63,46 @@ func AutoencodeByFilename(name string, data interface{}) ([]byte, string, error)
 	}
 
 	return b, mimetype, err
+}
+
+func ShouldApplyTo(
+	req *http.Request,
+	exceptPatterns interface{},
+	onlyPatterns interface{},
+	methods interface{},
+) bool {
+	if mm := sliceutil.CompactString(sliceutil.Stringify(methods)); len(mm) > 0 {
+		var pass bool
+
+		for _, m := range mm {
+			if stringutil.SoftEqual(m, req.Method) {
+				pass = true
+				break
+			}
+		}
+
+		if !pass {
+			return false
+		}
+	}
+
+	for _, except := range sliceutil.Stringify(exceptPatterns) {
+		if except != `` && IsGlobMatch(req.URL.Path, except) {
+			return false
+		}
+	}
+
+	// if there are "only" paths, then we may still match something.
+	// if not, then we didn't match an "except" path, and therefore should validate
+	if onlys := sliceutil.Stringify(onlyPatterns); len(onlys) > 0 {
+		for _, only := range onlys {
+			if only != `` && IsGlobMatch(req.URL.Path, only) {
+				return true
+			}
+		}
+
+		return false
+	} else {
+		return true
+	}
 }

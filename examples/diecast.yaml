@@ -47,4 +47,6 @@ vfs:
       haltOnMissing: false
       haltOnError:   true
 
-  root: "."
+renderers:
+  - type: "ooxml"
+    only: ["*.pptx", "*.xlsx", ".docx"]
