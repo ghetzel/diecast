@@ -21,5 +21,5 @@ type Retriever interface {
 
 // Takes a readable http.File, performs any desired conversion, and writes the result out to the given http.ResponseWriter.
 type Renderer interface {
-	Render(*RendererConfig) error
+	Render(http.ResponseWriter, *RendererConfig) error
 }

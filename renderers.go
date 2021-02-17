@@ -23,30 +23,14 @@ func RegisterRenderer(name string, renderer Renderer) {
 	renderers[name] = renderer
 }
 
-type PassthroughRenderer struct{}
-
-func Passthrough(r *RendererConfig) error {
-	return new(PassthroughRenderer).Render(r)
-}
-
-func (self *PassthroughRenderer) Render(cfg *RendererConfig) error {
-	if cfg != nil && cfg.Response != nil && cfg.Data != nil {
-		_, err := io.Copy(cfg.Response, cfg.Data)
-		return err
-	} else {
-		return nil
-	}
-}
-
 type RendererConfig struct {
-	Type     string                 `yaml:"type"`
-	Options  map[string]interface{} `yaml:"options"`
-	Only     interface{}            `yaml:"only"`
-	Except   interface{}            `yaml:"except"`
-	Methods  interface{}            `yaml:"methods"`
-	Request  *http.Request          `yaml:"-"`
-	Response http.ResponseWriter    `yaml:"-"`
-	Data     io.ReadCloser          `yaml:"-"`
+	Type    string                 `yaml:"type"`
+	Options map[string]interface{} `yaml:"options"`
+	Only    interface{}            `yaml:"only"`
+	Except  interface{}            `yaml:"except"`
+	Methods interface{}            `yaml:"methods"`
+	Request *http.Request          `yaml:"-"`
+	Data    io.ReadCloser          `yaml:"-"`
 }
 
 // Return whether the given request is eligible for rendering.
@@ -59,12 +43,11 @@ func (self *RendererConfig) Option(name string, fallbacks ...interface{}) typeut
 	return maputil.M(self.Options).Get(name, fallbacks...)
 }
 
-func (self RendererConfig) WithResponse(w http.ResponseWriter, req *http.Request, source io.ReadCloser) *RendererConfig {
+func (self RendererConfig) WithResponse(responseBody io.ReadCloser, req *http.Request) *RendererConfig {
 	var cfg = self
 
-	cfg.Response = w
+	cfg.Data = responseBody
 	cfg.Request = req
-	cfg.Data = source
 
 	return &cfg
 }
@@ -72,17 +55,13 @@ func (self RendererConfig) WithResponse(w http.ResponseWriter, req *http.Request
 // =====================================================================================================================
 
 // Render a retrieved file to the given response writer.
-func (self *Server) Render(input *RendererConfig) error {
-	var w = input.Response
-	var req = input.Request
-	var source = input.Data
-
+func (self *Server) Render(w http.ResponseWriter, input *RendererConfig) error {
 	// apply the first matching renderer from the config (if any)
 	for _, rc := range self.Renderers {
 		if rc.Type != `` {
-			if rc.ShouldApplyTo(req) {
+			if rc.ShouldApplyTo(input.Request) {
 				if renderer, ok := renderers[rc.Type]; ok {
-					return renderer.Render(rc.WithResponse(w, req, source))
+					return renderer.Render(w, rc.WithResponse(input.Data, input.Request))
 				}
 			}
 		} else {
@@ -91,5 +70,5 @@ func (self *Server) Render(input *RendererConfig) error {
 	}
 
 	// fallback to just copying the retrieved data to the response directly
-	return Passthrough(input)
+	return Passthrough(w, input)
 }
