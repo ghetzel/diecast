@@ -128,7 +128,7 @@ func (self *Template) Render(w io.Writer) error {
 	if state, err := self.DataSources.Refresh(); err == nil {
 		var entryPoint = typeutil.OrString(self.EntryPoint, DefaultEntryPoint)
 
-		return self.gotmpl.ExecutegoTemplate(w, entryPoint, state)
+		return self.gotmpl.ExecuteTemplate(w, entryPoint, state)
 	} else {
 		return err
 	}

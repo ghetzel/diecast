@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -28,7 +29,16 @@ func ErrorCode(msg string, code int) error {
 	}
 }
 
-var ErrNotImplemented = ErrorCode(`Not Implemented`, http.StatusNotImplemented)
+var NotImplemented = func(msg interface{}) error {
+	if s, ok := msg.(string); ok && s != `` {
+		return ErrorCode(`Not Implemented: `+s, http.StatusNotImplemented)
+	} else if err, ok := msg.(error); ok && err != nil {
+		return ErrorCode(`Not Implemented: `+err.Error(), http.StatusNotImplemented)
+	} else {
+		return ErrorCode(`Not Implemented: `+fmt.Sprintf("%T", msg), http.StatusNotImplemented)
+	}
+}
+
 var ErrNotFound = ErrorCode(`no such file or directory`, http.StatusNotFound)
 
 type ControlError struct {

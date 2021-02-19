@@ -9,5 +9,5 @@ type DataSource struct {
 type DataSet []DataSource
 
 func (self DataSet) Refresh() (map[string]interface{}, error) {
-	return nil, ErrNotImplemented
+	return nil, NotImplemented(`datasources`)
 }

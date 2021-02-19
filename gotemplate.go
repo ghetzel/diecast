@@ -57,7 +57,7 @@ func (self *goTemplate) Clone() (*goTemplate, error) {
 	}
 }
 
-func (self *goTemplate) DefinedgoTemplates() string {
+func (self *goTemplate) DefinedTemplates() string {
 	if self.html != nil {
 		return self.html.DefinedTemplates()
 	} else {
@@ -83,7 +83,7 @@ func (self *goTemplate) Execute(wr io.Writer, data interface{}) error {
 	}
 }
 
-func (self *goTemplate) ExecutegoTemplate(wr io.Writer, name string, data interface{}) error {
+func (self *goTemplate) ExecuteTemplate(wr io.Writer, name string, data interface{}) error {
 	if self.html != nil {
 		return self.html.ExecuteTemplate(wr, name, data)
 	} else {
