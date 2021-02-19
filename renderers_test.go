@@ -10,19 +10,16 @@ import (
 )
 
 func TestRendererConfigWithResponse(t *testing.T) {
-	var a = RendererConfig{}
+	var a RendererConfig
 
-	assert.Nil(t, a.Request)
-	assert.Nil(t, a.Data)
+	assert.Nil(t, a.request)
+	assert.Nil(t, a.data)
 
-	var b = a.WithResponse(
-		ioutil.NopCloser(bytes.NewBufferString(`hello`)),
+	var b = newRenderConfigFromRequest(
 		httptest.NewRequest(`GET`, `/`, nil),
+		ioutil.NopCloser(bytes.NewBufferString(`hello`)),
 	)
 
-	assert.Nil(t, a.Request)
-	assert.Nil(t, a.Data)
-
-	assert.NotNil(t, b.Request)
-	assert.NotNil(t, b.Data)
+	assert.NotNil(t, b.request)
+	assert.NotNil(t, b.data)
 }

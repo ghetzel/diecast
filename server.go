@@ -59,10 +59,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// -------------------------------------------------------------------------------------------------------------------
 	//  ▶ consume the input data found in RETRIEVE and write whatever response the requestor will receive
 	//
-	err = self.Render(w, &RendererConfig{
-		Request: req,
-		Data:    file,
-	})
+	err = self.Render(w, newRenderConfigFromRequest(req, file))
 
 	if err == nil {
 		return

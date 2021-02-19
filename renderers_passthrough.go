@@ -12,6 +12,6 @@ func Passthrough(w http.ResponseWriter, cfg *RendererConfig) error {
 }
 
 func (self *PassthroughRenderer) Render(w http.ResponseWriter, cfg *RendererConfig) error {
-	_, err := io.Copy(w, cfg.Data)
+	_, err := io.Copy(w, cfg.Data())
 	return err
 }

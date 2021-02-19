@@ -35,6 +35,13 @@ type RendererConfig struct {
 	data    io.ReadCloser
 }
 
+func newRenderConfigFromRequest(req *http.Request, d io.ReadCloser) *RendererConfig {
+	return &RendererConfig{
+		data:    d,
+		request: req,
+	}
+}
+
 // Return whether the local request is eligible for renderering.
 func (self *RendererConfig) ShouldApply() bool {
 	if self.request == nil {

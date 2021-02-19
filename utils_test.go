@@ -61,12 +61,11 @@ func TestShouldApplyTo(t *testing.T) {
 			return c.ShouldApplyTo(req)
 		},
 		func(req *http.Request, except interface{}, only interface{}, methods interface{}) bool {
-			var c = new(RendererConfig)
+			var c = newRenderConfigFromRequest(req, nil)
 
 			c.Except = except
 			c.Only = only
 			c.Methods = methods
-			c.Request = req
 
 			return c.ShouldApplyTo(req)
 		},
