@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"io"
 	"net/http"
 )
 
@@ -22,4 +23,9 @@ type Retriever interface {
 // Takes a readable http.File, performs any desired conversion, and writes the result out to the given http.ResponseWriter.
 type Renderer interface {
 	Render(http.ResponseWriter, *RendererConfig) error
+}
+
+type templatable interface {
+	Execute(wr io.Writer, data interface{}) error
+	ExecuteTemplate(wr io.Writer, name string, data interface{}) error
 }

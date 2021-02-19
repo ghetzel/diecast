@@ -1,6 +1,9 @@
 package diecast
 
-import "net/http"
+import (
+	"io"
+	"net/http"
+)
 
 var FrontMatterSeparator = []byte("---\n")
 var MaxFrontMatterSize = 32768
@@ -8,11 +11,17 @@ var MaxFrontMatterSize = 32768
 type TemplateRenderer struct{}
 
 func (self *TemplateRenderer) Render(w http.ResponseWriter, cfg *RendererConfig) error {
-	defer cfg.Data.Close()
+	var data = cfg.Data()
+	defer data.Close()
 
-	if _, frontMatter, err := SplitFrontMatter(cfg.Data); err == nil {
-		frontMatter.Request = cfg.Request
-		return ErrNotImplemented
+	if tmpl, unread, err := ParseTemplate(data); err == nil {
+		// nothing was left unread
+		if unread == nil {
+			return tmpl.Render(w)
+		} else {
+			var _, err = io.Copy(w, data)
+			return err
+		}
 	} else {
 		return err
 	}

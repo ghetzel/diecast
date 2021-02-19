@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,27 +13,24 @@ func rcstr(s string) io.ReadCloser {
 	return ioutil.NopCloser(bytes.NewBufferString(s))
 }
 
-func TestSplitFrontMatter(t *testing.T) {
+func TestParseTemplate(t *testing.T) {
 	// -------------------------------------------------------------------------------------------------------------------
-	var rc, fm, err = SplitFrontMatter(nil)
+	var tmpl, err = ParseTemplate(nil)
 
 	assert.Equal(t, io.EOF, err)
-	assert.Nil(t, rc)
-	assert.Nil(t, fm)
+	assert.Nil(t, tmpl)
 
 	// -------------------------------------------------------------------------------------------------------------------
-	rc, fm, err = SplitFrontMatter(rcstr(`<html></html>`))
+	tmpl, err = ParseTemplate(rcstr(`<html></html>`))
 
 	assert.NoError(t, err)
-	assert.Equal(t, `<html></html>`, typeutil.String(rc))
-	assert.Nil(t, fm)
+	assert.Equal(t, `<html></html>`, tmpl.String())
+	assert.Nil(t, tmpl)
 
 	// -------------------------------------------------------------------------------------------------------------------
-	rc, fm, err = SplitFrontMatter(rcstr("---\n---\n<html></html>"))
+	tmpl, err = ParseTemplate(rcstr("---\n---\n<html></html>"))
 
 	assert.NoError(t, err)
-	assert.Equal(t, `<html></html>`, typeutil.String(rc))
-	assert.Equal(t, &FrontMatter{
-		ContentOffset: 4,
-	}, fm)
+	assert.Equal(t, `<html></html>`, tmpl.String())
+	assert.Equal(t, 4, tmpl.ContentOffset)
 }
