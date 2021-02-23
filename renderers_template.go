@@ -1,7 +1,6 @@
 package diecast
 
 import (
-	"io"
 	"net/http"
 )
 
@@ -13,14 +12,8 @@ type TemplateRenderer struct{}
 func (self *TemplateRenderer) Render(ctx *Context, input http.File, cfg *RendererConfig) error {
 	defer input.Close()
 
-	if tmpl, unread, err := ParseTemplate(input); err == nil {
-		// nothing was left unread
-		if unread == nil {
-			return tmpl.Render(ctx, nil)
-		} else {
-			var _, err = io.Copy(ctx, input)
-			return err
-		}
+	if tmpl, err := ParseTemplate(input); err == nil {
+		return tmpl.Render(ctx, nil)
 	} else {
 		return err
 	}

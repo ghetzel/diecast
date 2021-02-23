@@ -115,8 +115,15 @@ func (self *Server) ListenAndServe(address string) error {
 	}
 
 	var errchan = make(chan error)
+	var readychan = make(chan bool)
 
 	go func() {
+		var ok bool
+
+		defer func(r *bool) {
+			readychan <- *r
+		}(&ok)
+
 		if verifyTimeout := typeutil.Duration(
 			typeutil.OrString(
 				self.VerifyTimeout,
@@ -133,10 +140,11 @@ func (self *Server) ListenAndServe(address string) error {
 			case err := <-verr:
 				if err == nil {
 					log.Debugf("verify: ok")
+					ok = true
 				} else {
 					log.Debugf("verify: error %v", err)
+					errchan <- err
 				}
-				errchan <- err
 			case <-time.After(verifyTimeout):
 				errchan <- fmt.Errorf("timed out waiting for verify test")
 			}
@@ -144,8 +152,10 @@ func (self *Server) ListenAndServe(address string) error {
 	}()
 
 	go func() {
-		log.Noticef("listening on %v", hsrv.Addr)
-		errchan <- hsrv.ListenAndServe()
+		if r := <-readychan; r {
+			log.Noticef("listening on %v", hsrv.Addr)
+			errchan <- hsrv.ListenAndServe()
+		}
 	}()
 
 	return <-errchan
@@ -155,7 +165,10 @@ func (self *Server) ListenAndServe(address string) error {
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var file http.File
 	var err error
-	var ctx = NewContext(w, req, &self.VFS)
+	var ctx = NewContext(&self.VFS)
+
+	ctx.Start(w, req)
+	defer ctx.Done()
 
 	// VALIDATE
 	// -------------------------------------------------------------------------------------------------------------------
@@ -167,7 +180,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		ctx.Warningf("validate: %v", err)
-		self.writeResponse(w, req, err)
+		self.writeResponse(ctx, err)
 		return
 	}
 
@@ -175,15 +188,18 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// -------------------------------------------------------------------------------------------------------------------
 	//  ▶ use the request to locate the data and metadata that will be rendered into a response
 	//
-	file, err = self.serveHttpPhaseRetrieve(ctx, req)
+	file, err = self.serveHttpPhaseRetrieve(ctx)
 
 	if err == nil {
 		defer file.Close()
 	} else {
 		ctx.Debugf("retrieve: %v", err)
-		self.writeResponse(w, req, err)
+		self.writeResponse(ctx, err)
 		return
 	}
+
+	// flush any last-minute headers and other prep before rendering occurs
+	ctx.finalizeBeforeRender()
 
 	// RENDER
 	// -------------------------------------------------------------------------------------------------------------------
@@ -195,7 +211,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	} else {
 		ctx.Debugf("render: %v", err)
-		self.writeResponse(w, req, err)
+		self.writeResponse(ctx, err)
 		return
 	}
 }
@@ -210,8 +226,9 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 //
 // All other conditions will convert the data to []byte and write that out directly.
 //
-func (self *Server) writeResponse(w http.ResponseWriter, req *http.Request, data interface{}, code ...int) {
-	var httpStatus int = http.StatusOK
+func (self *Server) writeResponse(ctx *Context, data interface{}, code ...int) {
+	var req = ctx.Request()
+	var httpStatus int = ctx.Code()
 
 	if data == nil {
 		httpStatus = http.StatusNoContent
@@ -229,7 +246,7 @@ func (self *Server) writeResponse(w http.ResponseWriter, req *http.Request, data
 
 	// treat 3xx codes as redirects, interpreting data as the new location string
 	if httpStatus >= 300 && httpStatus < 400 {
-		http.Redirect(w, req, typeutil.OrString(data, `/`), httpStatus)
+		http.Redirect(ctx, req, typeutil.OrString(data, `/`), httpStatus)
 		return
 	}
 
@@ -247,7 +264,7 @@ func (self *Server) writeResponse(w http.ResponseWriter, req *http.Request, data
 	if typeutil.IsMap(data) || typeutil.IsArray(data) {
 		if b, mimetype, err := AutoencodeByFilename(req.URL.Path, data); err == nil {
 			data = b
-			w.Header().Set(`Content-Type`, mimetype)
+			ctx.SetTypeHint(mimetype)
 		} else {
 			data = err.Error()
 			httpStatus = http.StatusInternalServerError
@@ -255,10 +272,10 @@ func (self *Server) writeResponse(w http.ResponseWriter, req *http.Request, data
 	}
 
 	// commit to responding and write out data
-	w.WriteHeader(httpStatus)
+	ctx.WriteHeader(httpStatus)
 
 	if data != nil {
-		w.Write(typeutil.Bytes(data))
+		ctx.Write(typeutil.Bytes(data))
 	}
 }
 

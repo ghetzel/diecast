@@ -24,65 +24,64 @@ type Template struct {
 	ContentOffset int     `yaml:"-"`
 	sha512sum     string
 	body          []byte
+	buf           *bytes.Buffer
 	gotmpl        *goTemplate
 	initDone      bool
 }
 
-func ParseTemplateString(source string) (*Template, io.Reader, error) {
+func ParseTemplateString(source string) (*Template, error) {
 	return ParseTemplate(bytes.NewBufferString(source))
 }
 
-func ParseTemplate(source io.Reader) (*Template, io.Reader, error) {
+func ParseTemplate(source io.Reader) (*Template, error) {
 	if source == nil {
-		return nil, nil, io.EOF
+		return nil, io.EOF
 	}
 
-	var chunk = make([]byte, len(FrontMatterSeparator))
 	var summer = sha512.New()
 
 	// tee the source to the hasher above for checksumming goodness
 	var summedSource = io.TeeReader(source, summer)
+	var tmpl = new(Template)
+	var fmData []byte
 
-	// Front Matter is declared in the first 4 bytes of the file being `---\n`.  If this is not the case,
-	// then we kinda glue that first 4 bytes back in place and return an intact, (effectively) unread io.Reader.
-	if n, err := io.ReadFull(summedSource, chunk); err == nil {
-		if bytes.Equal(chunk, FrontMatterSeparator) {
-			var tmpl = new(Template)
-			var fmData []byte
+	if data, err := ioutil.ReadAll(summedSource); err == nil {
+		var parts = bytes.SplitN(data, FrontMatterSeparator, 3)
 
-			if data, err := ioutil.ReadAll(summedSource); err == nil {
-				var parts = bytes.SplitN(data, FrontMatterSeparator, 2)
-
-				if len(parts) == 2 {
-					fmData = parts[0]
-					tmpl.body = parts[1]
-				} else {
-					tmpl.body = parts[0]
-				}
-
-				tmpl.ContentOffset = (2 * len(FrontMatterSeparator)) + len(fmData)
-				tmpl.sha512sum = hex.EncodeToString(summer.Sum(nil))
-			} else {
-				return nil, nil, err
-			}
-
-			// Only attempt to parse if we actually read any front matter data.
-			if len(fmData) > 0 {
-				if err := yaml.UnmarshalStrict(fmData, tmpl); err != nil {
-					return nil, nil, err
-				}
-			}
-
-			return tmpl, nil, tmpl.init()
-		} else {
-			// paste the bit we just read pack onto the front of the io.Reader like nothing happened
-			return nil, io.MultiReader(
-				bytes.NewBuffer(chunk[0:n]),
-				source,
-			), nil
+		switch len(parts) {
+		case 3:
+			fmData = parts[1]
+			tmpl.body = parts[2]
+		case 2:
+			fmData = parts[0]
+			tmpl.body = parts[1]
+		case 1:
+			tmpl.body = parts[0]
 		}
+
+		tmpl.buf = bytes.NewBuffer(tmpl.body)
+		tmpl.ContentOffset = (2 * len(FrontMatterSeparator)) + len(fmData)
+		tmpl.sha512sum = hex.EncodeToString(summer.Sum(nil))
 	} else {
-		return nil, nil, err
+		return nil, err
+	}
+
+	// Only attempt to parse if we actually read any front matter data.
+	if len(fmData) > 0 {
+		if err := yaml.UnmarshalStrict(fmData, tmpl); err != nil {
+			return nil, err
+		}
+	}
+
+	return tmpl, tmpl.init()
+}
+
+// Implement reader interface.
+func (self *Template) Read(b []byte) (int, error) {
+	if buf := self.buf; buf != nil {
+		return buf.Read(b)
+	} else {
+		return 0, io.EOF
 	}
 }
 
@@ -135,7 +134,7 @@ func (self *Template) Render(ctx *Context, w io.Writer) error {
 	}
 
 	if ctx == nil {
-		ctx = NewContext(nil, nil, nil)
+		ctx = NewContext(nil)
 	}
 
 	if w == nil {

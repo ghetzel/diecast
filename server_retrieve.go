@@ -5,11 +5,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 // Perform the retrieval phase of handling a request.
-func (self *Server) serveHttpPhaseRetrieve(ctx *Context, req *http.Request) (http.File, error) {
+func (self *Server) serveHttpPhaseRetrieve(ctx *Context) (http.File, error) {
 	if err := self.prep(); err != nil {
 		return nil, err
 	}
@@ -17,12 +18,23 @@ func (self *Server) serveHttpPhaseRetrieve(ctx *Context, req *http.Request) (htt
 	var file http.File
 	var lerr error
 
-	for _, tryPath := range self.retrieveTryPaths(req) {
+	for _, tryPath := range self.retrieveTryPaths(ctx.Request()) {
+		switch tryPath {
+		case ``, `/`:
+			continue
+		}
+
 		// ctx.Debugf("retrieve: try path %v", tryPath)
-		file, lerr = self.VFS.Open(tryPath)
+		file, lerr = ctx.Open(tryPath)
 
 		if lerr == nil {
 			// ctx.Debugf("retrieve: path %v succeeded", tryPath)
+			if stat, err := file.Stat(); err == nil {
+				if mt := fileutil.GetMimeType(stat.Name()); mt != `` {
+					ctx.SetTypeHint(mt)
+				}
+			}
+
 			break
 		}
 	}

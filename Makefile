@@ -5,6 +5,7 @@ ARTIFACT       ?= bin/diecast2
 .EXPORT_ALL_VARIABLES:
 GO111MODULE  = on
 CGO_ENABLED  = 0
+LOGLEVEL     = debug
 
 all: go.mod deps fmt build test
 
