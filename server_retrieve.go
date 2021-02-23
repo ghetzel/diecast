@@ -9,7 +9,7 @@ import (
 )
 
 // Perform the retrieval phase of handling a request.
-func (self *Server) Retrieve(req *http.Request) (http.File, error) {
+func (self *Server) serveHttpPhaseRetrieve(ctx *Context, req *http.Request) (http.File, error) {
 	if err := self.prep(); err != nil {
 		return nil, err
 	}
@@ -18,9 +18,11 @@ func (self *Server) Retrieve(req *http.Request) (http.File, error) {
 	var lerr error
 
 	for _, tryPath := range self.retrieveTryPaths(req) {
+		// ctx.Debugf("retrieve: try path %v", tryPath)
 		file, lerr = self.VFS.Open(tryPath)
 
 		if lerr == nil {
+			// ctx.Debugf("retrieve: path %v succeeded", tryPath)
 			break
 		}
 	}

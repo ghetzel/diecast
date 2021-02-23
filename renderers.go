@@ -1,10 +1,7 @@
 package diecast
 
 import (
-	"bytes"
-	"context"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/ghetzel/go-stockutil/maputil"
@@ -31,41 +28,6 @@ type RendererConfig struct {
 	Only    interface{}            `yaml:"only"`
 	Except  interface{}            `yaml:"except"`
 	Methods interface{}            `yaml:"methods"`
-	request *http.Request
-	data    io.ReadCloser
-}
-
-func newRenderConfigFromRequest(req *http.Request, d io.ReadCloser) *RendererConfig {
-	return &RendererConfig{
-		data:    d,
-		request: req,
-	}
-}
-
-// Return whether the local request is eligible for renderering.
-func (self *RendererConfig) ShouldApply() bool {
-	if self.request == nil {
-		return false
-	} else {
-		return self.ShouldApplyTo(self.request)
-	}
-}
-
-// Return a copy of the local request.
-func (self *RendererConfig) Request() *http.Request {
-	if self.request == nil {
-		return nil
-	} else {
-		return self.request.Clone(context.Background())
-	}
-}
-
-func (self *RendererConfig) Data() io.ReadCloser {
-	if self.data == nil {
-		return io.NopCloser(bytes.NewBuffer(nil))
-	} else {
-		return self.data
-	}
 }
 
 // Return whether the given request is eligible for rendering.
@@ -81,13 +43,13 @@ func (self *RendererConfig) Option(name string, fallbacks ...interface{}) typeut
 // =====================================================================================================================
 
 // Render a retrieved file to the given response writer.
-func (self *Server) Render(w http.ResponseWriter, input *RendererConfig) error {
+func (self *Server) serveHttpPhaseRender(ctx *Context, file http.File) error {
 	// apply the first matching renderer from the config (if any)
 	for _, rc := range self.Renderers {
 		if rc.Type != `` {
-			if rc.ShouldApply() {
+			if rc.ShouldApplyTo(ctx.Request()) {
 				if renderer, ok := renderers[rc.Type]; ok {
-					return renderer.Render(w, input)
+					return renderer.Render(ctx, file, &rc)
 				}
 			}
 		} else {
@@ -96,5 +58,5 @@ func (self *Server) Render(w http.ResponseWriter, input *RendererConfig) error {
 	}
 
 	// fallback to just copying the retrieved data to the response directly
-	return Passthrough(w, input)
+	return Passthrough(ctx, file, nil)
 }

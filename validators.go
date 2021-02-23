@@ -28,7 +28,6 @@ type ValidatorConfig struct {
 	Except   interface{}            `yaml:"except"`
 	Methods  interface{}            `yaml:"methods"`
 	Optional bool                   `yaml:"optional"`
-	Request  *http.Request          `yaml:"-"`
 }
 
 // Return whether the given request is eligible for validation under normal circumstances.
@@ -41,17 +40,11 @@ func (self *ValidatorConfig) Option(name string, fallbacks ...interface{}) typeu
 	return maputil.M(self.Options).Get(name, fallbacks...)
 }
 
-func (self ValidatorConfig) WithRequest(req *http.Request) *ValidatorConfig {
-	var cfg = self
-	cfg.Request = req
-	return &cfg
-}
-
 // =====================================================================================================================
 
 // Validate the given request against all configured validators.  Will return nil if
 // the request passes all matching validations or only fails on optional ones.
-func (self *Server) ValidateRequest(req *http.Request) error {
+func (self *Server) serveHttpPhaseValidate(ctx *Context) error {
 	if err := self.prep(); err != nil {
 		return err
 	}
@@ -59,9 +52,9 @@ func (self *Server) ValidateRequest(req *http.Request) error {
 	// check the request against each configured validator
 	for _, vc := range self.Validators {
 		if vc.Type != `` {
-			if vc.ShouldApplyTo(req) {
+			if vc.ShouldApplyTo(ctx.Request()) {
 				if validator, ok := validators[vc.Type]; ok {
-					if err := validator.Validate(vc.WithRequest(req)); err != nil {
+					if err := validator.Validate(ctx, &vc); err != nil {
 						if !vc.Optional {
 							return fmt.Errorf("failed on %q validator: %v", vc.Type, err)
 						}

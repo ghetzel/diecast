@@ -1,14 +1,30 @@
 package diecast
 
 import (
+	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"time"
 
+	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	"gopkg.in/yaml.v2"
 )
 
+var DefaultConfigFilename = `diecast.yaml`
+var DefaultAddress = `127.0.0.1:28419`
 var DefaultIndexFilename = `index.html`
 var DefaultLayoutsDir = `/_layouts`
 var DefaultErrorsDir = `/_errors`
+var DefaultVerifyMethod = `GET`
+var DefaultVerifyPath = `/`
+var DefaultVerifyTimeout = `1s`
+
+type ServerStartFunc func(*Server, error) error
 
 type ServerPaths struct {
 	LayoutsDir    string `yaml:"layouts"`
@@ -17,17 +33,129 @@ type ServerPaths struct {
 }
 
 type Server struct {
-	Paths      ServerPaths       `yaml:"paths"`
-	Validators []ValidatorConfig `yaml:"validators"`
-	Renderers  []RendererConfig  `yaml:"renderers"`
-	VFS        VFS
-	ovfs       http.FileSystem
+	Address       string            `yaml:"address"`
+	Paths         ServerPaths       `yaml:"paths"`
+	Validators    []ValidatorConfig `yaml:"validators"`
+	Renderers     []RendererConfig  `yaml:"renderers"`
+	VerifyMethod  string            `yaml:"verifyMethod"`
+	VerifyPath    string            `yaml:"verifyPath"`
+	VerifyTimeout string            `yaml:"verifyTimeout"`
+	VFS           VFS               `yaml:"vfs"`
+	ovfs          http.FileSystem
+	startFuncs    []ServerStartFunc
+}
+
+func NewServerFromConfig(r io.Reader) (*Server, error) {
+	var srv Server
+
+	if data, err := ioutil.ReadAll(r); err == nil {
+		if err := yaml.UnmarshalStrict(data, &srv); err == nil {
+			return &srv, nil
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+}
+
+func NewServerFromFile(cfgfile string) (*Server, error) {
+	if cfg, err := os.Open(cfgfile); err == nil {
+		defer cfg.Close()
+
+		if srv, err := NewServerFromConfig(cfg); err == nil {
+			srv.VFS.SetFallbackFS(http.Dir(filepath.Dir(cfgfile)))
+			return srv, nil
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+}
+
+func (self *Server) Verify() error {
+	var res, err = self.doSimpleRequest(
+		typeutil.OrString(self.VerifyMethod, DefaultVerifyMethod),
+		typeutil.OrString(self.VerifyPath, DefaultVerifyPath),
+	)
+
+	if rc := res.Body; rc != nil {
+		rc.Close()
+	}
+
+	return err
+}
+
+func (self *Server) OnStart(fn ServerStartFunc) {
+	if fn != nil {
+		self.startFuncs = append(self.startFuncs, fn)
+	}
+}
+
+func (self *Server) doSimpleRequest(method string, path string) (*http.Response, error) {
+	var wr = httptest.NewRecorder()
+	var req = httptest.NewRequest(method, path, nil)
+
+	self.ServeHTTP(wr, req)
+
+	wr.Flush()
+
+	if code := wr.Code; code < 400 {
+		return wr.Result(), nil
+	} else {
+		return wr.Result(), fmt.Errorf("HTTP %d: %s", code, http.StatusText(code))
+	}
+}
+
+func (self *Server) ListenAndServe(address string) error {
+	var hsrv = &http.Server{
+		Addr:    typeutil.OrString(address, self.Address, DefaultAddress),
+		Handler: self,
+	}
+
+	var errchan = make(chan error)
+
+	go func() {
+		if verifyTimeout := typeutil.Duration(
+			typeutil.OrString(
+				self.VerifyTimeout,
+				DefaultVerifyTimeout,
+			),
+		); verifyTimeout > 0 {
+			var verr = make(chan error)
+
+			go func() {
+				verr <- self.Verify()
+			}()
+
+			select {
+			case err := <-verr:
+				if err == nil {
+					log.Debugf("verify: ok")
+				} else {
+					log.Debugf("verify: error %v", err)
+				}
+				errchan <- err
+			case <-time.After(verifyTimeout):
+				errchan <- fmt.Errorf("timed out waiting for verify test")
+			}
+		}
+	}()
+
+	go func() {
+		log.Noticef("listening on %v", hsrv.Addr)
+		errchan <- hsrv.ListenAndServe()
+	}()
+
+	return <-errchan
 }
 
 // Implements the http.Handler interface.
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var file http.File
 	var err error
+	var ctx = NewContext(w, req, &self.VFS)
 
 	// VALIDATE
 	// -------------------------------------------------------------------------------------------------------------------
@@ -35,9 +163,10 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	//  ▶ perform authentication checks
 	//  ▶ any other security or data validation before causing a VFS retrieval
 	//
-	err = self.ValidateRequest(req)
+	err = self.serveHttpPhaseValidate(ctx)
 
 	if err != nil {
+		ctx.Warningf("validate: %v", err)
 		self.writeResponse(w, req, err)
 		return
 	}
@@ -46,11 +175,12 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// -------------------------------------------------------------------------------------------------------------------
 	//  ▶ use the request to locate the data and metadata that will be rendered into a response
 	//
-	file, err = self.Retrieve(req)
+	file, err = self.serveHttpPhaseRetrieve(ctx, req)
 
 	if err == nil {
 		defer file.Close()
 	} else {
+		ctx.Debugf("retrieve: %v", err)
 		self.writeResponse(w, req, err)
 		return
 	}
@@ -59,11 +189,12 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// -------------------------------------------------------------------------------------------------------------------
 	//  ▶ consume the input data found in RETRIEVE and write whatever response the requestor will receive
 	//
-	err = self.Render(w, newRenderConfigFromRequest(req, file))
+	err = self.serveHttpPhaseRender(ctx, file)
 
 	if err == nil {
 		return
 	} else {
+		ctx.Debugf("render: %v", err)
 		self.writeResponse(w, req, err)
 		return
 	}

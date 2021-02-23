@@ -12,6 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var Delimiters [2]string = [2]string{`{{`, `}}`}
 var DefaultEntryPoint = `main`
 var DefaultTemplateEngine = `html`
 
@@ -25,6 +26,10 @@ type Template struct {
 	body          []byte
 	gotmpl        *goTemplate
 	initDone      bool
+}
+
+func ParseTemplateString(source string) (*Template, io.Reader, error) {
+	return ParseTemplate(bytes.NewBufferString(source))
 }
 
 func ParseTemplate(source io.Reader) (*Template, io.Reader, error) {
@@ -88,9 +93,9 @@ func (self *Template) init() error {
 	}
 
 	var engine = typeutil.OrString(self.Engine, DefaultTemplateEngine)
-	var name = typeutil.OrString(self.Filename, engine+`:`+self.sha512sum)
+	// var name = typeutil.OrString(self.Filename, engine+`:`+self.sha512sum)
 
-	if gotmpl, err := parseGoTemplate(name, engine, self.templateString()); err == nil {
+	if gotmpl, err := parseGoTemplate(self.entryPoint(), engine, self.templateString()); err == nil {
 		self.gotmpl = gotmpl
 		self.initDone = true
 		return nil
@@ -109,7 +114,7 @@ func (self *Template) String() string {
 	if err := self.init(); err == nil {
 		var dst bytes.Buffer
 
-		if err := self.Render(&dst); err == nil {
+		if err := self.Render(nil, &dst); err == nil {
 			return dst.String()
 		} else {
 			return fmt.Sprintf("<!-- TEMPLATE ERROR: %v -->", err)
@@ -119,19 +124,25 @@ func (self *Template) String() string {
 	}
 }
 
+func (self *Template) entryPoint() string {
+	return typeutil.OrString(self.EntryPoint, DefaultEntryPoint)
+}
+
 // Refresh all data sources and render the template, writing the results to the giveni io.Writer.
-func (self *Template) Render(w io.Writer) error {
+func (self *Template) Render(ctx *Context, w io.Writer) error {
 	if err := self.init(); err != nil {
 		return err
 	}
 
-	if state, err := self.DataSources.Refresh(); err == nil {
-		var entryPoint = typeutil.OrString(self.EntryPoint, DefaultEntryPoint)
-
-		return self.gotmpl.ExecuteTemplate(w, entryPoint, state)
-	} else {
-		return err
+	if ctx == nil {
+		ctx = NewContext(nil, nil, nil)
 	}
+
+	if w == nil {
+		w = ctx
+	}
+
+	return self.gotmpl.ExecuteTemplate(w, self.entryPoint(), ctx.MapNative())
 }
 
 // Returns the SHA512 checksum of the underlying template file.

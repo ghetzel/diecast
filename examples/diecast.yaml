@@ -1,52 +1,52 @@
----
-validators:
-  - type: reject
-    options:
-      addresses: []
-      domains:   []
+# ---
+# validators:
+#   - type: reject
+#     options:
+#       addresses: []
+#       domains:   []
 
-  - type: basicAuth
-    options:
-      realm:    "My Realm"
-      htpasswd: "/path/to/htpasswd"
-      credentials:
-        admin: "$2y$...."
-    only:   []
-    except: []
+#   - type: basicAuth
+#     options:
+#       realm:    "My Realm"
+#       htpasswd: "/path/to/htpasswd"
+#       credentials:
+#         admin: "$2y$...."
+#     only:   []
+#     except: []
 
-  - type: oauth2
-    options:
-      callback: "https://example.com/auth/callback"
-      provider: "google"
-      clientId: "oauth_client_id_abc123"
-      secret:   "oauth_client_secret_xyz987"
+#   - type: oauth2
+#     options:
+#       callback: "https://example.com/auth/callback"
+#       provider: "google"
+#       clientId: "oauth_client_id_abc123"
+#       secret:   "oauth_client_secret_xyz987"
 
-  - type: shell
-    options:
-      # By default, if the script exits with status 0 and has content on standard output,
-      # that content will be stored in a cookie on the user browser/agent. Subsequent requests
-      # are expected to present this cookie, whose contents will be passed as standard input to the
-      # calling script for validation.  Setting the "disableCookies" setting to false explicitly
-      # disables this behavior, and the authentication script will expect credentials every time.
-      command:        "/usr/libexec/you-shall-not-pass"
-      disableCookies: false
-      cookie:
-        name:     "DCSESSION"
-        path:     ""
-        domain:   ""
-        lifetime: ""
-        secure:   true
-        httpOnly: false
-      deauth:
-        path:     "/auth/logout" # Specifies that all requests matching this path will remove an active session.
-        redirect: "/"            # The path to redirect to after deauth is performed.
+#   - type: shell
+#     options:
+#       # By default, if the script exits with status 0 and has content on standard output,
+#       # that content will be stored in a cookie on the user browser/agent. Subsequent requests
+#       # are expected to present this cookie, whose contents will be passed as standard input to the
+#       # calling script for validation.  Setting the "disableCookies" setting to false explicitly
+#       # disables this behavior, and the authentication script will expect credentials every time.
+#       command:        "/usr/libexec/you-shall-not-pass"
+#       disableCookies: false
+#       cookie:
+#         name:     "DCSESSION"
+#         path:     ""
+#         domain:   ""
+#         lifetime: ""
+#         secure:   true
+#         httpOnly: false
+#       deauth:
+#         path:     "/auth/logout" # Specifies that all requests matching this path will remove an active session.
+#         redirect: "/"            # The path to redirect to after deauth is performed.
 
-vfs:
-  layers:
-    - paths:         "/_layouts/**"
-      haltOnMissing: false
-      haltOnError:   true
+# vfs:
+#   layers:
+#     - paths:         "/_layouts/**"
+#       haltOnMissing: false
+#       haltOnError:   true
 
-renderers:
-  - type: "ooxml"
-    only: ["*.pptx", "*.xlsx", ".docx"]
+# renderers:
+#   - type: "ooxml"
+#     only: ["*.pptx", "*.xlsx", ".docx"]

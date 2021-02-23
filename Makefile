@@ -6,7 +6,7 @@ ARTIFACT       ?= bin/diecast2
 GO111MODULE  = on
 CGO_ENABLED  = 0
 
-all: go.mod deps fmt test
+all: go.mod deps fmt build test
 
 go.mod:
 	go mod init github.com/ghetzel/diecast/v2
@@ -24,7 +24,7 @@ test: fmt deps
 	go test -count=1 $(PKGS)
 
 $(ARTIFACT):
-	go build --ldflags '-extldflags "-static"' -ldflags '-s' -o $(ARTIFACT) *.go
+	go build --ldflags '-extldflags "-static"' -ldflags '-s' -o $(ARTIFACT) cmd/diecast2/*.go
 
 build: $(ARTIFACT)
 

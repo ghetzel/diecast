@@ -2,6 +2,8 @@ package diecast
 
 import (
 	"net/http"
+
+	"github.com/ghetzel/go-stockutil/log"
 )
 
 type FileSystemFunc = func(*Layer) (http.FileSystem, error)
@@ -41,19 +43,23 @@ func (self *VFS) SetFallbackFS(fallback http.FileSystem) {
 // Retrieve a file from the VFS.
 func (self *VFS) Open(name string) (http.File, error) {
 	if ov, ok := self.Overrides[name]; ok {
+		log.Debugf("vfs: open %s [override]", name)
 		return ov.httpFile(self)
 	}
 
 	// search through layers
-	for _, layer := range self.Layers {
+	for i, layer := range self.Layers {
 		if layer.shouldConsiderOpening(name) {
 			if file, err := layer.openHttpFile(name); err == nil {
+				log.Debugf("vfs: open %s [layer=%d]", name, i)
 				return file, nil
 			} else if err == ErrNotFound {
 				if layer.HaltOnMissing {
+					log.Debugf("vfs: halt: missing %s [layer=%d]", name, i)
 					return nil, err
 				}
 			} else if layer.HaltOnError {
+				log.Debugf("vfs: halt: error %v [layer=%d]", err, i)
 				return nil, err
 			} else {
 				continue
@@ -66,6 +72,7 @@ func (self *VFS) Open(name string) (http.File, error) {
 		if file, err := fs.Open(name); err == nil {
 			if stat, err := file.Stat(); err == nil {
 				if !stat.IsDir() {
+					log.Debugf("vfs: open %s [fallback]", name)
 					return file, nil
 				}
 			}
