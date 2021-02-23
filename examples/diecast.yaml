@@ -50,3 +50,8 @@
 # renderers:
 #   - type: "ooxml"
 #     only: ["*.pptx", "*.xlsx", ".docx"]
+
+dataSources:
+  - id: global
+    content:
+      hello: there

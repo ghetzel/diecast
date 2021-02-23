@@ -55,7 +55,7 @@ func (self *Context) reset() *Context {
 
 	self.id = ``
 	self.id = self.ID()
-	self.Map = maputil.M(sync.Map{})
+	self.Map = maputil.M(new(sync.Map))
 	self.wr = nil
 	self.req = nil
 	self.startedAt = time.Time{}
@@ -125,7 +125,7 @@ func (self *Context) Done() time.Duration {
 	var lvl log.Level
 
 	if code < 400 {
-		lvl = log.NOTICE
+		lvl = log.DEBUG
 	} else {
 		lvl = log.WARNING
 	}

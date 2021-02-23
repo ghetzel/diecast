@@ -34,6 +34,7 @@ type ServerPaths struct {
 
 type Server struct {
 	Address       string            `yaml:"address"`
+	DataSources   DataSet           `yaml:"dataSources"`
 	Paths         ServerPaths       `yaml:"paths"`
 	Validators    []ValidatorConfig `yaml:"validators"`
 	Renderers     []RendererConfig  `yaml:"renderers"`
@@ -166,6 +167,12 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var file http.File
 	var err error
 	var ctx = NewContext(&self.VFS)
+
+	if _, err := self.DataSources.Retrieve(ctx); err != nil {
+		ctx.Warningf("datasources: %v", err)
+		self.writeResponse(ctx, err)
+		return
+	}
 
 	ctx.Start(w, req)
 	defer ctx.Done()
