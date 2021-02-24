@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -16,6 +17,7 @@ import (
 var Delimiters [2]string = [2]string{`{{`, `}}`}
 var DefaultEntryPoint = `content`
 var DefaultTemplateEngine = `html`
+var LayoutNamePrefix string = `layout:`
 
 type Template struct {
 	Engine        string  `yaml:"engine"`
@@ -154,14 +156,19 @@ func (self *Template) Checksum() string {
 	return self.sha512sum
 }
 
-func (self *Template) AttachFile(name string, r io.Reader) error {
+func (self *Template) attachTemplate(ctx *Context, tmplName string, r io.Reader) error {
 	if tmpl, err := ParseTemplate(r); err == nil {
+		if err := tmpl.LoadRelatedTemplates(ctx); err != nil {
+			return fmt.Errorf("%s: %v", tmplName, err)
+		}
+
 		// whatever we need to do to merge in the new template header, do it here
+		self.EntryPoint = typeutil.OrString(tmpl.EntryPoint, self.EntryPoint)
 		self.DataSources = append(tmpl.DataSources, self.DataSources...)
 
 		// add this new data to our existing template tree and return
 		if pt := tmpl.gotmpl.ParseTree(); pt != nil {
-			var _, err = self.gotmpl.AddParseTree(name, pt)
+			var _, err = self.gotmpl.AddParseTree(tmplName, pt)
 			return err
 		} else {
 			return fmt.Errorf("invalid layout template")
@@ -169,4 +176,44 @@ func (self *Template) AttachFile(name string, r io.Reader) error {
 	} else {
 		return err
 	}
+}
+
+func (self *Template) layoutName(name string) string {
+	return LayoutNamePrefix + strings.TrimPrefix(name, LayoutNamePrefix)
+}
+
+func (self *Template) LoadRelatedTemplates(ctx *Context) error {
+	var doLayout bool = true
+	var name = ctx.T(self.Layout).OrString(DefaultLayoutName)
+	var lext string = typeutil.OrString(filepath.Ext(name), `.html`)
+
+	switch strings.ToLower(name) {
+	case `none`, `false`:
+		doLayout = false
+	}
+
+	if doLayout {
+		var layoutName = self.layoutName(name)
+		var layoutPath = filepath.Join(
+			typeutil.OrString(ctx.Server().Paths.LayoutsDir, DefaultLayoutsDir),
+			name+lext,
+		)
+
+		if ctx.WasTemplateSeen(layoutName) {
+			return nil
+		} else if layoutFile, err := ctx.Open(layoutPath); err == nil {
+			defer layoutFile.Close()
+			ctx.MarkTemplateSeen(layoutName)
+
+			if err := self.attachTemplate(ctx, layoutName, layoutFile); err == nil {
+				self.EntryPoint = layoutName
+			} else {
+				return err
+			}
+		} else if name != DefaultLayoutName {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
@@ -26,17 +27,19 @@ var RequestIdentifierFunc RequestIdentFunc
 // validating the request may proceed, locating and retrieving the data, and performing any
 // post-processing of that data before it is returned to the requestor.
 type Context struct {
-	data         *maputil.Map
-	wr           http.ResponseWriter
-	req          *http.Request
-	server       *Server
-	startedAt    time.Time
-	statusCode   int
-	bytesWritten int64
-	slock        sync.Mutex
-	mimeHint     string
-	id           string
-	wroteOnce    bool
+	data           *maputil.Map
+	wr             http.ResponseWriter
+	req            *http.Request
+	server         *Server
+	startedAt      time.Time
+	statusCode     int
+	bytesWritten   int64
+	startlock      sync.Mutex
+	datalock       sync.Mutex
+	mimeHint       string
+	id             string
+	wroteOnce      bool
+	visitedLayouts map[string]bool
 }
 
 func NewContext(server *Server) *Context {
@@ -51,7 +54,7 @@ func NewContext(server *Server) *Context {
 func (self *Context) reset() *Context {
 	self.id = ``
 	self.id = self.ID()
-	self.data = maputil.M(new(sync.Map))
+	self.data = maputil.M(nil)
 	self.wr = nil
 	self.req = nil
 	self.startedAt = time.Time{}
@@ -59,6 +62,7 @@ func (self *Context) reset() *Context {
 	self.mimeHint = DefaultContextTypeHint
 	self.statusCode = http.StatusOK
 	self.wroteOnce = false
+	self.visitedLayouts = make(map[string]bool)
 
 	return self
 }
@@ -93,8 +97,8 @@ func (self *Context) SetTypeHint(hint string) {
 
 // Start tracking a specific request+response pair.  Mark the request as completed with Done().
 func (self *Context) Start(wr http.ResponseWriter, req *http.Request) *Context {
-	self.slock.Lock()
-	defer self.slock.Unlock()
+	self.startlock.Lock()
+	defer self.startlock.Unlock()
 
 	self.wr = wr
 	self.req = req
@@ -116,10 +120,10 @@ func (self *Context) Start(wr http.ResponseWriter, req *http.Request) *Context {
 // Mark the request as completed.  If desired, the context instance can be reused with a subsequent
 // call to Start().
 func (self *Context) Done() time.Duration {
-	self.slock.Lock()
+	self.startlock.Lock()
 	defer func() {
 		self.reset()
-		self.slock.Unlock()
+		self.startlock.Unlock()
 	}()
 
 	var rhdr = self.wr.Header()
@@ -176,12 +180,77 @@ func (self *Context) ID() string {
 }
 
 // Set the value for a given key.
-func (self *Context) Set(key string, value interface{}) {
+func (self *Context) Set(key string, value interface{}) *Context {
+	self.datalock.Lock()
+	defer self.datalock.Unlock()
+
 	self.data.Set(key, value)
+	return self
+}
+
+// Append a value to an array stored at key.  Existing non-array values will be converted
+// into an array first.
+func (self *Context) Push(key string, value interface{}) *Context {
+	self.datalock.Lock()
+	defer self.datalock.Unlock()
+
+	var repl []interface{}
+
+	if v := self.data.Get(key); v.IsArray() {
+		repl = append(sliceutil.Sliceify(v.Value), value)
+	} else if v.IsNil() {
+		repl = []interface{}{value}
+	} else {
+		repl = []interface{}{v.Value, value}
+	}
+
+	if len(repl) == 0 {
+		self.data.Delete(key)
+	} else {
+		self.data.Set(key, repl)
+	}
+
+	return self
+}
+
+// Treat the value at key as an array, removing the last element and returning it while also
+// storing the shortened array.  If the key is non-existent, a Variant where IsNil() is true
+// will be returned.
+func (self *Context) Pop(key string) typeutil.Variant {
+	self.datalock.Lock()
+	defer self.datalock.Unlock()
+
+	if v := self.data.Get(key); v.IsArray() {
+		var vv = sliceutil.Sliceify(v.Value)
+
+		if l := len(vv); l == 0 {
+			return typeutil.Nil()
+		} else if l == 1 {
+			self.data.Delete(key)
+			return typeutil.V(vv[0])
+		} else {
+			self.data.Set(key, vv[0:(l-1)])
+			return typeutil.V(vv[(l - 1)])
+		}
+	} else {
+		self.data.Delete(key)
+		return v
+	}
+}
+
+// Retrieve a value at the given key.
+func (self *Context) Get(key string, fallback ...interface{}) typeutil.Variant {
+	self.datalock.Lock()
+	defer self.datalock.Unlock()
+
+	return self.data.Get(key, fallback...)
 }
 
 // Return the current context data as a map.
 func (self *Context) Data() map[string]interface{} {
+	self.datalock.Lock()
+	defer self.datalock.Unlock()
+
 	return self.data.MapNative(`yaml`)
 }
 
@@ -260,6 +329,28 @@ func (self *Context) T(value interface{}) typeutil.Variant {
 		return v
 	} else {
 		return typeutil.Nil()
+	}
+}
+
+// Mark a template as having been visited during this Context's session.  If true is returned, the layout
+// was just marked for the first time, otherwise it was already present.
+func (self *Context) MarkTemplateSeen(name string) bool {
+	if self.WasTemplateSeen(name) {
+		return false
+	} else {
+		self.visitedLayouts[name] = true
+		return true
+	}
+}
+
+// Returns whether the named template has been seen within this context.
+func (self *Context) WasTemplateSeen(name string) bool {
+	if alreadyThere, ok := self.visitedLayouts[name]; ok && alreadyThere {
+		log.Noticef("DEBUG: checking tpl %q: SEEN", name)
+		return true
+	} else {
+		log.Warningf("DEBUG: checking tpl %q: NEW", name)
+		return false
 	}
 }
 
