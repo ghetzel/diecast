@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mime"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -272,6 +273,11 @@ func (self *Context) Request() *http.Request {
 	}
 
 	return self.req
+}
+
+// Return the basename of the file that was requested.
+func (self *Context) RequestBasename() string {
+	return filepath.Base(self.req.URL.Path)
 }
 
 // Return the header set from the underlying http.ResponseWriter.

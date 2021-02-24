@@ -190,6 +190,8 @@ func (self *Template) LoadRelatedTemplates(ctx *Context) error {
 	switch strings.ToLower(name) {
 	case `none`, `false`:
 		doLayout = false
+	case ``:
+		doLayout = !strings.HasPrefix(ctx.RequestBasename(), `_`)
 	}
 
 	if doLayout {
