@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ghetzel/go-stockutil/convutil"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
@@ -27,21 +26,22 @@ var RequestIdentifierFunc RequestIdentFunc
 // validating the request may proceed, locating and retrieving the data, and performing any
 // post-processing of that data before it is returned to the requestor.
 type Context struct {
-	*maputil.Map
+	data         *maputil.Map
 	wr           http.ResponseWriter
 	req          *http.Request
-	fs           http.FileSystem
+	server       *Server
 	startedAt    time.Time
 	statusCode   int
 	bytesWritten int64
 	slock        sync.Mutex
 	mimeHint     string
 	id           string
+	wroteOnce    bool
 }
 
-func NewContext(fs http.FileSystem) *Context {
+func NewContext(server *Server) *Context {
 	var ctx = &Context{
-		fs: fs,
+		server: server,
 	}
 
 	return ctx.reset()
@@ -49,19 +49,16 @@ func NewContext(fs http.FileSystem) *Context {
 
 // Initialize all internal state such that a new request can begin via Start().
 func (self *Context) reset() *Context {
-	if self.fs == nil {
-		self.fs = http.Dir(DefaultContextDir)
-	}
-
 	self.id = ``
 	self.id = self.ID()
-	self.Map = maputil.M(new(sync.Map))
+	self.data = maputil.M(new(sync.Map))
 	self.wr = nil
 	self.req = nil
 	self.startedAt = time.Time{}
 	self.bytesWritten = 0
 	self.mimeHint = DefaultContextTypeHint
 	self.statusCode = http.StatusOK
+	self.wroteOnce = false
 
 	return self
 }
@@ -69,6 +66,11 @@ func (self *Context) reset() *Context {
 // Anything to do to the response immediately before rendering begins, after which point we lose control of the response.
 func (self *Context) finalizeBeforeRender() {
 	self.Header().Set(`X-Diecast-Request`, self.ID())
+}
+
+// Return the current Server instance that owns this context.
+func (self *Context) Server() *Server {
+	return self.server
 }
 
 // Retrieve the media type of the MIME type the response should have.
@@ -99,12 +101,13 @@ func (self *Context) Start(wr http.ResponseWriter, req *http.Request) *Context {
 	self.startedAt = time.Now()
 
 	self.SetTypeHint(fileutil.GetMimeType(self.req.URL.Path, self.mimeHint))
+	log.Debugf("%s \u250C%s\u257C", self.ID(), strings.Repeat("\u2500", 84))
 	self.Debugf("start request: %s %v", self.req.Method, self.req.URL)
 
 	for kv := range maputil.M(req.Header).Iter(maputil.IterOptions{
 		SortKeys: true,
 	}) {
-		self.Debugf("  % -32s: %v", kv.K, kv.Value)
+		self.Debugf("  % -32s %v", kv.K+`:`, kv.Value)
 	}
 
 	return self
@@ -122,29 +125,22 @@ func (self *Context) Done() time.Duration {
 	var rhdr = self.wr.Header()
 	var took = time.Since(self.startedAt)
 	var code = self.Code()
-	var lvl log.Level
 
-	if code < 400 {
-		lvl = log.DEBUG
-	} else {
-		lvl = log.WARNING
-	}
-
-	self.Logf(
-		lvl,
-		"responded HTTP %d %s (%v @ %v)",
+	self.Debugf(
+		"responded HTTP %d %s (%d bytes @ %v)",
 		code,
 		http.StatusText(code),
-		convutil.Bytes(self.bytesWritten),
+		self.bytesWritten,
 		took.Round(time.Microsecond),
 	)
 
 	for kv := range maputil.M(rhdr).Iter(maputil.IterOptions{
 		SortKeys: true,
 	}) {
-		self.Debugf("  % -32s: %v", kv.K, kv.Value)
+		self.Debugf("  % -32s %v", kv.K+`:`, kv.Value)
 	}
 
+	log.Debugf("%s \u2514%s\u257C", self.ID(), strings.Repeat("\u2500", 84))
 	return took
 }
 
@@ -179,14 +175,24 @@ func (self *Context) ID() string {
 	return stringutil.UUID().Base58()
 }
 
+// Set the value for a given key.
+func (self *Context) Set(key string, value interface{}) {
+	self.data.Set(key, value)
+}
+
+// Return the current context data as a map.
+func (self *Context) Data() map[string]interface{} {
+	return self.data.MapNative(`yaml`)
+}
+
 // Open a file in the underlying http.FileSystem.
 func (self *Context) Open(name string) (http.File, error) {
-	if self.fs == nil {
+	if self.server == nil {
 		panic("no filesystem associated with context")
 	}
 
 	self.Debugf("fs: open %q", name)
-	return self.fs.Open(name)
+	return self.server.VFS.Open(name)
 }
 
 // Return the http.Request associated with this context.  This function will panic if Start() was
@@ -208,6 +214,7 @@ func (self *Context) Header() http.Header {
 func (self *Context) Write(b []byte) (int, error) {
 	var n, err = self.wr.Write(b)
 	self.bytesWritten += int64(n)
+	self.wroteOnce = true
 	return n, err
 }
 
@@ -261,12 +268,12 @@ func (self *Context) T(value interface{}) typeutil.Variant {
 
 func (self *Context) Log(level log.Level, args ...interface{}) {
 	log.Log(level, append([]interface{}{
-		fmt.Sprintf("%s: ", self.ID()),
+		fmt.Sprintf("%s \u2502 ", self.ID()),
 	}, args...)...)
 }
 
 func (self *Context) Logf(level log.Level, format string, args ...interface{}) {
-	log.Logf(level, "%s: "+format, append([]interface{}{self.ID()}, args...)...)
+	log.Logf(level, "%s \u2502 "+format, append([]interface{}{self.ID()}, args...)...)
 }
 
 func (self *Context) Debug(args ...interface{}) {

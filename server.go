@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"gopkg.in/yaml.v2"
@@ -46,6 +47,7 @@ type Server struct {
 	startFuncs    []ServerStartFunc
 }
 
+// Loads a YAML-formatted configuration from the given reader and returns a Server.
 func NewServerFromConfig(r io.Reader) (*Server, error) {
 	var srv Server
 
@@ -60,6 +62,9 @@ func NewServerFromConfig(r io.Reader) (*Server, error) {
 	}
 }
 
+// Loads a YAML-formatted configuration from the given path.  The Server that is returned will
+// have its root directory set relative to the parent directory of the configuration file (unless
+// otherwise configured).
 func NewServerFromFile(cfgfile string) (*Server, error) {
 	if cfg, err := os.Open(cfgfile); err == nil {
 		defer cfg.Close()
@@ -75,10 +80,14 @@ func NewServerFromFile(cfgfile string) (*Server, error) {
 	}
 }
 
+// Perform a pre-configured request that must succeed to be considered successful.
 func (self *Server) Verify() error {
-	var res, err = self.doSimpleRequest(
+	var res, err = self.SimulateRequest(
 		typeutil.OrString(self.VerifyMethod, DefaultVerifyMethod),
 		typeutil.OrString(self.VerifyPath, DefaultVerifyPath),
+		nil,
+		nil,
+		nil,
 	)
 
 	if rc := res.Body; rc != nil {
@@ -88,18 +97,31 @@ func (self *Server) Verify() error {
 	return err
 }
 
+// Add a handler function that will be called when the server starts.
 func (self *Server) OnStart(fn ServerStartFunc) {
 	if fn != nil {
 		self.startFuncs = append(self.startFuncs, fn)
 	}
 }
 
-func (self *Server) doSimpleRequest(method string, path string) (*http.Response, error) {
+// Simulates a single request, returning the http.Response that would be sent to a client, and an error should one occur.
+func (self *Server) SimulateRequest(method string, path string, body io.Reader, qs map[string]interface{}, header map[string]interface{}) (*http.Response, error) {
 	var wr = httptest.NewRecorder()
-	var req = httptest.NewRequest(method, path, nil)
+	var req = httptest.NewRequest(
+		typeutil.OrString(method, http.MethodGet),
+		path,
+		body,
+	)
+
+	for k, v := range qs {
+		httputil.SetQ(req.URL, k, typeutil.Auto(v))
+	}
+
+	for k, v := range header {
+		req.Header.Set(k, typeutil.String(v))
+	}
 
 	self.ServeHTTP(wr, req)
-
 	wr.Flush()
 
 	if code := wr.Code; code < 400 {
@@ -109,18 +131,20 @@ func (self *Server) doSimpleRequest(method string, path string) (*http.Response,
 	}
 }
 
+// Start accepting connections and responding to requests on the given address.
 func (self *Server) ListenAndServe(address string) error {
+	var errchan = make(chan error)
+	var readychan = make(chan bool)
 	var hsrv = &http.Server{
 		Addr:    typeutil.OrString(address, self.Address, DefaultAddress),
 		Handler: self,
 	}
 
-	var errchan = make(chan error)
-	var readychan = make(chan bool)
-
+	// verification check happens in a goroutine BEFORE the server starts listening
 	go func() {
 		var ok bool
 
+		// tell the listen goroutine whether we're ready for it to start listening or to exit
 		defer func(r *bool) {
 			readychan <- *r
 		}(&ok)
@@ -133,6 +157,7 @@ func (self *Server) ListenAndServe(address string) error {
 		); verifyTimeout > 0 {
 			var verr = make(chan error)
 
+			// verify happens in yet another goroutine so we can implement a timeout (below)
 			go func() {
 				verr <- self.Verify()
 			}()
@@ -141,7 +166,7 @@ func (self *Server) ListenAndServe(address string) error {
 			case err := <-verr:
 				if err == nil {
 					log.Debugf("verify: ok")
-					ok = true
+					ok = true // ok to start listening
 				} else {
 					log.Debugf("verify: error %v", err)
 					errchan <- err
@@ -149,9 +174,12 @@ func (self *Server) ListenAndServe(address string) error {
 			case <-time.After(verifyTimeout):
 				errchan <- fmt.Errorf("timed out waiting for verify test")
 			}
+		} else {
+			ok = true // ok to start listening
 		}
 	}()
 
+	// wait for an ok signal then start listening blocked in another goroutine
 	go func() {
 		if r := <-readychan; r {
 			log.Noticef("listening on %v", hsrv.Addr)
@@ -159,6 +187,7 @@ func (self *Server) ListenAndServe(address string) error {
 		}
 	}()
 
+	// whoever errors first returns
 	return <-errchan
 }
 
@@ -166,10 +195,11 @@ func (self *Server) ListenAndServe(address string) error {
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var file http.File
 	var err error
-	var ctx = NewContext(&self.VFS)
+	var ctx = NewContext(self)
 
+	// populate the context with data from the global DataSet
 	if _, err := self.DataSources.Retrieve(ctx); err != nil {
-		ctx.Warningf("datasources: %v", err)
+		ctx.Warningf("data: %v", err)
 		self.writeResponse(ctx, err)
 		return
 	}
@@ -221,6 +251,9 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		self.writeResponse(ctx, err)
 		return
 	}
+
+	// END.OF.LINE.
+	// -------------------------------------------------------------------------------------------------------------------
 }
 
 // Intelligently respond in a consistent manner with the data provided, including error detection, redirection,

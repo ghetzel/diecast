@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 
@@ -9,6 +10,8 @@ import (
 	"github.com/ghetzel/go-stockutil/executil"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
+	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 var userAwareConfigFile = filepath.Join(
@@ -54,9 +57,28 @@ func main() {
 					Usage:  `The address the server will listen on.`,
 					EnvVar: `DIECAST_ADDRESS`,
 				},
+				cli.StringFlag{
+					Name:   `single-request, r`,
+					Usage:  `Perform a single request against the given path and print the output.`,
+					EnvVar: `DIECAST_SINGLE_REQUEST`,
+				},
 			},
 			Action: func(c *cli.Context) {
-				log.FatalIf(server.ListenAndServe(c.String(`address`)))
+				if sreq := c.String(`single-request`); sreq != `` {
+					var method, path = stringutil.SplitPairTrailing(sreq, ` `)
+					method = typeutil.OrString(method, `get`)
+
+					if res, err := server.SimulateRequest(method, path, nil, nil, nil); err == nil {
+						if res.Body != nil {
+							defer res.Body.Close()
+							io.Copy(os.Stdout, res.Body)
+						}
+					} else {
+						log.Fatalf("request failed: %v", err)
+					}
+				} else {
+					log.FatalIf(server.ListenAndServe(c.String(`address`)))
+				}
 			},
 		},
 	}

@@ -37,6 +37,28 @@ func parseGoTemplate(name string, engine string, data string) (*goTemplate, erro
 	return gotmpl, nil
 }
 
+func (self *goTemplate) Names() (names []string) {
+	if self.html != nil {
+		for _, t := range self.html.Templates() {
+			names = append(names, t.Name())
+		}
+	} else {
+		for _, t := range self.text.Templates() {
+			names = append(names, t.Name())
+		}
+	}
+
+	return
+}
+
+func (self *goTemplate) ParseTree() *parse.Tree {
+	if self.html != nil {
+		return self.html.Tree.Copy()
+	} else {
+		return self.text.Tree.Copy()
+	}
+}
+
 func (self *goTemplate) AddParseTree(name string, tree *parse.Tree) (*goTemplate, error) {
 	if self.html != nil {
 		var _, err = self.html.AddParseTree(name, tree)

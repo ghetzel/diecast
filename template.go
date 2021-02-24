@@ -7,19 +7,21 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"strings"
 
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"gopkg.in/yaml.v2"
 )
 
 var Delimiters [2]string = [2]string{`{{`, `}}`}
-var DefaultEntryPoint = `main`
+var DefaultEntryPoint = `content`
 var DefaultTemplateEngine = `html`
 
 type Template struct {
 	Engine        string  `yaml:"engine"`
 	EntryPoint    string  `yaml:"entryPoint"`
 	DataSources   DataSet `yaml:"dataSources"`
+	Layout        string  `yaml:"layout"`
 	Filename      string  `yaml:"-"`
 	ContentOffset int     `yaml:"-"`
 	sha512sum     string
@@ -94,7 +96,7 @@ func (self *Template) init() error {
 	var engine = typeutil.OrString(self.Engine, DefaultTemplateEngine)
 	// var name = typeutil.OrString(self.Filename, engine+`:`+self.sha512sum)
 
-	if gotmpl, err := parseGoTemplate(self.entryPoint(), engine, self.templateString()); err == nil {
+	if gotmpl, err := parseGoTemplate(self.entryPoint(), engine, self.TemplateString()); err == nil {
 		self.gotmpl = gotmpl
 		self.initDone = true
 		return nil
@@ -103,8 +105,8 @@ func (self *Template) init() error {
 	}
 }
 
-// Internal stringifyer convenience function.
-func (self *Template) templateString() string {
+// Return the raw, unrendered template source.
+func (self *Template) TemplateString() string {
 	return string(self.body)
 }
 
@@ -141,10 +143,30 @@ func (self *Template) Render(ctx *Context, w io.Writer) error {
 		w = ctx
 	}
 
-	return self.gotmpl.ExecuteTemplate(w, self.entryPoint(), ctx.MapNative())
+	ctx.Debugf("template: entrypoint is %q", self.entryPoint())
+	ctx.Debugf("template: attached: %s", strings.Join(self.gotmpl.Names(), `, `))
+
+	return self.gotmpl.ExecuteTemplate(w, self.entryPoint(), ctx.Data())
 }
 
 // Returns the SHA512 checksum of the underlying template file.
 func (self *Template) Checksum() string {
 	return self.sha512sum
+}
+
+func (self *Template) AttachFile(name string, r io.Reader) error {
+	if tmpl, err := ParseTemplate(r); err == nil {
+		// whatever we need to do to merge in the new template header, do it here
+		self.DataSources = append(tmpl.DataSources, self.DataSources...)
+
+		// add this new data to our existing template tree and return
+		if pt := tmpl.gotmpl.ParseTree(); pt != nil {
+			var _, err = self.gotmpl.AddParseTree(name, pt)
+			return err
+		} else {
+			return fmt.Errorf("invalid layout template")
+		}
+	} else {
+		return err
+	}
 }

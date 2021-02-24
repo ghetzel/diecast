@@ -38,5 +38,5 @@ func (self DataSet) Retrieve(ctx *Context) (map[string]interface{}, error) {
 		}
 	}
 
-	return ctx.MapNative(), nil
+	return ctx.Data(), nil
 }
