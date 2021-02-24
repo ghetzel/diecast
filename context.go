@@ -106,13 +106,13 @@ func (self *Context) Start(wr http.ResponseWriter, req *http.Request) *Context {
 	self.startedAt = time.Now()
 
 	self.SetTypeHint(fileutil.GetMimeType(self.req.URL.Path, self.mimeHint))
-	log.Debugf("%s \u250C%s\u257C", self.ID(), strings.Repeat("\u2500", 84))
-	self.Debugf("start request: %s %v", self.req.Method, self.req.URL)
+	log.Debugf("%s ${cyan}\u250C%s\u257C${reset}", self.ID(), strings.Repeat("\u2500", 84))
+	self.Logf(log.DEBUG, "context: start (%s %v)", self.req.Method, self.req.URL)
 
 	for kv := range maputil.M(req.Header).Iter(maputil.IterOptions{
 		SortKeys: true,
 	}) {
-		self.Debugf("  % -32s %v", kv.K+`:`, kv.Value)
+		self.Logf(log.DEBUG, "  % -32s %v", kv.K+`:`, kv.Value)
 	}
 
 	return self
@@ -131,21 +131,23 @@ func (self *Context) Done() time.Duration {
 	var took = time.Since(self.startedAt)
 	var code = self.Code()
 
-	self.Debugf(
-		"responded HTTP %d %s (%d bytes @ %v)",
+	self.Logf(
+		log.DEBUG,
+		"context: wrote response (HTTP %d %s; %d bytes; took %v; %d headers)",
 		code,
 		http.StatusText(code),
 		self.bytesWritten,
 		took.Round(time.Microsecond),
+		len(rhdr),
 	)
 
 	for kv := range maputil.M(rhdr).Iter(maputil.IterOptions{
 		SortKeys: true,
 	}) {
-		self.Debugf("  % -32s %v", kv.K+`:`, kv.Value)
+		self.Logf(log.DEBUG, "  % -32s %v", kv.K+`:`, kv.Value)
 	}
 
-	log.Debugf("%s \u2514%s\u257C", self.ID(), strings.Repeat("\u2500", 84))
+	log.Debugf("%s ${cyan}\u2514%s\u257C${reset}", self.ID(), strings.Repeat("\u2500", 84))
 	return took
 }
 
@@ -185,7 +187,16 @@ func (self *Context) Set(key string, value interface{}) *Context {
 	self.datalock.Lock()
 	defer self.datalock.Unlock()
 
-	self.data.Set(key, value)
+	if typeutil.IsMap(value) {
+		if flat, err := maputil.CoalesceMap(maputil.M(value).MapNative(), `.`); err == nil {
+			for k, v := range flat {
+				self.data.Set(key+`.`+k, v)
+			}
+		}
+	} else {
+		self.data.Set(key, value)
+	}
+
 	return self
 }
 
@@ -352,12 +363,14 @@ func (self *Context) MarkTemplateSeen(name string) bool {
 // Returns whether the named template has been seen within this context.
 func (self *Context) WasTemplateSeen(name string) bool {
 	if alreadyThere, ok := self.visitedLayouts[name]; ok && alreadyThere {
-		log.Noticef("DEBUG: checking tpl %q: SEEN", name)
 		return true
 	} else {
-		log.Warningf("DEBUG: checking tpl %q: NEW", name)
 		return false
 	}
+}
+
+func (self *Context) logPrefix() string {
+	return ``
 }
 
 // The remaining functions implement the logging pseudointerface in go-stockutil/log such that
@@ -365,12 +378,12 @@ func (self *Context) WasTemplateSeen(name string) bool {
 
 func (self *Context) Log(level log.Level, args ...interface{}) {
 	log.Log(level, append([]interface{}{
-		fmt.Sprintf("%s \u2502 ", self.ID()),
+		fmt.Sprintf("%s ${cyan}\u2502${reset} "+self.logPrefix(), self.ID()),
 	}, args...)...)
 }
 
 func (self *Context) Logf(level log.Level, format string, args ...interface{}) {
-	log.Logf(level, "%s \u2502 "+format, append([]interface{}{self.ID()}, args...)...)
+	log.Logf(level, "%s ${cyan}\u2502${reset} "+self.logPrefix()+format, append([]interface{}{self.ID()}, args...)...)
 }
 
 func (self *Context) Debug(args ...interface{}) {

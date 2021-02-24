@@ -145,8 +145,8 @@ func (self *Template) Render(ctx *Context, w io.Writer) error {
 		w = ctx
 	}
 
-	ctx.Debugf("template: entrypoint is %q", self.entryPoint())
-	ctx.Debugf("template: attached: %s", strings.Join(self.gotmpl.Names(), `, `))
+	ctx.Debugf("template: known templates: %s", strings.Join(self.gotmpl.Names(), `, `))
+	ctx.Debugf("template: entrypoint: %s", self.entryPoint())
 
 	return self.gotmpl.ExecuteTemplate(w, self.entryPoint(), ctx.Data())
 }
