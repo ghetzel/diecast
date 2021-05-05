@@ -120,6 +120,7 @@ func (self *OOXMLRenderer) Render(w http.ResponseWriter, req *http.Request, opti
 											}
 										}
 
+										// find templated elements and do some preprocessing
 										for _, el := range doc.Root().FindElementsPath(ooxmlTemplatedElements) {
 											var txt = el.Text()
 											var flushTmpl bool
@@ -159,24 +160,30 @@ func (self *OOXMLRenderer) Render(w http.ResponseWriter, req *http.Request, opti
 											}
 
 											if flushTmpl && multiFirst != nil {
-												if eval, err := EvalInline(
-													tmpl,
-													options.Data,
-													options.FunctionSet,
-												); err == nil {
-													multiFirst.SetText(eval)
-													multiFirst = nil
-													tmpl = ``
-												} else {
-													return fmt.Errorf("bad template %q: %v", tmpl, err)
-												}
+												multiFirst.SetText(tmpl)
+												multiFirst = nil
+												tmpl = ``
 											}
+										}
+
+										var intermediate bytes.Buffer
+
+										if _, err := doc.WriteTo(&intermediate); err == nil {
+											if eval, err := EvalInline(
+												intermediate.String(),
+												maputil.DeepCopy(options.Data),
+												options.FunctionSet,
+											); err == nil {
+												_, terr = dest.Write([]byte(eval))
+											} else {
+												return fmt.Errorf("bad template %q: %v", inpart.Name, err)
+											}
+										} else {
+											return fmt.Errorf("bad intermediate: %v", err)
 										}
 									} else {
 										return fmt.Errorf("bad xml: %v", err)
 									}
-
-									_, terr = doc.WriteTo(dest)
 								default:
 									_, terr = io.Copy(dest, src)
 								}

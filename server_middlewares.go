@@ -130,6 +130,10 @@ func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Requ
 }
 
 func (self *Server) middlewareParseRequestBody(w http.ResponseWriter, req *http.Request) bool {
+	if reqbody(req) != nil {
+		return true
+	}
+
 	// request body
 	// ------------------------------------------------------------------------
 	var body = new(RequestBody)
