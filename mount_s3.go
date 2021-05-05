@@ -17,8 +17,14 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 )
 
+type awsLog struct{}
+
+func (self *awsLog) Log(data ...interface{}) {
+	log.Debug(data...)
+}
+
 var awsSession = func() *session.Session {
-	if sess, err := session.NewSession(&aws.Config{
+	var cfg = &aws.Config{
 		Credentials: credentials.NewChainCredentials([]credentials.Provider{
 			&credentials.EnvProvider{},
 			&credentials.SharedCredentialsProvider{
@@ -26,7 +32,14 @@ var awsSession = func() *session.Session {
 				Profile:  executil.Env(`AWS_PROFILE`, `default`),
 			},
 		}),
-	}); err == nil {
+	}
+
+	if log.VeryDebugging() {
+		cfg.WithLogLevel(aws.LogDebugWithHTTPBody)
+		cfg.Logger = new(awsLog)
+	}
+
+	if sess, err := session.NewSession(cfg); err == nil {
 		if ep := executil.Env(`AWS_ENDPOINT_URL`); ep != `` {
 			sess.Config.Endpoint = aws.String(ep)
 		}

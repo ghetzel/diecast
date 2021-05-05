@@ -1,7 +1,9 @@
 package diecast
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 
@@ -134,6 +136,30 @@ func (self RequestUrlInfo) ParamsSlice() []interface{} {
 	return params
 }
 
+type RequestBody struct {
+	Length   int64         `json:"size"`
+	Raw      []byte        `json:"raw"`
+	String   string        `json:"string"`
+	Parsed   interface{}   `json:"parsed"`
+	Error    string        `json:"error,omitempty"`
+	Loaded   bool          `json:"loaded,omitempty"`
+	Original io.ReadCloser `json:"-"`
+	current  *bytes.Buffer
+}
+
+func (self *RequestBody) Read(b []byte) (int, error) {
+	if self.current == nil {
+		self.current = bytes.NewBuffer(self.Raw)
+	}
+
+	return self.current.Read(b)
+}
+
+func (self *RequestBody) Close() error {
+	self.current = nil
+	return nil
+}
+
 type RequestInfo struct {
 	ID               string                 `json:"id"`
 	Timestamp        int64                  `json:"timestamp"`
@@ -150,6 +176,7 @@ type RequestInfo struct {
 	URL              RequestUrlInfo         `json:"url"`
 	TLS              *RequestTlsInfo        `json:"tls"`
 	CSRFToken        string                 `json:"csrftoken,omitempty"`
+	Body             *RequestBody           `json:"body,omitempty"`
 }
 
 func (self *RequestInfo) asMap() (map[string]interface{}, error) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"image"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -42,6 +43,7 @@ func (self *Server) setupServer() error {
 
 	self.BeforeHandlers = []Middleware{
 		self.middlewareStartRequest,
+		self.middlewareParseRequestBody,
 		self.middlewareDebugRequest,
 		self.middlewareInjectHeaders,
 		self.middlewareProcessAuthenticators,
@@ -123,6 +125,41 @@ func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Requ
 
 	// setup request tracing info
 	startRequestTimer(req)
+
+	return true
+}
+
+func (self *Server) middlewareParseRequestBody(w http.ResponseWriter, req *http.Request) bool {
+	// request body
+	// ------------------------------------------------------------------------
+	var body = new(RequestBody)
+
+	body.Length = req.ContentLength
+	body.Original = req.Body
+
+	httputil.RequestSetValue(req, RequestBodyKey, body)
+
+	if req.Body != nil && req.ContentLength > 0 {
+		defer req.Body.Close()
+
+		if data, err := ioutil.ReadAll(req.Body); err == nil {
+			body.Raw = data
+			body.String = string(data)
+			body.Loaded = true
+
+			req.Body = body
+			req.ContentLength = body.Length
+			req.Header.Del(`Content-Encoding`)
+			req.Header.Del(`Transfer-Encoding`)
+			req.Header.Set(`Content-Length`, typeutil.String(req.ContentLength))
+
+			if err := httputil.ParseRequest(req, &body.Parsed); err != nil {
+				body.Error = err.Error()
+			}
+		} else if err != io.EOF {
+			body.Error = err.Error()
+		}
+	}
 
 	return true
 }

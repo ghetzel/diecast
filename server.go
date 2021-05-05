@@ -93,6 +93,7 @@ const ContentTemplateName = `content`
 const ContextRequestKey = `diecast-request-id`
 const ContextResponseKey = `diecast-response`
 const JaegerSpanKey = `jaeger-span`
+const RequestBodyKey = `request-body`
 
 var HeaderSeparator = []byte{'-', '-', '-'}
 var DefaultIndexFile = `index.html`
@@ -101,6 +102,7 @@ var DefaultTemplatePatterns = []string{`*.html`, `*.md`, `*.scss`}
 var DefaultAutocompressPatterns = []string{`*.zip`, `*.docx`, `*.xlsx`, `*.pptx`}
 var DefaultTryExtensions = []string{`html`, `md`}
 var DefaultAutoindexFilename = `/autoindex.html`
+var DefaultRequestBodyPreload int64 = 1048576
 
 var DefaultAutolayoutPatterns = []string{
 	`*.html`,
@@ -281,6 +283,7 @@ type Server struct {
 	BindingTimeout       interface{}               `yaml:"bindingTimeout"          json:"bindingTimeout"`          // Sets the default timeout for bindings that don't explicitly set one.
 	JaegerConfig         *JaegerConfig             `yaml:"jaeger"                  json:"jaeger"`                  // Configures distributed tracing using Jaeger.
 	AutocompressPatterns []string                  `yaml:"autocompress"            json:"autocompress"`            // A set of glob patterns indicating directories whose contents will be delivered as ZIP files
+	RequestBodyPreload   int64                     `yaml:"requestPreload"          json:"requestPreload"`          // Maximum number of bytes to read from a request body for the purpose of automatically parsing it.  Requests larger than this will not be available to templates.
 	altRootCaPool        *x509.CertPool
 	faviconImageIco      []byte
 	fs                   http.FileSystem
@@ -313,6 +316,7 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		OverridePageObject: make(map[string]interface{}),
 		GlobalHeaders:      make(map[string]interface{}),
 		EnableLayouts:      true,
+		RequestBodyPreload: DefaultRequestBodyPreload,
 		mux:                http.NewServeMux(),
 		userRouter:         vestigo.NewRouter(),
 		viaConstructor:     true,
@@ -2174,28 +2178,20 @@ func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.Fi
 // Try to load the given path from each of the mounts, and return the matching mount and its response
 // if found.
 func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *MountResponse, error) {
-	var body *bytes.Reader
+	var body *RequestBody
 
-	// buffer the request body because we need to repeatedly pass it to multiple mounts
-	if data, err := ioutil.ReadAll(req.Body); err == nil {
-		if len(data) > 0 {
-			log.Debugf("[%s] process mounts: buffered %d bytes from request body", reqid(req), len(data))
-		}
-
-		body = bytes.NewReader(data)
-		req.Body = ioutil.NopCloser(body)
+	if rb := reqbody(req); rb != nil {
+		body = rb
 	} else {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("no request body")
 	}
 
 	var lastErr error
 
 	// find a mount that has this file
 	for _, mount := range self.Mounts {
-		// seek the body buffer back to the beginning
-		if _, err := body.Seek(0, 0); err != nil {
-			return nil, nil, err
-		}
+		// closing the RequestBody resets the reader to the beginning
+		body.Close()
 
 		if mount.WillRespondTo(requestPath, req, body) {
 			// attempt to open the file entry
@@ -2211,9 +2207,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 		}
 	}
 
-	if _, err := body.Seek(0, 0); err != nil {
-		return nil, nil, err
-	}
+	body.Close()
 
 	if lastErr == nil {
 		lastErr = fmt.Errorf("%q not found", requestPath)
@@ -2335,6 +2329,14 @@ func reqid(req *http.Request) string {
 	return httputil.RequestGetValue(req, ContextRequestKey).String()
 }
 
+func reqbody(req *http.Request) *RequestBody {
+	if body, ok := httputil.RequestGetValue(req, RequestBodyKey).Value.(*RequestBody); ok {
+		return body
+	}
+
+	return nil
+}
+
 func reqres(req *http.Request) *statusInterceptor {
 	if w := httputil.RequestGetValue(req, ContextResponseKey).Value; w != nil {
 		if rw, ok := w.(*statusInterceptor); ok {
@@ -2445,6 +2447,7 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 	}
 
 	request.ID = reqid(req)
+	request.Body = reqbody(req)
 	request.Timestamp = time.Now().UnixNano()
 	request.Method = req.Method
 	request.Protocol = req.Proto

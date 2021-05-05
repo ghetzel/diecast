@@ -50,8 +50,6 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 	var serveFile *candidateFile
 
 	if strings.HasPrefix(req.URL.Path, prefix) {
-		defer req.Body.Close()
-
 		// get a sequence of paths to search
 		var requestPaths = self.candidatePathsForRequest(req)
 		var localCandidate *candidateFile

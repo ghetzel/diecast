@@ -93,7 +93,12 @@ func GetFunctions(server *Server) (funcGroups, FuncMap) {
 		defer server.lockGetFunctions.Unlock()
 	}
 
-	var funcs FuncMap = globalFunctions
+	var funcs FuncMap = make(FuncMap)
+
+	for k, v := range globalFunctions {
+		funcs[k] = v
+	}
+
 	var groups funcGroups = make(funcGroups, 0)
 
 	// String Processing
