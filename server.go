@@ -30,6 +30,7 @@ import (
 	"syscall"
 	"time"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
@@ -211,6 +212,57 @@ func (self *TraceMapping) TraceName(candidate string) (string, bool) {
 	return ``, false
 }
 
+type JWTConfig struct {
+	Algorithm string                 `yaml:"alg"     json:"alg"`     // The JWT signing algorithm to use (default: HS256)
+	Secret    string                 `yaml:"secret"  json:"secret"`  // The JWT secret used to sign payloads
+	Claims    map[string]interface{} `yaml:"claims"  json:"claims"`  // The claims being made (i.e.: the payload that will be converted to JSON)
+	Expires   interface{}            `yaml:"expires" json:"expires"` // A duration string representing how long issued tokens will be valid for (default: 60s)
+	Issuer    string                 `yaml:"issuer"  json:"issuer"`  // The JWT issuer
+	Subject   string                 `yaml:"subject" json:"subject"`
+}
+
+func (self *JWTConfig) Issue(tpldata map[string]interface{}, funcs FuncMap) (string, error) {
+	var now = time.Now()
+	var alg = typeutil.OrString(self.Algorithm, `HS256`)
+	var expiry = typeutil.OrDuration(self.Expires, `60s`)
+
+	if signer := jwt.GetSigningMethod(alg); signer != nil {
+		var claims jwt.Claims
+
+		if len(self.Claims) == 0 {
+			claims = jwt.StandardClaims{
+				Id:        stringutil.UUID().String(),
+				IssuedAt:  now.Unix(),
+				ExpiresAt: now.Add(expiry).Unix(),
+				Issuer:    ShouldEvalInline(self.Issuer, tpldata, funcs).String(),
+				Subject:   ShouldEvalInline(self.Subject, tpldata, funcs).String(),
+				NotBefore: now.Unix(),
+			}
+		} else {
+			var c = jwt.MapClaims(self.Claims)
+
+			if self.Issuer != `` {
+				c[`iss`] = self.Issuer
+			}
+
+			c[`iat`] = now.Unix()
+			c[`exp`] = now.Add(expiry).Unix()
+			c[`jti`] = stringutil.UUID().String()
+
+			for k, v := range c {
+				c[k] = ShouldEvalInline(v, tpldata, funcs).Value
+			}
+
+			claims = c
+		}
+
+		// put it all together: sign the JSONified claims using the given signing method and secret
+		return jwt.NewWithClaims(signer, claims).SignedString([]byte(self.Secret))
+	} else {
+		return ``, fmt.Errorf("invalid signing algorithm %q", alg)
+	}
+}
+
 type JaegerConfig struct {
 	Enable                  bool                   `yaml:"enable"                  json:"enable"`                  // Explicitly enable or disable Jaeger tracing
 	ServiceName             string                 `yaml:"service"                 json:"service"`                 // Set the service name that traces will fall under.
@@ -284,6 +336,7 @@ type Server struct {
 	JaegerConfig         *JaegerConfig             `yaml:"jaeger"                  json:"jaeger"`                  // Configures distributed tracing using Jaeger.
 	AutocompressPatterns []string                  `yaml:"autocompress"            json:"autocompress"`            // A set of glob patterns indicating directories whose contents will be delivered as ZIP files
 	RequestBodyPreload   int64                     `yaml:"requestPreload"          json:"requestPreload"`          // Maximum number of bytes to read from a request body for the purpose of automatically parsing it.  Requests larger than this will not be available to templates.
+	JWT                  map[string]*JWTConfig     `yaml:"jwt"                     json:"jwt"`                     // Contains configurations for generating JSON Web Tokens in templates.
 	altRootCaPool        *x509.CertPool
 	faviconImageIco      []byte
 	fs                   http.FileSystem
@@ -526,6 +579,10 @@ func (self *Server) populateDefaults() {
 
 	if self.BindingTimeout == `` {
 		self.BindingTimeout = DefaultBindingTimeout
+	}
+
+	if len(self.JWT) == 0 {
+		self.JWT = make(map[string]*JWTConfig)
 	}
 }
 
@@ -1764,6 +1821,17 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 		}
 
 		return ``, fmt.Errorf("no translations available")
+	}
+
+	// fn jwt: generate a new JSON Web Token using the named configuration
+	funcs[`jwt`] = func(jwtConfigName string) (string, error) {
+		if len(self.JWT) > 0 {
+			if cfg, ok := self.JWT[jwtConfigName]; ok && cfg != nil {
+				return cfg.Issue(data, funcs)
+			}
+		}
+
+		return ``, fmt.Errorf("JWT configuration %q not found", jwtConfigName)
 	}
 
 	return funcs

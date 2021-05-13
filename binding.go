@@ -574,6 +574,16 @@ func EvalInline(input string, data map[string]interface{}, funcs FuncMap, names 
 	}
 }
 
+func ShouldEvalInline(input interface{}, data map[string]interface{}, funcs FuncMap) typeutil.Variant {
+	if ins := typeutil.String(input); strings.Contains(ins, `{{`) && strings.Contains(ins, `}}`) {
+		if out, err := EvalInline(ins, data, funcs); err == nil {
+			return typeutil.V(out)
+		}
+	}
+
+	return typeutil.V(input)
+}
+
 func ApplyJPath(data interface{}, jpath string) (interface{}, error) {
 	if typeutil.IsMap(data) && jpath != `` {
 		var err error

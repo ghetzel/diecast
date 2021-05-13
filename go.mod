@@ -9,6 +9,7 @@ require (
 	github.com/beevik/etree v1.1.0
 	github.com/biessek/golang-ico v0.0.0-20180326222316-d348d9ea4670
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ghetzel/cli v1.17.0
 	github.com/ghetzel/go-stockutil v1.9.11
