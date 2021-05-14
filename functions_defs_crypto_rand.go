@@ -297,11 +297,12 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server *Server) funcGroup {
 						Default:     `sha1`,
 					},
 				},
-				Function: func(input interface{}, secret string, alg ...string) ([]byte, error) {
+				Function: func(input interface{}, secret string, alg ...string) (string, error) {
 					if hasher, err := hashingAlgo(typeutil.OrString(alg, `sha1`)); err == nil {
-						return hasher.Sum(typeutil.Bytes(input)), nil
+						var h = hasher.Sum(typeutil.Bytes(input))
+						return hex.EncodeToString(h), nil
 					} else {
-						return nil, err
+						return ``, err
 					}
 				},
 			},
