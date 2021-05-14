@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"crypto/hmac"
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/sha1"
@@ -18,22 +19,22 @@ import (
 	"github.com/spaolacci/murmur3"
 )
 
-func hashingAlgo(alg string) (hash.Hash, error) {
+func hashingAlgo(alg string) (func() hash.Hash, error) {
 	alg = strings.ToLower(alg)
 
 	switch alg {
 	case `sha1`:
-		return sha1.New(), nil
+		return sha1.New, nil
 	case `sha224`:
-		return sha256.New224(), nil
+		return sha256.New224, nil
 	case `sha256`:
-		return sha256.New(), nil
+		return sha256.New, nil
 	case `sha384`:
-		return sha512.New384(), nil
+		return sha512.New384, nil
 	case `sha512`:
-		return sha512.New(), nil
+		return sha512.New, nil
 	case `md5`:
-		return md5.New(), nil
+		return md5.New, nil
 	default:
 		return nil, fmt.Errorf("unknown algorithm %q", alg)
 	}
@@ -41,8 +42,8 @@ func hashingAlgo(alg string) (hash.Hash, error) {
 
 func hashTheThing(fn string, input interface{}) (string, error) {
 	if hasher, err := hashingAlgo(fn); err == nil {
-		var data = typeutil.Bytes(input)
-		return hex.EncodeToString(hasher.Sum(data)), nil
+		var data = []byte(typeutil.String(input))
+		return hex.EncodeToString(hasher().Sum(data)), nil
 	} else {
 		return ``, err
 	}
@@ -299,8 +300,13 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server *Server) funcGroup {
 				},
 				Function: func(input interface{}, secret string, alg ...string) (string, error) {
 					if hasher, err := hashingAlgo(typeutil.OrString(alg, `sha1`)); err == nil {
-						var h = hasher.Sum(typeutil.Bytes(input))
-						return hex.EncodeToString(h), nil
+						var hmacca = hmac.New(hasher, []byte(secret))
+
+						if _, err := hmacca.Write([]byte(typeutil.String(input))); err == nil {
+							return hex.EncodeToString(hmacca.Sum(nil)), nil
+						} else {
+							return ``, err
+						}
 					} else {
 						return ``, err
 					}
