@@ -928,14 +928,14 @@
         ],
         "Examples": [
           {
-            "Code": "elide \"This is a sentence that contains fifty characters.\" 18",
+            "Code": "section \"this|is|a|row\" 1 \"|\"",
             "Description": "",
-            "Return": "This is a sentence"
+            "Return": "this"
           },
           {
-            "Code": "elide \"hello.\" 16",
+            "Code": "section \"this|is|a|row\" 2 \"|\"",
             "Description": "",
-            "Return": "hello."
+            "Return": "is"
           }
         ]
       },
@@ -3209,6 +3209,99 @@
         "Examples": null
       },
       {
+        "Name": "hash",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return the hash if the given value using the specified algorithm.",
+        "Returns": "bytes",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "cleartext",
+            "Type": "string",
+            "Description": "The value to perform a one-way hash operation on.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "algorithm",
+            "Type": "string",
+            "Description": "The hash algorithm to use.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": [
+              {
+                "Name": "sha1",
+                "Type": "",
+                "Description": "SHA-1 algorithm",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "sha224",
+                "Type": "",
+                "Description": "SHA-224 algorithm",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "sha256",
+                "Type": "",
+                "Description": "SHA-256 algorithm",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "sha384",
+                "Type": "",
+                "Description": "SHA-384 algorithm",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "sha512",
+                "Type": "",
+                "Description": "SHA-512 algorithm",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "md5",
+                "Type": "",
+                "Description": "MD5 algorithm",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              },
+              {
+                "Name": "murmur3",
+                "Type": "",
+                "Description": "Murmur3 algorithm",
+                "Variadic": false,
+                "Optional": false,
+                "Default": null,
+                "Valid": null
+              }
+            ]
+          }
+        ],
+        "Examples": null
+      },
+      {
         "Name": "md5",
         "Alias": "",
         "Aliases": null,
@@ -3431,6 +3524,44 @@
         "Returns": "",
         "Hidden": false,
         "Arguments": null,
+        "Examples": null
+      },
+      {
+        "Name": "hmac",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Generate an HMAC signature for the given input, secret string, and (optionally) hashing algorithm.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "input",
+            "Type": "string, bytes",
+            "Description": "The input to generate an HMAC signature for.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "secret",
+            "Type": "string",
+            "Description": "The secret string to use for generating the signature.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "algorithm",
+            "Type": "string",
+            "Description": "The name of the hashing algorithm to use for signing.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": "sha1",
+            "Valid": null
+          }
+        ],
         "Examples": null
       }
     ],
