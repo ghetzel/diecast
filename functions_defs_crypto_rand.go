@@ -8,38 +8,43 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
+	"hash"
 	"math"
 	mrand "math/rand"
+	"strings"
 
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/spaolacci/murmur3"
 )
 
-func hashTheThing(fn string, input interface{}) (string, error) {
-	var data = []byte(typeutil.String(input))
+func hashingAlgo(alg string) (hash.Hash, error) {
+	alg = strings.ToLower(alg)
 
-	switch fn {
-	case `md5`:
-		var out = md5.Sum(data)
-		return hex.EncodeToString(out[:]), nil
+	switch alg {
 	case `sha1`:
-		var out = sha1.Sum(data)
-		return hex.EncodeToString(out[:]), nil
+		return sha1.New(), nil
 	case `sha224`:
-		var out = sha256.Sum224(data)
-		return hex.EncodeToString(out[:]), nil
+		return sha256.New224(), nil
 	case `sha256`:
-		var out = sha256.Sum256(data)
-		return hex.EncodeToString(out[:]), nil
+		return sha256.New(), nil
 	case `sha384`:
-		var out = sha512.Sum384(data)
-		return hex.EncodeToString(out[:]), nil
+		return sha512.New384(), nil
 	case `sha512`:
-		var out = sha512.Sum512(data)
-		return hex.EncodeToString(out[:]), nil
+		return sha512.New(), nil
+	case `md5`:
+		return md5.New(), nil
 	default:
-		return ``, fmt.Errorf("Unimplemented hashing function %q", fn)
+		return nil, fmt.Errorf("unknown algorithm %q", alg)
+	}
+}
+
+func hashTheThing(fn string, input interface{}) (string, error) {
+	if hasher, err := hashingAlgo(fn); err == nil {
+		var data = typeutil.Bytes(input)
+		return hex.EncodeToString(hasher.Sum(data)), nil
+	} else {
+		return ``, err
 	}
 }
 
@@ -54,6 +59,52 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server *Server) funcGroup {
 				Summary: `Hash the given data using the Murmur3 algorithm.`,
 				Function: func(input interface{}) uint64 {
 					return murmur3.Sum64(toBytes(input))
+				},
+			}, {
+				Name:    `hash`,
+				Summary: `Return the hash if the given value using the specified algorithm.`,
+				Arguments: []funcArg{
+					{
+						Name:        `cleartext`,
+						Type:        `string`,
+						Description: `The value to perform a one-way hash operation on.`,
+					}, {
+						Name:        `algorithm`,
+						Type:        `string`,
+						Description: `The hash algorithm to use.`,
+						Valid: []funcArg{
+							{
+								Name:        `sha1`,
+								Description: `SHA-1 algorithm`,
+							}, {
+								Name:        `sha224`,
+								Description: `SHA-224 algorithm`,
+							}, {
+								Name:        `sha256`,
+								Description: `SHA-256 algorithm`,
+							}, {
+								Name:        `sha384`,
+								Description: `SHA-384 algorithm`,
+							}, {
+								Name:        `sha512`,
+								Description: `SHA-512 algorithm`,
+							}, {
+								Name:        `md5`,
+								Description: `MD5 algorithm`,
+							}, {
+								Name:        `murmur3`,
+								Description: `Murmur3 algorithm`,
+							},
+						},
+					},
+				},
+				Returns: `bytes`,
+				Function: func(input interface{}, alg string) ([]byte, error) {
+					if out, err := hashTheThing(alg, input); err == nil {
+						return hex.DecodeString(out)
+					} else {
+						return nil, err
+					}
 				},
 			}, {
 				Name:    `md5`,
@@ -231,6 +282,32 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server *Server) funcGroup {
 				Summary: `Generate the raw bytes of a new Version 4 UUID value.`,
 				Function: func() []byte {
 					return stringutil.UUID().Bytes()
+				},
+			}, {
+				Name:    `hmac`,
+				Summary: `Generate an HMAC signature for the given input, secret string, and (optionally) hashing algorithm.`,
+				Arguments: []funcArg{
+					{
+						Name:        `input`,
+						Type:        `string, bytes`,
+						Description: `The input to generate an HMAC signature for.`,
+					}, {
+						Name:        `secret`,
+						Type:        `string`,
+						Description: `The secret string to use for generating the signature.`,
+					}, {
+						Name:        `algorithm`,
+						Type:        `string`,
+						Description: `The name of the hashing algorithm to use for signing.`,
+						Default:     `sha1`,
+					},
+				},
+				Function: func(input interface{}, secret string, alg ...string) ([]byte, error) {
+					if hasher, err := hashingAlgo(typeutil.OrString(alg, `sha1`)); err == nil {
+						return hasher.Sum(typeutil.Bytes(input)), nil
+					} else {
+						return nil, err
+					}
 				},
 			},
 		},

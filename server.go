@@ -1860,6 +1860,16 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 		return ``, fmt.Errorf("JWT configuration %q not found", jwtConfigName)
 	}
 
+	funcs[`jwtSecret`] = func(jwtConfigName string) (string, error) {
+		if len(self.JWT) > 0 {
+			if cfg, ok := self.JWT[jwtConfigName]; ok && cfg != nil {
+				return EvalInline(cfg.Secret, data, funcs)
+			}
+		}
+
+		return ``, fmt.Errorf("JWT configuration %q not found", jwtConfigName)
+	}
+
 	return funcs
 }
 

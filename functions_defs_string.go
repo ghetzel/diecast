@@ -905,11 +905,11 @@ func loadStandardFunctionsString(funcs FuncMap, server *Server) funcGroup {
 				},
 				Examples: []funcExample{
 					{
-						Code:   `elide "This is a sentence that contains fifty characters." 18`,
-						Return: `This is a sentence`,
+						Code:   `section "this|is|a|row" 1 "|"`,
+						Return: `this`,
 					}, {
-						Code:   `elide "hello." 16`,
-						Return: `hello.`,
+						Code:   `section "this|is|a|row" 2 "|"`,
+						Return: `is`,
 					},
 				},
 			}, {
