@@ -221,6 +221,16 @@ type JWTConfig struct {
 	Subject   string                 `yaml:"subject" json:"subject"`
 }
 
+func (self *JWTConfig) SignedString(input string) (string, error) {
+	var alg = typeutil.OrString(self.Algorithm, `HS256`)
+
+	if signer := jwt.GetSigningMethod(alg); signer != nil {
+		return signer.Sign(input, []byte(self.Secret))
+	} else {
+		return ``, fmt.Errorf("invalid signing algorithm %q", alg)
+	}
+}
+
 func (self *JWTConfig) Issue(tpldata map[string]interface{}, funcs FuncMap) (string, error) {
 	var now = time.Now()
 	var alg = typeutil.OrString(self.Algorithm, `HS256`)
@@ -1828,6 +1838,22 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 		if len(self.JWT) > 0 {
 			if cfg, ok := self.JWT[jwtConfigName]; ok && cfg != nil {
 				return cfg.Issue(data, funcs)
+			}
+		}
+
+		return ``, fmt.Errorf("JWT configuration %q not found", jwtConfigName)
+	}
+
+	// fn jwtSign: generates a signature for the given input.  If the input is a map or array, it will be
+	// JSON-encoded before signing.
+	funcs[`jwtSign`] = func(jwtConfigName string, input interface{}) (string, error) {
+		if len(self.JWT) > 0 {
+			if cfg, ok := self.JWT[jwtConfigName]; ok && cfg != nil {
+				if typeutil.IsScalar(input) {
+					return cfg.SignedString(typeutil.String(input))
+				} else {
+					return cfg.SignedString(typeutil.JSON(input))
+				}
 			}
 		}
 
