@@ -98,13 +98,8 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server *Server) funcGroup {
 						},
 					},
 				},
-				Returns: `bytes`,
-				Function: func(input interface{}, alg string) ([]byte, error) {
-					if out, err := hashTheThing(alg, input); err == nil {
-						return hex.DecodeString(out)
-					} else {
-						return nil, err
-					}
+				Function: func(input interface{}, alg string) (string, error) {
+					return hashTheThing(alg, input)
 				},
 			}, {
 				Name:    `md5`,

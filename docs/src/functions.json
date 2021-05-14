@@ -3213,7 +3213,7 @@
         "Alias": "",
         "Aliases": null,
         "Summary": "Return the hash if the given value using the specified algorithm.",
-        "Returns": "bytes",
+        "Returns": "",
         "Hidden": false,
         "Arguments": [
           {
