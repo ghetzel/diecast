@@ -1664,7 +1664,7 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// fn incrementByValue: Add a number to a counter tracking the number of occurrences of a specific value.
-	funcs[`incrementByValue`] = func(name string, value interface{}, incr ...int) interface{} {
+	funcs[`incrementByValue`] = func(name string, value interface{}, incr ...interface{}) interface{} {
 		var key = makeVarKey(name, fmt.Sprintf("%v", value))
 		var count = 0
 
@@ -1673,7 +1673,7 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 		}
 
 		if len(incr) > 0 {
-			count += incr[0]
+			count += typeutil.NInt(incr[0])
 		} else {
 			count += 1
 		}
