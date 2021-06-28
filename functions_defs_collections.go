@@ -501,7 +501,11 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 					sort.Slice(out, func(i int, j int) bool {
 						var mI = maputil.M(out[i])
 						var mJ = maputil.M(out[j])
-						return mI.String(key) < mJ.String(key)
+
+						return typeutil.IsLessThan(
+							mI.Get(key),
+							mJ.Get(key),
+						)
 					})
 					return out, nil
 				},
@@ -541,7 +545,11 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 					sort.Slice(out, func(i int, j int) bool {
 						var mI = maputil.M(out[i])
 						var mJ = maputil.M(out[j])
-						return mI.String(key) > mJ.String(key)
+
+						return typeutil.IsLessThan(
+							mJ.Get(key),
+							mI.Get(key),
+						)
 					})
 					return out, nil
 				},
@@ -1158,10 +1166,10 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 					var out = sliceutil.Sliceify(input)
 
 					sort.Slice(out, func(i, j int) bool {
-						var iv = typeutil.String(out[i])
-						var jv = typeutil.String(out[j])
-
-						return iv < jv
+						return typeutil.IsLessThan(
+							out[i],
+							out[j],
+						)
 					})
 
 					return out
@@ -1186,10 +1194,10 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 					var out = sliceutil.Sliceify(input)
 
 					sort.Slice(out, func(i, j int) bool {
-						var iv = typeutil.String(out[i])
-						var jv = typeutil.String(out[j])
-
-						return iv > jv
+						return typeutil.IsLessThan(
+							out[j],
+							out[i],
+						)
 					})
 
 					return out
