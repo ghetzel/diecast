@@ -1644,16 +1644,17 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// fn increment: Increment a named variable by an amount.
-	funcs[`increment`] = func(name string, incr ...int) interface{} {
+	funcs[`increment`] = func(name string, incr ...interface{}) interface{} {
 		var key = makeVarKey(name)
-		var count = 0
+		var count float64
+		var incrV float64 = typeutil.OrFloat(0, incr...)
 
 		if existing := maputil.DeepGet(data, key); existing != nil {
-			count = int(typeutil.V(existing).Int())
+			count = typeutil.V(existing).Float()
 		}
 
-		if len(incr) > 0 {
-			count += incr[0]
+		if incrV > 0 {
+			count += incrV
 		} else {
 			count += 1
 		}
@@ -1666,14 +1667,15 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	// fn incrementByValue: Add a number to a counter tracking the number of occurrences of a specific value.
 	funcs[`incrementByValue`] = func(name string, value interface{}, incr ...interface{}) interface{} {
 		var key = makeVarKey(name, fmt.Sprintf("%v", value))
-		var count = 0
+		var count float64
+		var incrV float64 = typeutil.OrFloat(0, incr...)
 
 		if existing := maputil.DeepGet(data, key); existing != nil {
-			count = int(typeutil.V(existing).Int())
+			count = typeutil.V(existing).Float()
 		}
 
-		if len(incr) > 0 {
-			count += typeutil.NInt(incr[0])
+		if incrV > 0 {
+			count += incrV
 		} else {
 			count += 1
 		}
