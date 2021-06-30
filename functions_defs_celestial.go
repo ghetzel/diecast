@@ -11,6 +11,7 @@ import (
 )
 
 const lunarHalfCycle = 14
+const sunElevationDayNightCutoff = -0.523 // day starts/ends when the sun is 0.7deg below the horizon
 
 func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 	return funcGroup{
@@ -130,9 +131,10 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 					var o = astral.Observer{
 						Latitude:  typeutil.Float(latitude),
 						Longitude: typeutil.Float(longitude),
-						Elevation: typeutil.Float(elevation),
+						Elevation: elevation,
 					}
 
+					var sunRefractedElevation = astral.Elevation(o, t, true)
 					var azimuth, zenithT = astral.ZenithAndAzimuth(o, t, false)
 					var _, zenithR = astral.ZenithAndAzimuth(o, t, true)
 
@@ -144,11 +146,11 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 					out.Set(`sun.state.blue_hour`, false)
 					out.Set(`sun.state.golden_hour`, false)
 					out.Set(`sun.state.twilight`, false)
-					out.Set(`sun.state.daytime`, false)
+					out.Set(`sun.state.daytime`, (sunRefractedElevation >= sunElevationDayNightCutoff))
+					out.Set(`sun.state.night`, (sunRefractedElevation < sunElevationDayNightCutoff))
 					out.Set(`sun.state.golden_hour`, false)
 					out.Set(`sun.state.twilight`, false)
 					out.Set(`sun.state.blue_hour`, false)
-					out.Set(`sun.state.night`, false)
 
 					out.Set(`sun.position.zenith.angle`, mathutil.RoundPlaces(zenithT, 2))
 					out.Set(`sun.position.zenith.refracted_angle`, mathutil.RoundPlaces(zenithR, 2))
@@ -158,7 +160,7 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 					out.Set(`sun.position.azimuth.cardinal`, geoutil.GetDirectionFromBearing(azimuth))
 
 					out.Set(`sun.position.elevation.angle`, mathutil.RoundPlaces(astral.Elevation(o, t, false), 3))
-					out.Set(`sun.position.elevation.refracted_angle`, mathutil.RoundPlaces(astral.Elevation(o, t, true), 3))
+					out.Set(`sun.position.elevation.refracted_angle`, mathutil.RoundPlaces(sunRefractedElevation, 3))
 
 					// all those enchanting sounding parts of the sun's journey through the sky...
 					var dawnA, _ = astral.Dawn(o, t, astral.DepressionAstronomical)
@@ -174,7 +176,7 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 						out.Set(`sun.dawn.blue_hour.start`, start)
 						out.Set(`sun.dawn.blue_hour.end`, end)
 
-						if now.After(start) && now.Before(end) {
+						if t.After(start) && t.Before(end) {
 							out.Set(`sun.state.blue_hour`, true)
 						}
 					} else {
@@ -186,7 +188,7 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 						out.Set(`sun.dawn.golden_hour.start`, start)
 						out.Set(`sun.dawn.golden_hour.end`, end)
 
-						if now.After(start) && now.Before(end) {
+						if t.After(start) && t.Before(end) {
 							out.Set(`sun.state.golden_hour`, true)
 						}
 					} else {
@@ -203,7 +205,7 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 						out.Set(`sun.twilight.start`, start)
 						out.Set(`sun.twilight.end`, end)
 
-						if now.After(start) && now.Before(end) {
+						if t.After(start) && t.Before(end) {
 							out.Set(`sun.state.twilight`, true)
 						}
 					} else {
@@ -215,10 +217,6 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 						out.Set(`sun.daytime.start`, start)
 						out.Set(`sun.daytime.end`, end)
 						out.Set(`sun.daytime.length_minutes`, int(end.Sub(start).Round(time.Minute)/time.Minute))
-
-						if now.After(start) && now.Before(end) {
-							out.Set(`sun.state.daytime`, true)
-						}
 					} else {
 						return nil, err
 					}
@@ -231,7 +229,7 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 						out.Set(`sun.dusk.golden_hour.start`, start)
 						out.Set(`sun.dusk.golden_hour.end`, end)
 
-						if now.After(start) && now.Before(end) {
+						if t.After(start) && t.Before(end) {
 							out.Set(`sun.state.golden_hour`, true)
 						}
 					} else {
@@ -248,7 +246,7 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 						out.Set(`sun.twilight.start`, start)
 						out.Set(`sun.twilight.end`, end)
 
-						if now.After(start) && now.Before(end) {
+						if t.After(start) && t.Before(end) {
 							out.Set(`sun.state.twilight`, true)
 						}
 					} else {
@@ -260,7 +258,7 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 						out.Set(`sun.dusk.blue_hour.start`, start)
 						out.Set(`sun.dusk.blue_hour.end`, end)
 
-						if now.After(start) && now.Before(end) {
+						if t.After(start) && t.Before(end) {
 							out.Set(`sun.state.blue_hour`, true)
 						}
 					} else {
@@ -281,10 +279,6 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 						out.Set(`sun.night.start`, start)
 						out.Set(`sun.night.end`, end)
 						out.Set(`sun.night.length_minutes`, int(end.Sub(start).Round(time.Minute)/time.Minute))
-
-						if now.After(start) && now.Before(end) {
-							out.Set(`sun.state.night`, true)
-						}
 					} else {
 						return nil, err
 					}
