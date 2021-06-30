@@ -34,6 +34,7 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/signalsciences/tlstext v1.2.0
+	github.com/sj14/astral v0.1.1
 	github.com/spaolacci/murmur3 v0.0.0-20170819071325-9f5d223c6079
 	github.com/tg123/go-htpasswd v0.0.0-20190305225429-d38e564730bf
 	github.com/uber/jaeger-client-go v2.24.0+incompatible

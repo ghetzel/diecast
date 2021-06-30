@@ -7632,6 +7632,141 @@
     "Skip": false
   },
   {
+    "Name": "Celestial \u0026 Astronomical Functions",
+    "Description": "Used for calculating details pertaining to the motion of celestial bodies as viewed from points on Earth.",
+    "Functions": [
+      {
+        "Name": "celestial",
+        "Alias": "",
+        "Aliases": null,
+        "Summary": "Return extensive details about the position, timing, and motion of celestial objects at a given time and location.",
+        "Returns": "",
+        "Hidden": false,
+        "Arguments": [
+          {
+            "Name": "time",
+            "Type": "time",
+            "Description": "The date/time of the observation.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": "t",
+            "Valid": null
+          },
+          {
+            "Name": "latitude",
+            "Type": "number",
+            "Description": "The latitude of the observation point.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "longitude",
+            "Type": "number",
+            "Description": "The longitude of the observation point.",
+            "Variadic": false,
+            "Optional": false,
+            "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "elevation",
+            "Type": "number",
+            "Description": "The elevation the observation point.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": null,
+            "Valid": null
+          }
+        ],
+        "Examples": [
+          {
+            "Code": "celestial \"2021-06-29T22:45:42-04:00\" 40.698828 -75.866871",
+            "Description": "",
+            "Return": {
+              "observer": {
+                "elevation": 0,
+                "latitude": 40.698828,
+                "longitude": -75.866871,
+                "time": "2021-06-29T22:45:42-04:00"
+              },
+              "sun": {
+                "dawn": {
+                  "astronomical": "2021-06-29T03:30:13.257109492-04:00",
+                  "blue_hour": {
+                    "end": "2021-06-29T05:15:06.309934909-04:00",
+                    "start": "2021-06-29T05:02:07.747425294-04:00"
+                  },
+                  "civil": "2021-06-29T05:02:07.747425294-04:00",
+                  "golden_hour": {
+                    "end": "2021-06-29T06:16:05.605639753-04:00",
+                    "start": "2021-06-29T05:15:06.309934909-04:00"
+                  },
+                  "nautical": "2021-06-29T04:19:57.237244746-04:00"
+                },
+                "daytime": {
+                  "end": "2021-06-29T20:38:17.801264937-04:00",
+                  "length_minutes": 902,
+                  "start": "2021-06-29T05:36:01.179080433-04:00"
+                },
+                "dusk": {
+                  "astronomical": "2021-06-29T22:43:50.570964112-04:00",
+                  "blue_hour": {
+                    "end": "2021-06-29T21:12:08.653725257-04:00",
+                    "start": "2021-06-29T20:59:11.115310087-04:00"
+                  },
+                  "civil": "2021-06-29T21:12:08.653725257-04:00",
+                  "golden_hour": {
+                    "end": "2021-06-29T20:59:11.115310087-04:00",
+                    "start": "2021-06-29T19:58:15.424130576-04:00"
+                  },
+                  "nautical": "2021-06-29T21:54:14.888833839-04:00"
+                },
+                "midnight": "2021-06-29T01:07:14-04:00",
+                "night": {
+                  "end": "2021-06-30T05:02:39.575940636-04:00",
+                  "length_minutes": 471,
+                  "start": "2021-06-29T21:12:08.653725257-04:00"
+                },
+                "noon": "2021-06-29T13:07:06-04:00",
+                "position": {
+                  "azimuth": {
+                    "angle": 108.1,
+                    "cardinal": "E"
+                  },
+                  "elevation": {
+                    "angle": -18.104,
+                    "refracted_angle": -18.086
+                  },
+                  "zenith": {
+                    "angle": 325.8,
+                    "cardinal": "NW",
+                    "refracted_angle": 325.8
+                  }
+                },
+                "state": {
+                  "blue_hour": false,
+                  "daytime": false,
+                  "golden_hour": false,
+                  "night": true,
+                  "twilight": false
+                },
+                "sunrise": "2021-06-29T05:36:01.179080433-04:00",
+                "sunset": "2021-06-29T20:38:17.801264937-04:00",
+                "twilight": {
+                  "end": "2021-06-29T21:12:08.653725257-04:00",
+                  "start": "2021-06-29T20:38:17.801264937-04:00"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "Skip": false
+  },
+  {
     "Name": "Dynamic Variables",
     "Description": "A set of functions that allow for custom data to be set, retrieved, and removed at runtime; providing greater flexibility over standard template variables. All variables created or modified using these functions are accessible under the global _$.vars_ object.  For example, a variable set with \u003ccode\u003e{{ var \"test\" 123 }}\u003c/code\u003e would be retrieved with \u003ccode\u003e{{ $.vars.test }}\u003c/code\u003e, which would contain the integer value _123_.",
     "Functions": [

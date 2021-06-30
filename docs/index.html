@@ -57,6 +57,7 @@
                         </summary>
                         <nav class="nav nav-pills flex-column ml-4">
                             <a class="nav-link" href="#arrays-and-objects">Arrays and Objects</a>
+                            <a class="nav-link" href="#celestial---astronomical-functions">Celestial &amp; Astronomical Functions</a>
                             <a class="nav-link" href="#color-manipulation">Color Manipulation</a>
                             <a class="nav-link" href="#comparison-functions">Comparison Functions</a>
                             <a class="nav-link" href="#dynamic-variables">Dynamic Variables</a>
@@ -884,6 +885,16 @@ Diecast runtime directory:</p>
         </li>
         <li>
             <a href="#fn-values">values</a>
+        </li>
+    </ul>
+</details>
+<details>
+    <summary>
+        <a href="#celestial---astronomical-functions">Celestial &amp; Astronomical Functions</a>
+    </summary>
+    <ul>
+        <li>
+            <a href="#fn-celestial">celestial</a>
         </li>
     </ul>
 </details>
@@ -4374,6 +4385,148 @@ Diecast runtime directory:</p>
   &#34;a&#34;,
   1
 ]</p>
+            </div>
+        </div>
+    </section>
+</section>
+<section class="group mt-4" id="celestial---astronomical-functions">
+    <header>
+        <h3>Celestial &amp; Astronomical Functions</h3>
+        <p><p>Used for calculating details pertaining to the motion of celestial bodies as viewed from points on Earth.</p>
+</p>
+    </header>
+    <section class="function" id="fn-celestial">
+        <h4 class="mt-3">
+            celestial
+            <a href="#fn-celestial" class="text-body ml-2">
+                <i class="fa fa-link"></i>
+            </a>
+        </h4>
+        <div class="mb-1">
+            <i>Usage:</i>
+            <code>celestial TIME LATITUDE LONGITUDE [ELEVATION]</code>
+        </div>
+        <p>Return extensive details about the position, timing, and motion of celestial objects at a given time and location.</p>
+        <h5>Arguments</h5>
+        <table class="table table-sm w-100">
+            <thead>
+                <tr>
+                    <th class="pl-2 pr-2">Name</th>
+                    <th class="pl-2 pr-2">Data Type</th>
+                    <th class="pl-2 pr-2">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th><pre>TIME</pre></th>
+                    <td>time</td>
+                    <td>
+                        <p>The date/time of the observation.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>LATITUDE</pre></th>
+                    <td>number</td>
+                    <td>
+                        <p>The latitude of the observation point.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>LONGITUDE</pre></th>
+                    <td>number</td>
+                    <td>
+                        <p>The longitude of the observation point.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>ELEVATION</pre></th>
+                    <td>number</td>
+                    <td>
+                        <p>The elevation the observation point.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h5>Examples</h5>
+        <div class="examples">
+            <div class="example" id="fn-celestial-example-0">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>celestial &#34;2021-06-29T22:45:42-04:00&#34; 40.698828 -75.866871<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">{
+  &#34;observer&#34;: {
+    &#34;elevation&#34;: 0,
+    &#34;latitude&#34;: 40.698828,
+    &#34;longitude&#34;: -75.866871,
+    &#34;time&#34;: &#34;2021-06-29T22:45:42-04:00&#34;
+  },
+  &#34;sun&#34;: {
+    &#34;dawn&#34;: {
+      &#34;astronomical&#34;: &#34;2021-06-29T03:30:13.257109492-04:00&#34;,
+      &#34;blue_hour&#34;: {
+        &#34;end&#34;: &#34;2021-06-29T05:15:06.309934909-04:00&#34;,
+        &#34;start&#34;: &#34;2021-06-29T05:02:07.747425294-04:00&#34;
+      },
+      &#34;civil&#34;: &#34;2021-06-29T05:02:07.747425294-04:00&#34;,
+      &#34;golden_hour&#34;: {
+        &#34;end&#34;: &#34;2021-06-29T06:16:05.605639753-04:00&#34;,
+        &#34;start&#34;: &#34;2021-06-29T05:15:06.309934909-04:00&#34;
+      },
+      &#34;nautical&#34;: &#34;2021-06-29T04:19:57.237244746-04:00&#34;
+    },
+    &#34;daytime&#34;: {
+      &#34;end&#34;: &#34;2021-06-29T20:38:17.801264937-04:00&#34;,
+      &#34;length_minutes&#34;: 902,
+      &#34;start&#34;: &#34;2021-06-29T05:36:01.179080433-04:00&#34;
+    },
+    &#34;dusk&#34;: {
+      &#34;astronomical&#34;: &#34;2021-06-29T22:43:50.570964112-04:00&#34;,
+      &#34;blue_hour&#34;: {
+        &#34;end&#34;: &#34;2021-06-29T21:12:08.653725257-04:00&#34;,
+        &#34;start&#34;: &#34;2021-06-29T20:59:11.115310087-04:00&#34;
+      },
+      &#34;civil&#34;: &#34;2021-06-29T21:12:08.653725257-04:00&#34;,
+      &#34;golden_hour&#34;: {
+        &#34;end&#34;: &#34;2021-06-29T20:59:11.115310087-04:00&#34;,
+        &#34;start&#34;: &#34;2021-06-29T19:58:15.424130576-04:00&#34;
+      },
+      &#34;nautical&#34;: &#34;2021-06-29T21:54:14.888833839-04:00&#34;
+    },
+    &#34;midnight&#34;: &#34;2021-06-29T01:07:14-04:00&#34;,
+    &#34;night&#34;: {
+      &#34;end&#34;: &#34;2021-06-30T05:02:39.575940636-04:00&#34;,
+      &#34;length_minutes&#34;: 471,
+      &#34;start&#34;: &#34;2021-06-29T21:12:08.653725257-04:00&#34;
+    },
+    &#34;noon&#34;: &#34;2021-06-29T13:07:06-04:00&#34;,
+    &#34;position&#34;: {
+      &#34;azimuth&#34;: {
+        &#34;angle&#34;: 108.1,
+        &#34;cardinal&#34;: &#34;E&#34;
+      },
+      &#34;elevation&#34;: {
+        &#34;angle&#34;: -18.104,
+        &#34;refracted_angle&#34;: -18.086
+      },
+      &#34;zenith&#34;: {
+        &#34;angle&#34;: 325.8,
+        &#34;cardinal&#34;: &#34;NW&#34;,
+        &#34;refracted_angle&#34;: 325.8
+      }
+    },
+    &#34;state&#34;: {
+      &#34;blue_hour&#34;: false,
+      &#34;daytime&#34;: false,
+      &#34;golden_hour&#34;: false,
+      &#34;night&#34;: true,
+      &#34;twilight&#34;: false
+    },
+    &#34;sunrise&#34;: &#34;2021-06-29T05:36:01.179080433-04:00&#34;,
+    &#34;sunset&#34;: &#34;2021-06-29T20:38:17.801264937-04:00&#34;,
+    &#34;twilight&#34;: {
+      &#34;end&#34;: &#34;2021-06-29T21:12:08.653725257-04:00&#34;,
+      &#34;start&#34;: &#34;2021-06-29T20:38:17.801264937-04:00&#34;
+    }
+  }
+}</p>
             </div>
         </div>
     </section>

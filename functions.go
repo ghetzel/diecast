@@ -143,6 +143,9 @@ func GetFunctions(server *Server) (funcGroups, FuncMap) {
 	// Highlighting
 	groups = append(groups, loadStandardFunctionsLangHighlighting(funcs, server))
 
+	// Celestial & Astronomical
+	groups = append(groups, loadStandardFunctionsCelestial(funcs, server))
+
 	// Documentation for runtime functions
 	groups = append(groups, loadRuntimeFunctionsVariables(server))
 	groups = append(groups, loadRuntimeFunctionsRequest(server))
