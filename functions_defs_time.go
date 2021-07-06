@@ -128,11 +128,11 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Return: `2020-01-01 00:00:00 +0000 UTC`,
 					},
 				},
-				Function: func(durationString string, fromTime ...time.Time) (time.Time, error) {
+				Function: func(durationString string, fromTime ...interface{}) (time.Time, error) {
 					var from = time.Now()
 
 					if len(fromTime) > 0 {
-						from = fromTime[0]
+						from = typeutil.Time(fromTime[0])
 					}
 
 					if duration, err := timeutil.ParseDuration(durationString); err == nil {
@@ -398,10 +398,27 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Name:        `duration`,
 						Type:        `string, duration`,
 						Description: `The duration being checked.`,
+					}, {
+						Name:        `reference`,
+						Type:        `string, time`,
+						Optional:    true,
+						Description: `If provided, this time will be used to check the given times instead of the current time.`,
+						Default:     `(the current time)`,
 					},
 				},
-				Function: func(t interface{}, d interface{}) (bool, error) {
+				Function: func(t interface{}, d interface{}, tm ...interface{}) (bool, error) {
+					var now = time.Now()
+
+					if len(tm) > 0 && tm[0] != nil {
+						if t, err := stringutil.ConvertToTime(tm[0]); err == nil {
+							now = t
+						} else {
+							return false, err
+						}
+					}
+
 					return timeDelta(
+						now,
 						typeutil.Time(t),
 						typeutil.Duration(d),
 						false,
@@ -419,10 +436,27 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Name:        `duration`,
 						Type:        `string, duration`,
 						Description: `The duration being checked.`,
+					}, {
+						Name:        `reference`,
+						Type:        `string, time`,
+						Optional:    true,
+						Description: `If provided, this time will be used to check the given times instead of the current time.`,
+						Default:     `(the current time)`,
 					},
 				},
-				Function: func(t interface{}, d interface{}) (bool, error) {
+				Function: func(t interface{}, d interface{}, tm ...interface{}) (bool, error) {
+					var now = time.Now()
+
+					if len(tm) > 0 && tm[0] != nil {
+						if t, err := stringutil.ConvertToTime(tm[0]); err == nil {
+							now = t
+						} else {
+							return false, err
+						}
+					}
+
 					return timeDelta(
+						now,
 						typeutil.Time(t),
 						typeutil.Duration(d),
 						true,

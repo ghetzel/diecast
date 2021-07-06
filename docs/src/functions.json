@@ -3033,6 +3033,15 @@
             "Optional": false,
             "Default": null,
             "Valid": null
+          },
+          {
+            "Name": "reference",
+            "Type": "string, time",
+            "Description": "If provided, this time will be used to check the given times instead of the current time.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": "(the current time)",
+            "Valid": null
           }
         ],
         "Examples": null
@@ -3061,6 +3070,15 @@
             "Variadic": false,
             "Optional": false,
             "Default": null,
+            "Valid": null
+          },
+          {
+            "Name": "reference",
+            "Type": "string, time",
+            "Description": "If provided, this time will be used to check the given times instead of the current time.",
+            "Variadic": false,
+            "Optional": true,
+            "Default": "(the current time)",
             "Valid": null
           }
         ],

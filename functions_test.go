@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ghetzel/go-stockutil/timeutil"
 	"github.com/ghetzel/testify/require"
 )
 
@@ -93,8 +94,8 @@ func TestTimeFunctions(t *testing.T) {
 	var assert = require.New(t)
 	var fns = GetStandardFunctions(nil)
 
-	var isOlderThan = fns[`isOlderThan`].(func(t interface{}, d interface{}) (bool, error))
-	var isNewerThan = fns[`isNewerThan`].(func(t interface{}, d interface{}) (bool, error))
+	var isOlderThan = fns[`isOlderThan`].(func(t interface{}, d interface{}, tm ...interface{}) (bool, error))
+	var isNewerThan = fns[`isNewerThan`].(func(t interface{}, d interface{}, tm ...interface{}) (bool, error))
 
 	b, err := isOlderThan(time.Now().Add(-1*time.Hour), "30m")
 	assert.NoError(err)
@@ -109,6 +110,24 @@ func TestTimeFunctions(t *testing.T) {
 	assert.False(b)
 
 	b, err = isNewerThan(time.Now().Add(-1*time.Hour), "2h")
+	assert.NoError(err)
+	assert.True(b)
+
+	var now = timeutil.ReferenceTime()
+
+	b, err = isOlderThan(now.Add(-1*time.Hour), "30m", now)
+	assert.NoError(err)
+	assert.True(b)
+
+	b, err = isOlderThan(now.Add(-1*time.Hour), "2h", now)
+	assert.NoError(err)
+	assert.False(b)
+
+	b, err = isNewerThan(now.Add(-1*time.Hour), "30m", now)
+	assert.NoError(err)
+	assert.False(b)
+
+	b, err = isNewerThan(now.Add(-1*time.Hour), "2h", now)
 	assert.NoError(err)
 	assert.True(b)
 }

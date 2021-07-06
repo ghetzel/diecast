@@ -11180,7 +11180,7 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>isNewerThan TIME DURATION</code>
+            <code>isNewerThan TIME DURATION [REFERENCE]</code>
         </div>
         <p>Return whether the time between now and the given time is less than or equal to now minus the given duration.</p>
         <h5>Arguments</h5>
@@ -11207,6 +11207,13 @@ Diecast runtime directory:</p>
                         <p>The duration being checked.</p>
                     </td>
                 </tr>
+                <tr>
+                    <th><pre>REFERENCE</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>If provided, this time will be used to check the given times instead of the current time.</p>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </section>
@@ -11219,7 +11226,7 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>isOlderThan TIME DURATION</code>
+            <code>isOlderThan TIME DURATION [REFERENCE]</code>
         </div>
         <p>Return whether the time between now and the given time is greater than now minus the given duration.</p>
         <h5>Arguments</h5>
@@ -11244,6 +11251,13 @@ Diecast runtime directory:</p>
                     <td>string, duration</td>
                     <td>
                         <p>The duration being checked.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th><pre>REFERENCE</pre></th>
+                    <td>string, time</td>
+                    <td>
+                        <p>If provided, this time will be used to check the given times instead of the current time.</p>
                     </td>
                 </tr>
             </tbody>
