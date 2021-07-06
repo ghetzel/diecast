@@ -54,41 +54,41 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 							},
 							"sun": map[string]interface{}{
 								"dawn": map[string]interface{}{
-									"astronomical": "2021-06-29T03:30:13.257109492-04:00",
+									"astronomical": "2021-06-29T03:30:13-04:00",
 									"blue_hour": map[string]interface{}{
-										"end":   "2021-06-29T05:15:06.309934909-04:00",
-										"start": "2021-06-29T05:02:07.747425294-04:00",
+										"end":   "2021-06-29T05:15:06-04:00",
+										"start": "2021-06-29T05:02:08-04:00",
 									},
-									"civil": "2021-06-29T05:02:07.747425294-04:00",
+									"civil": "2021-06-29T05:02:08-04:00",
 									"golden_hour": map[string]interface{}{
-										"end":   "2021-06-29T06:16:05.605639753-04:00",
-										"start": "2021-06-29T05:15:06.309934909-04:00",
+										"end":   "2021-06-29T06:16:06-04:00",
+										"start": "2021-06-29T05:15:06-04:00",
 									},
-									"nautical": "2021-06-29T04:19:57.237244746-04:00",
+									"nautical": "2021-06-29T04:19:57-04:00",
 								},
 								"daytime": map[string]interface{}{
-									"end":            "2021-06-29T20:38:17.801264937-04:00",
+									"end":            "2021-06-29T20:38:18-04:00",
 									"length_minutes": 902,
-									"start":          "2021-06-29T05:36:01.179080433-04:00",
+									"start":          "2021-06-29T05:36:01-04:00",
 								},
 								"dusk": map[string]interface{}{
-									"astronomical": "2021-06-29T22:43:50.570964112-04:00",
+									"astronomical": "2021-06-29T22:43:51-04:00",
 									"blue_hour": map[string]interface{}{
-										"end":   "2021-06-29T21:12:08.653725257-04:00",
-										"start": "2021-06-29T20:59:11.115310087-04:00",
+										"end":   "2021-06-29T21:12:09-04:00",
+										"start": "2021-06-29T20:59:11-04:00",
 									},
-									"civil": "2021-06-29T21:12:08.653725257-04:00",
+									"civil": "2021-06-29T21:12:09-04:00",
 									"golden_hour": map[string]interface{}{
-										"end":   "2021-06-29T20:59:11.115310087-04:00",
-										"start": "2021-06-29T19:58:15.424130576-04:00",
+										"end":   "2021-06-29T20:59:11-04:00",
+										"start": "2021-06-29T19:58:15-04:00",
 									},
-									"nautical": "2021-06-29T21:54:14.888833839-04:00",
+									"nautical": "2021-06-29T21:54:15-04:00",
 								},
 								"midnight": "2021-06-29T01:07:14-04:00",
 								"night": map[string]interface{}{
-									"end":            "2021-06-30T05:02:39.575940636-04:00",
+									"end":            "2021-06-30T05:02:40-04:00",
 									"length_minutes": 471,
-									"start":          "2021-06-29T21:12:08.653725257-04:00",
+									"start":          "2021-06-29T21:12:09-04:00",
 								},
 								"noon": "2021-06-29T13:07:06-04:00",
 								"position": map[string]interface{}{
@@ -113,11 +113,11 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 									"night":       true,
 									"twilight":    false,
 								},
-								"sunrise": "2021-06-29T05:36:01.179080433-04:00",
-								"sunset":  "2021-06-29T20:38:17.801264937-04:00",
+								"sunrise": "2021-06-29T05:36:01-04:00",
+								"sunset":  "2021-06-29T20:38:18-04:00",
 								"twilight": map[string]interface{}{
-									"end":   "2021-06-29T21:12:08.653725257-04:00",
-									"start": "2021-06-29T20:38:17.801264937-04:00",
+									"end":   "2021-06-29T21:12:09-04:00",
+									"start": "2021-06-29T20:38:18-04:00",
 								},
 							},
 						},
@@ -126,7 +126,7 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 				Function: func(obstime interface{}, latitude interface{}, longitude interface{}, e ...interface{}) (map[string]interface{}, error) {
 					var out = maputil.M(nil)
 					var now = time.Now()
-					var t = typeutil.OrTime(obstime, now)
+					var t = typeutil.OrTime(obstime, now).Round(time.Second)
 					var elevation = typeutil.OrFloat(e)
 					var o = astral.Observer{
 						Latitude:  typeutil.Float(latitude),
@@ -137,6 +137,15 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 					var sunRefractedElevation = astral.Elevation(o, t, true)
 					var azimuth, zenithT = astral.ZenithAndAzimuth(o, t, false)
 					var _, zenithR = astral.ZenithAndAzimuth(o, t, true)
+					var stateName string
+					var sunrise time.Time
+					var sunset time.Time
+					var dawnBH bool
+					var dawnGH bool
+					var duskGH bool
+					var duskBH bool
+					var noon = astral.Noon(o, t)
+					var midnight = astral.Midnight(o, t)
 
 					out.Set(`observer.time`, t.Format(time.RFC3339))
 					out.Set(`observer.latitude`, o.Latitude)
@@ -177,7 +186,8 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 						out.Set(`sun.dawn.blue_hour.end`, end)
 
 						if t.After(start) && t.Before(end) {
-							out.Set(`sun.state.blue_hour`, true)
+							dawnBH = true
+							out.Set(`sun.state.blue_hour`, dawnBH)
 						}
 					} else {
 						return nil, err
@@ -189,7 +199,8 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 						out.Set(`sun.dawn.golden_hour.end`, end)
 
 						if t.After(start) && t.Before(end) {
-							out.Set(`sun.state.golden_hour`, true)
+							dawnGH = true
+							out.Set(`sun.state.golden_hour`, dawnGH)
 						}
 					} else {
 						return nil, err
@@ -197,7 +208,8 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 
 					// ---------------------------------------------------------------------------------------
 					if at, err := astral.Sunrise(o, t); err == nil {
-						out.Set(`sun.sunrise`, at)
+						sunrise = at
+						out.Set(`sun.sunrise`, sunrise)
 					}
 
 					// ---------------------------------------------------------------------------------------
@@ -222,7 +234,7 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 					}
 
 					// ---------------------------------------------------------------------------------------
-					out.Set(`sun.noon`, astral.Noon(o, t))
+					out.Set(`sun.noon`, noon)
 
 					// ---------------------------------------------------------------------------------------
 					if start, end, err := astral.GoldenHour(o, t, astral.SunDirectionSetting); err == nil {
@@ -230,7 +242,8 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 						out.Set(`sun.dusk.golden_hour.end`, end)
 
 						if t.After(start) && t.Before(end) {
-							out.Set(`sun.state.golden_hour`, true)
+							duskGH = true
+							out.Set(`sun.state.golden_hour`, duskGH)
 						}
 					} else {
 						return nil, err
@@ -238,7 +251,8 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 
 					// ---------------------------------------------------------------------------------------
 					if at, err := astral.Sunset(o, t); err == nil {
-						out.Set(`sun.sunset`, at)
+						sunset = at
+						out.Set(`sun.sunset`, sunset)
 					}
 
 					// ---------------------------------------------------------------------------------------
@@ -259,7 +273,8 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 						out.Set(`sun.dusk.blue_hour.end`, end)
 
 						if t.After(start) && t.Before(end) {
-							out.Set(`sun.state.blue_hour`, true)
+							duskBH = true
+							out.Set(`sun.state.blue_hour`, duskBH)
 						}
 					} else {
 						return nil, err
@@ -282,6 +297,38 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server *Server) funcGroup {
 					} else {
 						return nil, err
 					}
+
+					if t.After(midnight.Add(-15*time.Minute)) && t.Before(midnight.Add(15*time.Minute)) {
+						stateName = `solar-midnight`
+					} else if duskGH || (t.After(sunset) && t.Before(duskC)) {
+						stateName = `sunset`
+					} else if t.After(duskA) && t.Before(duskA.Add(15*time.Minute)) {
+						stateName = `astronomical-twilight`
+					} else if t.After(duskN) && t.Before(duskA) {
+						stateName = `nautical-twilight`
+					} else if t.After(duskC) && t.Before(duskN) {
+						stateName = `civil-twilight`
+					} else if t.After(dawnC) && t.Before(sunrise) {
+						stateName = `civil-twilight`
+					} else if t.After(dawnN) && t.Before(dawnC) {
+						stateName = `nautical-twilight`
+					} else if t.After(dawnA) && t.Before(dawnN) {
+						stateName = `astronomical-twilight`
+					} else if dawnGH {
+						stateName = `sunrise`
+					} else if t.After(noon.Add(-15*time.Minute)) && t.Before(noon.Add(15*time.Minute)) {
+						stateName = `solar-noon`
+					} else if t.After(sunrise) && t.Before(noon) {
+						stateName = `morning`
+					} else if t.After(noon) && t.Before(sunset) {
+						stateName = `afternoon`
+					} else if sunRefractedElevation < sunElevationDayNightCutoff {
+						stateName = `night`
+					} else if sunRefractedElevation >= sunElevationDayNightCutoff {
+						stateName = `day`
+					}
+
+					out.Set(`sun.state.name`, stateName)
 
 					// ---------------------------------------------------------------------------------------
 					out.Set(`sun.midnight`, astral.Midnight(o, t))
