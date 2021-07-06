@@ -210,86 +210,88 @@ func tmFmt(value interface{}, format ...string) (string, error) {
 		return ``, nil
 	}
 
-	if v, err := stringutil.ConvertToTime(value); err == nil {
-		var tmFormat string
-		var formatName string
+	var v = typeutil.Time(value)
 
-		if len(format) == 0 {
-			tmFormat = time.RFC3339
-		} else {
-			formatName = format[0]
-
-			switch formatName {
-			case `kitchen`:
-				tmFormat = time.Kitchen
-			case `timer`:
-				tmFormat = `15:04:05`
-			case `rfc3339`:
-				tmFormat = time.RFC3339
-			case `rfc3339ns`:
-				tmFormat = time.RFC3339Nano
-			case `rfc822`:
-				tmFormat = time.RFC822
-			case `rfc822z`:
-				tmFormat = time.RFC822Z
-			case `rfc1123`:
-				tmFormat = time.RFC1123
-			case `rfc1123z`:
-				tmFormat = time.RFC1123Z
-			case `epoch`:
-				return fmt.Sprintf("%d", v.Unix()), nil
-			case `epoch-ms`:
-				return fmt.Sprintf("%d", int64(v.UnixNano()/1000000)), nil
-			case `epoch-us`:
-				return fmt.Sprintf("%d", int64(v.UnixNano()/1000)), nil
-			case `epoch-ns`:
-				return fmt.Sprintf("%d", int64(v.UnixNano())), nil
-			case `day`:
-				tmFormat = `Monday`
-			case `slash`:
-				tmFormat = `01/02/2006`
-			case `slash-dmy`:
-				tmFormat = `02/01/2006`
-			case `ymd`:
-				tmFormat = `2006-01-02`
-			case `ruby`:
-				tmFormat = time.RubyDate
-			case `ansi`, `ansic`:
-				tmFormat = time.ANSIC
-			case `unixdate`:
-				tmFormat = time.UnixDate
-			case `stamp`:
-				tmFormat = time.Stamp
-			case `stamp-ms`:
-				tmFormat = time.StampMilli
-			case `stamp-us`:
-				tmFormat = time.StampMicro
-			case `stamp-ns`:
-				tmFormat = time.StampNano
-			default:
-				tmFormat = formatName
-			}
-		}
-
-		var vStr string
-
-		switch tmFormat {
-		case `human`:
-			vStr = humanize.Time(v)
-		default:
-			vStr = v.Format(tmFormat)
-		}
-
-		if formatName == `timer` {
-			if len(strings.Split(vStr, `:`)) == 3 {
-				vStr = strings.TrimPrefix(vStr, `00:`)
-			}
-		}
-
-		return vStr, nil
-	} else {
-		return ``, err
+	if v.IsZero() {
+		return ``, fmt.Errorf("invalid time: %v", value)
 	}
+
+	var tmFormat string
+	var formatName string
+
+	if len(format) == 0 {
+		tmFormat = time.RFC3339
+	} else {
+		formatName = format[0]
+
+		switch formatName {
+		case `kitchen`:
+			tmFormat = time.Kitchen
+		case `timer`:
+			tmFormat = `15:04:05`
+		case `rfc3339`:
+			tmFormat = time.RFC3339
+		case `rfc3339ns`:
+			tmFormat = time.RFC3339Nano
+		case `rfc822`:
+			tmFormat = time.RFC822
+		case `rfc822z`:
+			tmFormat = time.RFC822Z
+		case `rfc1123`:
+			tmFormat = time.RFC1123
+		case `rfc1123z`:
+			tmFormat = time.RFC1123Z
+		case `epoch`:
+			return fmt.Sprintf("%d", v.Unix()), nil
+		case `epoch-ms`:
+			return fmt.Sprintf("%d", int64(v.UnixNano()/1000000)), nil
+		case `epoch-us`:
+			return fmt.Sprintf("%d", int64(v.UnixNano()/1000)), nil
+		case `epoch-ns`:
+			return fmt.Sprintf("%d", int64(v.UnixNano())), nil
+		case `day`:
+			tmFormat = `Monday`
+		case `slash`:
+			tmFormat = `01/02/2006`
+		case `slash-dmy`:
+			tmFormat = `02/01/2006`
+		case `ymd`:
+			tmFormat = `2006-01-02`
+		case `ruby`:
+			tmFormat = time.RubyDate
+		case `ansi`, `ansic`:
+			tmFormat = time.ANSIC
+		case `unixdate`:
+			tmFormat = time.UnixDate
+		case `stamp`:
+			tmFormat = time.Stamp
+		case `stamp-ms`:
+			tmFormat = time.StampMilli
+		case `stamp-us`:
+			tmFormat = time.StampMicro
+		case `stamp-ns`:
+			tmFormat = time.StampNano
+		default:
+			tmFormat = formatName
+		}
+	}
+
+	var vStr string
+
+	switch tmFormat {
+	case `human`:
+		vStr = humanize.Time(v)
+	default:
+		vStr = v.Format(tmFormat)
+	}
+
+	if formatName == `timer` {
+		if len(strings.Split(vStr, `:`)) == 3 {
+			vStr = strings.TrimPrefix(vStr, `00:`)
+		}
+	}
+
+	return vStr, nil
 }
 
 func calcFn(op string, values ...interface{}) (float64, error) {
