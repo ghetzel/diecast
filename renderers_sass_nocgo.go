@@ -1,3 +1,4 @@
+//go:build arm || OR || !cgo
 // +build arm OR !cgo
 
 package diecast

@@ -863,6 +863,11 @@ func (self *Server) GetResponse(method string, path string, body io.Reader, para
 	return rw.Result()
 }
 
+// Return a URL string that can be used to perform requests from the local machine.
+func (self *Server) LocalURL() string {
+	return self.bestInternalLoopbackUrl(nil)
+}
+
 // Start a long-running webserver.  If provided, the functions provided will be run in parallel
 // after the server has started.  If any of them return a non-nil error, the server will stop and
 // this method will return that error.

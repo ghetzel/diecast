@@ -34,6 +34,7 @@ func TestStaticServer(t *testing.T) {
 	server.SetMounts(mounts)
 	assert.Nil(server.Initialize())
 	assert.Equal(len(mounts), len(server.Mounts))
+	assert.Equal(`http://127.0.0.1:28419`, server.LocalURL())
 
 	doTestServerRequest(server, `GET`, `/index.html`,
 		func(w *httptest.ResponseRecorder) {
