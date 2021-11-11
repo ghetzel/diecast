@@ -35,7 +35,7 @@ require (
 	github.com/kyokomi/emoji v2.1.0+incompatible
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-shellwords v1.0.9
-	github.com/microcosm-cc/bluemonday v1.0.1
+	github.com/microcosm-cc/bluemonday v1.0.16
 	github.com/montanaflynn/stats v0.0.0-20151014174947-eeaced052adb
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/opentracing/opentracing-go v1.1.0
@@ -49,16 +49,17 @@ require (
 	github.com/yosssi/gohtml v0.0.0-20180130040904-97fbf36f4aa8
 	go.uber.org/atomic v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
-	golang.org/x/net v0.0.0-20210224082022-3d97a244fca7
+	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
-	golang.org/x/text v0.3.4
+	golang.org/x/text v0.3.6
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
 	github.com/alicebob/gopher-json v0.0.0-20180125190556-5a6b3ba71ee6 // indirect
 	github.com/andybalholm/cascadia v1.0.0 // indirect
+	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/c-bata/go-prompt v0.2.2 // indirect
 	github.com/cenkalti/backoff v2.1.1+incompatible // indirect
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
@@ -74,6 +75,7 @@ require (
 	github.com/ghetzel/uuid v0.0.0-20171129191014-dec09d789f3d // indirect
 	github.com/go-shiori/dom v0.0.0-20200325044552-dcb2bfb8d4d8 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/grandcat/zeroconf v0.0.0-20190118114326-c2d1b4121200 // indirect
 	github.com/h2non/filetype v1.0.13-0.20200520201155-df519de6e270 // indirect
@@ -113,7 +115,7 @@ require (
 	github.com/urfave/negroni v1.0.0 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20190206043414-8bfc7677f583 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	golang.org/x/sys v0.0.0-20210225134936-a50acf3fe073 // indirect
+	golang.org/x/sys v0.0.0-20210423082822-04245dca01da // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.6 // indirect
