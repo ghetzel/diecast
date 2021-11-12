@@ -17,16 +17,16 @@ require (
 	github.com/beevik/etree v1.1.0
 	github.com/biessek/golang-ico v0.0.0-20180326222316-d348d9ea4670
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ghetzel/cli v1.17.0
-	github.com/ghetzel/go-stockutil v1.10.0
+	github.com/ghetzel/go-stockutil v1.10.1
 	github.com/ghetzel/go-webfriend v0.9.60
 	github.com/ghetzel/ratelimit v0.0.0-20200513232932-b28727c55ae1
 	github.com/ghetzel/testify v1.4.1
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-shiori/go-readability v0.0.0-20200413080041-05caea5f6592
 	github.com/gobwas/glob v0.2.3
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/grokify/html-strip-tags-go v0.0.0-20180530080503-3f8856873ce5
 	github.com/husobee/vestigo v1.1.0
@@ -101,7 +101,7 @@ require (
 	github.com/mcuadros/go-defaults v1.1.0 // indirect
 	github.com/melbahja/goph v1.2.1 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
-	github.com/miekg/dns v1.1.12 // indirect
+	github.com/miekg/dns v1.1.43 // indirect
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect

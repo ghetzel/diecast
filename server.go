@@ -30,7 +30,6 @@ import (
 	"syscall"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
@@ -43,6 +42,7 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/ghetzel/ratelimit"
 	"github.com/gobwas/glob"
+	jwt "github.com/golang-jwt/jwt"
 	"github.com/husobee/vestigo"
 	"github.com/mattn/go-shellwords"
 	opentracing "github.com/opentracing/opentracing-go"
