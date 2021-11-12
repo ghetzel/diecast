@@ -381,7 +381,6 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		EnableLayouts:      true,
 		RequestBodyPreload: DefaultRequestBodyPreload,
 		mux:                http.NewServeMux(),
-		userRouter:         vestigo.NewRouter(),
 		viaConstructor:     true,
 	}
 
@@ -517,9 +516,7 @@ func (self *Server) populateDefaults() {
 		self.mux = http.NewServeMux()
 	}
 
-	if self.userRouter == nil {
-		self.userRouter = vestigo.NewRouter()
-	}
+	self.handlersEnsureRouter()
 
 	if self.Log.Format == `` {
 		self.Log.Format = logFormats[`common`]

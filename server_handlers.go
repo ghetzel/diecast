@@ -28,6 +28,12 @@ type Routable interface {
 
 type AddHandlerFunc func(verb string, route string, handler http.HandlerFunc) (string, string, http.HandlerFunc)
 
+func (self *Server) handlersEnsureRouter() {
+	if self.userRouter == nil {
+		self.userRouter = vestigo.NewRouter()
+	}
+}
+
 // Return the value of a URL parameter within a given request handler.
 func (self *Server) P(req *http.Request, param string, fallback ...interface{}) typeutil.Variant {
 	if v := vestigo.Param(req, param); v != `` {
@@ -92,11 +98,13 @@ func (self *Server) HandleFunc(route string, handler http.HandlerFunc) {
 // Add a handler function for an endpoint (any HTTP method.)
 func (self *Server) Handle(route string, handler http.Handler) {
 	self.hasUserRoutes = true
+	self.handlersEnsureRouter()
 	self.userRouter.Handle(route, handler)
 }
 
 func (self *Server) addHandler(verb string, route string, handler http.HandlerFunc) {
 	self.hasUserRoutes = true
+	self.handlersEnsureRouter()
 
 	if oah := self.OnAddHandler; oah != nil {
 		v, r, h := oah(verb, route, handler)

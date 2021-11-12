@@ -196,6 +196,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if self.hasUserRoutes {
+		self.handlersEnsureRouter()
 		self.userRouter.ServeHTTP(w, req)
 	} else if lastErr != nil {
 		// something else went sideways
