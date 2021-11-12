@@ -1311,6 +1311,14 @@ func (self *Server) applyTemplate(
 					return fmt.Errorf("unknown switch checktype %q", swcase.CheckType)
 				}
 
+				var usePath string
+
+				if c, err := EvalInline(swcase.UsePath, data, funcs); err == nil {
+					usePath = c
+				} else {
+					return err
+				}
+
 				if swcase.Break {
 					break SwitchCaseLoop
 
@@ -1322,10 +1330,10 @@ func (self *Server) applyTemplate(
 					finalHeader.Redirect = redir
 					break SwitchCaseLoop
 
-				} else if swTemplate, err := self.fs.Open(swcase.UsePath); err == nil {
+				} else if swTemplate, err := self.fs.Open(usePath); err == nil {
 					if swHeader, swData, err := SplitTemplateHeaderContent(swTemplate); err == nil {
 						if fh, err := finalHeader.Merge(swHeader); err == nil {
-							log.Debugf("[%s] Switch case %d matched, switching to template %v", reqid(req), i, swcase.UsePath)
+							log.Debugf("[%s] Switch case %d matched, switching to template %v", reqid(req), i, usePath)
 							// httputil.RequestSetValue(req, SwitchCaseKey, usePath)
 
 							return self.applyTemplate(
