@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/gorilla/websocket"
 	"github.com/husobee/vestigo"
 )
 
@@ -11,9 +12,23 @@ import (
 // make sure Server actually implements it at compile time
 var _compileTimeCheckRoutable Routable = new(Server)
 
+type Upgrader = websocket.Upgrader
+
+var DefaultUpgrader = Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+type WebsocketConn = websocket.Conn
+type WebsocketHandlerFunc = func(http.ResponseWriter, *http.Request, *WebsocketConn)
+
 type Routable interface {
 	P(req *http.Request, param string, fallback ...interface{}) typeutil.Variant
 	Get(route string, handler http.HandlerFunc)
+	Websocket(route string, wsHandler WebsocketHandlerFunc, upgradeHeaders http.Header)
 	Head(route string, handler http.HandlerFunc)
 	Post(route string, handler http.HandlerFunc)
 	Put(route string, handler http.HandlerFunc)
@@ -48,6 +63,16 @@ func (self *Server) P(req *http.Request, param string, fallback ...interface{}) 
 // Add a handler for an HTTP GET endpoint.
 func (self *Server) Get(route string, handler http.HandlerFunc) {
 	self.addHandler(http.MethodGet, route, handler)
+}
+
+func (self *Server) Websocket(route string, wsHandler WebsocketHandlerFunc, upgradeHeaders http.Header) {
+	self.addHandler(http.MethodGet, route, func(w http.ResponseWriter, req *http.Request) {
+		if conn, err := DefaultUpgrader.Upgrade(w, req, upgradeHeaders); err == nil {
+			wsHandler(w, req, (*WebsocketConn)(conn))
+		} else {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+	})
 }
 
 // Add a handler for an HTTP HEAD endpoint.

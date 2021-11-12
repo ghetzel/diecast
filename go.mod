@@ -28,6 +28,7 @@ require (
 	github.com/gobwas/glob v0.2.3
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gomodule/redigo v2.0.0+incompatible
+	github.com/gorilla/websocket v1.4.2
 	github.com/grokify/html-strip-tags-go v0.0.0-20180530080503-3f8856873ce5
 	github.com/husobee/vestigo v1.1.0
 	github.com/jbenet/go-base58 v0.0.0-20150317085156-6237cf65f3a6
@@ -76,7 +77,6 @@ require (
 	github.com/go-shiori/dom v0.0.0-20200325044552-dcb2bfb8d4d8 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/grandcat/zeroconf v0.0.0-20190118114326-c2d1b4121200 // indirect
 	github.com/h2non/filetype v1.0.13-0.20200520201155-df519de6e270 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
