@@ -101,19 +101,69 @@ func (self *S3Mount) String() string {
 
 func (self *S3Mount) Open(name string) (http.File, error) {
 	if awsSession != nil {
-		name = filepath.Join(self.Path, name)
-
-		var bucket, key = stringutil.SplitPair(strings.TrimPrefix(name, `/`), `/`)
+		var remoteName = filepath.Join(self.Path, name)
+		var bucket, key = stringutil.SplitPair(strings.TrimPrefix(remoteName, `/`), `/`)
 
 		if obj, err := s3client().GetObject(&s3.GetObjectInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 		}); err == nil {
-			var mr = NewMountResponse(name, *obj.ContentLength, obj.Body)
+			var mr = NewMountResponse(remoteName, *obj.ContentLength, obj.Body)
 
 			mr.ContentType = *obj.ContentType
 
 			return mr, nil
+		} else if log.ErrContains(err, `NoSuchKey`) {
+			var fauxParent = newHttpFile(name, nil)
+
+			fauxParent.SetIsDir(true)
+			log.Noticef("s3: parent %v", fauxParent.Name())
+
+			if err := s3client().ListObjectsPages(&s3.ListObjectsInput{
+				Bucket: aws.String(bucket),
+				Prefix: aws.String(strings.TrimSuffix(key, `/`) + `/`),
+			}, func(page *s3.ListObjectsOutput, lastPage bool) bool {
+				var subdirs = make(map[string]bool)
+
+				for _, obj := range page.Contents {
+					var lazyFile = newHttpFile(*obj.Key, nil)
+					var objdir = filepath.Dir(*obj.Key)
+					var add bool
+
+					if *obj.Key == objdir {
+						continue
+					}
+
+					lazyFile.SetFileSystem(self)
+					lazyFile.SetName(*obj.Key)
+					lazyFile.SetSize(*obj.Size)
+
+					if objdir == key {
+						if strings.HasPrefix(*obj.Key, objdir+`/`) {
+							if _, ok := subdirs[objdir]; !ok {
+								add = true
+								lazyFile.SetIsDir(true)
+								subdirs[objdir] = true
+								log.Noticef("s3: dir %v", objdir)
+							}
+						} else {
+							log.Noticef("s3: file %v", obj.Key)
+						}
+					}
+
+					if add {
+						var mr = NewMountResponse(*obj.Key, *obj.Size, lazyFile)
+						fauxParent.AddChildFile(mr)
+						log.Noticef("s3: add fcx %v", lazyFile.Name())
+					}
+				}
+
+				return true
+			}); err == nil {
+				return fauxParent, nil
+			} else {
+				return nil, err
+			}
 		} else {
 			return nil, err
 		}

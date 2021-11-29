@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/fileutil"
-	"github.com/ghetzel/go-stockutil/pathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 )
@@ -144,52 +142,27 @@ func loadStandardFunctionsPath(funcs FuncMap, server *Server) funcGroup {
 					var entries = make([]*fileInfo, 0)
 
 					if len(dirs) == 0 || dirs[0] == `` || dirs[0] == `.` || dirs[0] == `/` {
-						if server != nil {
-							dir = server.RootPath
-						} else if wd, err := os.Getwd(); err == nil {
-							dir = wd
-						} else {
-							return nil, err
-						}
+						dir = `/`
 					} else {
 						dir = dirs[0]
 					}
 
-					// lock everything into the server rootpath
-					if server != nil && dir != server.RootPath {
-						dir = filepath.Join(server.RootPath, dir)
-					}
-
-					if d, err := pathutil.ExpandUser(dir); err == nil {
-						dir = d
-					} else {
-						return nil, err
-					}
-
-					dir = path.Clean(dir)
-
-					if server != nil && !server.IsInRootPath(dir) {
-						return nil, fmt.Errorf("permission denied")
-					}
-
-					if pathutil.DirExists(dir) {
-						dir = path.Join(dir, `*`)
-					}
-
-					if e, err := filepath.Glob(dir); err == nil {
-						for _, entry := range e {
-							if info, err := os.Stat(entry); err == nil {
+					if root, err := server.fs.Open(dir); err == nil {
+						if children, err := root.Readdir(-1); err == nil {
+							for _, child := range children {
 								entries = append(entries, &fileInfo{
-									Parent:    path.Dir(entry),
-									Directory: info.IsDir(),
-									FileInfo:  info,
+									Parent:    path.Dir(child.Name()),
+									Directory: child.IsDir(),
+									FileInfo:  child,
 								})
 							}
-						}
 
-						sort.Slice(entries, func(i, j int) bool {
-							return strings.ToLower(entries[i].Name()) < strings.ToLower(entries[j].Name())
-						})
+							sort.Slice(entries, func(i, j int) bool {
+								return strings.ToLower(entries[i].Name()) < strings.ToLower(entries[j].Name())
+							})
+						} else {
+							return nil, err
+						}
 
 						return entries, nil
 					} else {

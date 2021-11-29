@@ -7,6 +7,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -426,8 +427,10 @@ func (self *zipEntry) Stat() (os.FileInfo, error) {
 // -------------------------------------------------------------------------------------------------
 type httpFile struct {
 	*fileutil.FileInfo
-	buf    *bytes.Reader
-	closed bool
+	buf      *bytes.Reader
+	fs       http.FileSystem
+	closed   bool
+	children []os.FileInfo
 }
 
 func newHttpFile(name string, data []byte) *httpFile {
@@ -443,12 +446,50 @@ func newHttpFile(name string, data []byte) *httpFile {
 	return f
 }
 
+func (self *httpFile) SetFileSystem(fs http.FileSystem) {
+	self.fs = fs
+}
+
+func (self *httpFile) lazyLoadBuffer() error {
+	if self.buf == nil {
+		if self.fs == nil {
+			return fmt.Errorf("cannot lazy load buffer without an underlying filesystem")
+		} else if file, err := self.fs.Open(self.Name()); err == nil {
+			defer file.Close()
+
+			if data, err := ioutil.ReadAll(file); err == nil {
+				self.buf = bytes.NewReader(data)
+				self.closed = false
+				self.children = nil
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (self *httpFile) AddChildFile(info os.FileInfo) {
+	if self.children == nil {
+		self.children = make([]os.FileInfo, 0)
+	}
+
+	self.children = append(self.children, info)
+}
+
 func (self *httpFile) Close() error {
 	self.closed = true
 	return nil
 }
 
 func (self *httpFile) Read(b []byte) (int, error) {
+	if err := self.lazyLoadBuffer(); err != nil {
+		return 0, err
+	}
+
 	if self.closed {
 		return 0, fmt.Errorf("attempted read on closed file")
 	} else if self.buf == nil {
@@ -459,6 +500,10 @@ func (self *httpFile) Read(b []byte) (int, error) {
 }
 
 func (self *httpFile) Seek(offset int64, whence int) (int64, error) {
+	if err := self.lazyLoadBuffer(); err != nil {
+		return 0, err
+	}
+
 	if self.closed {
 		return 0, fmt.Errorf("attempted seek on closed file")
 	} else if self.buf == nil {
@@ -469,9 +514,29 @@ func (self *httpFile) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (self *httpFile) Readdir(count int) ([]os.FileInfo, error) {
-	return nil, io.EOF
+	return self.children, io.EOF
 }
 
 func (self *httpFile) Stat() (os.FileInfo, error) {
 	return self.FileInfo, nil
+}
+
+// -------------------------------------------------------------------------------------------------
+type httpToIoFs struct {
+	httpFs http.FileSystem
+}
+
+func newHttpToIoFs(fs http.FileSystem) *httpToIoFs {
+	return &httpToIoFs{
+		httpFs: fs,
+	}
+}
+
+func (self *httpToIoFs) Open(name string) (fs.File, error) {
+	if f, err := self.httpFs.Open(name); err == nil {
+		return f, nil
+	} else {
+		log.Warningf("httpToIoFs: Open(%q): %v", name, err)
+		return nil, err
+	}
 }
