@@ -2,7 +2,7 @@ package diecast
 
 import (
 	"fmt"
-	"net/http"
+	"io/fs"
 
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
@@ -16,7 +16,7 @@ type Layer struct {
 	Paths         interface{}            `yaml:"paths"`
 	HaltOnMissing bool                   `yaml:"haltOnMissing"`
 	HaltOnError   bool                   `yaml:"haltOnError"`
-	fs            http.FileSystem
+	fs            fs.FS
 }
 
 // Return a typeutil.Variant containing the value at the named option key, or a fallback value.
@@ -42,7 +42,7 @@ func (self *Layer) shouldConsiderOpening(name string) bool {
 }
 
 // Retrieve the named file from the filesystem specified
-func (self *Layer) openHttpFile(name string) (http.File, error) {
+func (self *Layer) openFsFile(name string) (fs.File, error) {
 	if self.fs == nil {
 		if fsfn, ok := filesystems[self.Type]; ok {
 			if fsfn != nil {

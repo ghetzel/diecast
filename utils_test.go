@@ -11,25 +11,25 @@ import (
 )
 
 func TestMockHttpFile(t *testing.T) {
-	var file *mockHttpFile
+	var file *mockFile
 	var err error
 
-	// file, err = newMockHttpFile(`test.txt`, nil)
+	// file, err = newMockFile(`test.txt`, nil)
 	// assert.Equal(t, ErrNotFound, err)
 
-	file, err = newMockHttpFile(`test.txt`, `HELLO`)
+	file, err = newMockFile(`test.txt`, `HELLO`)
 	assert.NoError(t, err)
 	assert.Equal(t, `HELLO`, file.String())
 
-	file, err = newMockHttpFile(`test.txt`, []byte(`HELLO`))
+	file, err = newMockFile(`test.txt`, []byte(`HELLO`))
 	assert.NoError(t, err)
 	assert.Equal(t, `HELLO`, file.String())
 
-	file, err = newMockHttpFile(`test.txt`, bytes.NewBufferString(`HELLO`))
+	file, err = newMockFile(`test.txt`, bytes.NewBufferString(`HELLO`))
 	assert.NoError(t, err)
 	assert.Equal(t, `HELLO`, file.String())
 
-	file, err = newMockHttpFile(`test.txt`, errors.New(`HELLO`))
+	file, err = newMockFile(`test.txt`, errors.New(`HELLO`))
 	assert.NoError(t, err)
 	assert.Equal(t, `HELLO`, file.String())
 }

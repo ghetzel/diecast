@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"io/fs"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -10,12 +11,12 @@ import (
 )
 
 // Perform the retrieval phase of handling a request.
-func (self *Server) serveHttpPhaseRetrieve(ctx *Context) (http.File, error) {
+func (self *Server) serveHttpPhaseRetrieve(ctx *Context) (fs.File, error) {
 	if err := self.prep(); err != nil {
 		return nil, err
 	}
 
-	var file http.File
+	var file fs.File
 	var lerr error
 
 	for _, tryPath := range self.retrieveTryPaths(ctx.Request()) {
@@ -24,7 +25,7 @@ func (self *Server) serveHttpPhaseRetrieve(ctx *Context) (http.File, error) {
 			continue
 		}
 
-		// ctx.Debugf("retrieve: try path %v", tryPath)
+		ctx.Debugf("retrieve: try path %v", tryPath)
 		file, lerr = ctx.Open(tryPath)
 
 		if lerr == nil {

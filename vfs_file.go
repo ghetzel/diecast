@@ -1,7 +1,7 @@
 package diecast
 
 import (
-	"net/http"
+	"io/fs"
 
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
@@ -12,9 +12,9 @@ type File struct {
 	Data   interface{} `yaml:"data"`
 }
 
-// returns an object that satisfies the http.File interface and returns data as read from the Source
+// returns an object that satisfies the fs.File interface and returns data as read from the Source
 // file path, or from the data literal.  If Data is a map or array, it will be encoded and returned as an encoded string.
-func (self *File) httpFile(vfs *VFS) (http.File, error) {
+func (self *File) fsFile(vfs *VFS) (fs.File, error) {
 	if self.Data != nil {
 		var mimetype string
 		var data = self.Data
@@ -28,7 +28,7 @@ func (self *File) httpFile(vfs *VFS) (http.File, error) {
 			}
 		}
 
-		if file, err := newMockHttpFile(self.Path, data); err == nil {
+		if file, err := newMockFile(self.Path, data); err == nil {
 			if mimetype != `` {
 				file.SetHeader(`Content-Type`, mimetype)
 			}

@@ -1,8 +1,6 @@
 package diecast
 
-import (
-	"net/http"
-)
+import "io/fs"
 
 var FrontMatterSeparator = []byte("---\n")
 var MaxFrontMatterSize = 32768
@@ -10,7 +8,7 @@ var DefaultLayoutName = `default`
 
 type TemplateRenderer struct{}
 
-func (self *TemplateRenderer) Render(ctx *Context, input http.File, cfg *RendererConfig) error {
+func (self *TemplateRenderer) Render(ctx *Context, input fs.File, cfg *RendererConfig) error {
 	defer input.Close()
 
 	if tmpl, err := ParseTemplate(input); err == nil {

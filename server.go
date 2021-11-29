@@ -3,6 +3,7 @@ package diecast
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -42,8 +43,8 @@ type Server struct {
 	VerifyMethod  string            `yaml:"verifyMethod"`
 	VerifyPath    string            `yaml:"verifyPath"`
 	VerifyTimeout string            `yaml:"verifyTimeout"`
-	VFS           VFS               `yaml:"vfs"`
-	ovfs          http.FileSystem
+	VFS           *VFS              `yaml:"vfs"`
+	ovfs          fs.FS
 	startFuncs    []ServerStartFunc
 }
 
@@ -70,7 +71,7 @@ func NewServerFromFile(cfgfile string) (*Server, error) {
 		defer cfg.Close()
 
 		if srv, err := NewServerFromConfig(cfg); err == nil {
-			srv.VFS.SetFallbackFS(http.Dir(filepath.Dir(cfgfile)))
+			srv.VFS.SetFallbackFS(os.DirFS(filepath.Dir(cfgfile)))
 			return srv, nil
 		} else {
 			return nil, err
@@ -193,13 +194,19 @@ func (self *Server) ListenAndServe(address string) error {
 
 // Implements the http.Handler interface.
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	var file http.File
+	var file fs.File
 	var err error
 	var ctx = NewContext(self)
 
 	// populate the context with data from the global DataSet
 	if _, err := self.DataSources.Retrieve(ctx); err != nil {
 		ctx.Warningf("data: %v", err)
+		self.writeResponse(ctx, err)
+		return
+	}
+
+	if err := self.prep(); err != nil {
+		ctx.Warningf("prep: %v", err)
 		self.writeResponse(ctx, err)
 		return
 	}
@@ -262,7 +269,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // When data is nil, and no code is provided -> HTTP 204
 // When data is an error, write out the error text and ensure the HTTP status is >= 400
 // When code is [300,399], an HTTP redirect will occur, redirecting to the path resulting from stringifying data.
-// When data is a Map or Array, I will be encoded and returned as JSON with Content-Type: application/json.
+// When data is a Map or Array, it will be encoded and returned as JSON with Content-Type: application/json.
 //
 // All other conditions will convert the data to []byte and write that out directly.
 //
@@ -321,6 +328,10 @@ func (self *Server) writeResponse(ctx *Context, data interface{}, code ...int) {
 
 // setup and populate any last-second things we might need to process a request
 func (self *Server) prep() error {
+	if self.VFS == nil {
+		self.VFS = new(VFS)
+	}
+
 	if self.ovfs != nil {
 		self.VFS.SetFallbackFS(self.ovfs)
 	}

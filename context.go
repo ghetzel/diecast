@@ -3,6 +3,7 @@ package diecast
 import (
 	"bytes"
 	"fmt"
+	"io/fs"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -267,7 +268,7 @@ func (self *Context) Data() map[string]interface{} {
 }
 
 // Open a file in the underlying http.FileSystem.
-func (self *Context) Open(name string) (http.File, error) {
+func (self *Context) Open(name string) (fs.File, error) {
 	if self.server == nil {
 		panic("no filesystem associated with context")
 	}

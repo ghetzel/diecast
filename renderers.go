@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"io/fs"
 	"net/http"
 	"strings"
 
@@ -76,7 +77,7 @@ func (self *RendererConfig) RendererFor(ctx *Context) Renderer {
 // =====================================================================================================================
 
 // Render a retrieved file to the given response writer.
-func (self *Server) serveHttpPhaseRender(ctx *Context, file http.File) error {
+func (self *Server) serveHttpPhaseRender(ctx *Context, file fs.File) error {
 	// apply the first matching renderer from the config (if any)
 	for _, rc := range self.Renderers {
 		if renderer := rc.RendererFor(ctx); renderer != nil {

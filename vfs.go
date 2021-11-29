@@ -1,20 +1,25 @@
 package diecast
 
 import (
-	"net/http"
+	"io/fs"
+	"os"
+
+	"github.com/ghetzel/go-stockutil/log"
 )
 
-type FileSystemFunc = func(*Layer) (http.FileSystem, error)
+type FileSystemFunc = func(*Layer) (fs.FS, error)
 
 var filesystems = make(map[string]FileSystemFunc)
 
 func init() {
-	// RegisterFS(`s3`, func(layer *Layer) http.FileSystem {
+	// RegisterFS(`s3`, func(layer *Layer) fs.FS {
 	// 	var bucket = layer.Option(`bucket`).String()
 	// })
 
-	RegisterFS(``, func(layer *Layer) (http.FileSystem, error) {
-		return http.Dir(layer.Option(`path`, `.`).String()), nil
+	RegisterFS(``, func(layer *Layer) (fs.FS, error) {
+		var root = layer.Option(`path`, `.`).String()
+
+		return os.DirFS(root), nil
 	})
 }
 
@@ -28,36 +33,36 @@ func RegisterFS(fstype string, fsfn FileSystemFunc) {
 type VFS struct {
 	Overrides map[string]*File `yaml:"overrides"`
 	Layers    []Layer          `yaml:"layers"`
-	fallback  http.FileSystem
+	fallback  fs.FS
 }
 
 // Set the filesystem that will be used to respond to any requests not otherwise handled by plugins and overrides.
-func (self *VFS) SetFallbackFS(fallback http.FileSystem) {
+func (self *VFS) SetFallbackFS(fallback fs.FS) {
 	if fallback != nil {
 		self.fallback = fallback
 	}
 }
 
 // Retrieve a file from the VFS.
-func (self *VFS) Open(name string) (http.File, error) {
+func (self *VFS) Open(name string) (fs.File, error) {
 	if ov, ok := self.Overrides[name]; ok {
-		// log.Debugf("vfs: open %s [override]", name)
-		return ov.httpFile(self)
+		log.Debugf("vfs: open %s [override]", name)
+		return ov.fsFile(self)
 	}
 
 	// search through layers
-	for _, layer := range self.Layers {
+	for i, layer := range self.Layers {
 		if layer.shouldConsiderOpening(name) {
-			if file, err := layer.openHttpFile(name); err == nil {
-				// log.Debugf("vfs: open %s [layer=%d]", name, i)
+			if file, err := layer.openFsFile(name); err == nil {
+				log.Debugf("vfs: open %s [layer=%d]", name, i)
 				return file, nil
 			} else if err == ErrNotFound {
 				if layer.HaltOnMissing {
-					// log.Debugf("vfs: halt: missing %s [layer=%d]", name, i)
+					log.Debugf("vfs: halt: missing %s [layer=%d]", name, i)
 					return nil, err
 				}
 			} else if layer.HaltOnError {
-				// log.Debugf("vfs: halt: error %v [layer=%d]", err, i)
+				log.Debugf("vfs: halt: error %v [layer=%d]", err, i)
 				return nil, err
 			} else {
 				continue
@@ -70,7 +75,7 @@ func (self *VFS) Open(name string) (http.File, error) {
 		if file, err := fs.Open(name); err == nil {
 			if stat, err := file.Stat(); err == nil {
 				if !stat.IsDir() {
-					// log.Debugf("vfs: open %s [fallback]", name)
+					log.Debugf("vfs: open %s [fallback]", name)
 					return file, nil
 				}
 			}

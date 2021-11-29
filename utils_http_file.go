@@ -11,7 +11,7 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
-type mockHttpFile struct {
+type mockFile struct {
 	fileutil.FileInfo
 	file   http.File
 	data   []byte
@@ -20,8 +20,8 @@ type mockHttpFile struct {
 }
 
 // Load data from a variety of sources and expose it with an http.File interface.
-func newMockHttpFile(name string, src interface{}) (*mockHttpFile, error) {
-	var file = new(mockHttpFile)
+func newMockFile(name string, src interface{}) (*mockFile, error) {
+	var file = new(mockFile)
 
 	file.SetIsDir(false)
 	file.SetName(name)
@@ -30,7 +30,7 @@ func newMockHttpFile(name string, src interface{}) (*mockHttpFile, error) {
 }
 
 // setup seekable internal buffer and recalculate size
-func (self *mockHttpFile) prep() {
+func (self *mockFile) prep() {
 	if self.buf == nil {
 		self.buf = bytes.NewReader(self.data)
 	}
@@ -38,7 +38,7 @@ func (self *mockHttpFile) prep() {
 	self.SetSize(int64(self.buf.Len()))
 }
 
-func (self *mockHttpFile) SetHeader(key string, value interface{}) {
+func (self *mockFile) SetHeader(key string, value interface{}) {
 	if self.header == nil {
 		self.header = make(http.Header)
 	}
@@ -46,11 +46,11 @@ func (self *mockHttpFile) SetHeader(key string, value interface{}) {
 	self.header.Set(key, typeutil.String(value))
 }
 
-func (self *mockHttpFile) Header() http.Header {
+func (self *mockFile) Header() http.Header {
 	return self.header
 }
 
-func (self *mockHttpFile) SetSource(src interface{}) error {
+func (self *mockFile) SetSource(src interface{}) error {
 	if src == nil { // nil source
 		self.SetData(nil)
 		return nil
@@ -91,37 +91,37 @@ func (self *mockHttpFile) SetSource(src interface{}) error {
 	return nil
 }
 
-func (self *mockHttpFile) SetData(b []byte) {
+func (self *mockFile) SetData(b []byte) {
 	self.data = b
 	self.prep()
 }
 
-func (self *mockHttpFile) Read(b []byte) (int, error) {
+func (self *mockFile) Read(b []byte) (int, error) {
 	self.prep()
 
 	return self.buf.Read(b)
 }
 
-func (self *mockHttpFile) Seek(offset int64, whence int) (int64, error) {
+func (self *mockFile) Seek(offset int64, whence int) (int64, error) {
 	self.prep()
 
 	return self.buf.Seek(offset, whence)
 }
 
-func (self *mockHttpFile) Close() error {
+func (self *mockFile) Close() error {
 	self.data = nil
 	self.buf = nil
 	return nil
 }
 
-func (self *mockHttpFile) Readdir(count int) ([]os.FileInfo, error) {
+func (self *mockFile) Readdir(count int) ([]os.FileInfo, error) {
 	return nil, os.ErrInvalid
 }
 
-func (self *mockHttpFile) Stat() (os.FileInfo, error) {
+func (self *mockFile) Stat() (os.FileInfo, error) {
 	return &self.FileInfo, nil
 }
 
-func (self *mockHttpFile) String() string {
+func (self *mockFile) String() string {
 	return string(self.data)
 }
