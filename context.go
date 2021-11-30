@@ -25,6 +25,11 @@ var DefaultContextTypeHint = `application/octet-stream`
 var DefaultContextDir = `.`
 var RequestIdentifierFunc RequestIdentFunc
 
+const (
+	XDiecastRequest = `X-Diecast-Request`
+	XDiecastError   = `X-Diecast-Error`
+)
+
 // A Context represents everything necessary to handle the request for a single resource, including
 // validating the request may proceed, locating and retrieving the data, and performing any
 // post-processing of that data before it is returned to the requestor.
@@ -71,7 +76,7 @@ func (self *Context) reset() *Context {
 
 // Anything to do to the response immediately before rendering begins, after which point we lose control of the response.
 func (self *Context) finalizeBeforeRender() {
-	self.Header().Set(`X-Diecast-Request`, self.ID())
+	self.Header().Set(XDiecastRequest, self.ID())
 }
 
 // Return the current Server instance that owns this context.

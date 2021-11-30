@@ -64,6 +64,14 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) {
+				var specs = c.Args()
+
+				if len(specs) == 0 {
+					specs = []string{`.`}
+				}
+
+				log.FatalIf(server.LoadLayersFromString(specs...))
+
 				if sreq := c.String(`single-request`); sreq != `` {
 					var method, path = stringutil.SplitPairTrailing(sreq, ` `)
 					method = typeutil.OrString(method, `get`)

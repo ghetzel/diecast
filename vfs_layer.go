@@ -3,6 +3,8 @@ package diecast
 import (
 	"fmt"
 	"io/fs"
+	"net/url"
+	"strings"
 
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
@@ -17,6 +19,37 @@ type Layer struct {
 	HaltOnMissing bool                   `yaml:"haltOnMissing"`
 	HaltOnError   bool                   `yaml:"haltOnError"`
 	fs            fs.FS
+}
+
+func LayerFromString(spec string) (*Layer, error) {
+	if s, err := url.Parse(spec); err == nil {
+		var layer = new(Layer)
+
+		layer.Type = s.Scheme
+		layer.Options = make(map[string]interface{})
+
+		for key, values := range s.Query() {
+			switch len(values) {
+			case 0:
+				layer.Options[key] = true
+			case 1:
+				switch key {
+				case `haltOnMissing`:
+					layer.HaltOnMissing = typeutil.Bool(values[0])
+				case `haltOnError`:
+					layer.HaltOnError = typeutil.Bool(values[0])
+				default:
+					layer.Options[key] = values[0]
+				}
+			default:
+				layer.Options[key] = values
+			}
+		}
+
+		return layer, nil
+	} else {
+		return nil, err
+	}
 }
 
 // Return a typeutil.Variant containing the value at the named option key, or a fallback value.
@@ -43,6 +76,8 @@ func (self *Layer) shouldConsiderOpening(name string) bool {
 
 // Retrieve the named file from the filesystem specified
 func (self *Layer) openFsFile(name string) (fs.File, error) {
+	name = strings.TrimPrefix(name, `/`)
+
 	if self.fs == nil {
 		if fsfn, ok := filesystems[self.Type]; ok {
 			if fsfn != nil {

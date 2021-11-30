@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -43,7 +44,7 @@ type Server struct {
 	VerifyMethod  string            `yaml:"verifyMethod"`
 	VerifyPath    string            `yaml:"verifyPath"`
 	VerifyTimeout string            `yaml:"verifyTimeout"`
-	VFS           *VFS              `yaml:"vfs"`
+	VFS           VFS               `yaml:"vfs"`
 	ovfs          fs.FS
 	startFuncs    []ServerStartFunc
 }
@@ -81,6 +82,19 @@ func NewServerFromFile(cfgfile string) (*Server, error) {
 	}
 }
 
+// Configure VFS layers from a connection string
+func (self *Server) LoadLayersFromString(specs ...string) error {
+	for _, spec := range specs {
+		if layer, err := LayerFromString(spec); err == nil {
+			self.VFS.Layers = append(self.VFS.Layers, *layer)
+		} else {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Perform a pre-configured request that must succeed to be considered successful.
 func (self *Server) Verify() error {
 	var res, err = self.SimulateRequest(
@@ -93,6 +107,10 @@ func (self *Server) Verify() error {
 
 	if rc := res.Body; rc != nil {
 		rc.Close()
+	}
+
+	for _, deepError := range res.Header.Values(XDiecastError) {
+		err = log.AppendError(err, errors.New(deepError))
 	}
 
 	return err
@@ -169,7 +187,7 @@ func (self *Server) ListenAndServe(address string) error {
 					log.Debugf("verify: ok")
 					ok = true // ok to start listening
 				} else {
-					log.Debugf("verify: error %v", err)
+					// log.Debugf("verify: error %v", err)
 					errchan <- err
 				}
 			case <-time.After(verifyTimeout):
@@ -305,6 +323,8 @@ func (self *Server) writeResponse(ctx *Context, data interface{}, code ...int) {
 		if httpStatus < 400 {
 			httpStatus = http.StatusInternalServerError
 		}
+
+		ctx.Header().Add(XDiecastError, err.Error())
 	}
 
 	// auto-jsonify complex types
@@ -315,6 +335,7 @@ func (self *Server) writeResponse(ctx *Context, data interface{}, code ...int) {
 		} else {
 			data = err.Error()
 			httpStatus = http.StatusInternalServerError
+			ctx.Header().Add(XDiecastError, err.Error())
 		}
 	}
 
@@ -328,10 +349,6 @@ func (self *Server) writeResponse(ctx *Context, data interface{}, code ...int) {
 
 // setup and populate any last-second things we might need to process a request
 func (self *Server) prep() error {
-	if self.VFS == nil {
-		self.VFS = new(VFS)
-	}
-
 	if self.ovfs != nil {
 		self.VFS.SetFallbackFS(self.ovfs)
 	}
