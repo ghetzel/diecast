@@ -9,14 +9,16 @@ import (
 )
 
 type MountResponse struct {
-	ContentType  string
-	StatusCode   int
-	Metadata     map[string]interface{}
-	RedirectTo   string
-	RedirectCode int
-	payload      interface{}
-	name         string
-	size         int64
+	ContentType        string
+	StatusCode         int
+	Metadata           map[string]interface{}
+	RedirectTo         string
+	RedirectCode       int
+	payload            interface{}
+	name               string
+	size               int64
+	underlyingFile     http.File
+	underlyingFileInfo os.FileInfo
 }
 
 func NewMountResponse(name string, size int64, payload interface{}) *MountResponse {
@@ -28,6 +30,11 @@ func NewMountResponse(name string, size int64, payload interface{}) *MountRespon
 		name:        name,
 		size:        size,
 	}
+}
+
+func (self *MountResponse) setUnderlyingFile(file http.File, info os.FileInfo) {
+	self.underlyingFile = file
+	self.underlyingFileInfo = info
 }
 
 func (self *MountResponse) GetPayload() interface{} {
@@ -72,31 +79,59 @@ func (self *MountResponse) Close() error {
 }
 
 func (self *MountResponse) Readdir(count int) ([]os.FileInfo, error) {
-	return nil, fmt.Errorf("readdir() not valid on response objects")
+	if self.underlyingFileInfo != nil {
+		return self.underlyingFile.Readdir(count)
+	} else {
+		return nil, fmt.Errorf("readdir() not available on this response object")
+	}
 }
 
 func (self *MountResponse) Name() string {
-	return self.name
+	if self.underlyingFileInfo != nil {
+		return self.underlyingFileInfo.Name()
+	} else {
+		return self.name
+	}
 }
 
 func (self *MountResponse) Size() int64 {
-	return self.size
+	if self.underlyingFileInfo != nil {
+		return self.underlyingFileInfo.Size()
+	} else {
+		return self.size
+	}
 }
 
 func (self *MountResponse) Mode() os.FileMode {
-	return 0666
+	if self.underlyingFileInfo != nil {
+		return self.underlyingFileInfo.Mode()
+	} else {
+		return 0666
+	}
 }
 
 func (self *MountResponse) ModTime() time.Time {
-	return time.Now()
+	if self.underlyingFileInfo != nil {
+		return self.underlyingFileInfo.ModTime()
+	} else {
+		return time.Now()
+	}
 }
 
 func (self *MountResponse) IsDir() bool {
-	return false
+	if self.underlyingFileInfo != nil {
+		return self.underlyingFileInfo.IsDir()
+	} else {
+		return false
+	}
 }
 
 func (self *MountResponse) Sys() interface{} {
-	return nil
+	if self.underlyingFileInfo != nil {
+		return self.underlyingFileInfo.Sys()
+	} else {
+		return nil
+	}
 }
 
 func (self *MountResponse) Stat() (os.FileInfo, error) {

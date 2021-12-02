@@ -6927,7 +6927,7 @@ Diecast runtime directory:</p>
         </h4>
         <div class="mb-1">
             <i>Usage:</i>
-            <code>basename PATH</code>
+            <code>basename PATH [EXTENSION]</code>
         </div>
         <p>Return the filename component of the given path.</p>
         <h5>Arguments</h5>
@@ -6947,6 +6947,13 @@ Diecast runtime directory:</p>
                         <p>The path to extract the filename from.</p>
                     </td>
                 </tr>
+                <tr>
+                    <th><pre>EXTENSION</pre></th>
+                    <td>string</td>
+                    <td>
+                        <p>The path to extract the filename from.</p>
+                    </td>
+                </tr>
             </tbody>
         </table>
         <h5>Examples</h5>
@@ -6954,6 +6961,10 @@ Diecast runtime directory:</p>
             <div class="example" id="fn-basename-example-0">
                 <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>basename &#34;/this/is/my/file.jpg&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
                 <p class="returns">&#34;file.jpg&#34;</p>
+            </div>
+            <div class="example" id="fn-basename-example-1">
+                <code><span class="code-unselectable">&#123;&#123;&nbsp;</span>basename &#34;/this/is/my/file.jpg&#34; &#34;.jpg&#34;<span class="code-unselectable">&nbsp;&#125;&#125;</span></code>
+                <p class="returns">&#34;file&#34;</p>
             </div>
         </div>
     </section>

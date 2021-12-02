@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/fileutil"
-	"github.com/ghetzel/go-stockutil/pathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 func loadStandardFunctionsPath(funcs FuncMap, server *Server) funcGroup {
@@ -27,16 +27,30 @@ func loadStandardFunctionsPath(funcs FuncMap, server *Server) funcGroup {
 						Name:        `path`,
 						Type:        `string`,
 						Description: `The path to extract the filename from.`,
+					}, {
+						Name:        `extension`,
+						Type:        `string`,
+						Optional:    true,
+						Description: `The path to extract the filename from.`,
 					},
 				},
 				Examples: []funcExample{
 					{
 						Code:   `basename "/this/is/my/file.jpg"`,
 						Return: `file.jpg`,
+					}, {
+						Code:   `basename "/this/is/my/file.jpg" ".jpg"`,
+						Return: `file`,
 					},
 				},
-				Function: func(value interface{}) string {
-					return path.Base(fmt.Sprintf("%v", value))
+				Function: func(value interface{}, extnames ...string) string {
+					var base = path.Base(fmt.Sprintf("%v", value))
+
+					if ext := typeutil.String(sliceutil.FirstNonZero(extnames)); ext != `` {
+						base = strings.TrimSuffix(base, ext)
+					}
+
+					return base
 				},
 			}, {
 				Name:    `extname`,
@@ -139,13 +153,14 @@ func loadStandardFunctionsPath(funcs FuncMap, server *Server) funcGroup {
 						},
 					},
 				},
-				Function: func(dirs ...string) ([]*fileInfo, error) {
+				Function: func(dirs ...string) ([]map[string]interface{}, error) {
 					var dir string
-					var entries = make([]*fileInfo, 0)
+					var glob string
+					var entries = make([]map[string]interface{}, 0)
 
 					if len(dirs) == 0 || dirs[0] == `` || dirs[0] == `.` || dirs[0] == `/` {
 						if server != nil {
-							dir = server.RootPath
+							dir = `/`
 						} else if wd, err := os.Getwd(); err == nil {
 							dir = wd
 						} else {
@@ -155,40 +170,49 @@ func loadStandardFunctionsPath(funcs FuncMap, server *Server) funcGroup {
 						dir = dirs[0]
 					}
 
-					// lock everything into the server rootpath
-					if server != nil && dir != server.RootPath {
-						dir = filepath.Join(server.RootPath, dir)
-					}
-
-					if d, err := pathutil.ExpandUser(dir); err == nil {
-						dir = d
-					} else {
-						return nil, err
+					if len(dirs) > 1 {
+						glob = dirs[1]
 					}
 
 					dir = path.Clean(dir)
 
-					if server != nil && !server.IsInRootPath(dir) {
-						return nil, fmt.Errorf("permission denied")
-					}
+					var ranAtLeastOnce bool
 
-					if pathutil.DirExists(dir) {
-						dir = path.Join(dir, `*`)
-					}
-
-					if e, err := filepath.Glob(dir); err == nil {
-						for _, entry := range e {
-							if info, err := os.Stat(entry); err == nil {
-								entries = append(entries, &fileInfo{
-									Parent:    path.Dir(entry),
+					if err := httpFsWalk(server.fs, dir, glob, func(path string, info os.FileInfo, err error) error {
+						if err == nil {
+							// omit first call (which is the root directory)
+							if ranAtLeastOnce {
+								var fi = &fileInfo{
+									Parent:    filepath.Dir(path),
 									Directory: info.IsDir(),
 									FileInfo:  info,
-								})
-							}
-						}
+								}
 
+								entries = append(entries, fi.toMap())
+							}
+							// if matched, err := filepath.Match(dir, path); err == nil {
+							// 	if matched {
+							// 	}
+							// } else {
+							// 	return err
+							// }
+
+							if ranAtLeastOnce && info.IsDir() {
+								// we only want one level, do not descend into directories
+								return filepath.SkipDir
+							} else {
+								ranAtLeastOnce = true
+								return nil
+							}
+						} else {
+							return err
+						}
+					}); err == nil {
 						sort.Slice(entries, func(i, j int) bool {
-							return strings.ToLower(entries[i].Name()) < strings.ToLower(entries[j].Name())
+							var iname = typeutil.String(entries[i][`name`])
+							var jname = typeutil.String(entries[j][`name`])
+
+							return strings.ToLower(iname) < strings.ToLower(jname)
 						})
 
 						return entries, nil

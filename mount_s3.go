@@ -15,6 +15,7 @@ import (
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/jszwec/s3fs"
 )
 
 type awsLog struct{}
@@ -64,6 +65,19 @@ var awsSession = func() *session.Session {
 type S3Mount struct {
 	MountPoint string `json:"mount"`
 	Path       string `json:"source"`
+	fs         map[string]http.FileSystem
+}
+
+func (self *S3Mount) s3fs(bucket string) http.FileSystem {
+	if self.fs == nil {
+		self.fs = make(map[string]http.FileSystem)
+	}
+
+	if _, ok := self.fs[bucket]; !ok {
+		self.fs[bucket] = http.FS(s3fs.New(s3client(), bucket))
+	}
+
+	return self.fs[bucket]
 }
 
 func (self *S3Mount) GetMountPoint() string {
@@ -105,15 +119,20 @@ func (self *S3Mount) Open(name string) (http.File, error) {
 
 		var bucket, key = stringutil.SplitPair(strings.TrimPrefix(name, `/`), `/`)
 
-		if obj, err := s3client().GetObject(&s3.GetObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		}); err == nil {
-			var mr = NewMountResponse(name, *obj.ContentLength, obj.Body)
+		if fsFile, err := self.s3fs(bucket).Open(key); err == nil {
+			if info, err := fsFile.Stat(); err == nil {
+				var mr = NewMountResponse(name, info.Size(), fsFile)
 
-			mr.ContentType = *obj.ContentType
+				mr.setUnderlyingFile(fsFile, info)
 
-			return mr, nil
+				if ct := fileutil.GetMimeType(info.Name()); ct != `` {
+					mr.ContentType = ct
+				}
+
+				return mr, nil
+			} else {
+				return nil, err
+			}
 		} else {
 			return nil, err
 		}

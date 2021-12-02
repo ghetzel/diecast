@@ -13,7 +13,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.5.0
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alicebob/miniredis v2.5.0+incompatible
-	github.com/aws/aws-sdk-go v1.34.13
+	github.com/aws/aws-sdk-go v1.36.24
 	github.com/beevik/etree v1.1.0
 	github.com/biessek/golang-ico v0.0.0-20180326222316-d348d9ea4670
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
@@ -32,6 +32,7 @@ require (
 	github.com/grokify/html-strip-tags-go v0.0.0-20180530080503-3f8856873ce5
 	github.com/husobee/vestigo v1.1.0
 	github.com/jbenet/go-base58 v0.0.0-20150317085156-6237cf65f3a6
+	github.com/jszwec/s3fs v0.3.1
 	github.com/kelvins/sunrisesunset v0.0.0-20170601204625-14f1915ad4b4
 	github.com/kyokomi/emoji v2.1.0+incompatible
 	github.com/mattn/go-isatty v0.0.12
@@ -54,6 +55,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
 	golang.org/x/text v0.3.6
+	golang.org/x/tools v0.0.0-20200304193943-95d2e580d8eb
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -85,7 +87,7 @@ require (
 	github.com/jdkato/prose v1.1.0 // indirect
 	github.com/jdxcode/netrc v0.0.0-20201119100258-050cafb6dbe6 // indirect
 	github.com/jlaffaye/ftp v0.0.0-20190126081051-8019e6774408 // indirect
-	github.com/jmespath/go-jmespath v0.3.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jsummers/gobmp v0.0.0-20151104160322-e2ba15ffa76e // indirect
 	github.com/juliangruber/go-intersect v1.0.0 // indirect
 	github.com/kellydunn/golang-geo v0.7.0 // indirect

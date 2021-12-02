@@ -2314,7 +2314,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 			mountResponse, err := mount.OpenWithType(requestPath, req, body)
 			lastErr = err
 
-			if err == nil {
+			if err == nil && !mountResponse.IsDir() {
 				log.Debugf("mount %v handled %q", mount.GetMountPoint(), requestPath)
 				return mount, mountResponse, nil
 			} else if IsHardStop(err) {

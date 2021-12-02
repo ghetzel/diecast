@@ -48,7 +48,7 @@ type fileInfo struct {
 	os.FileInfo
 }
 
-func (self *fileInfo) MarshalJSON() ([]byte, error) {
+func (self *fileInfo) toMap() map[string]interface{} {
 	var full = path.Join(self.Parent, self.Name())
 
 	var data = map[string]interface{}{
@@ -63,7 +63,11 @@ func (self *fileInfo) MarshalJSON() ([]byte, error) {
 		data[`mimetype`] = fileutil.GetMimeType(full)
 	}
 
-	return json.Marshal(data)
+	return data
+}
+
+func (self *fileInfo) MarshalJSON() ([]byte, error) {
+	return json.Marshal(self.toMap())
 }
 
 func (self *fileInfo) String() string {
