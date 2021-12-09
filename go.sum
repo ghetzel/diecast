@@ -63,8 +63,8 @@ github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4
 github.com/ghetzel/cli v1.17.0 h1:gMbJBrjPMz7JRsYrcV7sK60HCqQxwI/xO8dEjP6Z1yk=
 github.com/ghetzel/cli v1.17.0/go.mod h1:Q+8sg5kp2RtKNJH7orf5ntfal6ol+XPGCYyRd5dEJm8=
 github.com/ghetzel/go-defaults v1.2.0/go.mod h1:xWhTgOoc4UNWT7sl3oyNFqtKzEbUKI9C3rqbwtwdxFw=
-github.com/ghetzel/go-stockutil v1.10.1 h1:ghtE3kO7aK9On2vIc9ZiQHFaq6VANip5JeHWFUKO9No=
-github.com/ghetzel/go-stockutil v1.10.1/go.mod h1:8QOPXLM8zk/nLd8gOWaPPK9ZmOeoIiHABCYBHx9ouc8=
+github.com/ghetzel/go-stockutil v1.10.2 h1:4Kp+jPzAirHoH0pa94ktaR3XpV4YuU/5cNdmYROzk04=
+github.com/ghetzel/go-stockutil v1.10.2/go.mod h1:8QOPXLM8zk/nLd8gOWaPPK9ZmOeoIiHABCYBHx9ouc8=
 github.com/ghetzel/testify v1.4.1 h1:wpJirdM+znAnxWruGDBdIys5aU+wGJHNUTkgEo4PYwk=
 github.com/ghetzel/testify v1.4.1/go.mod h1:FwvFn1OiGEUgzhS3ySCjTBG7/sez0WRvOAxz5uQU8so=
 github.com/ghetzel/uuid v0.0.0-20171129191014-dec09d789f3d h1:YVJe7KwVYazt90hCc/q2dYJVS3062AY6QdT6iHd+Kh8=
