@@ -10,7 +10,7 @@ replace (
 
 require (
 	github.com/ghetzel/cli v1.17.0
-	github.com/ghetzel/go-stockutil v1.10.2
+	github.com/ghetzel/go-stockutil v1.10.3
 	github.com/gobwas/glob v0.2.3
 	github.com/stretchr/testify v1.6.1
 	gopkg.in/yaml.v2 v2.4.0
