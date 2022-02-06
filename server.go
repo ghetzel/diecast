@@ -171,6 +171,7 @@ type LogConfig struct {
 	Destination string `yaml:"destination"          json:"destination"` // specify where logs should be written to
 	Truncate    bool   `yaml:"truncate"             json:"truncate"`    // if true, the output log file will be truncated on startup
 	Colorize    bool   `yaml:"colorize"             json:"colorize"`    // if false, log output will not be colorized
+	Disable     bool   `yaml:"disable"              json:"disable"`     // if true, no log output will be written
 }
 
 type RateLimitConfig struct {
@@ -2795,6 +2796,10 @@ func (self *Server) cleanupCommands() {
 
 // called by the cleanup middleware to log the completed request according to LogFormat.
 func (self *Server) logreq(w http.ResponseWriter, req *http.Request) {
+	if self.Log.Disable {
+		return
+	}
+
 	if tm := getRequestTimer(req); tm != nil {
 		var format = logFormats[self.Log.Format]
 
