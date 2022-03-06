@@ -7,9 +7,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/ghetzel/cli"
@@ -32,6 +34,7 @@ func main() {
 	app.EnableBashCompletion = true
 
 	var server = diecast.NewServer(``)
+	var sigchan = make(chan os.Signal, 1)
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
@@ -218,6 +221,22 @@ func main() {
 		}
 
 		log.SetLevelString(c.String(`log-level`))
+
+		signal.Notify(sigchan, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
+
+		go func() {
+			for s := range sigchan {
+				log.Debugf("intercepted OS signal %v", s)
+				if err := server.Shutdown(); err == nil {
+					os.Exit(0)
+				} else {
+					log.Errorf("error while stoppping: %v", err)
+					os.Exit(42)
+				}
+
+			}
+		}()
+
 		return nil
 	}
 

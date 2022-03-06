@@ -30,6 +30,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ghetzel/go-stockutil/executil"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
@@ -155,7 +156,9 @@ type StartCommand struct {
 	WaitBefore       string                 `yaml:"delay"            json:"delay"`            // How long to delay before running the command
 	Wait             string                 `yaml:"timeout"          json:"timeout"`          // How long to wait before killing the command
 	ExitOnCompletion bool                   `yaml:"exitOnCompletion" json:"exitOnCompletion"` // Whether Diecast should exit upon command completion
-	cmd              *exec.Cmd
+	Detach           bool                   `yaml:"detach"           json:"detach"`           // Whether the command should detach from the Diecast process that started it
+	cmd              *executil.Cmd
+	mkey             int
 }
 
 type TlsConfig struct {
@@ -365,6 +368,8 @@ type Server struct {
 	viaConstructor       bool
 	sharedBindingData    sync.Map
 	lockGetFunctions     sync.Mutex
+	managedCommands      sync.Map
+	stopping             bool
 }
 
 func NewServer(root interface{}, patterns ...string) *Server {
@@ -394,6 +399,26 @@ func NewServer(root interface{}, patterns ...string) *Server {
 	}
 
 	return server
+}
+
+func (self *Server) Shutdown() (merr error) {
+	self.stopping = true
+
+	var wg sync.WaitGroup
+
+	self.managedCommands.Range(func(k interface{}, v interface{}) bool {
+		if scmd, ok := v.(*StartCommand); ok {
+			wg.Add(1)
+			go func(sc *StartCommand, w *sync.WaitGroup) {
+				merr = log.AppendError(merr, sc.cmd.Close())
+				w.Done()
+			}(scmd, &wg)
+		}
+		return true
+	})
+
+	wg.Wait()
+	return
 }
 
 func (self *Server) ShouldReturnSource(req *http.Request) bool {
@@ -2677,18 +2702,25 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 }
 
 func (self *Server) RunStartCommand(scmds []*StartCommand, waitForCommand bool) (bool, error) {
-	for _, scmd := range scmds {
+	for i, scmd := range scmds {
 		if cmdline := scmd.Command; cmdline != `` {
 			if tokens, err := shellwords.Parse(cmdline); err == nil {
-				scmd.cmd = exec.Command(tokens[0], tokens[1:]...)
-				scmd.cmd.SysProcAttr = &syscall.SysProcAttr{
-					Setpgid: true,
+				scmd.cmd = executil.Command(tokens[0], tokens[1:]...)
+				scmd.mkey = i
+
+				if scmd.Detach {
+					scmd.cmd.SysProcAttr = &syscall.SysProcAttr{
+						Setpgid: true,
+						Pgid:    0,
+					}
+				} else {
+					self.managedCommands.Store(scmd.mkey, scmd)
 				}
 
 				var env = make(map[string]interface{})
 
 				for _, pair := range os.Environ() {
-					key, value := stringutil.SplitPair(pair, `=`)
+					var key, value = stringutil.SplitPair(pair, `=`)
 					env[key] = value
 				}
 
@@ -2697,6 +2729,7 @@ func (self *Server) RunStartCommand(scmds []*StartCommand, waitForCommand bool) 
 				}
 
 				env[`DIECAST`] = true
+				env[`DIECAST_URL`] = self.LocalURL()
 				env[`DIECAST_BIN`] = self.BinPath
 				env[`DIECAST_DEBUG`] = self.EnableDebugging
 				env[`DIECAST_ADDRESS`] = self.Address
@@ -2733,6 +2766,7 @@ func (self *Server) RunStartCommand(scmds []*StartCommand, waitForCommand bool) 
 					go func() {
 						log.Infof("Executing command: %v", strings.Join(scmd.cmd.Args, ` `))
 						waitchan <- scmd.cmd.Run()
+						self.managedCommands.Delete(scmd.mkey)
 					}()
 
 					time.Sleep(wait)

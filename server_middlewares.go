@@ -126,6 +126,11 @@ func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Requ
 	// setup request tracing info
 	startRequestTimer(req)
 
+	if self.stopping {
+		http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
+		return false
+	}
+
 	return true
 }
 
