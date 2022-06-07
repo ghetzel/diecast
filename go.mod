@@ -1,12 +1,6 @@
 module github.com/ghetzel/diecast
 
-go 1.17
-
-replace (
-	k8s.io/api => k8s.io/api v0.19.1
-	k8s.io/apimachinery => k8s.io/apimachinery v0.19.1
-	k8s.io/client-go => k8s.io/client-go v0.19.1
-)
+go 1.18
 
 require (
 	cloud.google.com/go v0.54.0 // indirect
@@ -55,7 +49,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
 	golang.org/x/text v0.3.6
-	golang.org/x/tools v0.0.0-20200304193943-95d2e580d8eb
+	golang.org/x/tools v0.0.0-20210106214847-113979e3529a
 	gopkg.in/yaml.v2 v2.4.0
 )
 
