@@ -1,4 +1,4 @@
-package diecast
+package internal
 
 import (
 	"fmt"
@@ -8,10 +8,16 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
-var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
-
 type InProcessRunner struct {
 	funcs maputil.Map
+}
+
+func (self *InProcessRunner) Init() error {
+	for name, fn := range BuiltinFunctions {
+		self.SetFunction(name, fn)
+	}
+
+	return nil
 }
 
 func (self *InProcessRunner) SetFunction(name string, fn interface{}) {

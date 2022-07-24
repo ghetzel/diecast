@@ -1,4 +1,4 @@
-package diecast
+package internal
 
 import (
 	"io"
@@ -11,13 +11,13 @@ import (
 
 type FuncMap map[string]interface{}
 
-type goTemplate struct {
+type GolangTemplate struct {
 	html *htemplate.Template
 	text *ttemplate.Template
 }
 
-func parseGoTemplate(name string, engine string, data string) (*goTemplate, error) {
-	var gotmpl = new(goTemplate)
+func ParseGolangTemplate(name string, engine string, data string) (*GolangTemplate, error) {
+	var gotmpl = new(GolangTemplate)
 
 	switch engine {
 	case `html`, ``:
@@ -37,7 +37,7 @@ func parseGoTemplate(name string, engine string, data string) (*goTemplate, erro
 	return gotmpl, nil
 }
 
-func (self *goTemplate) Names() (names []string) {
+func (self *GolangTemplate) Names() (names []string) {
 	if self.html != nil {
 		for _, t := range self.html.Templates() {
 			names = append(names, t.Name())
@@ -51,7 +51,7 @@ func (self *goTemplate) Names() (names []string) {
 	return
 }
 
-func (self *goTemplate) ParseTree() *parse.Tree {
+func (self *GolangTemplate) ParseTree() *parse.Tree {
 	if self.html != nil {
 		return self.html.Tree.Copy()
 	} else {
@@ -59,7 +59,7 @@ func (self *goTemplate) ParseTree() *parse.Tree {
 	}
 }
 
-func (self *goTemplate) AddParseTree(name string, tree *parse.Tree) (*goTemplate, error) {
+func (self *GolangTemplate) AddParseTree(name string, tree *parse.Tree) (*GolangTemplate, error) {
 	if self.html != nil {
 		var _, err = self.html.AddParseTree(name, tree)
 		return self, err
@@ -69,7 +69,7 @@ func (self *goTemplate) AddParseTree(name string, tree *parse.Tree) (*goTemplate
 	}
 }
 
-func (self *goTemplate) Clone() (*goTemplate, error) {
+func (self *GolangTemplate) Clone() (*GolangTemplate, error) {
 	if self.html != nil {
 		var _, err = self.html.Clone()
 		return self, err
@@ -79,7 +79,7 @@ func (self *goTemplate) Clone() (*goTemplate, error) {
 	}
 }
 
-func (self *goTemplate) DefinedTemplates() string {
+func (self *GolangTemplate) DefinedTemplates() string {
 	if self.html != nil {
 		return self.html.DefinedTemplates()
 	} else {
@@ -87,7 +87,7 @@ func (self *goTemplate) DefinedTemplates() string {
 	}
 }
 
-func (self *goTemplate) Delims(left, right string) *goTemplate {
+func (self *GolangTemplate) Delims(left, right string) *GolangTemplate {
 	if self.html != nil {
 		self.html.Delims(left, right)
 	} else {
@@ -97,7 +97,7 @@ func (self *goTemplate) Delims(left, right string) *goTemplate {
 	return self
 }
 
-func (self *goTemplate) Execute(wr io.Writer, data interface{}) error {
+func (self *GolangTemplate) Execute(wr io.Writer, data interface{}) error {
 	if self.html != nil {
 		return self.html.Execute(wr, data)
 	} else {
@@ -105,7 +105,7 @@ func (self *goTemplate) Execute(wr io.Writer, data interface{}) error {
 	}
 }
 
-func (self *goTemplate) ExecuteTemplate(wr io.Writer, name string, data interface{}) error {
+func (self *GolangTemplate) ExecuteTemplate(wr io.Writer, name string, data interface{}) error {
 	if self.html != nil {
 		return self.html.ExecuteTemplate(wr, name, data)
 	} else {
@@ -113,7 +113,7 @@ func (self *goTemplate) ExecuteTemplate(wr io.Writer, name string, data interfac
 	}
 }
 
-func (self *goTemplate) Funcs(funcMap FuncMap) *goTemplate {
+func (self *GolangTemplate) Funcs(funcMap FuncMap) *GolangTemplate {
 	if self.html != nil {
 		var fm = make(htemplate.FuncMap)
 
@@ -135,7 +135,7 @@ func (self *goTemplate) Funcs(funcMap FuncMap) *goTemplate {
 	return self
 }
 
-func (self *goTemplate) Lookup(name string) *goTemplate {
+func (self *GolangTemplate) Lookup(name string) *GolangTemplate {
 	if self.html != nil {
 		self.html.Lookup(name)
 	} else {
@@ -145,14 +145,14 @@ func (self *goTemplate) Lookup(name string) *goTemplate {
 	return self
 }
 
-func (self *goTemplate) Name() string {
+func (self *GolangTemplate) Name() string {
 	if self.html != nil {
 		return self.html.Name()
 	} else {
 		return self.text.Name()
 	}
 }
-func (self *goTemplate) New(name string) *goTemplate {
+func (self *GolangTemplate) New(name string) *GolangTemplate {
 	if self.html != nil {
 		self.html.New(name)
 	} else {
@@ -162,7 +162,7 @@ func (self *goTemplate) New(name string) *goTemplate {
 	return self
 }
 
-func (self *goTemplate) Option(opt ...string) *goTemplate {
+func (self *GolangTemplate) Option(opt ...string) *GolangTemplate {
 	if self.html != nil {
 		self.html.Option(opt...)
 	} else {
@@ -172,7 +172,7 @@ func (self *goTemplate) Option(opt ...string) *goTemplate {
 	return self
 }
 
-func (self *goTemplate) Parse(text string) (*goTemplate, error) {
+func (self *GolangTemplate) Parse(text string) (*GolangTemplate, error) {
 	if self.html != nil {
 		var _, err = self.html.Parse(text)
 		return self, err
@@ -182,7 +182,7 @@ func (self *goTemplate) Parse(text string) (*goTemplate, error) {
 	}
 }
 
-func (self *goTemplate) ParseFS(fs fs.FS, patterns ...string) (*goTemplate, error) {
+func (self *GolangTemplate) ParseFS(fs fs.FS, patterns ...string) (*GolangTemplate, error) {
 	if self.html != nil {
 		var _, err = self.html.ParseFS(fs, patterns...)
 		return self, err
@@ -192,7 +192,7 @@ func (self *goTemplate) ParseFS(fs fs.FS, patterns ...string) (*goTemplate, erro
 	}
 }
 
-func (self *goTemplate) ParseFiles(filenames ...string) (*goTemplate, error) {
+func (self *GolangTemplate) ParseFiles(filenames ...string) (*GolangTemplate, error) {
 	if self.html != nil {
 		var _, err = self.html.ParseFiles(filenames...)
 		return self, err
@@ -202,7 +202,7 @@ func (self *goTemplate) ParseFiles(filenames ...string) (*goTemplate, error) {
 	}
 }
 
-func (self *goTemplate) ParseGlob(pattern string) (*goTemplate, error) {
+func (self *GolangTemplate) ParseGlob(pattern string) (*GolangTemplate, error) {
 	if self.html != nil {
 		var _, err = self.html.ParseGlob(pattern)
 		return self, err

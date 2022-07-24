@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ghetzel/diecast/v2/internal"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"gopkg.in/yaml.v2"
 )
@@ -29,7 +30,7 @@ type Template struct {
 	sha512sum     string
 	body          []byte
 	buf           *bytes.Buffer
-	gotmpl        *goTemplate
+	gotmpl        *internal.GolangTemplate
 	initDone      bool
 }
 
@@ -98,7 +99,7 @@ func (self *Template) init() error {
 	var engine = typeutil.OrString(self.Engine, DefaultTemplateEngine)
 	// var name = typeutil.OrString(self.Filename, engine+`:`+self.sha512sum)
 
-	if gotmpl, err := parseGoTemplate(self.entryPoint(), engine, self.TemplateString()); err == nil {
+	if gotmpl, err := internal.ParseGolangTemplate(self.entryPoint(), engine, self.TemplateString()); err == nil {
 		self.gotmpl = gotmpl
 		self.initDone = true
 		return nil
