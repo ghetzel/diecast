@@ -7,7 +7,7 @@ import (
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/mathutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
-	"github.com/sj14/astral"
+	"github.com/sj14/astral/pkg/astral"
 )
 
 const lunarHalfCycle = 14

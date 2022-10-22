@@ -4,8 +4,7 @@ GO111MODULE ?= on
 LOCALS      := $(shell find . -type f -name '*.go')
 BIN         ?= diecast-$(shell go env GOOS)-$(shell go env GOARCH)
 VERSION      = $(shell grep 'const ApplicationVersion' version.go | cut -d= -f2 | tr -d '`' | tr -d ' ')
-CGO_CFLAGS   = -I/opt/homebrew/include
-CGO_LDFLAGS  = -L/opt/homebrew/lib
+CGO_ENABLED ?= 0
 
 all: deps build test docs
 
@@ -38,8 +37,6 @@ favicon.go:
 
 build: fmt
 	go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/$(BIN) cmd/diecast/main.go
-	CGO_ENABLED=0 go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/$(BIN)-nocgo cmd/diecast/main.go
-	#GOOS=darwin go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/diecast-darwin-amd64 cmd/diecast/main.go
 	which diecast && cp -v bin/$(BIN) $(shell which diecast) || true
 
 docs:

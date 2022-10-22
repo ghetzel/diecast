@@ -8,14 +8,11 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-webfriend"
-	"github.com/ghetzel/go-webfriend/browser"
-	wfcore "github.com/ghetzel/go-webfriend/commands/core"
-	wfpage "github.com/ghetzel/go-webfriend/commands/page"
+	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/proto"
 )
 
 type PdfRenderer struct {
@@ -45,19 +42,21 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 
 		_, err := io.Copy(w, options.Input)
 		return err
-
-	} else if www, err := browser.Start(); err == nil {
-		defer www.Stop()
+	} else {
 		var buffer bytes.Buffer
+		var browser = rod.New()
+
+		if err := browser.Connect(); err != nil {
+			return err
+		}
+
+		defer browser.Close()
 
 		var subaddr = self.server.Address
 
 		if strings.HasPrefix(subaddr, `:`) {
 			subaddr = `127.0.0.1` + subaddr
 		}
-
-		// start a headless chromium-browser instance that we can interact with
-		var env = webfriend.NewEnvironment(www)
 
 		// mangle the URL to be a strictly-localhost affair
 		suburl, _ := url.Parse(req.URL.String())
@@ -69,27 +68,10 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 
 		log.Debugf("Rendering %v as PDF", suburl)
 
-		var core = env.MustModule(`core`).(*wfcore.Commands)
-		var page = env.MustModule(`page`).(*wfpage.Commands)
-
-		var timeout time.Duration
-
-		if options.Timeout > 0 {
-			timeout = options.Timeout
-		} else {
-			timeout = 60 * time.Second
-		}
-
-		// visit the URL
-		if _, err := core.Go(suburl.String(), &wfcore.GoArgs{
-			Timeout:                   timeout,
-			RequireOriginatingRequest: false,
-		}); err != nil {
-			return err
-		}
-
-		// render the loaded page as a PDF
-		if err := page.Pdf(&buffer, nil); err == nil {
+		if data, err := browser.MustPage(suburl.String()).Screenshot(true, &proto.PageCaptureScreenshot{
+			Format: proto.PageCaptureScreenshotFormatPng,
+		}); err == nil {
+			buffer.Write(data)
 			w.Header().Set(`Content-Type`, `application/pdf`)
 
 			var rewrittenFilename = strings.TrimSuffix(
@@ -109,8 +91,5 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 		} else {
 			return err
 		}
-	} else {
-		log.Fatalf("could not generate PDF: %v", err)
-		return err
 	}
 }
