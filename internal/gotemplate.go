@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"io"
 	"io/fs"
 
@@ -16,7 +15,12 @@ const TextEngine string = `text`
 const HtmlEngine string = `html`
 
 func NewTemplate(name string, engine string) *GolangTemplate {
-	var t, _ = ParseGolangTemplate(name, engine, ``)
+	var t, _ = ParseGolangTemplate(name, engine, ``, BuiltinFunctions)
+	return t
+}
+
+func NewTemplateWithFuncs(name string, engine string, funcs FuncMap) *GolangTemplate {
+	var t, _ = ParseGolangTemplate(name, engine, ``, funcs)
 	return t
 }
 
@@ -26,14 +30,16 @@ type GolangTemplate struct {
 	name   string
 	engine string
 	body   string
+	funcs  FuncMap
 }
 
-func ParseGolangTemplate(name string, engine string, body string) (*GolangTemplate, error) {
+func ParseGolangTemplate(name string, engine string, body string, funcs FuncMap) (*GolangTemplate, error) {
 	var gotmpl = new(GolangTemplate)
 
 	gotmpl.name = name
 	gotmpl.engine = engine
 	gotmpl.body = body
+	gotmpl.funcs = funcs
 
 	return gotmpl, gotmpl.init()
 }
@@ -41,24 +47,26 @@ func ParseGolangTemplate(name string, engine string, body string) (*GolangTempla
 func (self *GolangTemplate) init() error {
 	switch self.engine {
 	case HtmlEngine, ``:
-		if tmpl, err := htemplate.New(self.name).Parse(self.body); err == nil {
+		if tmpl, err := htemplate.New(self.name).Funcs(
+			self.hfuncs(),
+		).Parse(self.body); err == nil {
 			self.html = tmpl
 			self.text = nil
-			return nil
 		} else {
 			return err
 		}
 	case TextEngine:
-		if tmpl, err := ttemplate.New(self.name).Parse(self.body); err == nil {
+		if tmpl, err := ttemplate.New(self.name).Funcs(
+			self.tfuncs(),
+		).Parse(self.body); err == nil {
 			self.html = nil
 			self.text = tmpl
-			return nil
 		} else {
 			return err
 		}
 	}
 
-	return fmt.Errorf("invalid engine %q", self.engine)
+	return nil
 }
 
 func (self *GolangTemplate) Names() (names []string) {
@@ -146,26 +154,24 @@ func (self *GolangTemplate) Render(wr io.Writer, data interface{}, name string) 
 	}
 }
 
-func (self *GolangTemplate) Funcs(funcMap FuncMap) *GolangTemplate {
-	if self.html != nil {
-		var fm = make(htemplate.FuncMap)
+func (self *GolangTemplate) hfuncs() htemplate.FuncMap {
+	var fm = make(htemplate.FuncMap)
 
-		for k, v := range funcMap {
-			fm[k] = v
-		}
-
-		self.html.Funcs(fm)
-	} else {
-		var fm = make(ttemplate.FuncMap)
-
-		for k, v := range funcMap {
-			fm[k] = v
-		}
-
-		self.text.Funcs(fm)
+	for k, v := range self.funcs {
+		fm[k] = v
 	}
 
-	return self
+	return fm
+}
+
+func (self *GolangTemplate) tfuncs() ttemplate.FuncMap {
+	var fm = make(ttemplate.FuncMap)
+
+	for k, v := range self.funcs {
+		fm[k] = v
+	}
+
+	return fm
 }
 
 func (self *GolangTemplate) Lookup(name string) *GolangTemplate {

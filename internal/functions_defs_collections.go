@@ -154,8 +154,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 					var out = make([]interface{}, 0)
 
 					for i, value := range sliceutil.Sliceify(input) {
-						var tmpl = NewTemplate(`inline`, TextEngine)
-						tmpl.Funcs(funcs)
+						var tmpl = NewTemplateWithFuncs(`inline`, TextEngine, funcs)
 
 						if !strings.HasPrefix(expr, `{{`) {
 							expr = `{{` + expr
@@ -352,8 +351,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 					var out = make([]interface{}, 0)
 
 					for i, obj := range sliceutil.Sliceify(input) {
-						var tmpl = NewTemplate(`inline`, TextEngine)
-						tmpl.Funcs(funcs)
+						var tmpl = NewTemplateWithFuncs(`inline`, TextEngine, funcs)
 						var m = maputil.M(obj)
 
 						if !strings.HasPrefix(expr, `{{`) {
@@ -1512,8 +1510,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 
 							if len(valueTpls) > 0 && valueTpls[0] != `` {
 								if stringutil.IsSurroundedBy(valueTpls[0], `{{`, `}}`) {
-									var tmpl = NewTemplate(`inline`, TextEngine)
-									tmpl.Funcs(funcs)
+									var tmpl = NewTemplateWithFuncs(`inline`, TextEngine, funcs)
 
 									if err := tmpl.ParseString(valueTpls[0]); err == nil {
 										var output = bytes.NewBuffer(nil)

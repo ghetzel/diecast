@@ -19,12 +19,15 @@ var FrontMatterSeparator = internal.FrontMatterSeparator
 var LayoutNamePrefix string = `layout:`
 var MaxFrontMatterSize = 32768
 
+type FuncMap = internal.FuncMap
+
 type Template struct {
 	*internal.TemplateHeader
 	body     []byte
 	buf      *bytes.Buffer
 	gotmpl   *internal.GolangTemplate
 	initDone bool
+	funcs    FuncMap
 }
 
 func ParseTemplateString(source string) (*Template, error) {
@@ -32,6 +35,10 @@ func ParseTemplateString(source string) (*Template, error) {
 }
 
 func ParseTemplate(source io.Reader) (*Template, error) {
+	return ParseTemplateWithFuncs(source, nil)
+}
+
+func ParseTemplateWithFuncs(source io.Reader, funcs FuncMap) (*Template, error) {
 	if source == nil {
 		return nil, io.EOF
 	}
@@ -39,6 +46,7 @@ func ParseTemplate(source io.Reader) (*Template, error) {
 	var tmpl = new(Template)
 
 	if hdr, body, err := internal.SplitTemplateHeaderContent(source); err == nil {
+		tmpl.funcs = funcs
 		tmpl.TemplateHeader = hdr
 		tmpl.body = body
 	} else {
@@ -50,8 +58,8 @@ func ParseTemplate(source io.Reader) (*Template, error) {
 
 // Implement reader interface.
 func (self *Template) Read(b []byte) (int, error) {
-	if self.buf == nil {
-		if err := self.init(); err == nil {
+	if err := self.init(); err == nil {
+		if self.buf == nil {
 			var dst bytes.Buffer
 
 			if err := self.Render(nil, &dst); err != nil {
@@ -59,9 +67,9 @@ func (self *Template) Read(b []byte) (int, error) {
 			}
 
 			self.buf = &dst
-		} else {
-			return 0, fmt.Errorf("init err: %v", err)
 		}
+	} else {
+		return 0, fmt.Errorf("init err: %v", err)
 	}
 
 	if buf := self.buf; buf != nil {
@@ -79,6 +87,11 @@ func (self *Template) Close() error {
 	return nil
 }
 
+func (self *Template) reinit() error {
+	self.initDone = false
+	return self.init()
+}
+
 // Initialize the template, parsing the data and making the object ready for subsequent calls to Render
 func (self *Template) init() error {
 	if self.initDone {
@@ -88,13 +101,26 @@ func (self *Template) init() error {
 	var engine = typeutil.OrString(self.Engine, DefaultTemplateEngine)
 	// var name = typeutil.OrString(self.Filename, engine+`:`+self.SHA512SUM)
 
-	if gotmpl, err := internal.ParseGolangTemplate(self.entryPoint(), engine, self.TemplateString()); err == nil {
+	if gotmpl, err := internal.ParseGolangTemplate(
+		self.entryPoint(),
+		engine,
+		self.TemplateString(),
+		self.funcs,
+	); err == nil {
 		self.gotmpl = gotmpl
 		self.initDone = true
 		return nil
 	} else {
+		fmt.Printf("gotmpl: %v\n", err)
 		return err
 	}
+}
+
+func (self *Template) Funcs(funcMap internal.FuncMap) *Template {
+	self.funcs = funcMap
+	self.reinit()
+
+	return self
 }
 
 // Return the raw, unrendered template source.
@@ -135,8 +161,9 @@ func (self *Template) Render(ctx *Context, w io.Writer) error {
 		w = ctx
 	}
 
-	// ctx.Debugf("template: known templates: %s", strings.Join(self.gotmpl.Names()``, `, `))
-	// ctx.Debugf("template: entrypoint: %s", self.entryPoint())
+	ctx.Debugf("template: known templates: %s", strings.Join(self.gotmpl.Names(), `, `))
+	ctx.Debugf("template: entrypoint: %s", self.entryPoint())
+	ctx.Debugf("template: funcs: %d", len(self.funcs))
 
 	return self.gotmpl.ExecuteTemplate(w, self.entryPoint(), ctx.Data())
 }
@@ -147,7 +174,7 @@ func (self *Template) Checksum() string {
 }
 
 func (self *Template) attachTemplate(ctx *Context, tmplName string, r io.Reader) error {
-	if tmpl, err := ParseTemplate(r); err == nil {
+	if tmpl, err := ParseTemplateWithFuncs(r, self.funcs); err == nil {
 		if err := tmpl.LoadRelatedTemplates(ctx); err != nil {
 			return fmt.Errorf("%s: %v", tmplName, err)
 		}

@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	// "github.com/ghetzel/diecast/v2/internal"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"

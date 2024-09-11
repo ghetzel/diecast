@@ -359,8 +359,7 @@ func filterByKey(funcs FuncMap, input interface{}, key string, exprs ...interfac
 
 		if item := submap.Get(key); !item.IsNil() {
 			if stringutil.IsSurroundedBy(exprStr, `{{`, `}}`) {
-				var tmpl = NewTemplate(`inline`, TextEngine)
-				tmpl.Funcs(funcs)
+				var tmpl = NewTemplateWithFuncs(`inline`, TextEngine, funcs)
 
 				if err := tmpl.ParseString(exprStr); err == nil {
 					var output = bytes.NewBuffer(nil)
@@ -405,8 +404,7 @@ func uniqByKey(funcs FuncMap, input interface{}, key string, saveLast bool, expr
 				var valkey string
 
 				if stringutil.IsSurroundedBy(exprStr, `{{`, `}}`) {
-					var tmpl = NewTemplate(`inline`, TextEngine)
-					tmpl.Funcs(funcs)
+					var tmpl = NewTemplateWithFuncs(`inline`, TextEngine, funcs)
 
 					if err := tmpl.ParseString(exprStr); err == nil {
 						var output = bytes.NewBuffer(nil)

@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/ghetzel/go-stockutil/httputil"
@@ -47,6 +48,7 @@ type Server struct {
 	VFS           VFS               `yaml:"vfs"`
 	ovfs          fs.FS
 	startFuncs    []ServerStartFunc
+	srvlock       sync.Mutex
 }
 
 // Loads a YAML-formatted configuration from the given reader and returns a Server.
@@ -353,4 +355,12 @@ func (self *Server) prep() error {
 	}
 
 	return nil
+}
+
+func (self *Server) Lock(name string) {
+	// self.srvlock.Lock()
+}
+
+func (self *Server) Unlock(name string) {
+	// self.srvlock.Unlock()
 }
