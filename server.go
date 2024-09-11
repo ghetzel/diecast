@@ -290,7 +290,6 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // When data is a Map or Array, it will be encoded and returned as JSON with Content-Type: application/json.
 //
 // All other conditions will convert the data to []byte and write that out directly.
-//
 func (self *Server) writeResponse(ctx *Context, data interface{}, code ...int) {
 	var req = ctx.Request()
 	var httpStatus int = ctx.Code()

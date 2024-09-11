@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	// "github.com/ghetzel/diecast/v2/internal"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
@@ -79,7 +80,7 @@ func (self *Context) finalizeBeforeRender() {
 	self.Header().Set(XDiecastRequest, self.ID())
 }
 
-// Return the current Server instance that owns this context.
+//  Return the current Server instance that owns this context.
 func (self *Context) Server() *Server {
 	return self.server
 }
@@ -103,7 +104,7 @@ func (self *Context) SetTypeHint(hint string) {
 }
 
 // Start tracking a specific request+response pair.  Mark the request as completed with Done().
-func (self *Context) Start(wr http.ResponseWriter, req *http.Request) *Context {
+func (self *Context) StartHTTP(wr http.ResponseWriter, req *http.Request) {
 	self.startlock.Lock()
 	defer self.startlock.Unlock()
 
@@ -120,7 +121,10 @@ func (self *Context) Start(wr http.ResponseWriter, req *http.Request) *Context {
 	}) {
 		self.Logf(log.DEBUG, "  % -32s %v", kv.K+`:`, kv.Value)
 	}
+}
 
+func (self *Context) Start(wr http.ResponseWriter, req *http.Request) *Context {
+	self.StartHTTP(wr, req)
 	return self
 }
 
@@ -189,7 +193,7 @@ func (self *Context) ID() string {
 }
 
 // Set the value for a given key.
-func (self *Context) Set(key string, value interface{}) *Context {
+func (self *Context) SetValue(key string, value interface{}) {
 	self.datalock.Lock()
 	defer self.datalock.Unlock()
 
@@ -202,13 +206,16 @@ func (self *Context) Set(key string, value interface{}) *Context {
 	} else {
 		self.data.Set(key, value)
 	}
+}
 
+func (self *Context) Set(key string, value interface{}) *Context {
+	self.SetValue(key, value)
 	return self
 }
 
 // Append a value to an array stored at key.  Existing non-array values will be converted
 // into an array first.
-func (self *Context) Push(key string, value interface{}) *Context {
+func (self *Context) PushValue(key string, value interface{}) {
 	self.datalock.Lock()
 	defer self.datalock.Unlock()
 
@@ -227,7 +234,10 @@ func (self *Context) Push(key string, value interface{}) *Context {
 	} else {
 		self.data.Set(key, repl)
 	}
+}
 
+func (self *Context) Push(key string, value interface{}) *Context {
+	self.PushValue(key, value)
 	return self
 }
 

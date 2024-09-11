@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"io"
 	"io/fs"
 
@@ -11,30 +12,53 @@ import (
 
 type FuncMap map[string]interface{}
 
-type GolangTemplate struct {
-	html *htemplate.Template
-	text *ttemplate.Template
+const TextEngine string = `text`
+const HtmlEngine string = `html`
+
+func NewTemplate(name string, engine string) *GolangTemplate {
+	var t, _ = ParseGolangTemplate(name, engine, ``)
+	return t
 }
 
-func ParseGolangTemplate(name string, engine string, data string) (*GolangTemplate, error) {
+type GolangTemplate struct {
+	html   *htemplate.Template
+	text   *ttemplate.Template
+	name   string
+	engine string
+	body   string
+}
+
+func ParseGolangTemplate(name string, engine string, body string) (*GolangTemplate, error) {
 	var gotmpl = new(GolangTemplate)
 
-	switch engine {
-	case `html`, ``:
-		if tmpl, err := htemplate.New(name).Parse(data); err == nil {
-			gotmpl.html = tmpl
+	gotmpl.name = name
+	gotmpl.engine = engine
+	gotmpl.body = body
+
+	return gotmpl, gotmpl.init()
+}
+
+func (self *GolangTemplate) init() error {
+	switch self.engine {
+	case HtmlEngine, ``:
+		if tmpl, err := htemplate.New(self.name).Parse(self.body); err == nil {
+			self.html = tmpl
+			self.text = nil
+			return nil
 		} else {
-			return nil, err
+			return err
 		}
-	case `text`:
-		if tmpl, err := ttemplate.New(name).Parse(data); err == nil {
-			gotmpl.text = tmpl
+	case TextEngine:
+		if tmpl, err := ttemplate.New(self.name).Parse(self.body); err == nil {
+			self.html = nil
+			self.text = tmpl
+			return nil
 		} else {
-			return nil, err
+			return err
 		}
 	}
 
-	return gotmpl, nil
+	return fmt.Errorf("invalid engine %q", self.engine)
 }
 
 func (self *GolangTemplate) Names() (names []string) {
@@ -106,6 +130,15 @@ func (self *GolangTemplate) Execute(wr io.Writer, data interface{}) error {
 }
 
 func (self *GolangTemplate) ExecuteTemplate(wr io.Writer, name string, data interface{}) error {
+	if self.html != nil {
+		return self.html.ExecuteTemplate(wr, name, data)
+	} else {
+		return self.text.ExecuteTemplate(wr, name, data)
+	}
+}
+
+// Backwards compat with 1.x
+func (self *GolangTemplate) Render(wr io.Writer, data interface{}, name string) error {
 	if self.html != nil {
 		return self.html.ExecuteTemplate(wr, name, data)
 	} else {
@@ -210,4 +243,9 @@ func (self *GolangTemplate) ParseGlob(pattern string) (*GolangTemplate, error) {
 		var _, err = self.text.ParseGlob(pattern)
 		return self, err
 	}
+}
+
+func (self *GolangTemplate) ParseString(body string) error {
+	self.body = body
+	return self.init()
 }

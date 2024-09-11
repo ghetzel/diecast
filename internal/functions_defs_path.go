@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/fileutil"
@@ -114,130 +112,133 @@ func loadStandardFunctionsPath(funcs FuncMap, server ServerProxy) FuncGroup {
 				Name:     `pwd`,
 				Summary:  `Return the present working directory.`,
 				Function: os.Getwd,
-			}, {
-				Name:    `dir`,
-				Summary: `Return a list of files and directories in *path*, or in the current directory if not specified.`,
-				Arguments: []FuncArg{
-					{
-						Name:        `path`,
-						Type:        `string`,
-						Optional:    true,
-						Description: `The path to retrieve an array of children from.`,
-					},
-				},
-				Examples: []FuncExample{
-					{
-						Code: `dir`,
-						Return: []map[string]interface{}{
-							{
-								`name`:          `file.jpg`,
-								`path`:          `/this/is/my/file.jpg`,
-								`size`:          `124719`,
-								`last_modified`: `2006-01-02T15:04:05Z07:00`,
-								`directory`:     false,
-								`mimetype`:      `image/jpeg`,
-							}, {
-								`name`:          `css`,
-								`path`:          `/this/is/my/css`,
-								`size`:          `4096`,
-								`last_modified`: `2006-01-02T15:04:05Z07:00`,
-								`directory`:     true,
-							}, {
-								`name`:          `README.md`,
-								`path`:          `/this/is/my/README.md`,
-								`size`:          `11216`,
-								`last_modified`: `2006-01-02T15:04:05Z07:00`,
-								`directory`:     false,
-								`mimetype`:      `text/plain`,
-							},
-						},
-					},
-				},
-				Function: func(dirs ...string) ([]map[string]interface{}, error) {
-					var dir string
-					var glob string
-					var entries = make([]map[string]interface{}, 0)
+			},
+			// {
+			// 	Name:    `dir`,
+			// 	Summary: `Return a list of files and directories in *path*, or in the current directory if not specified.`,
+			// 	Arguments: []FuncArg{
+			// 		{
+			// 			Name:        `path`,
+			// 			Type:        `string`,
+			// 			Optional:    true,
+			// 			Description: `The path to retrieve an array of children from.`,
+			// 		},
+			// 	},
+			// 	Examples: []FuncExample{
+			// 		{
+			// 			Code: `dir`,
+			// 			Return: []map[string]interface{}{
+			// 				{
+			// 					`name`:          `file.jpg`,
+			// 					`path`:          `/this/is/my/file.jpg`,
+			// 					`size`:          `124719`,
+			// 					`last_modified`: `2006-01-02T15:04:05Z07:00`,
+			// 					`directory`:     false,
+			// 					`mimetype`:      `image/jpeg`,
+			// 				}, {
+			// 					`name`:          `css`,
+			// 					`path`:          `/this/is/my/css`,
+			// 					`size`:          `4096`,
+			// 					`last_modified`: `2006-01-02T15:04:05Z07:00`,
+			// 					`directory`:     true,
+			// 				}, {
+			// 					`name`:          `README.md`,
+			// 					`path`:          `/this/is/my/README.md`,
+			// 					`size`:          `11216`,
+			// 					`last_modified`: `2006-01-02T15:04:05Z07:00`,
+			// 					`directory`:     false,
+			// 					`mimetype`:      `text/plain`,
+			// 				},
+			// 			},
+			// 		},
+			// 	},
+			// 	Function: func(dirs ...string) ([]map[string]interface{}, error) {
+			// 		var dir string
+			// 		var glob string
+			// 		var entries = make([]map[string]interface{}, 0)
 
-					if len(dirs) == 0 || dirs[0] == `` || dirs[0] == `.` || dirs[0] == `/` {
-						if server != nil {
-							dir = `/`
-						} else if wd, err := os.Getwd(); err == nil {
-							dir = wd
-						} else {
-							return nil, err
-						}
-					} else {
-						dir = dirs[0]
-					}
+			// 		if len(dirs) == 0 || dirs[0] == `` || dirs[0] == `.` || dirs[0] == `/` {
+			// 			if server != nil {
+			// 				dir = `/`
+			// 			} else if wd, err := os.Getwd(); err == nil {
+			// 				dir = wd
+			// 			} else {
+			// 				return nil, err
+			// 			}
+			// 		} else {
+			// 			dir = dirs[0]
+			// 		}
 
-					if len(dirs) > 1 {
-						glob = dirs[1]
-					}
+			// 		if len(dirs) > 1 {
+			// 			glob = dirs[1]
+			// 		}
 
-					dir = path.Clean(dir)
+			// 		dir = path.Clean(dir)
 
-					var ranAtLeastOnce bool
+			// 		var ranAtLeastOnce bool
 
-					if err := httpFsWalk(server.fs, dir, glob, func(path string, info os.FileInfo, err error) error {
-						if err == nil {
-							// omit first call (which is the root directory)
-							if ranAtLeastOnce {
-								var fi = &fileInfo{
-									Parent:    filepath.Dir(path),
-									Directory: info.IsDir(),
-									FileInfo:  info,
-								}
+			// 		if err := httpFsWalk(server.fs, dir, glob, func(path string, info os.FileInfo, err error) error {
+			// 			if err == nil {
+			// 				// omit first call (which is the root directory)
+			// 				if ranAtLeastOnce {
+			// 					var fi = &fileInfo{
+			// 						Parent:    filepath.Dir(path),
+			// 						Directory: info.IsDir(),
+			// 						FileInfo:  info,
+			// 					}
 
-								entries = append(entries, fi.toMap())
-							}
-							// if matched, err := filepath.Match(dir, path); err == nil {
-							// 	if matched {
-							// 	}
-							// } else {
-							// 	return err
-							// }
+			// 					entries = append(entries, fi.toMap())
+			// 				}
+			// 				// if matched, err := filepath.Match(dir, path); err == nil {
+			// 				// 	if matched {
+			// 				// 	}
+			// 				// } else {
+			// 				// 	return err
+			// 				// }
 
-							if ranAtLeastOnce && info.IsDir() {
-								// we only want one level, do not descend into directories
-								return filepath.SkipDir
-							} else {
-								ranAtLeastOnce = true
-								return nil
-							}
-						} else {
-							return err
-						}
-					}); err == nil {
-						sort.Slice(entries, func(i, j int) bool {
-							var iname = typeutil.String(entries[i][`name`])
-							var jname = typeutil.String(entries[j][`name`])
+			// 				if ranAtLeastOnce && info.IsDir() {
+			// 					// we only want one level, do not descend into directories
+			// 					return filepath.SkipDir
+			// 				} else {
+			// 					ranAtLeastOnce = true
+			// 					return nil
+			// 				}
+			// 			} else {
+			// 				return err
+			// 			}
+			// 		}); err == nil {
+			// 			sort.Slice(entries, func(i, j int) bool {
+			// 				var iname = typeutil.String(entries[i][`name`])
+			// 				var jname = typeutil.String(entries[j][`name`])
 
-							return strings.ToLower(iname) < strings.ToLower(jname)
-						})
+			// 				return strings.ToLower(iname) < strings.ToLower(jname)
+			// 			})
 
-						return entries, nil
-					} else {
-						return nil, err
-					}
-				},
-			}, {
-				Name:    `pathInRoot`,
-				Summary: `Returns whether the given path falls within the Diecast serving root path.`,
-				Arguments: []FuncArg{
-					{
-						Name:        `path`,
-						Type:        `string`,
-						Description: `The path to check.`,
-					},
-				},
-				Function: func(path string) bool {
-					if server != nil {
-						return server.IsInRootPath(path)
-					} else {
-						return true
-					}
-				},
-			}, {
+			// 			return entries, nil
+			// 		} else {
+			// 			return nil, err
+			// 		}
+			// 	},
+			// },
+			// {
+			// 	Name:    `pathInRoot`,
+			// 	Summary: `Returns whether the given path falls within the Diecast serving root path.`,
+			// 	Arguments: []FuncArg{
+			// 		{
+			// 			Name:        `path`,
+			// 			Type:        `string`,
+			// 			Description: `The path to check.`,
+			// 		},
+			// 	},
+			// 	Function: func(path string) bool {
+			// 		if server != nil {
+			// 			return server.IsInRootPath(path)
+			// 		} else {
+			// 			return true
+			// 		}
+			// 	},
+			// },
+			{
 				Name:    `mimetype`,
 				Summary: `Returns a best guess at the MIME type for the given filename.`,
 				Arguments: []FuncArg{

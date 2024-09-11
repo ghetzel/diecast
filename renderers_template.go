@@ -1,10 +1,8 @@
 package diecast
 
-import "io/fs"
-
-var FrontMatterSeparator = []byte("---\n")
-var MaxFrontMatterSize = 32768
-var DefaultLayoutName = `default`
+import (
+	"io/fs"
+)
 
 type TemplateRenderer struct {
 }

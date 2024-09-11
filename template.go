@@ -2,36 +2,29 @@ package diecast
 
 import (
 	"bytes"
-	"crypto/sha512"
-	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 
 	"github.com/ghetzel/diecast/v2/internal"
 	"github.com/ghetzel/go-stockutil/typeutil"
-	"gopkg.in/yaml.v2"
 )
 
-var Delimiters [2]string = [2]string{`{{`, `}}`}
 var DefaultEntryPoint = `content`
+var DefaultLayoutName = `default`
 var DefaultTemplateEngine = `html`
+var Delimiters = internal.Delimiters
+var FrontMatterSeparator = internal.FrontMatterSeparator
 var LayoutNamePrefix string = `layout:`
+var MaxFrontMatterSize = 32768
 
 type Template struct {
-	Engine        string  `yaml:"engine"`
-	EntryPoint    string  `yaml:"entryPoint"`
-	DataSources   DataSet `yaml:"dataSources"`
-	Layout        string  `yaml:"layout"`
-	Filename      string  `yaml:"-"`
-	ContentOffset int     `yaml:"-"`
-	sha512sum     string
-	body          []byte
-	buf           *bytes.Buffer
-	gotmpl        *internal.GolangTemplate
-	initDone      bool
+	*internal.TemplateHeader
+	body     []byte
+	buf      *bytes.Buffer
+	gotmpl   *internal.GolangTemplate
+	initDone bool
 }
 
 func ParseTemplateString(source string) (*Template, error) {
@@ -43,39 +36,13 @@ func ParseTemplate(source io.Reader) (*Template, error) {
 		return nil, io.EOF
 	}
 
-	var summer = sha512.New()
-
-	// tee the source to the hasher above for checksumming goodness
-	var summedSource = io.TeeReader(source, summer)
 	var tmpl = new(Template)
-	var fmData []byte
 
-	if data, err := ioutil.ReadAll(summedSource); err == nil {
-		var parts = bytes.SplitN(data, FrontMatterSeparator, 3)
-
-		switch len(parts) {
-		case 3:
-			fmData = parts[1]
-			tmpl.body = parts[2]
-		case 2:
-			fmData = parts[0]
-			tmpl.body = parts[1]
-		case 1:
-			tmpl.body = parts[0]
-		}
-
-		tmpl.buf = bytes.NewBuffer(tmpl.body)
-		tmpl.ContentOffset = (2 * len(FrontMatterSeparator)) + len(fmData)
-		tmpl.sha512sum = hex.EncodeToString(summer.Sum(nil))
+	if hdr, body, err := internal.SplitTemplateHeaderContent(source); err == nil {
+		tmpl.TemplateHeader = hdr
+		tmpl.body = body
 	} else {
 		return nil, err
-	}
-
-	// Only attempt to parse if we actually read any front matter data.
-	if len(fmData) > 0 {
-		if err := yaml.UnmarshalStrict(fmData, tmpl); err != nil {
-			return nil, err
-		}
 	}
 
 	return tmpl, tmpl.init()
@@ -83,11 +50,33 @@ func ParseTemplate(source io.Reader) (*Template, error) {
 
 // Implement reader interface.
 func (self *Template) Read(b []byte) (int, error) {
+	if self.buf == nil {
+		if err := self.init(); err == nil {
+			var dst bytes.Buffer
+
+			if err := self.Render(nil, &dst); err != nil {
+				return 0, err
+			}
+
+			self.buf = &dst
+		} else {
+			return 0, fmt.Errorf("init err: %v", err)
+		}
+	}
+
 	if buf := self.buf; buf != nil {
 		return buf.Read(b)
 	} else {
 		return 0, io.EOF
 	}
+}
+
+// Implemented io.Closer
+func (self *Template) Close() error {
+	self.initDone = false
+	self.buf = nil
+	self.gotmpl = nil
+	return nil
 }
 
 // Initialize the template, parsing the data and making the object ready for subsequent calls to Render
@@ -97,7 +86,7 @@ func (self *Template) init() error {
 	}
 
 	var engine = typeutil.OrString(self.Engine, DefaultTemplateEngine)
-	// var name = typeutil.OrString(self.Filename, engine+`:`+self.sha512sum)
+	// var name = typeutil.OrString(self.Filename, engine+`:`+self.SHA512SUM)
 
 	if gotmpl, err := internal.ParseGolangTemplate(self.entryPoint(), engine, self.TemplateString()); err == nil {
 		self.gotmpl = gotmpl
@@ -146,15 +135,15 @@ func (self *Template) Render(ctx *Context, w io.Writer) error {
 		w = ctx
 	}
 
-	ctx.Debugf("template: known templates: %s", strings.Join(self.gotmpl.Names(), `, `))
-	ctx.Debugf("template: entrypoint: %s", self.entryPoint())
+	// ctx.Debugf("template: known templates: %s", strings.Join(self.gotmpl.Names()``, `, `))
+	// ctx.Debugf("template: entrypoint: %s", self.entryPoint())
 
 	return self.gotmpl.ExecuteTemplate(w, self.entryPoint(), ctx.Data())
 }
 
 // Returns the SHA512 checksum of the underlying template file.
 func (self *Template) Checksum() string {
-	return self.sha512sum
+	return self.SHA512SUM
 }
 
 func (self *Template) attachTemplate(ctx *Context, tmplName string, r io.Reader) error {

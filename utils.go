@@ -17,9 +17,8 @@ import (
 
 var globcache sync.Map
 
-// Return whether the give path matches the given extended glob pattern as described
+//  Return whether the give path matches the given extended glob pattern as described
 // at https://pkg.go.dev/github.com/gobwas/glob#Compile
-//
 func IsGlobMatch(path string, pattern string) bool {
 	var globber glob.Glob
 
