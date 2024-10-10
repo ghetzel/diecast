@@ -2,24 +2,9 @@ package diecast
 
 import (
 	"io/fs"
-	"os"
 )
 
 type FileSystemFunc = func(*Layer) (fs.FS, error)
-
-var filesystems = make(map[string]FileSystemFunc)
-
-func init() {
-	// RegisterFS(`s3`, func(layer *Layer) fs.FS {
-	// 	var bucket = layer.Option(`bucket`).String()
-	// })
-
-	RegisterFS(``, func(layer *Layer) (fs.FS, error) {
-		var root = layer.Option(`path`, `.`).String()
-
-		return os.DirFS(root), nil
-	})
-}
 
 // Register a new filesystem creator function to the given type.  If type is empty,
 // the given function will be used as the default filesystem for unspecified layer types.

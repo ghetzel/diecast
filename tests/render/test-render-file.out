@@ -1,0 +1,11 @@
+Incorrect Usage.
+
+NAME:
+   diecast-linux-amd64 render - Render the given file as a template.
+
+USAGE:
+   diecast-linux-amd64 render [command options] [arguments...]
+
+OPTIONS:
+   --data, -d [--data option --data option]	Specify a data to include in the template input as a "[nested.]key=value" string.
+   

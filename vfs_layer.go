@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/maputil"
@@ -15,7 +16,8 @@ import (
 type Layer struct {
 	Type          string                 `yaml:"type"`
 	Options       map[string]interface{} `yaml:"options"`
-	Paths         interface{}            `yaml:"paths"`
+	RootDir       string                 `yaml:"root"`
+	Paths         []string               `yaml:"paths"`
 	HaltOnMissing bool                   `yaml:"haltOnMissing"`
 	HaltOnError   bool                   `yaml:"haltOnError"`
 	fs            fs.FS
@@ -25,8 +27,15 @@ func LayerFromString(spec string) (*Layer, error) {
 	if s, err := url.Parse(spec); err == nil {
 		var layer = new(Layer)
 
-		layer.Type = s.Scheme
 		layer.Options = make(map[string]interface{})
+		layer.RootDir = path.Clean(path.Join(s.Host, s.Path))
+
+		switch s.Scheme {
+		case ``, `fs`, `file`:
+			layer.Type = ``
+		default:
+			layer.Type = s.Scheme
+		}
 
 		for key, values := range s.Query() {
 			switch len(values) {

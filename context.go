@@ -287,8 +287,10 @@ func (self *Context) Open(name string) (fs.File, error) {
 		panic("no filesystem associated with context")
 	}
 
-	self.Debugf("fs: open %q", name)
-	return self.server.VFS.Open(name)
+	var f, err = self.server.VFS.Open(name)
+	self.Debugf("fs: open(%q) %v", name, err)
+
+	return f, err
 }
 
 // Return the http.Request associated with this context.  This function will panic if Start() was

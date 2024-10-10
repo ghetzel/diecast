@@ -1,0 +1,9 @@
+---
+layout: false
+includes:
+    one: ./include-one.html
+    two: ./sub/include-two.html
+---
+<b>{{ .request.method }}</b>
+{{ template "one" . }}
+{{ template "two" . }}
