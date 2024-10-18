@@ -1,31 +1,21 @@
 package diecast
 
-
 import (
-	"context"
 	"fmt"
-	"io"
-	"io/fs"
-	"os"
-	"os/user"
-	"path/filepath"
-	"strings"
-
-	"github.com/ghetzel/go-stockutil/fileutil"
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/stringutil"
-	_ "github.com/rclone/rclone/backend/all"
+	"github.com/ghetzel/diecast/v2/internal"
 	rclone_fs "github.com/rclone/rclone/fs"
-	rclone_config "github.com/rclone/rclone/fs/config"
-	rclone_configfile "github.com/rclone/rclone/fs/config/configfile"
+	"io/fs"
 )
 
-
 func init() {
-	// RegisterFS(`s3`, func(layer *Layer) fs.FS {
-	// 	var bucket = layer.Option(`bucket`).String()
-	// })
+	for _, reginfo := range rclone_fs.Registry {
+		RegisterFS(reginfo.Prefix, func(layer *Layer) (fs.FS, error) {
+			// fmt.Printf("vfs/%s: %v\n", layer.Type, layer.RootDir)
+			return internal.CreateRcloneFilesystem(
+				layer.String(),
+				fmt.Sprintf("%s:%s", layer.Type, layer.RootDir),
+				nil,
+			)
+		})
+	}
 }
-
-

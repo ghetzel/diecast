@@ -1,6 +1,30 @@
 package internal
 
+import (
+	"context"
+	"fmt"
+	"io"
+	"io/fs"
+	"os"
+	"os/user"
+	"path/filepath"
+	"sort"
+	"strings"
+	"sync"
+
+	"github.com/ghetzel/go-stockutil/fileutil"
+	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/stringutil"
+	"github.com/ghetzel/go-stockutil/typeutil"
+	_ "github.com/rclone/rclone/backend/all"
+	rclone_fs "github.com/rclone/rclone/fs"
+	rclone_config "github.com/rclone/rclone/fs/config"
+	rclone_configfile "github.com/rclone/rclone/fs/config/configfile"
+)
+
 var rcloneInstances = make(map[string]rclone_fs.Fs)
+
+type rcloneOpenerFunc func(*rcloneFsFile) (io.ReadCloser, error)
 
 type RequiredValue bool
 
@@ -10,12 +34,12 @@ func (self RequiredValue) String() string {
 
 type RcloneFS struct {
 	fs.FS
-	Name          string                 
-	Type          string                 
-	Root          string                 
-	Options       map[string]interface{} 
-	vfs           rclone_fs.Fs
-	rcctx         context.Context
+	Name    string
+	Type    string
+	Root    string
+	Options map[string]interface{}
+	vfs     rclone_fs.Fs
+	rcctx   context.Context
 }
 
 func currentUser() string {
@@ -27,6 +51,10 @@ func currentUser() string {
 }
 
 var DefaultRemoteTypeOptions = map[string]map[string]interface{}{
+	`s3`: {
+		`provider`: `AWS`,
+		`env_auth`: true,
+	},
 	`sftp`: {
 		`user`:     currentUser(),
 		`key_file`: fileutil.MustExpandUser(`~/.ssh/id_rsa`),
@@ -40,15 +68,15 @@ var DefaultRemoteTypeOptions = map[string]map[string]interface{}{
 
 func CreateRcloneFilesystem(name string, typeRootPair string, options map[string]interface{}) (*RcloneFS, error) {
 	var fstype, rt = stringutil.SplitPair(typeRootPair, `:`)
-	var source = &RcloneFS{
+	var rcfs = &RcloneFS{
 		Name:    name,
 		Type:    fstype,
 		Root:    rt,
 		Options: options,
 	}
 
-	if err := source.validate(); err == nil {
-		return source, nil
+	if err := rcfs.validate(); err == nil {
+		return rcfs, nil
 	} else {
 		return nil, err
 	}
@@ -82,10 +110,6 @@ func (self *RcloneFS) validate() error {
 		return fmt.Errorf("no type specified")
 	}
 
-	if self.Title == `` {
-		self.Title = strings.Title(self.Name)
-	}
-
 	if len(self.Options) == 0 {
 		self.Options = make(map[string]interface{})
 	}
@@ -97,7 +121,7 @@ func (self *RcloneFS) validate() error {
 		return err
 	}
 
-	// log.Debugf("[source=%q] rclone type=%v root=%v", self.Name, self.Type, fmt.Sprintf("%s:%s", self.Name, self.Root))
+	// log.Debugf("vfs/rclone type=%v root=%v", self.Name, self.Type, fmt.Sprintf("%s:%s", self.Name, self.Root))
 
 	if vfs, ok := rcloneInstances[self.Name]; ok {
 		self.vfs = vfs
@@ -113,6 +137,8 @@ func (self *RcloneFS) validate() error {
 
 	if self.vfs == nil {
 		return fmt.Errorf("vfs not available")
+	} else {
+		self.vfs.Features()
 	}
 
 	return nil
@@ -150,7 +176,7 @@ func (self *RcloneFS) generateAndSetRcloneConfig() error {
 
 	rclone_configfile.Install()
 
-	rclone_fs.LogPrint = func(level rclone_fs.LogLevel, text string) {
+	rclone_fs.LogOutput = func(level rclone_fs.LogLevel, text string) {
 		for _, substring := range []string{
 			`Can't follow symlink without`,
 			`Can't transfer non file/directory`,
@@ -160,7 +186,7 @@ func (self *RcloneFS) generateAndSetRcloneConfig() error {
 			}
 		}
 
-		log.Debugf("[rclone] %v", text)
+		// log.Debugf("vfs/rclone: %v", text)
 	}
 
 	return nil
@@ -168,7 +194,7 @@ func (self *RcloneFS) generateAndSetRcloneConfig() error {
 
 // Locate the RClone configuration for this media source.
 func (self *RcloneFS) workingConfigPath() string {
-	var path = fmt.Sprintf("~/.config/airstream/run/rclone-%s.conf", self.Name)
+	var path = fmt.Sprintf("~/.cache/diecast/fs-%s.conf", self.Name)
 
 	return fileutil.MustExpandUser(path)
 }
@@ -187,69 +213,238 @@ func (self *RcloneFS) rcloneConfigString(opts map[string]interface{}) string {
 	return strings.Join(lines, "\n") + "\n"
 }
 
-func (self *RcloneFS) Open(name string) (fs.File, error) {
-	return self.OpenMedia(name, false)
+func (self *RcloneFS) remotePath(path string) string {
+	return fmt.Sprintf("%v:%v", self.Name, path)
 }
 
-func (self *RcloneFS) OpenMedia(name string, loadmeta bool) (*MediaEntry, error) {
+func (self *RcloneFS) Open(name string) (fs.File, error) {
 	if err := self.validate(); err != nil {
 		return nil, fmt.Errorf("invalid media source: %v", err)
 	}
 
 	var entries rclone_fs.DirEntries
 	var dir, file = filepath.Split(name)
-	var mediaEntry = NewMediaEntry(self, dir, file)
+	dir = filepath.Clean(filepath.Join(self.Root, dir))
+
+	var entry = newRcloneFsFile(self, dir, file)
 	var done bool
 
-	if e, err := self.vfs.List(self.rcctx, name); err == nil {
-		entries = e
-	} else if log.ErrContains(err, `is a file not a directory`) {
+	if obj, oerr := self.vfs.NewObject(self.rcctx, name); oerr == nil {
+		entry.SetName(name)
+		entry.SetIsDir(false)
+		entry.SetSize(obj.Size())
+		entry.SetFileOpener(obj.Size(), func(e *rcloneFsFile) (io.ReadCloser, error) {
+			return obj.Open(self.rcctx)
+		})
+
+		return entry, nil
+	} else if oerr == rclone_fs.ErrorIsDir {
 		if e, err := self.vfs.List(self.rcctx, dir); err == nil {
 			entries = e
 		} else {
 			return nil, err
 		}
 	} else {
-		return nil, err
+		return nil, oerr
 	}
 
 	entries.ForDir(func(d rclone_fs.Directory) {
-		var entry = NewMediaEntry(self, d.String(), ``)
-		entry.SetIndex(mediaEntry.Len())
-		mediaEntry.AddChild(entry)
+		var fileobj = newRcloneFsFile(self, d.String(), ``)
+		entry.SetIndex(entry.Len())
+		entry.AddChild(fileobj)
 	})
 
 	entries.ForObject(func(o rclone_fs.Object) {
 		var dir, filename = filepath.Split(o.String())
-		var entry = NewMediaEntry(self, dir, filename)
+		var childobj = newRcloneFsFile(self, dir, filename)
 
 		if done {
 			return
 		} else if file != `` && o.String() == file {
-			mediaEntry.SetFileOpener(o.Size(), func(e *MediaEntry) (io.ReadCloser, error) {
+			childobj.SetFileOpener(o.Size(), func(e *rcloneFsFile) (io.ReadCloser, error) {
 				return o.Open(self.rcctx)
 			})
-
-			if loadmeta {
-				defer mediaEntry.LoadMetadata()
-			}
 
 			done = true
 		} else {
-			entry.SetFileOpener(o.Size(), func(e *MediaEntry) (io.ReadCloser, error) {
+			childobj.SetFileOpener(o.Size(), func(e *rcloneFsFile) (io.ReadCloser, error) {
 				return o.Open(self.rcctx)
 			})
 
-			if loadmeta {
-				defer entry.LoadMetadata()
-			}
-
-			entry.SetIndex(mediaEntry.Len())
-
-			mediaEntry.AddChild(entry)
+			entry.SetIndex(entry.Len())
+			entry.AddChild(childobj)
 
 		}
 	})
 
-	return mediaEntry, nil
+	return entry, nil
+}
+
+type rcloneFsFile struct {
+	*fileutil.FileInfo
+	size     int64
+	opener   rcloneOpenerFunc
+	dir      string
+	filename string
+	basefs   *RcloneFS
+	nfo      *fileutil.FileInfo
+	rc       io.ReadCloser
+	children []*rcloneFsFile
+	mimetype string
+	index    int
+	openlock sync.Mutex
+}
+
+func newRcloneFsFile(base *RcloneFS, dir string, name string) *rcloneFsFile {
+	return &rcloneFsFile{
+		FileInfo: fileutil.NewFileInfo(),
+		basefs:   base,
+		children: make([]*rcloneFsFile, 0),
+		dir:      dir,
+		filename: name,
+		mimetype: fileutil.GetMimeType(name, ``),
+	}
+}
+
+func (self *rcloneFsFile) SetFileOpener(size int64, opener rcloneOpenerFunc) {
+	self.size = size
+	self.opener = opener
+}
+
+func (self *rcloneFsFile) AddChild(child *rcloneFsFile) {
+	self.children = append(self.children, child)
+}
+
+func (self *rcloneFsFile) engage() (io.ReadCloser, error) {
+	self.openlock.Lock()
+	defer self.openlock.Unlock()
+
+	if self.rc == nil {
+		if self.opener == nil {
+			return nil, fmt.Errorf("no opener for media entry")
+		}
+
+		if rc, err := self.opener(self); err == nil {
+			self.rc = rc
+		} else {
+			return nil, err
+		}
+	}
+
+	return self.rc, nil
+}
+
+func (self *rcloneFsFile) Stat() (fs.FileInfo, error) {
+	if self.nfo == nil {
+		self.nfo = fileutil.NewFileInfo()
+
+		if self.filename == `` {
+			self.nfo.SetIsDir(true)
+			self.nfo.SetName(self.dir)
+		} else {
+			self.nfo.SetIsDir(false)
+			self.nfo.SetName(self.filename)
+		}
+
+		self.nfo.SetSize(self.size)
+	}
+
+	if self.nfo.Name() == `` {
+		return nil, fmt.Errorf("invalid entry name")
+	}
+
+	return self.nfo, nil
+}
+
+func (self *rcloneFsFile) Name() string {
+	return typeutil.OrString(self.filename, strings.TrimSuffix(self.dir, `/`)+`/`)
+}
+
+func (self *rcloneFsFile) IsDir() bool {
+	return len(self.filename) == 0
+}
+
+func (self *rcloneFsFile) Type() fs.FileMode {
+	return 0
+}
+
+func (self *rcloneFsFile) Info() (fs.FileInfo, error) {
+	return self.Stat()
+}
+
+func (self *rcloneFsFile) Read(b []byte) (int, error) {
+	if rc, err := self.engage(); err == nil {
+		return rc.Read(b)
+	} else {
+		return 0, err
+	}
+}
+
+func (self *rcloneFsFile) Close() error {
+	if rc, err := self.engage(); err == nil {
+		return rc.Close()
+	} else {
+		return err
+	}
+}
+
+func (self *rcloneFsFile) ReadDir(n int) ([]fs.DirEntry, error) {
+	if self.IsDir() {
+		if n < len(self.children) {
+			self.sortChildren()
+			var children = self.children
+
+			if n >= 0 {
+				children = children[0:n]
+			} else {
+				n = len(children)
+			}
+
+			var results = make([]fs.DirEntry, n)
+
+			for i, child := range children {
+				results[i] = child
+			}
+
+			return results, nil
+		} else {
+			return make([]fs.DirEntry, 0), io.EOF
+		}
+	}
+
+	return nil, fmt.Errorf("not a directory")
+}
+
+func (self *rcloneFsFile) sortChildren() {
+	if len(self.children) > 0 {
+		sort.Slice(self.children, func(i int, j int) bool {
+			var ic = self.children[i]
+			var jc = self.children[j]
+			return ic.sortKey() < jc.sortKey()
+		})
+	}
+}
+
+func (self *rcloneFsFile) sortKey() string {
+	var epoch string
+	var name string = self.Name()
+
+	if self.IsDir() {
+		epoch = `0`
+	} else {
+		epoch = `1`
+	}
+
+	return epoch + `:` + strings.ToLower(name)
+}
+func (self *rcloneFsFile) Len() int {
+	return len(self.children)
+}
+
+func (self *rcloneFsFile) Index() int {
+	return self.index
+}
+
+func (self *rcloneFsFile) SetIndex(i int) {
+	self.index = i
 }

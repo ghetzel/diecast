@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"io/fs"
 	"net/url"
@@ -21,12 +22,17 @@ type Layer struct {
 	HaltOnMissing bool                   `yaml:"haltOnMissing"`
 	HaltOnError   bool                   `yaml:"haltOnError"`
 	fs            fs.FS
+	id            string
 }
 
 func LayerFromString(spec string) (*Layer, error) {
 	if s, err := url.Parse(spec); err == nil {
 		var layer = new(Layer)
 
+		var idgen = sha256.New()
+		idgen.Write([]byte(spec))
+
+		layer.id = fmt.Sprintf("%x", idgen.Sum(nil))
 		layer.Options = make(map[string]interface{})
 		layer.RootDir = path.Clean(path.Join(s.Host, s.Path))
 
@@ -59,6 +65,11 @@ func LayerFromString(spec string) (*Layer, error) {
 	} else {
 		return nil, err
 	}
+}
+
+// Return a string identifier for this layer
+func (self *Layer) String() string {
+	return fmt.Sprintf("%s-%s", self.Type, self.id)
 }
 
 // Return a typeutil.Variant containing the value at the named option key, or a fallback value.

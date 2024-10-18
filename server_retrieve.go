@@ -25,7 +25,7 @@ func (self *Server) serveHttpPhaseRetrieve(ctx *Context) (fs.File, error) {
 			continue
 		}
 
-		ctx.Debugf("retrieve: try path %v", tryPath)
+		// ctx.Debugf("retrieve: try path %v", tryPath)
 		file, lerr = ctx.Open(tryPath)
 
 		if lerr == nil {

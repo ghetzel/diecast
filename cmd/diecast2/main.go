@@ -65,7 +65,6 @@ func main() {
 		}
 
 		log.FatalIf(server.LoadLayersFromString(specs...))
-		log.DumpJSON(server.VFS.Layers)
 
 		if sreq := c.String(`single-request`); sreq != `` {
 			var method, path = stringutil.SplitPairTrailing(sreq, ` `)

@@ -395,12 +395,12 @@ func (self *Context) logPrefix() string {
 
 func (self *Context) Log(level log.Level, args ...interface{}) {
 	log.Log(level, append([]interface{}{
-		fmt.Sprintf("%s ${cyan}\u2502${reset} "+self.logPrefix(), self.ID()),
+		fmt.Sprintf("%22s ${cyan}\u2502${reset} "+self.logPrefix(), self.ID()),
 	}, args...)...)
 }
 
 func (self *Context) Logf(level log.Level, format string, args ...interface{}) {
-	log.Logf(level, "%s ${cyan}\u2502${reset} "+self.logPrefix()+format, append([]interface{}{self.ID()}, args...)...)
+	log.Logf(level, "%22s ${cyan}\u2502${reset} "+self.logPrefix()+format, append([]interface{}{self.ID()}, args...)...)
 }
 
 func (self *Context) Debug(args ...interface{}) {
