@@ -52,7 +52,8 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server ServerProxy) FuncGroup {
 						indentString = indent[0]
 					}
 
-					data, err := json.MarshalIndent(value, ``, indentString)
+					var data, err = json.MarshalIndent(value, ``, indentString)
+
 					return string(data[:]), err
 				},
 			}, {

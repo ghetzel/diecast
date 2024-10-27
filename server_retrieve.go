@@ -1,12 +1,14 @@
 package diecast
 
 import (
+	"fmt"
 	"io/fs"
 	"net/http"
 	"path/filepath"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/fileutil"
+	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
@@ -25,7 +27,7 @@ func (self *Server) serveHttpPhaseRetrieve(ctx *Context) (fs.File, error) {
 			continue
 		}
 
-		// ctx.Debugf("retrieve: try path %v", tryPath)
+		ctx.Debugf("retrieve: try path %v", tryPath)
 		file, lerr = ctx.Open(tryPath)
 
 		if lerr == nil {
@@ -46,13 +48,24 @@ func (self *Server) serveHttpPhaseRetrieve(ctx *Context) (fs.File, error) {
 
 // builds a list of filesystem objects to search for in response to the request URL path
 func (self *Server) retrieveTryPaths(req *http.Request) (paths []string) {
+	// start with the filename exactly as requested
 	paths = append(paths, req.URL.Path)
 
-	if strings.HasSuffix(req.URL.Path, `/`) {
-		paths = append(paths, filepath.Join(
-			req.URL.Path,
-			typeutil.OrString(self.Paths.IndexFilename, DefaultIndexFilename),
-		))
+	// then try <filename>/index.html
+	paths = append(paths, filepath.Join(
+		req.URL.Path,
+		typeutil.OrString(self.Paths.IndexFilename, DefaultIndexFilename),
+	))
+
+	// then try various default file extensions
+	var basepath = req.URL.Path
+	basepath = strings.TrimSuffix(basepath, `/`)
+
+	if _, x := stringutil.SplitPair(basepath, `.`); x == `` {
+		for _, ext := range self.defaultFileExtensions() {
+			ext = strings.TrimPrefix(ext, `.`)
+			paths = append(paths, fmt.Sprintf("%s.%s", basepath, ext))
+		}
 	}
 
 	return

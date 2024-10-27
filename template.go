@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ghetzel/diecast/v2/internal"
+	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
@@ -157,6 +158,10 @@ func (self *Template) Render(ctx *Context, w io.Writer) error {
 		ctx = NewContext(nil)
 	}
 
+	if err := self.applyPageVars(ctx); err != nil {
+		return err
+	}
+
 	if w == nil {
 		w = ctx
 	}
@@ -171,6 +176,34 @@ func (self *Template) Render(ctx *Context, w io.Writer) error {
 // Returns the SHA512 checksum of the underlying template file.
 func (self *Template) Checksum() string {
 	return self.SHA512SUM
+}
+
+func (self *Template) applyPageVars(ctx *Context) error {
+	var pageVars = maputil.Apply(self.Page, func(key []string, value interface{}) (interface{}, bool) {
+		if mii, ok := value.(map[interface{}]interface{}); ok {
+			var msi = make(map[string]interface{})
+			for ki, vi := range mii {
+				msi[typeutil.String(ki)] = vi
+			}
+
+			return msi, true
+		} else if ev, err := ctx.Eval(value); err == nil {
+			return ev, true
+		} else {
+			return value, false
+		}
+	})
+
+	if curPageVars := ctx.Get(`page`); curPageVars.IsMap() {
+		if m, err := maputil.Merge(curPageVars, pageVars); err == nil {
+			pageVars = m
+		} else {
+			return err
+		}
+	}
+
+	ctx.SetValue(`page`, pageVars)
+	return nil
 }
 
 func (self *Template) attachTemplate(ctx *Context, tmplName string, r io.Reader) error {

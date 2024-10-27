@@ -10,7 +10,6 @@ import (
 func init() {
 	for _, reginfo := range rclone_fs.Registry {
 		RegisterFS(reginfo.Prefix, func(layer *Layer) (fs.FS, error) {
-			// fmt.Printf("vfs/%s: %v\n", layer.Type, layer.RootDir)
 			return internal.CreateRcloneFilesystem(
 				layer.String(),
 				fmt.Sprintf("%s:%s", layer.Type, layer.RootDir),

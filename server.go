@@ -27,6 +27,7 @@ var DefaultErrorsDir = `/_errors`
 var DefaultVerifyMethod = `GET`
 var DefaultVerifyPath = `/`
 var DefaultVerifyTimeout = `1s`
+var DefaultExtensions = []string{`.html`, `.htm`, `.md`}
 
 type ServerStartFunc func(*Server, error) error
 
@@ -34,6 +35,20 @@ type ServerPaths struct {
 	LayoutsDir    string `yaml:"layouts"`
 	ErrorsDir     string `yaml:"errors"`
 	IndexFilename string `yaml:"indexFilename"`
+}
+
+type RequestOptions struct {
+	Headers map[string]interface{} `yaml:"headers"`
+}
+
+type ResponseOptions struct {
+	Headers map[string]interface{} `yaml:"headers"`
+}
+
+type DefaultOptions struct {
+	Extensions []string        `yaml:"tryExtensions"`
+	Request    RequestOptions  `yaml:"request"`
+	Response   ResponseOptions `yaml:"response"`
 }
 
 type Server struct {
@@ -46,6 +61,7 @@ type Server struct {
 	VerifyPath    string            `yaml:"verifyPath"`
 	VerifyTimeout string            `yaml:"verifyTimeout"`
 	VFS           VFS               `yaml:"vfs"`
+	Defaults      DefaultOptions    `yaml:"defaults"`
 	ovfs          fs.FS
 	startFuncs    []ServerStartFunc
 	srvlock       sync.Mutex
@@ -265,6 +281,11 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// flush any last-minute headers and other prep before rendering occurs
 	ctx.finalizeBeforeRender()
 
+	// inject global headers from config
+	for k, v := range self.Defaults.Response.Headers {
+		ctx.Header().Set(k, typeutil.String(v))
+	}
+
 	// RENDER
 	// -------------------------------------------------------------------------------------------------------------------
 	//  ▶ consume the input data found in RETRIEVE and write whatever response the requestor will receive
@@ -363,4 +384,12 @@ func (self *Server) Lock(name string) {
 
 func (self *Server) Unlock(name string) {
 	// self.srvlock.Unlock()
+}
+
+func (self *Server) defaultFileExtensions() []string {
+	if len(self.Defaults.Extensions) > 0 {
+		return self.Defaults.Extensions
+	} else {
+		return DefaultExtensions
+	}
 }
