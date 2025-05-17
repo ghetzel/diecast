@@ -7,7 +7,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -48,7 +47,7 @@ func xmlNtoS(name xml.Name) string {
 	return name.Local
 }
 
-func xmlToMap(in []byte) (map[string]interface{}, error) {
+func xmlToMap(in []byte) (map[string]any, error) {
 	var docroot xmlNode
 
 	if err := xml.Unmarshal(in, &docroot); err == nil {
@@ -58,11 +57,11 @@ func xmlToMap(in []byte) (map[string]interface{}, error) {
 	}
 }
 
-func xmlNodeToMap(node *xmlNode) map[string]interface{} {
-	var out = make(map[string]interface{})
+func xmlNodeToMap(node *xmlNode) map[string]any {
+	var out = make(map[string]any)
 
-	var attrs = make(map[string]interface{})
-	var children = make(map[string]interface{})
+	var attrs = make(map[string]any)
+	var children = make(map[string]any)
 
 	for _, attr := range node.Attrs {
 		attrs[xmlNtoS(attr.Name)] = typeutil.Auto(attr.Value)
@@ -74,8 +73,8 @@ func xmlNodeToMap(node *xmlNode) map[string]interface{} {
 
 		if existing, ok := children[key]; ok {
 			if !typeutil.IsArray(existing) {
-				children[key] = append([]interface{}{existing}, value)
-			} else if eI, ok := existing.([]interface{}); ok {
+				children[key] = append([]any{existing}, value)
+			} else if eI, ok := existing.([]any); ok {
 				children[key] = append(eI, value)
 			}
 
@@ -99,10 +98,10 @@ func xmlNodeToMap(node *xmlNode) map[string]interface{} {
 	return out
 }
 
-func xsvToArray(data []byte, delim rune) (map[string]interface{}, error) {
-	var recs = make([][]interface{}, 0)
+func xsvToArray(data []byte, delim rune) (map[string]any, error) {
+	var recs = make([][]any, 0)
 
-	var out = map[string]interface{}{
+	var out = map[string]any{
 		`headers`: make([]string, 0),
 		`records`: recs,
 	}
@@ -115,7 +114,7 @@ func xsvToArray(data []byte, delim rune) (map[string]interface{}, error) {
 			if i == 0 {
 				out[`headers`] = row
 			} else {
-				var outrec = make([]interface{}, len(row))
+				var outrec = make([]any, len(row))
 
 				for j, col := range row {
 					outrec[j] = typeutil.Auto(col)
@@ -132,22 +131,6 @@ func xsvToArray(data []byte, delim rune) (map[string]interface{}, error) {
 		return out, nil
 	} else {
 		return nil, err
-	}
-}
-
-type funcHandler struct {
-	fn http.HandlerFunc
-}
-
-func (self *funcHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	self.fn(w, req)
-}
-
-func constantErrHandler(server *Server, err error, code int) http.Handler {
-	return &funcHandler{
-		fn: func(w http.ResponseWriter, req *http.Request) {
-			server.respondError(w, req, err, code)
-		},
 	}
 }
 
@@ -179,14 +162,14 @@ func MultiReadCloser(readers ...io.Reader) *multiReadCloser {
 	}
 }
 
-func (self *multiReadCloser) Read(p []byte) (int, error) {
-	return self.reader.Read(p)
+func (multi *multiReadCloser) Read(p []byte) (int, error) {
+	return multi.reader.Read(p)
 }
 
-func (self *multiReadCloser) Close() error {
+func (multi *multiReadCloser) Close() error {
 	var mErr error
 
-	for _, closer := range self.closers {
+	for _, closer := range multi.closers {
 		mErr = log.AppendError(mErr, closer.Close())
 	}
 
@@ -206,23 +189,18 @@ func intercept(upstream http.ResponseWriter) *statusInterceptor {
 	}
 }
 
-func (self *statusInterceptor) WriteHeader(code int) {
-	self.ResponseWriter.WriteHeader(code)
-	self.code = code
+func (intercept *statusInterceptor) WriteHeader(code int) {
+	intercept.ResponseWriter.WriteHeader(code)
+	intercept.code = code
 }
 
-func (self *statusInterceptor) Write(b []byte) (int, error) {
-	n, err := self.ResponseWriter.Write(b)
-	self.bytesWritten += int64(n)
+func (intercept *statusInterceptor) Write(b []byte) (int, error) {
+	n, err := intercept.ResponseWriter.Write(b)
+	intercept.bytesWritten += int64(n)
 	return n, err
 }
 
-// A do-nothing http.Handler that does nothing
-type nopHandler struct{}
-
-func (self *nopHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {}
-
-func fancyMapJoin(in interface{}) string {
+func fancyMapJoin(in any) string {
 	var m = maputil.M(in)
 
 	// extract formatting directives from map keys, which uses in-band signalling that i don't *love*,
@@ -290,20 +268,20 @@ func newZipFS(archive *zip.Reader) *zipFS {
 	}
 }
 
-func (self *zipFS) Open(name string) (http.File, error) {
+func (zipfs *zipFS) Open(name string) (http.File, error) {
 	name = filepath.Clean(name)
 
 	switch name {
 	case ``, `/`, `./`:
-		return newZipEntry(self, &zip.File{
+		return newZipEntry(zipfs, &zip.File{
 			FileHeader: zip.FileHeader{
 				Name: `/`,
 			},
 		}), nil
 	default:
-		for _, hdr := range self.archive.File {
+		for _, hdr := range zipfs.archive.File {
 			if name == filepath.Clean(hdr.Name) {
-				return newZipEntry(self, hdr), nil
+				return newZipEntry(zipfs, hdr), nil
 			}
 		}
 	}
@@ -311,7 +289,7 @@ func (self *zipFS) Open(name string) (http.File, error) {
 	return nil, os.ErrNotExist
 }
 
-func (self *zipFS) entries(path string) []os.FileInfo {
+func (zipfs *zipFS) entries(path string) []os.FileInfo {
 	path = filepath.Clean(path)
 	path = strings.TrimPrefix(path, `/`)
 
@@ -323,7 +301,7 @@ func (self *zipFS) entries(path string) []os.FileInfo {
 	var dirs []os.FileInfo
 	var files []os.FileInfo
 
-	for _, hdr := range self.archive.File {
+	for _, hdr := range zipfs.archive.File {
 		var dirname = filepath.Dir(filepath.Clean(hdr.Name))
 
 		if (path == `/` && dirname == `.`) || (dirname == path) {
@@ -354,13 +332,13 @@ func newZipEntry(fs *zipFS, file *zip.File) *zipEntry {
 	}
 }
 
-func (self *zipEntry) prep() error {
-	if self.rs == nil {
-		if rc, err := self.zipfile.Open(); err == nil {
+func (entry *zipEntry) prep() error {
+	if entry.rs == nil {
+		if rc, err := entry.zipfile.Open(); err == nil {
 			defer rc.Close()
 
-			if data, err := ioutil.ReadAll(rc); err == nil {
-				self.rs = bytes.NewReader(data)
+			if data, err := io.ReadAll(rc); err == nil {
+				entry.rs = bytes.NewReader(data)
 			} else {
 				return err
 			}
@@ -372,44 +350,44 @@ func (self *zipEntry) prep() error {
 	return nil
 }
 
-func (self *zipEntry) Read(b []byte) (int, error) {
-	if err := self.prep(); err == nil {
-		return self.rs.Read(b)
+func (entry *zipEntry) Read(b []byte) (int, error) {
+	if err := entry.prep(); err == nil {
+		return entry.rs.Read(b)
 	} else {
 		return 0, err
 	}
 }
 
-func (self *zipEntry) Seek(offset int64, whence int) (int64, error) {
-	if err := self.prep(); err == nil {
-		return self.rs.Seek(offset, whence)
+func (entry *zipEntry) Seek(offset int64, whence int) (int64, error) {
+	if err := entry.prep(); err == nil {
+		return entry.rs.Seek(offset, whence)
 	} else {
 		return 0, err
 	}
 }
 
-func (self *zipEntry) Close() error {
-	self.rs = nil
-	self.zipfile = nil
+func (entry *zipEntry) Close() error {
+	entry.rs = nil
+	entry.zipfile = nil
 	return nil
 }
 
-func (self *zipEntry) Readdir(count int) ([]os.FileInfo, error) {
-	if self.zipfile.FileInfo().IsDir() {
-		if self.entries == nil {
-			self.entries = self.fs.entries(self.zipfile.Name)
+func (entry *zipEntry) Readdir(count int) ([]os.FileInfo, error) {
+	if entry.zipfile.FileInfo().IsDir() {
+		if entry.entries == nil {
+			entry.entries = entry.fs.entries(entry.zipfile.Name)
 		}
 
-		if self.offset <= len(self.entries) {
-			if end := (self.offset + count); end < len(self.entries) {
+		if entry.offset <= len(entry.entries) {
+			if end := (entry.offset + count); end < len(entry.entries) {
 				var err error
-				var sub = self.entries[self.offset:end]
+				var sub = entry.entries[entry.offset:end]
 
-				if self.offset >= len(self.entries) {
+				if entry.offset >= len(entry.entries) {
 					err = io.EOF
 				}
 
-				self.offset += len(sub)
+				entry.offset += len(sub)
 
 				return sub, err
 			}
@@ -419,8 +397,8 @@ func (self *zipEntry) Readdir(count int) ([]os.FileInfo, error) {
 	return nil, io.EOF
 }
 
-func (self *zipEntry) Stat() (os.FileInfo, error) {
-	return self.zipfile.FileInfo(), nil
+func (entry *zipEntry) Stat() (os.FileInfo, error) {
+	return entry.zipfile.FileInfo(), nil
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -443,35 +421,35 @@ func newHttpFile(name string, data []byte) *httpFile {
 	return f
 }
 
-func (self *httpFile) Close() error {
-	self.closed = true
+func (hfile *httpFile) Close() error {
+	hfile.closed = true
 	return nil
 }
 
-func (self *httpFile) Read(b []byte) (int, error) {
-	if self.closed {
+func (hfile *httpFile) Read(b []byte) (int, error) {
+	if hfile.closed {
 		return 0, fmt.Errorf("attempted read on closed file")
-	} else if self.buf == nil {
+	} else if hfile.buf == nil {
 		return 0, io.EOF
 	} else {
-		return self.buf.Read(b)
+		return hfile.buf.Read(b)
 	}
 }
 
-func (self *httpFile) Seek(offset int64, whence int) (int64, error) {
-	if self.closed {
+func (hfile *httpFile) Seek(offset int64, whence int) (int64, error) {
+	if hfile.closed {
 		return 0, fmt.Errorf("attempted seek on closed file")
-	} else if self.buf == nil {
+	} else if hfile.buf == nil {
 		return 0, io.EOF
 	} else {
-		return self.buf.Seek(offset, whence)
+		return hfile.buf.Seek(offset, whence)
 	}
 }
 
-func (self *httpFile) Readdir(count int) ([]os.FileInfo, error) {
+func (hfile *httpFile) Readdir(count int) ([]os.FileInfo, error) {
 	return nil, io.EOF
 }
 
-func (self *httpFile) Stat() (os.FileInfo, error) {
-	return self.FileInfo, nil
+func (hfile *httpFile) Stat() (os.FileInfo, error) {
+	return hfile.FileInfo, nil
 }

@@ -11,7 +11,7 @@ import (
 
 var HighlightTheme = `monokai`
 
-func loadStandardFunctionsLangHighlighting(funcs FuncMap, server *Server) funcGroup {
+func loadStandardFunctionsLangHighlighting(_ FuncMap, _ *Server) funcGroup {
 	var group = funcGroup{
 		Name:        `Language Highlighting`,
 		Description: `Utilities for performing syntax highlighting of source code.`,
@@ -30,7 +30,7 @@ func loadStandardFunctionsLangHighlighting(funcs FuncMap, server *Server) funcGr
 						Description: `The source code to highlight.`,
 					},
 				},
-				Function: func(language string, in interface{}) (template.HTML, error) {
+				Function: func(language string, in any) (template.HTML, error) {
 					var out bytes.Buffer
 					var src = typeutil.String(in)
 

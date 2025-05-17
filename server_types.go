@@ -10,7 +10,7 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
-func kvValues(kv []KV) (values []interface{}) {
+func kvValues(kv []KV) (values []any) {
 	for _, item := range kv {
 		values = append(values, item.V)
 	}
@@ -19,13 +19,13 @@ func kvValues(kv []KV) (values []interface{}) {
 }
 
 type KV struct {
-	K string      `json:"key"`
-	V interface{} `json:"value"`
+	K string `json:"key"`
+	V any    `json:"value"`
 }
 
 type Cookie struct {
 	Name     string         `yaml:"name,omitempty"     json:"name,omitempty"`
-	Value    interface{}    `yaml:"-"                  json:"value,omitempty"`
+	Value    any            `yaml:"-"                  json:"value,omitempty"`
 	Path     string         `yaml:"path,omitempty"     json:"path,omitempty"`
 	Domain   string         `yaml:"domain,omitempty"   json:"domain,omitempty"`
 	MaxAge   *int           `yaml:"maxAge,omitempty"   json:"maxAge,omitempty"`
@@ -38,9 +38,9 @@ type CookieSameSite string
 
 const (
 	SameSiteDefault CookieSameSite = ``
-	SameSiteLax                    = `lax`
-	SameSiteStrict                 = `strict`
-	SameSiteNone                   = `none`
+	SameSiteLax     CookieSameSite = `lax`
+	SameSiteStrict  CookieSameSite = `strict`
+	SameSiteNone    CookieSameSite = `none`
 )
 
 func MakeCookieSameSite(sameSite http.SameSite) CookieSameSite {
@@ -56,8 +56,8 @@ func MakeCookieSameSite(sameSite http.SameSite) CookieSameSite {
 	}
 }
 
-func (self CookieSameSite) SameSite() http.SameSite {
-	switch self {
+func (info CookieSameSite) SameSite() http.SameSite {
+	switch info {
 	case SameSiteLax:
 		return http.SameSiteLaxMode
 	case SameSiteStrict:
@@ -115,21 +115,21 @@ type RequestTlsInfo struct {
 }
 
 type RequestUrlInfo struct {
-	Unmodified string                 `json:"unmodified"`
-	String     string                 `json:"string"`
-	Scheme     string                 `json:"scheme"`
-	Host       string                 `json:"host"`
-	Port       int                    `json:"port"`
-	Path       string                 `json:"path"`
-	Fragment   string                 `json:"fragment"`
-	Query      map[string]interface{} `json:"query"`
-	Params     []KV                   `json:"params"`
+	Unmodified string         `json:"unmodified"`
+	String     string         `json:"string"`
+	Scheme     string         `json:"scheme"`
+	Host       string         `json:"host"`
+	Port       int            `json:"port"`
+	Path       string         `json:"path"`
+	Fragment   string         `json:"fragment"`
+	Query      map[string]any `json:"query"`
+	Params     []KV           `json:"params"`
 }
 
-func (self RequestUrlInfo) ParamsSlice() []interface{} {
-	var params []interface{}
+func (info RequestUrlInfo) ParamsSlice() []any {
+	var params []any
 
-	for _, kv := range self.Params {
+	for _, kv := range info.Params {
 		params = append(params, kv.V)
 	}
 
@@ -140,49 +140,49 @@ type RequestBody struct {
 	Length   int64         `json:"size"`
 	Raw      []byte        `json:"raw"`
 	String   string        `json:"string"`
-	Parsed   interface{}   `json:"parsed"`
+	Parsed   any           `json:"parsed"`
 	Error    string        `json:"error,omitempty"`
 	Loaded   bool          `json:"loaded,omitempty"`
 	Original io.ReadCloser `json:"-"`
 	current  *bytes.Buffer
 }
 
-func (self *RequestBody) Read(b []byte) (int, error) {
-	if self.current == nil {
-		self.current = bytes.NewBuffer(self.Raw)
+func (info *RequestBody) Read(b []byte) (int, error) {
+	if info.current == nil {
+		info.current = bytes.NewBuffer(info.Raw)
 	}
 
-	return self.current.Read(b)
+	return info.current.Read(b)
 }
 
-func (self *RequestBody) Close() error {
-	self.current = nil
+func (info *RequestBody) Close() error {
+	info.current = nil
 	return nil
 }
 
 type RequestInfo struct {
-	ID               string                 `json:"id"`
-	Timestamp        int64                  `json:"timestamp"`
-	Method           string                 `json:"method"`
-	Protocol         string                 `json:"protocol"`
-	ContentLength    int64                  `json:"length"`
-	TransferEncoding []string               `json:"encoding"`
-	Headers          map[string]interface{} `json:"headers"`
-	Cookies          map[string]Cookie      `json:"cookies"`
-	RemoteIP         string                 `json:"remote_ip"`
-	RemotePort       int                    `json:"remote_port"`
-	RemoteAddr       string                 `json:"remote_address"`
-	Host             string                 `json:"host"`
-	URL              RequestUrlInfo         `json:"url"`
-	TLS              *RequestTlsInfo        `json:"tls"`
-	CSRFToken        string                 `json:"csrftoken,omitempty"`
-	Body             *RequestBody           `json:"body,omitempty"`
+	ID               string            `json:"id"`
+	Timestamp        int64             `json:"timestamp"`
+	Method           string            `json:"method"`
+	Protocol         string            `json:"protocol"`
+	ContentLength    int64             `json:"length"`
+	TransferEncoding []string          `json:"encoding"`
+	Headers          map[string]any    `json:"headers"`
+	Cookies          map[string]Cookie `json:"cookies"`
+	RemoteIP         string            `json:"remote_ip"`
+	RemotePort       int               `json:"remote_port"`
+	RemoteAddr       string            `json:"remote_address"`
+	Host             string            `json:"host"`
+	URL              RequestUrlInfo    `json:"url"`
+	TLS              *RequestTlsInfo   `json:"tls"`
+	CSRFToken        string            `json:"csrftoken,omitempty"`
+	Body             *RequestBody      `json:"body,omitempty"`
 }
 
-func (self *RequestInfo) asMap() (map[string]interface{}, error) {
-	var rv map[string]interface{}
+func (info *RequestInfo) asMap() (map[string]any, error) {
+	var rv map[string]any
 
-	if data, err := json.Marshal(self); err == nil {
+	if data, err := json.Marshal(info); err == nil {
 		if err := json.Unmarshal(data, &rv); err == nil {
 			return rv, nil
 		} else {
@@ -193,16 +193,16 @@ func (self *RequestInfo) asMap() (map[string]interface{}, error) {
 	}
 }
 
-func (self *RequestInfo) Header(key string) typeutil.Variant {
-	if v, ok := self.Headers[key]; ok {
+func (info *RequestInfo) Header(key string) typeutil.Variant {
+	if v, ok := info.Headers[key]; ok {
 		return typeutil.V(v)
 	}
 
 	return typeutil.V(nil)
 }
 
-func (self *RequestInfo) Cookie(key string) *Cookie {
-	if c, ok := self.Cookies[key]; ok {
+func (info *RequestInfo) Cookie(key string) *Cookie {
+	if c, ok := info.Cookies[key]; ok {
 		return &c
 	}
 

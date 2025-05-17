@@ -54,10 +54,10 @@ func TestBindingHttp(t *testing.T) {
 	var assert = require.New(t)
 	var mux = http.NewServeMux()
 	var dc = NewServer(`./tests/hello`)
-	var funcs = dc.GetTemplateFunctions(make(map[string]interface{}), nil)
+	var funcs = dc.GetTemplateFunctions(make(map[string]any), nil)
 
 	mux.HandleFunc(`/test/thing.json`, func(w http.ResponseWriter, req *http.Request) {
-		httputil.RespondJSON(w, map[string]interface{}{
+		httputil.RespondJSON(w, map[string]any{
 			`success`: `ok`,
 		})
 	})
@@ -65,7 +65,7 @@ func TestBindingHttp(t *testing.T) {
 	mux.HandleFunc(`/test/code/`, func(w http.ResponseWriter, req *http.Request) {
 		var code = typeutil.Int(strings.TrimPrefix(req.URL.Path, `/test/code/`))
 
-		httputil.RespondJSON(w, map[string]interface{}{
+		httputil.RespondJSON(w, map[string]any{
 			`code`: code,
 		}, int(code))
 
@@ -86,12 +86,12 @@ func TestBindingHttp(t *testing.T) {
 	out, err := binding.Evaluate(
 		httptest.NewRequest(`GET`, `/test/code/200`, nil),
 		&TemplateHeader{},
-		make(map[string]interface{}),
+		make(map[string]any),
 		funcs,
 	)
 
 	assert.NoError(err)
-	assert.Equal(map[string]interface{}{
+	assert.Equal(map[string]any{
 		`code`: float64(200),
 	}, out)
 }
@@ -104,7 +104,7 @@ func TestBindingRedis(t *testing.T) {
 	defer redis.Close()
 
 	var dc = NewServer(`./tests/hello`)
-	var funcs = dc.GetTemplateFunctions(make(map[string]interface{}), nil)
+	var funcs = dc.GetTemplateFunctions(make(map[string]any), nil)
 
 	redis.Set(`key.1`, `foo`)
 	redis.Set(`key.2`, `bar`)
@@ -122,7 +122,7 @@ func TestBindingRedis(t *testing.T) {
 		out, err := binding.Evaluate(
 			httptest.NewRequest(`GET`, `/yay`, nil),
 			&TemplateHeader{},
-			make(map[string]interface{}),
+			make(map[string]any),
 			funcs,
 		)
 
@@ -140,12 +140,12 @@ func TestBindingRedis(t *testing.T) {
 	out, err := binding.Evaluate(
 		httptest.NewRequest(`GET`, `/yay`, nil),
 		&TemplateHeader{},
-		make(map[string]interface{}),
+		make(map[string]any),
 		funcs,
 	)
 
 	assert.NoError(err)
-	assert.Equal(map[string]interface{}{
+	assert.Equal(map[string]any{
 		`key1`: `foof`,
 	}, out)
 }

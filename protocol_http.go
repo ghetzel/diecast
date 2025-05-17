@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"net/url"
@@ -23,11 +22,10 @@ import (
 
 // The HTTP binding protocol is used to interact with web servers and RESTful APIs.
 // It is specified with URLs that use the http:// or https:// schemes.
-//
 type HttpProtocol struct {
 }
 
-func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, error) {
+func (protocol *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, error) {
 	var id = reqid(rr.Request)
 	var trueHost string
 
@@ -95,11 +93,11 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 		var body bytes.Buffer
 
 		if rr.Binding.BodyParams != nil {
-			var bodyParams = make(map[string]interface{})
+			var bodyParams = make(map[string]any)
 
 			if len(rr.Binding.BodyParams) > 0 {
 				// evaluate each body param value as a template (unless explicitly told not to)
-				if err := maputil.Walk(rr.Binding.BodyParams, func(value interface{}, path []string, isLeaf bool) error {
+				if err := maputil.Walk(rr.Binding.BodyParams, func(value any, path []string, isLeaf bool) error {
 					if isLeaf {
 						if !rr.Binding.NoTemplate {
 							var rendered typeutil.Variant
@@ -138,7 +136,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 					}
 
 					// set body and content type
-					request.Body = ioutil.NopCloser(&body)
+					request.Body = io.NopCloser(&body)
 					request.Header.Set(`Content-Type`, `application/json`)
 
 				case `form`:
@@ -155,7 +153,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 					}
 
 					// set body and content type
-					request.Body = ioutil.NopCloser(&body)
+					request.Body = io.NopCloser(&body)
 					request.Header.Set(`Content-Type`, `application/x-www-form-urlencoded`)
 
 				default:
@@ -172,7 +170,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 			}
 
 			log.Debugf("[%s]  binding %q: rawbody (%d bytes)", id, rr.Binding.Name, len(payload))
-			request.Body = ioutil.NopCloser(bytes.NewBuffer(payload))
+			request.Body = io.NopCloser(bytes.NewBuffer(payload))
 		}
 
 		// build request headers
@@ -180,7 +178,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 
 		// if specified, have the binding request inherit the headers from the initiating request
 		if !rr.Binding.SkipInheritHeaders {
-			for k, _ := range rr.Request.Header {
+			for k := range rr.Request.Header {
 				var v = rr.Request.Header.Get(k)
 				log.Debugf("[%s]  binding %q: inherit %v=%v", id, rr.Binding.Name, k, v)
 				request.Header.Set(k, v)
@@ -238,7 +236,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 			}
 		}
 
-		newTCC.BuildNameToCertificate()
+		// newTCC.BuildNameToCertificate()
 
 		if transport, ok := BindingClient.Transport.(*http.Transport); ok {
 			if tcc := transport.TLSClientConfig; tcc != nil {
@@ -317,7 +315,7 @@ func (self *HttpProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, erro
 					if rc, ok := body.(io.ReadCloser); ok {
 						response.data = rc
 					} else {
-						response.data = ioutil.NopCloser(body)
+						response.data = io.NopCloser(body)
 					}
 				} else {
 					return nil, err

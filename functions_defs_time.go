@@ -11,7 +11,7 @@ import (
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
-func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
+func loadStandardFunctionsTime(_ FuncMap, _ *Server) funcGroup {
 	return funcGroup{
 		Name: `Time Functions`,
 		Description: `Used for working with time and duration values. Among this collection are ` +
@@ -86,7 +86,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Return: `2011-10-07T12:00:00-08:00`,
 					},
 				},
-				Function: func(durationString string, atI ...interface{}) (time.Time, error) {
+				Function: func(durationString string, atI ...any) (time.Time, error) {
 					var at = time.Now()
 
 					if len(atI) > 0 {
@@ -128,7 +128,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Return: `2020-01-01 00:00:00 +0000 UTC`,
 					},
 				},
-				Function: func(durationString string, fromTime ...interface{}) (time.Time, error) {
+				Function: func(durationString string, fromTime ...any) (time.Time, error) {
 					var from = time.Now()
 
 					if len(fromTime) > 0 {
@@ -179,7 +179,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Return: `2011-10-07T12:00:00-08:00`,
 					},
 				},
-				Function: func(at interface{}, interval ...string) (time.Duration, error) {
+				Function: func(at any, interval ...string) (time.Duration, error) {
 					if tm, err := stringutil.ConvertToTime(at); err == nil {
 						var since = time.Since(tm)
 
@@ -262,7 +262,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Return: `02:07`,
 					},
 				},
-				Function: func(value interface{}, unit string, formats ...string) (string, error) {
+				Function: func(value any, unit string, formats ...string) (string, error) {
 					var duration time.Duration
 
 					if vD, ok := value.(time.Duration); ok {
@@ -288,7 +288,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						case `y`:
 							duration = duration * time.Hour * 24 * 365
 						default:
-							return ``, fmt.Errorf("Unrecognized unit %q", unit)
+							return ``, fmt.Errorf("unrecognized unit %q", unit)
 						}
 					} else {
 						return ``, err
@@ -319,7 +319,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Description: `The time being checked.`,
 					},
 				},
-				Function: func(first interface{}, secondI ...interface{}) (bool, error) {
+				Function: func(first any, secondI ...any) (bool, error) {
 					return timeCmp(true, first, secondI...)
 				},
 			}, {
@@ -336,7 +336,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Description: `The time being checked.`,
 					},
 				},
-				Function: func(first interface{}, secondI ...interface{}) (bool, error) {
+				Function: func(first any, secondI ...any) (bool, error) {
 					return timeCmp(false, first, secondI...)
 				},
 			}, {
@@ -359,7 +359,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Default:     `(the current time)`,
 					},
 				},
-				Function: func(firstI interface{}, secondI interface{}, tm ...interface{}) (bool, error) {
+				Function: func(firstI any, secondI any, tm ...any) (bool, error) {
 					var now = time.Now()
 
 					if len(tm) > 0 && tm[0] != nil {
@@ -406,7 +406,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Default:     `(the current time)`,
 					},
 				},
-				Function: func(t interface{}, d interface{}, tm ...interface{}) (bool, error) {
+				Function: func(t any, d any, tm ...any) (bool, error) {
 					var now = time.Now()
 
 					if len(tm) > 0 && tm[0] != nil {
@@ -444,7 +444,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Default:     `(the current time)`,
 					},
 				},
-				Function: func(t interface{}, d interface{}, tm ...interface{}) (bool, error) {
+				Function: func(t any, d any, tm ...any) (bool, error) {
 					var now = time.Now()
 
 					if len(tm) > 0 && tm[0] != nil {
@@ -472,7 +472,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Description: `A string that will be scanned for values that look like dates and times.`,
 					},
 				},
-				Function: func(baseI interface{}) (time.Time, error) {
+				Function: func(baseI any) (time.Time, error) {
 					if base, err := stringutil.ToString(baseI); err == nil {
 						if tm, err := stringutil.ConvertToTime(base); err == nil {
 							return tm, nil
@@ -550,7 +550,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Default:     `(the current time)`,
 					},
 				},
-				Function: func(latitude float64, longitude float64, atTime ...interface{}) (time.Time, error) {
+				Function: func(latitude float64, longitude float64, atTime ...any) (time.Time, error) {
 					sr, _, err := getSunriseSunset(latitude, longitude, atTime...)
 					return sr, err
 				},
@@ -574,7 +574,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Default:     `(the current time)`,
 					},
 				},
-				Function: func(latitude float64, longitude float64, atTime ...interface{}) (time.Time, error) {
+				Function: func(latitude float64, longitude float64, atTime ...any) (time.Time, error) {
 					_, ss, err := getSunriseSunset(latitude, longitude, atTime...)
 					return ss, err
 				},
@@ -592,7 +592,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server *Server) funcGroup {
 						Description: `The second time being computed.`,
 					},
 				},
-				Function: func(firstI interface{}, secondI interface{}) (time.Duration, error) {
+				Function: func(firstI any, secondI any) (time.Duration, error) {
 					if first, err := stringutil.ConvertToTime(firstI); err == nil {
 						if second, err := stringutil.ConvertToTime(secondI); err == nil {
 							return first.Sub(second), nil

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"html"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"mime"
 	"net"
 	"net/http"
@@ -47,10 +47,10 @@ type BindingErrorAction string
 
 const (
 	ActionSummarize BindingErrorAction = `summarize`
-	ActionPrint                        = `print`
-	ActionContinue                     = `continue`
-	ActionBreak                        = `break`
-	ActionIgnore                       = `ignore`
+	ActionPrint     BindingErrorAction = `print`
+	ActionContinue  BindingErrorAction = `continue`
+	ActionBreak     BindingErrorAction = `break`
+	ActionIgnore    BindingErrorAction = `ignore`
 )
 
 var BindingClient = &http.Client{
@@ -72,18 +72,18 @@ type PaginatorConfig struct {
 }
 
 type ResultsPage struct {
-	Page    int         `yaml:"page"           json:"page"`
-	Last    bool        `yaml:"last,omitempty" json:"last,omitempty"`
-	Range   []int64     `yaml:"range"          json:"range"`
-	Data    interface{} `yaml:"data"           json:"data"`
-	Counter int64       `yaml:"counter"        json:"counter"`
-	Total   int64       `yaml:"total"          json:"total"`
+	Page    int     `yaml:"page"           json:"page"`
+	Last    bool    `yaml:"last,omitempty" json:"last,omitempty"`
+	Range   []int64 `yaml:"range"          json:"range"`
+	Data    any     `yaml:"data"           json:"data"`
+	Counter int64   `yaml:"counter"        json:"counter"`
+	Total   int64   `yaml:"total"          json:"total"`
 }
 
 type Binding struct {
-	BodyParams         map[string]interface{}        `yaml:"body,omitempty"                 json:"body,omitempty"`                 // If the request receives an open-ended body, this will allow structured data to be passed in.
+	BodyParams         map[string]any                `yaml:"body,omitempty"                 json:"body,omitempty"`                 // If the request receives an open-ended body, this will allow structured data to be passed in.
 	DisableCache       bool                          `yaml:"disable_cache,omitempty"        json:"disable_cache,omitempty"`        // Reserved for future use.
-	Fallback           interface{}                   `yaml:"fallback,omitempty"             json:"fallback,omitempty"`             // The value to place in $.bindings if the request fails.
+	Fallback           any                           `yaml:"fallback,omitempty"             json:"fallback,omitempty"`             // The value to place in $.bindings if the request fails.
 	Formatter          string                        `yaml:"formatter,omitempty"            json:"formatter,omitempty"`            // How to serialize BodyParams into a string before the request is made.
 	Headers            map[string]string             `yaml:"headers,omitempty"              json:"headers,omitempty"`              // Additional headers to include in the request.
 	IfStatus           map[string]BindingErrorAction `yaml:"if_status,omitempty"            json:"if_status,omitempty"`            // Actions to take in response to specific numeric response status codes.
@@ -97,40 +97,40 @@ type Binding struct {
 	Optional           bool                          `yaml:"optional,omitempty"             json:"optional,omitempty"`             // Whether the request failing will cause a page-wide error or be ignored.
 	Paginate           *PaginatorConfig              `yaml:"paginate,omitempty"             json:"paginate,omitempty"`             // A specialized repeater configuration that automatically performs pagination on an upstream request, aggregating the results before returning them.
 	ParamJoiner        string                        `yaml:"param_joiner,omitempty"         json:"param_joiner,omitempty"`         // If a parameter is provided as an array, but must be a string in the request, how shall the array elements be joined.
-	Params             map[string]interface{}        `yaml:"params,omitempty"               json:"params,omitempty"`               // A set of additional parameters to include in the request (e.g.: HTTP query string parameters)
+	Params             map[string]any                `yaml:"params,omitempty"               json:"params,omitempty"`               // A set of additional parameters to include in the request (e.g.: HTTP query string parameters)
 	Parser             string                        `yaml:"parser,omitempty"               json:"parser,omitempty"`               // How to parse the response content from the request.
-	ProtocolOptions    map[string]interface{}        `yaml:"protocol,omitempty"             json:"protocol,omitempty"`             // An open-ended set of options that are available for protocol implementations to use.
+	ProtocolOptions    map[string]any                `yaml:"protocol,omitempty"             json:"protocol,omitempty"`             // An open-ended set of options that are available for protocol implementations to use.
 	RawBody            string                        `yaml:"rawbody,omitempty"              json:"rawbody,omitempty"`              // If the request receives an open-ended body, this will allow raw data to be passed in as-is.
 	Repeat             string                        `yaml:"repeat,omitempty"               json:"repeat,omitempty"`               // A templated value that yields an array.  The binding request will be performed once for each array element, wherein the Resource value is passed into a template that includes the $index and $item variables, which represent the repeat array item's position and value, respectively.
 	Resource           string                        `yaml:"resource,omitempty"             json:"resource,omitempty"`             // The URL that specifies the protocol and resource to retrieve.
 	SkipInheritHeaders bool                          `yaml:"skip_inherit_headers,omitempty" json:"skip_inherit_headers,omitempty"` // Do not passthrough the headers that were sent to the template from the client's browser, even if Passthrough mode is enabled.
-	Timeout            interface{}                   `yaml:"timeout,omitempty"              json:"timeout,omitempty"`              // A duration specifying the timeout for the request.
+	Timeout            any                           `yaml:"timeout,omitempty"              json:"timeout,omitempty"`              // A duration specifying the timeout for the request.
 	Transform          string                        `yaml:"transform,omitempty"            json:"transform,omitempty"`            // Specifies a JSONPath expression that can be used to transform the response data received from the binding into the data that is provided to the template.
 	TlsCertificate     string                        `yaml:"tlscrt,omitempty"               json:"tlscrt,omitempty"`               // Provide the path to a TLS client certificate to present if the server requests one.
 	TlsKey             string                        `yaml:"tlskey,omitempty"               json:"tlskey,omitempty"`               // Provide the path to a TLS client certificate key to present if the server requests one.
 	OnlyPaths          []string                      `yaml:"only,omitempty"                 json:"only,omitempty"`                 // A list of request paths and glob patterns, ANY of which the binding will evaluate on.
 	ExceptPaths        []string                      `yaml:"except,omitempty"               json:"except,omitempty"`               // A list of request paths and glob patterns, ANY of which the binding will NOT evaluate on.
 	Interval           string                        `yaml:"interval,omitempty"             json:"interval,omitempty"`             // For Async Bindings, this specifies the interval on which data sources should be refreshed (if so desired).
-	Restrict           interface{}                   `yaml:"restrict,omitempty"             json:"restrict,omitempty"`             // DEPRECATED: use OnlyPaths/ExceptPaths instead.
+	Restrict           any                           `yaml:"restrict,omitempty"             json:"restrict,omitempty"`             // DEPRECATED: use OnlyPaths/ExceptPaths instead.
 	server             *Server
 	lastRefreshedAt    time.Time
 	syncing            bool
 }
 
-func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface{}, funcs FuncMap) error {
+func (binding *Binding) shouldEvaluate(req *http.Request, data map[string]any, funcs FuncMap) error {
 	if httputil.RequestGetValue(req, `force`).Bool() {
 		return nil
 	}
 
 	var id = reqid(req)
 
-	if !self.NoTemplate {
+	if !binding.NoTemplate {
 		var proceed bool
 		var desc string
 
 		// if any inclusions are present, then ONLY a matching path will proceed
-		if len(self.OnlyPaths) > 0 {
-			for _, pattern := range self.OnlyPaths {
+		if len(binding.OnlyPaths) > 0 {
+			for _, pattern := range binding.OnlyPaths {
 				if ok, err := filepath.Match(pattern, req.URL.Path); err == nil {
 					if ok {
 						proceed = true
@@ -147,7 +147,7 @@ func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface
 		}
 
 		// if any exclusions are present, then any matching one can stop evaluation
-		for _, pattern := range self.ExceptPaths {
+		for _, pattern := range binding.ExceptPaths {
 			if ok, err := filepath.Match(pattern, req.URL.Path); err == nil {
 				if ok {
 					proceed = false
@@ -160,16 +160,16 @@ func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface
 		}
 
 		if !proceed {
-			self.Optional = true
-			log.Debugf("[%s] Binding %q not being evaluated: path %q matched%s", id, self.Name, req.URL.Path, desc)
+			binding.Optional = true
+			log.Debugf("[%s] Binding %q not being evaluated: path %q matched%s", id, binding.Name, req.URL.Path, desc)
 			return ErrSkipEval
 		}
 
-		if self.OnlyIfExpr != `` {
-			if v, err := EvalInline(self.OnlyIfExpr, data, funcs); err == nil {
+		if binding.OnlyIfExpr != `` {
+			if v, err := EvalInline(binding.OnlyIfExpr, data, funcs); err == nil {
 				if !typeutil.Bool(v) {
-					self.Optional = true
-					log.Debugf("[%s] Binding %q not being evaluated because only_if expression was false", id, self.Name)
+					binding.Optional = true
+					log.Debugf("[%s] Binding %q not being evaluated because only_if expression was false", id, binding.Name)
 					return ErrSkipEval
 				}
 			} else {
@@ -177,11 +177,11 @@ func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface
 			}
 		}
 
-		if self.NotIfExpr != `` {
-			if v, err := EvalInline(self.NotIfExpr, data, funcs); err == nil {
+		if binding.NotIfExpr != `` {
+			if v, err := EvalInline(binding.NotIfExpr, data, funcs); err == nil {
 				if typeutil.Bool(v) {
-					self.Optional = true
-					log.Debugf("[%s] Binding %q not being evaluated because not_if expression was truthy", id, self.Name)
+					binding.Optional = true
+					log.Debugf("[%s] Binding %q not being evaluated because not_if expression was truthy", id, binding.Name)
 					return ErrSkipEval
 				}
 			} else {
@@ -193,18 +193,18 @@ func (self *Binding) shouldEvaluate(req *http.Request, data map[string]interface
 	return nil
 }
 
-func (self *Binding) tracedEvaluate(req *http.Request, header *TemplateHeader, data map[string]interface{}, funcs FuncMap) (out interface{}, err error) {
+func (binding *Binding) tracedEvaluate(req *http.Request, header *TemplateHeader, data map[string]any, funcs FuncMap) (out any, err error) {
 	var tracer opentracing.Tracer
 	var spanopts []opentracing.StartSpanOption
 
 	// if the originating request has a tracing span, we're going to create a child span of that
 	// to trace this binding evaluation
 	if parentSpan, ok := httputil.RequestGetValue(req, JaegerSpanKey).Value.(opentracing.Span); ok {
-		tracer = self.server.opentrace
+		tracer = binding.server.opentrace
 		spanopts = append(spanopts, opentracing.ChildOf(parentSpan.Context()))
 		spanopts = append(spanopts, opentracing.Tag{
 			Key:   `diecast.binding`,
-			Value: self.Name,
+			Value: binding.Name,
 		})
 	} else {
 		tracer = new(opentracing.NoopTracer)
@@ -212,7 +212,7 @@ func (self *Binding) tracedEvaluate(req *http.Request, header *TemplateHeader, d
 
 	var childSpan opentracing.Span
 
-	if traceName := self.server.traceName(fmt.Sprintf("Binding: %s", self.Name)); traceName != `` {
+	if traceName := binding.server.traceName(fmt.Sprintf("Binding: %s", binding.Name)); traceName != `` {
 		var traceHeaders = make(http.Header)
 
 		childSpan = tracer.StartSpan(traceName, spanopts...)
@@ -224,7 +224,7 @@ func (self *Binding) tracedEvaluate(req *http.Request, header *TemplateHeader, d
 
 		if header != nil {
 			if len(header.additionalHeaders) == 0 {
-				header.additionalHeaders = make(map[string]interface{})
+				header.additionalHeaders = make(map[string]any)
 			}
 
 			for k, vv := range traceHeaders {
@@ -235,7 +235,7 @@ func (self *Binding) tracedEvaluate(req *http.Request, header *TemplateHeader, d
 		}
 	}
 
-	out, err = self.Evaluate(req, header, data, funcs)
+	out, err = binding.Evaluate(req, header, data, funcs)
 
 	if childSpan != nil {
 		if err != nil {
@@ -248,16 +248,16 @@ func (self *Binding) tracedEvaluate(req *http.Request, header *TemplateHeader, d
 	return
 }
 
-func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data map[string]interface{}, funcs FuncMap) (interface{}, error) {
+func (binding *Binding) Evaluate(req *http.Request, header *TemplateHeader, data map[string]any, funcs FuncMap) (any, error) {
 	var id = reqid(req)
-	log.Debugf("[%s] Evaluating binding %q", id, self.Name)
+	log.Debugf("[%s] Evaluating binding %q", id, binding.Name)
 
-	if req.Header.Get(`X-Diecast-Binding`) == self.Name {
+	if req.Header.Get(`X-Diecast-Binding`) == binding.Name {
 		httputil.RequestSetValue(req, ContextStatusKey, http.StatusLoopDetected)
-		return nil, fmt.Errorf("Loop detected")
+		return nil, fmt.Errorf("loop detected")
 	}
 
-	var method = strings.ToUpper(self.Method)
+	var method = strings.ToUpper(binding.Method)
 
 	if method == `` {
 		method = http.MethodGet
@@ -266,7 +266,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	method = strings.ToUpper(method)
 	var uri string
 
-	if u, err := EvalInline(self.Resource, data, funcs); err == nil {
+	if u, err := EvalInline(binding.Resource, data, funcs); err == nil {
 		uri = u
 	} else {
 		return nil, fmt.Errorf("resource: %v", err)
@@ -276,7 +276,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	// prefixing the URL path with a colon (":") or slash ("/").
 	//
 	if strings.HasPrefix(uri, `:`) || strings.HasPrefix(uri, `/`) {
-		var prefix = self.server.bestInternalLoopbackUrl(req)
+		var prefix = binding.server.bestInternalLoopbackUrl(req)
 
 		prefix = strings.TrimSuffix(prefix, `/`)
 		uri = strings.TrimPrefix(uri, `:`)
@@ -291,11 +291,11 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				// lookup the hostname of the requested URL. if and only if ALL of the
 				// returned addresses are loopback addresses does Insecure remain true.
 				if addrs, err := net.LookupIP(bpu.Hostname()); err == nil {
-					self.Insecure = true
+					binding.Insecure = true
 
 					for _, addr := range addrs {
 						if !addr.IsLoopback() {
-							self.Insecure = false
+							binding.Insecure = false
 							break
 						}
 					}
@@ -304,7 +304,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		}
 	}
 
-	if err := self.shouldEvaluate(req, data, funcs); err != nil {
+	if err := binding.shouldEvaluate(req, data, funcs); err != nil {
 		return nil, err
 	}
 
@@ -316,13 +316,13 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		if p, ok := registeredProtocols[reqUrl.Scheme]; ok && p != nil {
 			protocol = p
 		} else {
-			return nil, fmt.Errorf("Cannot evaluate binding %v: invalid protocol scheme %q", self.Name, reqUrl.Scheme)
+			return nil, fmt.Errorf("cannot evaluate binding %v: invalid protocol scheme %q", binding.Name, reqUrl.Scheme)
 		}
 
-		log.Debugf("[%s]  binding %q: protocol=%T uri=%v", id, self.Name, protocol, uri)
+		log.Debugf("[%s]  binding %q: protocol=%T uri=%v", id, binding.Name, protocol, uri)
 		log.Infof("[%s] Binding: > %s %+v ? %s", id, strings.ToUpper(sliceutil.OrString(method, `get`)), reqUrl.String(), reqUrl.RawQuery)
 
-		var additionalHeaders map[string]interface{}
+		var additionalHeaders map[string]any
 
 		if header != nil {
 			additionalHeaders = header.additionalHeaders
@@ -331,39 +331,39 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 		if response, err := protocol.Retrieve(&ProtocolRequest{
 			Verb:              method,
 			URL:               reqUrl,
-			Binding:           self,
+			Binding:           binding,
 			Request:           req,
 			Header:            header,
 			TemplateData:      data,
 			TemplateFuncs:     funcs,
-			DefaultTimeout:    self.server.bindingTimeout(),
+			DefaultTimeout:    binding.server.bindingTimeout(),
 			AdditionalHeaders: additionalHeaders,
 		}); err == nil {
 			defer response.Close()
 
 			var onError BindingErrorAction
 
-			if oe, err := EvalInline(string(self.OnError), data, funcs); err == nil {
+			if oe, err := EvalInline(string(binding.OnError), data, funcs); err == nil {
 				onError = BindingErrorAction(oe)
 			} else {
 				return nil, fmt.Errorf("on_error: %v", err)
 			}
 
 			// handle per-http-status response handlers
-			if len(self.IfStatus) > 0 && response.StatusCode > 0 {
+			if len(binding.IfStatus) > 0 && response.StatusCode > 0 {
 				var statusAction BindingErrorAction
 				var nxx = typeutil.String(response.StatusCode - (response.StatusCode % 100))
 				nxx = strings.Replace(nxx, `0`, `x`, -1)
 				var nXX = strings.Replace(nxx, `0`, `X`, -1)
 
 				// get the action for this code
-				if sa, ok := self.IfStatus[typeutil.String(response.StatusCode)]; ok && sa != `` {
+				if sa, ok := binding.IfStatus[typeutil.String(response.StatusCode)]; ok && sa != `` {
 					statusAction = sa
-				} else if sa, ok := self.IfStatus[nxx]; ok && sa != `` {
+				} else if sa, ok := binding.IfStatus[nxx]; ok && sa != `` {
 					statusAction = sa
-				} else if sa, ok := self.IfStatus[nXX]; ok && sa != `` {
+				} else if sa, ok := binding.IfStatus[nXX]; ok && sa != `` {
 					statusAction = sa
-				} else if sa, ok := self.IfStatus[`*`]; ok && sa != `` {
+				} else if sa, ok := binding.IfStatus[`*`]; ok && sa != `` {
 					statusAction = sa
 				}
 
@@ -380,7 +380,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 					default:
 						var redirect = string(statusAction)
 
-						if !self.NoTemplate {
+						if !binding.NoTemplate {
 							if r, err := EvalInline(redirect, data, funcs); err == nil {
 								redirect = r
 							} else {
@@ -398,20 +398,16 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 				}
 			}
 
-			var data, err = ioutil.ReadAll(response)
+			var data, err = io.ReadAll(response)
 
 			if response.StatusCode >= 400 {
-				err = fmt.Errorf(string(data))
+				err = fmt.Errorf("%v", data)
 			}
 
 			if err != nil {
 				switch onError {
 				case ActionPrint:
-					if err != nil {
-						return nil, fmt.Errorf("%v", err)
-					} else {
-						return nil, fmt.Errorf("%v", string(data[:]))
-					}
+					return nil, fmt.Errorf("%v", err)
 				case ActionIgnore:
 					break
 				default:
@@ -438,33 +434,33 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 
 				// only do response body processing if there is data to process
 				if len(data) > 0 {
-					if self.Parser == `` {
+					if binding.Parser == `` {
 						switch mimeType {
 						case `application/json`:
-							self.Parser = `json`
+							binding.Parser = `json`
 						case `application/x-yaml`, `application/yaml`, `text/yaml`:
-							self.Parser = `yaml`
+							binding.Parser = `yaml`
 						case `text/html`:
-							self.Parser = `html`
+							binding.Parser = `html`
 						case `text/xml`:
-							self.Parser = `xml`
+							binding.Parser = `xml`
 						case `text/plain`:
-							self.Parser = `text`
+							binding.Parser = `text`
 						case `application/octet-stream`:
-							self.Parser = `literal`
+							binding.Parser = `literal`
 						}
 					}
 
-					var rv interface{}
+					var rv any
 
-					switch self.Parser {
+					switch binding.Parser {
 					case `json`, ``:
 						// if the parser is unset, and the response type is NOT application/json, then
 						// just read the response as plain text and return it.
 						//
 						// If you're certain the response actually is JSON, then explicitly set Parser==`json`
 						//
-						if self.Parser == `` && mimeType != `application/json` {
+						if binding.Parser == `` && mimeType != `application/json` {
 							rv = string(data)
 						} else {
 							err = json.Unmarshal(data, &rv)
@@ -495,10 +491,14 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						rv = data
 
 					default:
-						return nil, fmt.Errorf("[%s] Unknown response parser %q", id, self.Parser)
+						return nil, fmt.Errorf("[%s] Unknown response parser %q", id, binding.Parser)
 					}
 
-					if self.server.EnableDebugging {
+					if err != nil {
+						return nil, err
+					}
+
+					if binding.server.EnableDebugging {
 						if typeutil.IsArray(rv) || typeutil.IsMap(rv) {
 							if debugBody, err := json.MarshalIndent(rv, ``, `  `); err == nil {
 								for _, line := range stringutil.SplitLines(debugBody, "\n") {
@@ -508,7 +508,7 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 						}
 					}
 
-					return ApplyJPath(rv, self.Transform)
+					return ApplyJPath(rv, binding.Transform)
 				} else {
 					return nil, nil
 				}
@@ -523,8 +523,8 @@ func (self *Binding) Evaluate(req *http.Request, header *TemplateHeader, data ma
 	}
 }
 
-func (self *Binding) asyncEval() (interface{}, error) {
-	if s := self.server; s != nil {
+func (binding *Binding) asyncEval() (any, error) {
+	if s := binding.server; s != nil {
 		if req, err := http.NewRequest(
 			http.MethodGet,
 			s.bestInternalLoopbackUrl(nil),
@@ -533,10 +533,10 @@ func (self *Binding) asyncEval() (interface{}, error) {
 			// informs shouldEvaluate() that we should, indeed, evaluate this one.
 			httputil.RequestSetValue(req, `force`, true)
 
-			var data = make(map[string]interface{})
+			var data = make(map[string]any)
 			var funcs = s.GetTemplateFunctions(data, s.BaseHeader)
 
-			return self.tracedEvaluate(req, s.BaseHeader, data, funcs)
+			return binding.tracedEvaluate(req, s.BaseHeader, data, funcs)
 		} else {
 			return nil, err
 		}
@@ -545,7 +545,7 @@ func (self *Binding) asyncEval() (interface{}, error) {
 	}
 }
 
-func EvalInline(input string, data map[string]interface{}, funcs FuncMap, names ...string) (string, error) {
+func EvalInline(input string, data map[string]any, funcs FuncMap, names ...string) (string, error) {
 	var suffix = strings.Join(names, `-`)
 
 	if suffix != `` {
@@ -574,7 +574,7 @@ func EvalInline(input string, data map[string]interface{}, funcs FuncMap, names 
 	}
 }
 
-func ShouldEvalInline(input interface{}, data map[string]interface{}, funcs FuncMap) typeutil.Variant {
+func ShouldEvalInline(input any, data map[string]any, funcs FuncMap) typeutil.Variant {
 	if ins := typeutil.String(input); strings.Contains(ins, `{{`) && strings.Contains(ins, `}}`) {
 		if out, err := EvalInline(ins, data, funcs); err == nil {
 			return typeutil.V(out)
@@ -584,7 +584,7 @@ func ShouldEvalInline(input interface{}, data map[string]interface{}, funcs Func
 	return typeutil.V(input)
 }
 
-func ApplyJPath(data interface{}, jpath string) (interface{}, error) {
+func ApplyJPath(data any, jpath string) (any, error) {
 	if typeutil.IsMap(data) && jpath != `` {
 		var err error
 

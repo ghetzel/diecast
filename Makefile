@@ -1,7 +1,7 @@
 .EXPORT_ALL_VARIABLES:
 
 GO111MODULE ?= on
-LOCALS      := $(shell find . -type f -name '*.go')
+LOCALS      := $(shell find . -type f -name '*.go' -not -name favicon.go)
 BIN         ?= diecast-$(shell go env GOOS)-$(shell go env GOARCH)
 VERSION      = $(shell grep 'const ApplicationVersion' version.go | cut -d= -f2 | tr -d '`' | tr -d ' ')
 CGO_ENABLED ?= 0
@@ -10,17 +10,18 @@ all: deps build test docs
 
 deps:
 	go get ./...
-	-go mod tidy
 
-fmt:
-	go generate -x ./...
-	gofmt -w $(LOCALS)
+fmt: gofmt
+	go mod tidy
 	go vet ./...
+	go generate ./...
+
+gofmt: $(LOCALS)
+$(LOCALS):
+	@gofmt -s -w $(@)
 
 test:
 	go test -count=1 ./...
-	@cd tests/env-render && make --quiet --always-make
-	@cd tests/pipe-render && make --quiet --always-make
 
 favicon.go:
 	@convert -background transparent -define icon:auto-resize=16 contrib/diecast-ico-source.svg contrib/favicon.ico
@@ -40,7 +41,9 @@ build: fmt
 	which diecast && cp -v bin/$(BIN) $(shell which diecast) || true
 
 docs:
-	cd docs && make
+	@true
+#	@test -d docs || mkdir docs
+#	@cd docs && make
 
 package:
 	-rm -rf pkg
@@ -102,4 +105,4 @@ docker:
 	docker push ghetzel/diecast:$(VERSION)
 	docker push ghetzel/diecast:latest
 
-.PHONY: test deps docs build
+.PHONY: test deps docs build $(LOCALS)

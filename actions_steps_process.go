@@ -13,11 +13,13 @@ import (
 )
 
 // [type=process] Process the output of the previous step by performing a sequence of discrete
-//                operations on the data.
+//
+//	operations on the data.
+//
 // -------------------------------------------------------------------------------------------------
 type ProcessStep struct{}
 
-func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req *http.Request, prev *StepConfig) (interface{}, error) {
+func (step *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req *http.Request, prev *StepConfig) (any, error) {
 	var operations = sliceutil.Sliceify(config.Data)
 	var data = prev.Output
 
@@ -51,14 +53,14 @@ func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 
 				data = dataS
 			} else if data == nil {
-				return make([]interface{}, 0), nil
+				return make([]any, 0), nil
 			} else {
-				return nil, fmt.Errorf("Can only sort arrays, got %T", data)
+				return nil, fmt.Errorf("can only sort arrays, got %T", data)
 			}
 		case `diffuse`:
 			var sep = operation.String(`separator`, `.`)
 			var joiner = operation.String(`joiner`, `=`)
-			var dataM = make(map[string]interface{})
+			var dataM = make(map[string]any)
 
 			if typeutil.IsArray(data) {
 				for i, item := range sliceutil.Sliceify(data) {
@@ -78,7 +80,7 @@ func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 			} else if typeutil.IsMap(data) {
 				dataM = maputil.M(data).MapNative()
 			} else {
-				return nil, fmt.Errorf("Can only diffuse arrays or maps, got %T", data)
+				return nil, fmt.Errorf("can only diffuse arrays or maps, got %T", data)
 			}
 
 			if diffused, err := maputil.DiffuseMap(dataM, sep); err == nil {
@@ -106,7 +108,7 @@ func (self *ProcessStep) Perform(config *StepConfig, w http.ResponseWriter, req 
 
 			return strings.Join(lines, sep), nil
 		default:
-			return nil, fmt.Errorf("Unrecognized process operation %q", otype)
+			return nil, fmt.Errorf("unrecognized process operation %q", otype)
 		}
 	}
 

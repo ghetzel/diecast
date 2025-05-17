@@ -20,7 +20,7 @@ import (
 
 type awsLog struct{}
 
-func (self *awsLog) Log(data ...interface{}) {
+func (awslog *awsLog) Log(data ...any) {
 	log.Debug(data...)
 }
 
@@ -61,39 +61,38 @@ var awsSession = func() *session.Session {
 // - `AWS_REGION` to specify the region name
 // - `AWS_PROFILE` to specify the named profile to utilize when reading from ~/.aws/credentials and ~/.aws/config
 // - `AWS_ENDPOINT_URL` to override the HTTPS endpoint to use, namely for pointing to S3-compatible services.
-//
 type S3Mount struct {
 	MountPoint string `json:"mount"`
 	Path       string `json:"source"`
 	fs         map[string]http.FileSystem
 }
 
-func (self *S3Mount) s3fs(bucket string) http.FileSystem {
-	if self.fs == nil {
-		self.fs = make(map[string]http.FileSystem)
+func (mount *S3Mount) s3fs(bucket string) http.FileSystem {
+	if mount.fs == nil {
+		mount.fs = make(map[string]http.FileSystem)
 	}
 
-	if _, ok := self.fs[bucket]; !ok {
-		self.fs[bucket] = http.FS(s3fs.New(s3client(), bucket))
+	if _, ok := mount.fs[bucket]; !ok {
+		mount.fs[bucket] = http.FS(s3fs.New(s3client(), bucket))
 	}
 
-	return self.fs[bucket]
+	return mount.fs[bucket]
 }
 
-func (self *S3Mount) GetMountPoint() string {
-	return self.MountPoint
+func (mount *S3Mount) GetMountPoint() string {
+	return mount.MountPoint
 }
 
-func (self *S3Mount) GetTarget() string {
-	return self.Path
+func (mount *S3Mount) GetTarget() string {
+	return mount.Path
 }
 
-func (self *S3Mount) WillRespondTo(name string, req *http.Request, requestBody io.Reader) bool {
+func (mount *S3Mount) WillRespondTo(name string, req *http.Request, requestBody io.Reader) bool {
 	return true
 }
 
-func (self *S3Mount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (*MountResponse, error) {
-	if hf, err := self.Open(name); err == nil {
+func (mount *S3Mount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (*MountResponse, error) {
+	if hf, err := mount.Open(name); err == nil {
 		if mr, ok := hf.(*MountResponse); ok {
 			if mimetype, err := figureOutMimeType(name, hf); err == nil {
 				mr.ContentType = mimetype
@@ -109,17 +108,17 @@ func (self *S3Mount) OpenWithType(name string, req *http.Request, requestBody io
 	}
 }
 
-func (self *S3Mount) String() string {
-	return fmt.Sprintf("%T('%s')", self, self.GetMountPoint())
+func (mount *S3Mount) String() string {
+	return fmt.Sprintf("%T('%s')", mount, mount.GetMountPoint())
 }
 
-func (self *S3Mount) Open(name string) (http.File, error) {
+func (mount *S3Mount) Open(name string) (http.File, error) {
 	if awsSession != nil {
-		name = filepath.Join(self.Path, name)
+		name = filepath.Join(mount.Path, name)
 
 		var bucket, key = stringutil.SplitPair(strings.TrimPrefix(name, `/`), `/`)
 
-		if fsFile, err := self.s3fs(bucket).Open(key); err == nil {
+		if fsFile, err := mount.s3fs(bucket).Open(key); err == nil {
 			if info, err := fsFile.Stat(); err == nil {
 				var mr = NewMountResponse(name, info.Size(), fsFile)
 
@@ -143,31 +142,4 @@ func (self *S3Mount) Open(name string) (http.File, error) {
 
 func s3client() *s3.S3 {
 	return s3.New(awsSession)
-}
-
-func existsInS3(bucket string, key string) (bool, error) {
-	var client = s3client()
-
-	if key == `` {
-		if _, err := client.HeadBucket(&s3.HeadBucketInput{
-			Bucket: aws.String(bucket),
-		}); err == nil {
-			return true, nil
-		} else if log.ErrContains(err, `NoSuch`) || log.ErrContains(err, `NotFound`) {
-			return false, nil
-		} else {
-			return false, err
-		}
-	} else {
-		if _, err := client.HeadObject(&s3.HeadObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		}); err == nil {
-			return true, nil
-		} else if log.ErrContains(err, `NoSuch`) || log.ErrContains(err, `NotFound`) {
-			return false, nil
-		} else {
-			return false, err
-		}
-	}
 }

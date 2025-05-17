@@ -2,7 +2,6 @@ package diecast
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	pathpkg "path"
@@ -28,15 +27,6 @@ func httpFsStat(fs http.FileSystem, name string) (os.FileInfo, error) {
 	if file, err := fs.Open(name); err == nil {
 		defer file.Close()
 		return file.Stat()
-	} else {
-		return nil, err
-	}
-}
-
-func httpFsReadFile(fs http.FileSystem, path string) ([]byte, error) {
-	if rc, err := fs.Open(path); err == nil {
-		defer rc.Close()
-		return ioutil.ReadAll(rc)
 	} else {
 		return nil, err
 	}

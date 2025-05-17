@@ -35,65 +35,64 @@ func RegisterActionStep(typeName string, performable Performable) {
 }
 
 type Performable interface {
-	Perform(config *StepConfig, w http.ResponseWriter, req *http.Request, prev *StepConfig) (interface{}, error)
+	Perform(config *StepConfig, w http.ResponseWriter, req *http.Request, prev *StepConfig) (any, error)
 }
 
 type StepConfig struct {
-	Type     string      `yaml:"type"              json:"type"`              // The type of step
-	Data     interface{} `yaml:"data"              json:"data"`              // The data being passed into this step from the previous one
-	Timeout  string      `yaml:"timeout,omitempty" json:"timeout,omitempty"` // Timeout for this step
-	Parser   string      `yaml:"parser"            json:"parser"`            // The format the data being passed in is expected to be in
-	Output   interface{} `yaml:"-"                 json:"-"`
-	Error    error       `yaml:"-"                 json:"-"`
-	index    int
-	firstlog bool
-	reader   io.Reader
+	Type    string `yaml:"type"              json:"type"`              // The type of step
+	Data    any    `yaml:"data"              json:"data"`              // The data being passed into this step from the previous one
+	Timeout string `yaml:"timeout,omitempty" json:"timeout,omitempty"` // Timeout for this step
+	Parser  string `yaml:"parser"            json:"parser"`            // The format the data being passed in is expected to be in
+	Output  any    `yaml:"-"                 json:"-"`
+	Error   error  `yaml:"-"                 json:"-"`
+	index   int
+	reader  io.Reader
 }
 
-func (self *StepConfig) String() string {
-	if t := self.Type; t == `` {
+func (config *StepConfig) String() string {
+	if t := config.Type; t == `` {
 		return `(unknown)`
 	} else {
 		return t
 	}
 }
 
-func (self *StepConfig) postprocess() {
-	switch self.Parser {
+func (config *StepConfig) postprocess() {
+	switch config.Parser {
 	case ``, `json`:
-		var out = typeutil.Bytes(self.Output)
+		var out = typeutil.Bytes(config.Output)
 
 		if len(out) > 0 {
 			if stringutil.IsSurroundedBy(out, `[`, `]`) {
-				var outA []interface{}
+				var outA []any
 
 				if err := json.Unmarshal(out, &outA); err == nil {
-					self.Output = outA
+					config.Output = outA
 				} else {
-					self.Error = err
+					config.Error = err
 				}
 
 			} else if stringutil.IsSurroundedBy(out, `[`, `]`) {
-				var outM map[string]interface{}
+				var outM map[string]any
 
 				if err := json.Unmarshal(out, &outM); err == nil {
-					self.Output = outM
+					config.Output = outM
 				} else {
-					self.Error = err
+					config.Error = err
 				}
 			} else {
-				var outI interface{}
+				var outI any
 
 				if err := json.Unmarshal(out, &outI); err == nil {
-					self.Output = outI
+					config.Output = outI
 				} else if log.ErrHasPrefix(err, `invalid character`) {
 					var lines = strings.Split(string(out), "\n")
 
-					var outA []interface{}
+					var outA []any
 					var asLines bool
 
 					for i, line := range lines {
-						var outM map[string]interface{}
+						var outM map[string]any
 
 						if err := json.Unmarshal([]byte(line), &outM); err == nil {
 							outA = append(outA, outM)
@@ -101,7 +100,7 @@ func (self *StepConfig) postprocess() {
 							asLines = true
 							break
 						} else {
-							self.logstep("output line=%d: err=%v", i, err)
+							config.logstep("output line=%d: err=%v", i, err)
 						}
 					}
 
@@ -109,53 +108,52 @@ func (self *StepConfig) postprocess() {
 						outA = sliceutil.Sliceify(sliceutil.CompactString(lines))
 					}
 
-					self.Output = outA
+					config.Output = outA
 				} else {
-					self.Error = err
+					config.Error = err
 				}
 			}
 		}
 
 	case `lines`:
-		self.Output = sliceutil.CompactString(
-			strings.Split(typeutil.String(self.Output), "\n"),
+		config.Output = sliceutil.CompactString(
+			strings.Split(typeutil.String(config.Output), "\n"),
 		)
 
 	default:
-		self.Error = fmt.Errorf("Unsupported step parser %q", self.Parser)
-		break
+		config.Error = fmt.Errorf("unsupported step parser %q", config.Parser)
 	}
 }
 
-func (self *StepConfig) Read(b []byte) (int, error) {
-	if r, ok := self.Output.(io.Reader); ok {
+func (config *StepConfig) Read(b []byte) (int, error) {
+	if r, ok := config.Output.(io.Reader); ok {
 		return r.Read(b)
-	} else if self.reader == nil {
-		if data, err := json.Marshal(self.Output); err == nil {
-			self.reader = bytes.NewBuffer(data)
+	} else if config.reader == nil {
+		if data, err := json.Marshal(config.Output); err == nil {
+			config.reader = bytes.NewBuffer(data)
 		} else {
 			return 0, err
 		}
 	}
 
-	return self.reader.Read(b)
+	return config.reader.Read(b)
 }
 
-func (self *StepConfig) Close() error {
-	if self.reader != nil {
-		self.reader = nil
+func (config *StepConfig) Close() error {
+	if config.reader != nil {
+		config.reader = nil
 	}
 
-	if c, ok := self.Output.(io.Closer); ok {
+	if c, ok := config.Output.(io.Closer); ok {
 		return c.Close()
 	} else {
 		return nil
 	}
 }
 
-func (self *StepConfig) getTimeout() time.Duration {
-	if self.Timeout != `` {
-		if timeout, err := timeutil.ParseDuration(self.Timeout); err == nil {
+func (config *StepConfig) getTimeout() time.Duration {
+	if config.Timeout != `` {
+		if timeout, err := timeutil.ParseDuration(config.Timeout); err == nil {
 			return timeout
 		}
 	}
@@ -163,15 +161,15 @@ func (self *StepConfig) getTimeout() time.Duration {
 	return DefaultActionStepTimeout
 }
 
-func (self *StepConfig) Perform(_ *StepConfig, w http.ResponseWriter, req *http.Request, prev *StepConfig) (interface{}, error) {
-	if step, ok := steps[self.Type]; ok {
-		return step.Perform(self, w, req, prev)
+func (config *StepConfig) Perform(_ *StepConfig, w http.ResponseWriter, req *http.Request, prev *StepConfig) (any, error) {
+	if step, ok := steps[config.Type]; ok {
+		return step.Perform(config, w, req, prev)
 	} else {
-		return nil, fmt.Errorf("Unrecognized action step type %q", self.Type)
+		return nil, fmt.Errorf("unrecognized action step type %q", config.Type)
 	}
 }
 
-func (self *StepConfig) logstep(format string, args ...interface{}) {
+func (config *StepConfig) logstep(format string, args ...any) {
 	if format != `` {
 		if !strings.HasPrefix(format, "\u2502") {
 			format = "\u2502          " + format
@@ -184,27 +182,27 @@ func (self *StepConfig) logstep(format string, args ...interface{}) {
 type Action struct {
 	Name   string        `yaml:"name,omitempty" json:"name,omitempty"` // The name of this action
 	Path   string        `yaml:"path"           json:"path"`           // The URL path this action is accessible from
-	Method interface{}   `yaml:"method"         json:"method"`         // The HTTP method(s) this action will respond to
+	Method any           `yaml:"method"         json:"method"`         // The HTTP method(s) this action will respond to
 	Steps  []*StepConfig `yaml:"steps"          json:"steps"`          // The list of steps that are applied, in order, to the request body in order to generate a response
 }
 
 // Performs the action in response to an HTTP request, evaluating all action steps.  Steps are
 // responsible for generating and manipulating output.  The output of the last step will be returned,
 // or an error will be returned if not nil.
-func (self *Action) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (config *Action) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var started = time.Now()
-	var name = self.Name
+	var name = config.Name
 
 	if name == `` {
 		name = fmt.Sprintf("%s %s", req.Method, req.URL.Path)
 	}
 
-	var initData interface{}
+	var initData any
 
 	if req.ContentLength > 0 {
 		defer req.Body.Close()
 
-		var asMap map[string]interface{}
+		var asMap map[string]any
 
 		if err := httputil.ParseRequest(req, &asMap); err == nil {
 			initData = asMap
@@ -225,7 +223,7 @@ func (self *Action) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	log.Debugf("\u256d Run action %s", name)
 
-	for i, step := range self.Steps {
+	for i, step := range config.Steps {
 		step.index = i
 
 		step.logstep("\u2502  step %d: type=%v data=%T", i, step.Type, step.Data)
@@ -245,7 +243,7 @@ func (self *Action) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if prev != nil {
 		if err := prev.Error; err != nil {
-			httputil.RespondJSON(w, map[string]interface{}{
+			httputil.RespondJSON(w, map[string]any{
 				`error`:  err.Error(),
 				`output`: prev.Output,
 			}, http.StatusInternalServerError)

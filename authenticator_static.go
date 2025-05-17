@@ -17,22 +17,22 @@ func NewStaticAuthenticator(config *AuthenticatorConfig, allow bool) (*StaticAut
 	}, nil
 }
 
-func (self *StaticAuthenticator) Name() string {
-	if self.config != nil && self.config.Name != `` {
-		return self.config.Name
+func (auth *StaticAuthenticator) Name() string {
+	if auth.config != nil && auth.config.Name != `` {
+		return auth.config.Name
 	} else {
 		return `StaticAuthenticator`
 	}
 }
 
-func (self *StaticAuthenticator) IsCallback(_ *url.URL) bool {
+func (auth *StaticAuthenticator) IsCallback(_ *url.URL) bool {
 	return false
 }
 
-func (self *StaticAuthenticator) Callback(w http.ResponseWriter, req *http.Request) {
+func (auth *StaticAuthenticator) Callback(w http.ResponseWriter, req *http.Request) {
 
 }
 
-func (self *StaticAuthenticator) Authenticate(w http.ResponseWriter, req *http.Request) bool {
-	return self.allow
+func (auth *StaticAuthenticator) Authenticate(w http.ResponseWriter, req *http.Request) bool {
+	return auth.allow
 }

@@ -2,7 +2,7 @@ package diecast
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,7 +20,7 @@ func TestCsrfRequest(t *testing.T) {
 	assert.True(csrf.Handle(w, req))
 	assert.Empty(csrftoken(req))
 	assert.Equal(http.StatusOK, w.Code)
-	assert.Equal(``, w.HeaderMap.Get(DefaultCsrfHeaderName))
+	assert.Equal(``, w.Result().Header.Get(DefaultCsrfHeaderName))
 
 }
 
@@ -36,7 +36,7 @@ func TestCsrfRequestEnabled(t *testing.T) {
 	assert.Equal(http.StatusOK, w.Code)
 	assert.Equal(
 		csrftoken(req),
-		w.HeaderMap.Get(DefaultCsrfHeaderName),
+		w.Result().Header.Get(DefaultCsrfHeaderName),
 	)
 
 }
@@ -134,7 +134,7 @@ func TestCsrfPostValidRequestBodyIntact(t *testing.T) {
 	assert.True(csrf.Handle(w, req))
 	assert.Equal(http.StatusOK, w.Code)
 
-	reqbody, err := ioutil.ReadAll(req.Body)
+	reqbody, err := io.ReadAll(req.Body)
 	assert.NoError(err)
 
 	// the request body should still contain everything it had
@@ -142,5 +142,5 @@ func TestCsrfPostValidRequestBodyIntact(t *testing.T) {
 
 	// utilizing the "abc123" token should have forced a new token
 	assert.NotEqual(`abc123`, csrftoken(req))
-	assert.Equal(csrftoken(req), w.HeaderMap.Get(DefaultCsrfHeaderName))
+	assert.Equal(csrftoken(req), w.Result().Header.Get(DefaultCsrfHeaderName))
 }

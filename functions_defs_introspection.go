@@ -10,7 +10,7 @@ import (
 	"github.com/ghetzel/go-stockutil/stringutil"
 )
 
-func loadStandardFunctionsIntrospection(funcs FuncMap, server *Server) funcGroup {
+func loadStandardFunctionsIntrospection(_ FuncMap, _ *Server) funcGroup {
 	return funcGroup{
 		Name:        `Introspection and Reflection`,
 		Description: `Functions for inspecting runtime information about templates and Diecast itself.`,
@@ -18,11 +18,11 @@ func loadStandardFunctionsIntrospection(funcs FuncMap, server *Server) funcGroup
 			{
 				Name:    `templateKey`,
 				Summary: `Open the given file and retrieve the key from the page object defined in its header.`,
-				Function: func(filenameI interface{}, keyI interface{}, fallbacks ...interface{}) (interface{}, error) {
+				Function: func(filenameI any, keyI any, fallbacks ...any) (any, error) {
 					if filename, err := stringutil.ToString(filenameI); err == nil {
 						if key, err := stringutil.ToString(keyI); err == nil {
 							if file, err := os.Open(filename); err == nil {
-								var fallback interface{}
+								var fallback any
 
 								if values := sliceutil.Sliceify(sliceutil.Stringify(fallbacks)); len(values) > 0 {
 									fallback = values[0]
@@ -37,10 +37,10 @@ func loadStandardFunctionsIntrospection(funcs FuncMap, server *Server) funcGroup
 								return nil, err
 							}
 						} else {
-							return nil, fmt.Errorf("Unable to convert key to string")
+							return nil, fmt.Errorf("unable to convert key to string")
 						}
 					} else {
-						return nil, fmt.Errorf("Unable to convert filename to string")
+						return nil, fmt.Errorf("unable to convert filename to string")
 					}
 				},
 			},

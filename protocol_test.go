@@ -11,7 +11,7 @@ func TestProtocolRequest(t *testing.T) {
 	var fns = GetStandardFunctions(nil)
 
 	var req = &ProtocolRequest{
-		TemplateData: map[string]interface{}{
+		TemplateData: map[string]any{
 			`a`: 123,
 		},
 		TemplateFuncs: fns,

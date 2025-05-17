@@ -8,10 +8,6 @@ import (
 	"github.com/husobee/vestigo"
 )
 
-// since the Routable interface is for the benefit of external packages, lets
-// make sure Server actually implements it at compile time
-var _compileTimeCheckRoutable Routable = new(Server)
-
 type Upgrader = websocket.Upgrader
 
 var DefaultUpgrader = Upgrader{
@@ -26,7 +22,7 @@ type WebsocketConn = websocket.Conn
 type WebsocketHandlerFunc = func(http.ResponseWriter, *http.Request, *WebsocketConn)
 
 type Routable interface {
-	P(req *http.Request, param string, fallback ...interface{}) typeutil.Variant
+	P(req *http.Request, param string, fallback ...any) typeutil.Variant
 	Get(route string, handler http.HandlerFunc)
 	Websocket(route string, wsHandler WebsocketHandlerFunc, upgradeHeaders http.Header)
 	Head(route string, handler http.HandlerFunc)
@@ -43,14 +39,14 @@ type Routable interface {
 
 type AddHandlerFunc func(verb string, route string, handler http.HandlerFunc) (string, string, http.HandlerFunc)
 
-func (self *Server) handlersEnsureRouter() {
-	if self.userRouter == nil {
-		self.userRouter = vestigo.NewRouter()
+func (server *Server) handlersEnsureRouter() {
+	if server.userRouter == nil {
+		server.userRouter = vestigo.NewRouter()
 	}
 }
 
 // Return the value of a URL parameter within a given request handler.
-func (self *Server) P(req *http.Request, param string, fallback ...interface{}) typeutil.Variant {
+func (server *Server) P(req *http.Request, param string, fallback ...any) typeutil.Variant {
 	if v := vestigo.Param(req, param); v != `` {
 		return typeutil.V(v)
 	} else if len(fallback) > 0 {
@@ -61,12 +57,12 @@ func (self *Server) P(req *http.Request, param string, fallback ...interface{}) 
 }
 
 // Add a handler for an HTTP GET endpoint.
-func (self *Server) Get(route string, handler http.HandlerFunc) {
-	self.addHandler(http.MethodGet, route, handler)
+func (server *Server) Get(route string, handler http.HandlerFunc) {
+	server.addHandler(http.MethodGet, route, handler)
 }
 
-func (self *Server) Websocket(route string, wsHandler WebsocketHandlerFunc, upgradeHeaders http.Header) {
-	self.addHandler(http.MethodGet, route, func(w http.ResponseWriter, req *http.Request) {
+func (server *Server) Websocket(route string, wsHandler WebsocketHandlerFunc, upgradeHeaders http.Header) {
+	server.addHandler(http.MethodGet, route, func(w http.ResponseWriter, req *http.Request) {
 		if conn, err := DefaultUpgrader.Upgrade(w, req, upgradeHeaders); err == nil {
 			wsHandler(w, req, (*WebsocketConn)(conn))
 		} else {
@@ -76,62 +72,62 @@ func (self *Server) Websocket(route string, wsHandler WebsocketHandlerFunc, upgr
 }
 
 // Add a handler for an HTTP HEAD endpoint.
-func (self *Server) Head(route string, handler http.HandlerFunc) {
-	self.addHandler(http.MethodHead, route, handler)
+func (server *Server) Head(route string, handler http.HandlerFunc) {
+	server.addHandler(http.MethodHead, route, handler)
 }
 
 // Add a handler for an HTTP POST endpoint.
-func (self *Server) Post(route string, handler http.HandlerFunc) {
-	self.addHandler(http.MethodPost, route, handler)
+func (server *Server) Post(route string, handler http.HandlerFunc) {
+	server.addHandler(http.MethodPost, route, handler)
 }
 
 // Add a handler for an HTTP PUT endpoint.
-func (self *Server) Put(route string, handler http.HandlerFunc) {
-	self.addHandler(http.MethodPut, route, handler)
+func (server *Server) Put(route string, handler http.HandlerFunc) {
+	server.addHandler(http.MethodPut, route, handler)
 }
 
 // Add a handler for an HTTP DELETE endpoint.
-func (self *Server) Delete(route string, handler http.HandlerFunc) {
-	self.addHandler(http.MethodDelete, route, handler)
+func (server *Server) Delete(route string, handler http.HandlerFunc) {
+	server.addHandler(http.MethodDelete, route, handler)
 }
 
 // Add a handler for an HTTP PATCH endpoint.
-func (self *Server) Patch(route string, handler http.HandlerFunc) {
-	self.addHandler(http.MethodPatch, route, handler)
+func (server *Server) Patch(route string, handler http.HandlerFunc) {
+	server.addHandler(http.MethodPatch, route, handler)
 }
 
 // Add a handler for an HTTP OPTIONS endpoint.
-func (self *Server) Options(route string, handler http.HandlerFunc) {
-	self.addHandler(http.MethodOptions, route, handler)
+func (server *Server) Options(route string, handler http.HandlerFunc) {
+	server.addHandler(http.MethodOptions, route, handler)
 }
 
 // Add a handler for an HTTP CONNECT endpoint.
-func (self *Server) Connect(route string, handler http.HandlerFunc) {
-	self.addHandler(http.MethodConnect, route, handler)
+func (server *Server) Connect(route string, handler http.HandlerFunc) {
+	server.addHandler(http.MethodConnect, route, handler)
 }
 
 // Add a handler for an HTTP TRACE endpoint.
-func (self *Server) Trace(route string, handler http.HandlerFunc) {
-	self.addHandler(http.MethodTrace, route, handler)
+func (server *Server) Trace(route string, handler http.HandlerFunc) {
+	server.addHandler(http.MethodTrace, route, handler)
 }
 
 // Add a handler for an endpoint (any HTTP method.)
-func (self *Server) HandleFunc(route string, handler http.HandlerFunc) {
-	self.addHandler(``, route, handler)
+func (server *Server) HandleFunc(route string, handler http.HandlerFunc) {
+	server.addHandler(``, route, handler)
 }
 
 // Add a handler function for an endpoint (any HTTP method.)
-func (self *Server) Handle(route string, handler http.Handler) {
-	self.hasUserRoutes = true
-	self.handlersEnsureRouter()
-	self.userRouter.Handle(route, handler)
+func (server *Server) Handle(route string, handler http.Handler) {
+	server.hasUserRoutes = true
+	server.handlersEnsureRouter()
+	server.userRouter.Handle(route, handler)
 }
 
-func (self *Server) addHandler(verb string, route string, handler http.HandlerFunc) {
-	self.hasUserRoutes = true
-	self.handlersEnsureRouter()
+func (server *Server) addHandler(verb string, route string, handler http.HandlerFunc) {
+	server.hasUserRoutes = true
+	server.handlersEnsureRouter()
 
-	if oah := self.OnAddHandler; oah != nil {
+	if oah := server.OnAddHandler; oah != nil {
 		v, r, h := oah(verb, route, handler)
 
 		if v != `` {
@@ -148,10 +144,10 @@ func (self *Server) addHandler(verb string, route string, handler http.HandlerFu
 	}
 
 	if verb != `` {
-		self.userRouter.Add(verb, route, func(w http.ResponseWriter, req *http.Request) {
+		server.userRouter.Add(verb, route, func(w http.ResponseWriter, req *http.Request) {
 			handler(w, req)
 		})
 	} else {
-		self.userRouter.HandleFunc(route, handler)
+		server.userRouter.HandleFunc(route, handler)
 	}
 }

@@ -1,6 +1,5 @@
 package diecast
 
-//go:generate esc -o static.go -pkg diecast -modtime 1500000000 -prefix ui ui
 //go:generate make favicon.go
 
 import (
@@ -8,6 +7,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"embed"
 	"errors"
 	"fmt"
 	"html/template"
@@ -15,7 +15,6 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -55,8 +54,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+//go:embed ui
+var embedded embed.FS
+
 var ITotallyUnderstandRunningArbitraryCommandsAsRootIsRealRealBad = false
-var DirectoryErr = errors.New(`is a directory`)
+var ErrIsDirectory = errors.New(`is a directory`)
 var DefaultLocale = language.AmericanEnglish
 var DefaultLogFormat = `common`
 var DefaultProtocol = `http`
@@ -78,7 +80,7 @@ func RegisterLogFormat(name string, format string) {
 }
 
 func IsDirectoryErr(err error) bool {
-	return (err == DirectoryErr)
+	return (err == ErrIsDirectory)
 }
 
 const DefaultQueryJoiner = `,`
@@ -144,17 +146,17 @@ type Serveable interface {
 
 type RedirectTo string
 
-func (self RedirectTo) Error() string {
-	return string(self)
+func (server RedirectTo) Error() string {
+	return string(server)
 }
 
 type StartCommand struct {
-	Command          string                 `yaml:"command"          json:"command"`          // The shell command line to execute on start
-	Directory        string                 `yaml:"directory"        json:"directory"`        // The working directory the command should be run from
-	Environment      map[string]interface{} `yaml:"env"              json:"env"`              // A map of environment variables to expose to the command
-	WaitBefore       string                 `yaml:"delay"            json:"delay"`            // How long to delay before running the command
-	Wait             string                 `yaml:"timeout"          json:"timeout"`          // How long to wait before killing the command
-	ExitOnCompletion bool                   `yaml:"exitOnCompletion" json:"exitOnCompletion"` // Whether Diecast should exit upon command completion
+	Command          string         `yaml:"command"          json:"command"`          // The shell command line to execute on start
+	Directory        string         `yaml:"directory"        json:"directory"`        // The working directory the command should be run from
+	Environment      map[string]any `yaml:"env"              json:"env"`              // A map of environment variables to expose to the command
+	WaitBefore       string         `yaml:"delay"            json:"delay"`            // How long to delay before running the command
+	Wait             string         `yaml:"timeout"          json:"timeout"`          // How long to wait before killing the command
+	ExitOnCompletion bool           `yaml:"exitOnCompletion" json:"exitOnCompletion"` // Whether Diecast should exit upon command completion
 	cmd              *exec.Cmd
 }
 
@@ -181,8 +183,8 @@ type RateLimitConfig struct {
 	Penalty   string `yaml:"penalty"    json:"penalty"`    // An amount of time to sleep instead of returning an HTTP 429 error on rate limited requests
 }
 
-func (self *RateLimitConfig) KeyFor(req *http.Request) string {
-	if self.PerClient {
+func (server *RateLimitConfig) KeyFor(req *http.Request) string {
+	if server.PerClient {
 		return req.RemoteAddr
 	} else {
 		return `__global__`
@@ -195,18 +197,18 @@ type TraceMapping struct {
 	rx      *regexp.Regexp
 }
 
-func (self *TraceMapping) TraceName(candidate string) (string, bool) {
-	if self.Match != `` {
-		if self.rx == nil {
-			if rx, err := regexp.Compile(self.Match); err == nil {
-				self.rx = rx
+func (server *TraceMapping) TraceName(candidate string) (string, bool) {
+	if server.Match != `` {
+		if server.rx == nil {
+			if rx, err := regexp.Compile(server.Match); err == nil {
+				server.rx = rx
 			}
 		}
 	}
 
-	if self.rx != nil {
-		if self.rx.MatchString(candidate) {
-			return self.rx.ReplaceAllString(candidate, self.Replace), true
+	if server.rx != nil {
+		if server.rx.MatchString(candidate) {
+			return server.rx.ReplaceAllString(candidate, server.Replace), true
 		}
 	}
 
@@ -214,46 +216,46 @@ func (self *TraceMapping) TraceName(candidate string) (string, bool) {
 }
 
 type JWTConfig struct {
-	Algorithm string                 `yaml:"alg"     json:"alg"`     // The JWT signing algorithm to use (default: HS256)
-	Secret    string                 `yaml:"secret"  json:"secret"`  // The JWT secret used to sign payloads
-	Claims    map[string]interface{} `yaml:"claims"  json:"claims"`  // The claims being made (i.e.: the payload that will be converted to JSON)
-	Expires   interface{}            `yaml:"expires" json:"expires"` // A duration string representing how long issued tokens will be valid for (default: 60s)
-	Issuer    string                 `yaml:"issuer"  json:"issuer"`  // The JWT issuer
-	Subject   string                 `yaml:"subject" json:"subject"`
+	Algorithm string         `yaml:"alg"     json:"alg"`     // The JWT signing algorithm to use (default: HS256)
+	Secret    string         `yaml:"secret"  json:"secret"`  // The JWT secret used to sign payloads
+	Claims    map[string]any `yaml:"claims"  json:"claims"`  // The claims being made (i.e.: the payload that will be converted to JSON)
+	Expires   any            `yaml:"expires" json:"expires"` // A duration string representing how long issued tokens will be valid for (default: 60s)
+	Issuer    string         `yaml:"issuer"  json:"issuer"`  // The JWT issuer
+	Subject   string         `yaml:"subject" json:"subject"`
 }
 
-func (self *JWTConfig) SignedString(input string) (string, error) {
-	var alg = typeutil.OrString(self.Algorithm, `HS256`)
+func (server *JWTConfig) SignedString(input string) (string, error) {
+	var alg = typeutil.OrString(server.Algorithm, `HS256`)
 
 	if signer := jwt.GetSigningMethod(alg); signer != nil {
-		return signer.Sign(input, []byte(self.Secret))
+		return signer.Sign(input, []byte(server.Secret))
 	} else {
 		return ``, fmt.Errorf("invalid signing algorithm %q", alg)
 	}
 }
 
-func (self *JWTConfig) Issue(tpldata map[string]interface{}, funcs FuncMap) (string, error) {
+func (server *JWTConfig) Issue(tpldata map[string]any, funcs FuncMap) (string, error) {
 	var now = time.Now()
-	var alg = typeutil.OrString(self.Algorithm, `HS256`)
-	var expiry = typeutil.OrDuration(self.Expires, `60s`)
+	var alg = typeutil.OrString(server.Algorithm, `HS256`)
+	var expiry = typeutil.OrDuration(server.Expires, `60s`)
 
 	if signer := jwt.GetSigningMethod(alg); signer != nil {
 		var claims jwt.Claims
 
-		if len(self.Claims) == 0 {
+		if len(server.Claims) == 0 {
 			claims = jwt.StandardClaims{
 				Id:        stringutil.UUID().String(),
 				IssuedAt:  now.Unix(),
 				ExpiresAt: now.Add(expiry).Unix(),
-				Issuer:    ShouldEvalInline(self.Issuer, tpldata, funcs).String(),
-				Subject:   ShouldEvalInline(self.Subject, tpldata, funcs).String(),
+				Issuer:    ShouldEvalInline(server.Issuer, tpldata, funcs).String(),
+				Subject:   ShouldEvalInline(server.Subject, tpldata, funcs).String(),
 				NotBefore: now.Unix(),
 			}
 		} else {
-			var c = jwt.MapClaims(self.Claims)
+			var c = jwt.MapClaims(server.Claims)
 
-			if self.Issuer != `` {
-				c[`iss`] = self.Issuer
+			if server.Issuer != `` {
+				c[`iss`] = server.Issuer
 			}
 
 			c[`iat`] = now.Unix()
@@ -268,28 +270,28 @@ func (self *JWTConfig) Issue(tpldata map[string]interface{}, funcs FuncMap) (str
 		}
 
 		// put it all together: sign the JSONified claims using the given signing method and secret
-		return jwt.NewWithClaims(signer, claims).SignedString([]byte(self.Secret))
+		return jwt.NewWithClaims(signer, claims).SignedString([]byte(server.Secret))
 	} else {
 		return ``, fmt.Errorf("invalid signing algorithm %q", alg)
 	}
 }
 
 type JaegerConfig struct {
-	Enable                  bool                   `yaml:"enable"                  json:"enable"`                  // Explicitly enable or disable Jaeger tracing
-	ServiceName             string                 `yaml:"service"                 json:"service"`                 // Set the service name that traces will fall under.
-	Agent                   string                 `yaml:"agent"                   json:"agent"`                   // Specify the host:port of a local UDP agent to send traces to.
-	Collector               string                 `yaml:"collector"               json:"collector"`               // Specify the collector address to sent traces to.  Overrides "agent" if set.
-	Username                string                 `yaml:"username"                json:"username"`                // Provides a username to authenticate with the collector.
-	Password                string                 `yaml:"password"                json:"password"`                // Provides a password to authenticate with the collector.
-	QueueSize               int                    `yaml:"queueSize"               json:"queueSize"`               // Specify the size of the queue for outgoing reports.
-	FlushInterval           string                 `yaml:"flushInterval"           json:"flushInterval"`           // Duration specifying how frequently queued reports should be flushed.
-	Tags                    map[string]interface{} `yaml:"tags"                    json:"tags"`                    // A set of key-value pairs that are included in every trace.
-	SamplingType            string                 `yaml:"sampling"                json:"sampling"`                // Specifies the type of sampling to use: const, probabilistic, rateLimiting, or remote.
-	SamplingParam           float64                `yaml:"samplingParam"           json:"samplingParam"`           // A type-specific parameter used to configure that type of sampling; const: 0 or 1, probabilistic: 0.0-1.0, rateLimiting: max number of spans per seconds, remote: same as probabilistic.
-	SamplingServerURL       string                 `yaml:"samplingUrl"             json:"samplingUrl"`             // The sampling server URL for the "remote" sampling type.
-	SamplingRefreshInterval string                 `yaml:"samplingRefreshInterval" json:"samplingRefreshInterval"` // How frequently to poll the remote sampling server.
-	SamplingMaxOperations   int                    `yaml:"samplingMaxOps"          json:"samplingMaxOps"`          // A maximum number of operations for certain sampling modes.
-	OperationsMappings      []*TraceMapping        `yaml:"operations"              json:"operations"`              // Maps regular expressions used to match specific routes to the operation name that will be emitted in traces. Without a matching expression, traces will be named by the calling HTTP method and Request URI.  The string being tested by these regular expressions is the one that would be emitted otherwise; so "GET /path/to/file"
+	Enable                  bool            `yaml:"enable"                  json:"enable"`                  // Explicitly enable or disable Jaeger tracing
+	ServiceName             string          `yaml:"service"                 json:"service"`                 // Set the service name that traces will fall under.
+	Agent                   string          `yaml:"agent"                   json:"agent"`                   // Specify the host:port of a local UDP agent to send traces to.
+	Collector               string          `yaml:"collector"               json:"collector"`               // Specify the collector address to sent traces to.  Overrides "agent" if set.
+	Username                string          `yaml:"username"                json:"username"`                // Provides a username to authenticate with the collector.
+	Password                string          `yaml:"password"                json:"password"`                // Provides a password to authenticate with the collector.
+	QueueSize               int             `yaml:"queueSize"               json:"queueSize"`               // Specify the size of the queue for outgoing reports.
+	FlushInterval           string          `yaml:"flushInterval"           json:"flushInterval"`           // Duration specifying how frequently queued reports should be flushed.
+	Tags                    map[string]any  `yaml:"tags"                    json:"tags"`                    // A set of key-value pairs that are included in every trace.
+	SamplingType            string          `yaml:"sampling"                json:"sampling"`                // Specifies the type of sampling to use: const, probabilistic, rateLimiting, or remote.
+	SamplingParam           float64         `yaml:"samplingParam"           json:"samplingParam"`           // A type-specific parameter used to configure that type of sampling; const: 0 or 1, probabilistic: 0.0-1.0, rateLimiting: max number of spans per seconds, remote: same as probabilistic.
+	SamplingServerURL       string          `yaml:"samplingUrl"             json:"samplingUrl"`             // The sampling server URL for the "remote" sampling type.
+	SamplingRefreshInterval string          `yaml:"samplingRefreshInterval" json:"samplingRefreshInterval"` // How frequently to poll the remote sampling server.
+	SamplingMaxOperations   int             `yaml:"samplingMaxOps"          json:"samplingMaxOps"`          // A maximum number of operations for certain sampling modes.
+	OperationsMappings      []*TraceMapping `yaml:"operations"              json:"operations"`              // Maps regular expressions used to match specific routes to the operation name that will be emitted in traces. Without a matching expression, traces will be named by the calling HTTP method and Request URI.  The string being tested by these regular expressions is the one that would be emitted otherwise; so "GET /path/to/file"
 }
 
 type Server struct {
@@ -304,7 +306,7 @@ type Server struct {
 	BinPath              string                    `yaml:"-"                       json:"-"`                       // Exposes the location of the diecast binary
 	BindingPrefix        string                    `yaml:"bindingPrefix"           json:"bindingPrefix"`           // Specify a string to prefix all binding resource values that start with "/"
 	Bindings             SharedBindingSet          `yaml:"bindings"                json:"bindings"`                // Top-level bindings that apply to every rendered template
-	DefaultPageObject    map[string]interface{}    `yaml:"-"                       json:"-"`                       //
+	DefaultPageObject    map[string]any            `yaml:"-"                       json:"-"`                       //
 	DisableCommands      bool                      `yaml:"disable_commands"        json:"disable_commands"`        // Disable the execution of PrestartCommands and StartCommand .
 	DisableTimings       bool                      `yaml:"disableTimings"          json:"disableTimings"`          // Disable emitting per-request Server-Timing headers to aid in tracing bottlenecks and performance issues.
 	EnableDebugging      bool                      `yaml:"debug"                   json:"debug"`                   // Enables additional options for debugging applications. Caution: can expose secrets and other sensitive data.
@@ -315,14 +317,14 @@ type Server struct {
 	ExposeEnvVars        []string                  `yaml:"exposeEnvVars"           json:"exposeEnvVars"`           // a list of glob patterns matching environment variable names that should always be exposed
 	FaviconPath          string                    `yaml:"favicon"                 json:"favicon"`                 // TODO: favicon autogenerator: Specifies the relative path to the file containing the /favicon.ico file.  This path can point to a Windows Icon (.ico), GIF, PNG, JPEG, or Bitmap (.bmp).  If necessary, the file will be converted and stored in memory to the ICO format.
 	FilterEnvVars        []string                  `yaml:"filterEnvVars"           json:"filterEnvVars"`           // a list of glob patterns matching environment variable names that should not be exposed
-	GlobalHeaders        map[string]interface{}    `yaml:"globalHeaders,omitempty" json:"globalHeaders,omitempty"` // A set of HTTP headers that should be added to EVERY response Diecast returns, regardless of whether it originates from a template, mount, or other configuration.
+	GlobalHeaders        map[string]any            `yaml:"globalHeaders,omitempty" json:"globalHeaders,omitempty"` // A set of HTTP headers that should be added to EVERY response Diecast returns, regardless of whether it originates from a template, mount, or other configuration.
 	IndexFile            string                    `yaml:"indexFile"               json:"indexFile"`               // The name of the template file to use when a directory is requested.
 	LayoutPath           string                    `yaml:"layouts"                 json:"layouts"`                 // The path to the layouts template directory
 	Locale               string                    `yaml:"locale"                  json:"locale"`                  // Specify the default locale for pages being served.
 	MountConfigs         []MountConfig             `yaml:"mounts"                  json:"mounts"`                  // A list of mount configurations read from the diecast.yml config file.
 	Mounts               []Mount                   `yaml:"-"                       json:"-"`                       // The set of all registered mounts.
 	OnAddHandler         AddHandlerFunc            `yaml:"-"                       json:"-"`                       // A function that can be used to intercept handlers being added to the server.
-	OverridePageObject   map[string]interface{}    `yaml:"-"                       json:"-"`                       //
+	OverridePageObject   map[string]any            `yaml:"-"                       json:"-"`                       //
 	PrestartCommands     []*StartCommand           `yaml:"prestart"                json:"prestart"`                // A command that will be executed before the server is started.
 	Protocols            map[string]ProtocolConfig `yaml:"protocols"               json:"protocols"`               // Setup global configuration details for Binding Protocols
 	RendererMappings     map[string]string         `yaml:"rendererMapping"         json:"rendererMapping"`         // Map file extensions to preferred renderers for a given file type.
@@ -331,7 +333,7 @@ type Server struct {
 	StartCommands        []*StartCommand           `yaml:"start"                   json:"start"`                   // A command that will be executed after the server is confirmed running.
 	TLS                  *TlsConfig                `yaml:"tls"                     json:"tls"`                     // where SSL/TLS configuration is stored
 	TemplatePatterns     []string                  `yaml:"patterns"                json:"patterns"`                // A set of glob patterns specifying which files will be rendered as templates.
-	Translations         map[string]interface{}    `yaml:"translations,omitempty"  json:"translations,omitempty"`  // Stores translations for use with the i18n and l10n functions.  Keys values represent the
+	Translations         map[string]any            `yaml:"translations,omitempty"  json:"translations,omitempty"`  // Stores translations for use with the i18n and l10n functions.  Keys values represent the
 	TrustedRootPEMs      []string                  `yaml:"trustedRootPEMs"         json:"trustedRootPEMs"`         // List of filenames containing PEM-encoded X.509 TLS certificates that represent trusted authorities.  Use to validate certificates signed by an internal, non-public authority.
 	TryExtensions        []string                  `yaml:"tryExtensions"           json:"tryExtensions"`           // Try these file extensions when looking for default (i.e.: "index") files.  If IndexFile has an extension, it will be stripped first.
 	TryLocalFirst        bool                      `yaml:"localFirst"              json:"localFirst"`              // Whether to attempt to locate a local file matching the requested path before attempting to find a template.
@@ -343,7 +345,7 @@ type Server struct {
 	AfterHandlers        []http.HandlerFunc        `yaml:"-"                       json:"-"`                       // contains a stack of HandlerFuncs that are run after handling the request.  These functions cannot stop the request, as it's already been written to the client.
 	Protocol             string                    `yaml:"protocol"                json:"protocol"`                // Specify which HTTP protocol to use ("http", "http2")
 	RateLimit            *RateLimitConfig          `yaml:"ratelimit"               json:"ratelimit"`               // Specify a rate limiting configuration.
-	BindingTimeout       interface{}               `yaml:"bindingTimeout"          json:"bindingTimeout"`          // Sets the default timeout for bindings that don't explicitly set one.
+	BindingTimeout       any                       `yaml:"bindingTimeout"          json:"bindingTimeout"`          // Sets the default timeout for bindings that don't explicitly set one.
 	JaegerConfig         *JaegerConfig             `yaml:"jaeger"                  json:"jaeger"`                  // Configures distributed tracing using Jaeger.
 	AutocompressPatterns []string                  `yaml:"autocompress"            json:"autocompress"`            // A set of glob patterns indicating directories whose contents will be delivered as ZIP files
 	RequestBodyPreload   int64                     `yaml:"requestPreload"          json:"requestPreload"`          // Maximum number of bytes to read from a request body for the purpose of automatically parsing it.  Requests larger than this will not be available to templates.
@@ -353,7 +355,6 @@ type Server struct {
 	fs                   http.FileSystem
 	hasUserRoutes        bool
 	initialized          bool
-	precmd               *exec.Cmd
 	mux                  *http.ServeMux
 	userRouter           *vestigo.Router
 	logwriter            io.Writer
@@ -367,7 +368,7 @@ type Server struct {
 	lockGetFunctions     sync.Mutex
 }
 
-func NewServer(root interface{}, patterns ...string) *Server {
+func NewServer(root any, patterns ...string) *Server {
 	describeTimer(`tpl`, `Diecast Template Rendering`)
 
 	var server = &Server{
@@ -375,10 +376,10 @@ func NewServer(root interface{}, patterns ...string) *Server {
 		TemplatePatterns:   patterns,
 		Authenticators:     make(AuthenticatorConfigs, 0),
 		Bindings:           make(SharedBindingSet, 0),
-		DefaultPageObject:  make(map[string]interface{}),
+		DefaultPageObject:  make(map[string]any),
 		Mounts:             make([]Mount, 0),
-		OverridePageObject: make(map[string]interface{}),
-		GlobalHeaders:      make(map[string]interface{}),
+		OverridePageObject: make(map[string]any),
+		GlobalHeaders:      make(map[string]any),
 		EnableLayouts:      true,
 		RequestBodyPreload: DefaultRequestBodyPreload,
 		mux:                http.NewServeMux(),
@@ -396,8 +397,8 @@ func NewServer(root interface{}, patterns ...string) *Server {
 	return server
 }
 
-func (self *Server) ShouldReturnSource(req *http.Request) bool {
-	if self.EnableDebugging {
+func (server *Server) ShouldReturnSource(req *http.Request) bool {
+	if server.EnableDebugging {
 		if httputil.QBool(req, DebuggingQuerystringParam) {
 			return true
 		}
@@ -406,11 +407,11 @@ func (self *Server) ShouldReturnSource(req *http.Request) bool {
 	return false
 }
 
-func (self *Server) LoadConfig(filename string) error {
+func (server *Server) LoadConfig(filename string) error {
 	if pathutil.FileExists(filename) {
 		if file, err := os.Open(filename); err == nil {
 			defer file.Close()
-			return self.LoadConfigFromReader(file, filename)
+			return server.LoadConfigFromReader(file, filename)
 		} else {
 			return err
 		}
@@ -419,32 +420,32 @@ func (self *Server) LoadConfig(filename string) error {
 	return nil
 }
 
-func (self *Server) LoadConfigFromReader(file io.Reader, filename string) error {
-	if data, err := ioutil.ReadAll(file); err == nil && len(data) > 0 {
+func (server *Server) LoadConfigFromReader(file io.Reader, filename string) error {
+	if data, err := io.ReadAll(file); err == nil && len(data) > 0 {
 		data = []byte(stringutil.ExpandEnv(string(data)))
 
-		if err := yaml.UnmarshalStrict(data, self); err == nil {
+		if err := yaml.UnmarshalStrict(data, server); err == nil {
 			// apply environment-specific overrides
-			if self.Environment != `` && filename != `` {
+			if server.Environment != `` && filename != `` {
 				eDir, eFile := filepath.Split(filename)
 				var base = strings.TrimSuffix(eFile, filepath.Ext(eFile))
 				var ext = filepath.Ext(eFile)
-				eFile = fmt.Sprintf("%s.%s%s", base, self.Environment, ext)
+				eFile = fmt.Sprintf("%s.%s%s", base, server.Environment, ext)
 				var envPath = filepath.Join(eDir, eFile)
 
 				if fileutil.IsNonemptyFile(envPath) {
-					if err := self.LoadConfig(envPath); err != nil {
+					if err := server.LoadConfig(envPath); err != nil {
 						return fmt.Errorf("failed to load %s: %v", eFile, err)
 					}
 				}
 			}
 
 			// process mount configs into mount instances
-			for i, config := range self.MountConfigs {
+			for i, config := range server.MountConfigs {
 				if mount, err := NewMountFromSpec(fmt.Sprintf("%s:%s", config.Mount, config.To)); err == nil {
 					var mountOverwriteIndex = -1
 
-					for i, existing := range self.Mounts {
+					for i, existing := range server.Mounts {
 						if IsSameMount(mount, existing) {
 							mountOverwriteIndex = i
 							break
@@ -457,9 +458,9 @@ func (self *Server) LoadConfigFromReader(file io.Reader, filename string) error 
 
 					if mountOverwriteIndex >= 0 {
 						log.Debugf("mount: overwriting mountpoint with new configuration: %v", mount)
-						self.Mounts[mountOverwriteIndex] = mount
+						server.Mounts[mountOverwriteIndex] = mount
 					} else {
-						self.Mounts = append(self.Mounts, mount)
+						server.Mounts = append(server.Mounts, mount)
 					}
 				} else {
 					return fmt.Errorf("invalid mount %d: %v", i, err)
@@ -476,29 +477,29 @@ func (self *Server) LoadConfigFromReader(file io.Reader, filename string) error 
 }
 
 // Append the specified mounts to the current server.
-func (self *Server) SetMounts(mounts []Mount) {
-	if len(self.Mounts) > 0 {
-		self.Mounts = append(self.Mounts, mounts...)
+func (server *Server) SetMounts(mounts []Mount) {
+	if len(server.Mounts) > 0 {
+		server.Mounts = append(server.Mounts, mounts...)
 	} else {
-		self.Mounts = mounts
+		server.Mounts = mounts
 	}
 }
 
-func (self *Server) SetFileSystem(fs http.FileSystem) {
-	self.fs = fs
+func (server *Server) SetFileSystem(fs http.FileSystem) {
+	server.fs = fs
 }
 
 // Read a file from the underlying root filesystem, satisfying the http.FileSystem interface.
-func (self *Server) Open(name string) (http.File, error) {
-	if self.fs == nil {
+func (server *Server) Open(name string) (http.File, error) {
+	if server.fs == nil {
 		return nil, fmt.Errorf("no filesystem")
 	} else {
-		return self.fs.Open(name)
+		return server.fs.Open(name)
 	}
 }
 
-func (self *Server) IsInRootPath(path string) bool {
-	if absR, err := filepath.Abs(self.RootPath); err == nil {
+func (server *Server) IsInRootPath(path string) bool {
+	if absR, err := filepath.Abs(server.RootPath); err == nil {
 		if absP, err := filepath.Abs(path); err == nil {
 			absR, _ := filepath.EvalSymlinks(absR)
 			absP, _ := filepath.EvalSymlinks(absP)
@@ -512,178 +513,178 @@ func (self *Server) IsInRootPath(path string) bool {
 	return false
 }
 
-func (self *Server) populateDefaults() {
-	if self.mux == nil {
-		self.mux = http.NewServeMux()
+func (server *Server) populateDefaults() {
+	if server.mux == nil {
+		server.mux = http.NewServeMux()
 	}
 
-	self.handlersEnsureRouter()
+	server.handlersEnsureRouter()
 
-	if self.Log.Format == `` {
-		self.Log.Format = logFormats[`common`]
-		self.Log.Destination = `-`
-		self.Log.Colorize = true
+	if server.Log.Format == `` {
+		server.Log.Format = logFormats[`common`]
+		server.Log.Destination = `-`
+		server.Log.Colorize = true
 	}
 
-	if !self.viaConstructor {
-		self.EnableLayouts = true
+	if !server.viaConstructor {
+		server.EnableLayouts = true
 	}
 
-	if len(self.AutolayoutPatterns) == 0 {
-		self.AutolayoutPatterns = DefaultAutolayoutPatterns
+	if len(server.AutolayoutPatterns) == 0 {
+		server.AutolayoutPatterns = DefaultAutolayoutPatterns
 	}
 
-	if len(self.AutocompressPatterns) == 0 {
-		self.AutocompressPatterns = DefaultAutocompressPatterns
+	if len(server.AutocompressPatterns) == 0 {
+		server.AutocompressPatterns = DefaultAutocompressPatterns
 	}
 
-	if len(self.TemplatePatterns) == 0 {
-		self.TemplatePatterns = DefaultTemplatePatterns
+	if len(server.TemplatePatterns) == 0 {
+		server.TemplatePatterns = DefaultTemplatePatterns
 	}
 
-	if len(self.RendererMappings) == 0 {
-		self.RendererMappings = DefaultRendererMappings
+	if len(server.RendererMappings) == 0 {
+		server.RendererMappings = DefaultRendererMappings
 	}
 
-	if len(self.TryExtensions) == 0 {
-		self.TryExtensions = DefaultTryExtensions
+	if len(server.TryExtensions) == 0 {
+		server.TryExtensions = DefaultTryExtensions
 	}
 
-	if len(self.FilterEnvVars) == 0 {
-		self.FilterEnvVars = DefaultFilterEnvVars
+	if len(server.FilterEnvVars) == 0 {
+		server.FilterEnvVars = DefaultFilterEnvVars
 	}
 
-	if self.Address == `` {
-		self.Address = DefaultAddress
+	if server.Address == `` {
+		server.Address = DefaultAddress
 	}
 
-	if self.ErrorsPath == `` {
-		self.ErrorsPath = DefaultErrorsPath
+	if server.ErrorsPath == `` {
+		server.ErrorsPath = DefaultErrorsPath
 	}
 
-	if self.IndexFile == `` {
-		self.IndexFile = DefaultIndexFile
+	if server.IndexFile == `` {
+		server.IndexFile = DefaultIndexFile
 	}
 
-	if self.LayoutPath == `` {
-		self.LayoutPath = DefaultLayoutsPath
+	if server.LayoutPath == `` {
+		server.LayoutPath = DefaultLayoutsPath
 	}
 
-	if self.RoutePrefix == `` {
-		self.RoutePrefix = DefaultRoutePrefix
+	if server.RoutePrefix == `` {
+		server.RoutePrefix = DefaultRoutePrefix
 	}
 
-	if self.VerifyFile == `` {
-		self.VerifyFile = DefaultVerifyFile
+	if server.VerifyFile == `` {
+		server.VerifyFile = DefaultVerifyFile
 	}
 
-	if self.AutoindexTemplate == `` {
-		self.AutoindexTemplate = DefaultAutoindexFilename
+	if server.AutoindexTemplate == `` {
+		server.AutoindexTemplate = DefaultAutoindexFilename
 	}
 
-	if self.Protocol == `` {
-		self.Protocol = DefaultProtocol
+	if server.Protocol == `` {
+		server.Protocol = DefaultProtocol
 	}
 
-	if self.BindingTimeout == `` {
-		self.BindingTimeout = DefaultBindingTimeout
+	if server.BindingTimeout == `` {
+		server.BindingTimeout = DefaultBindingTimeout
 	}
 
-	if len(self.JWT) == 0 {
-		self.JWT = make(map[string]*JWTConfig)
+	if len(server.JWT) == 0 {
+		server.JWT = make(map[string]*JWTConfig)
 	}
 }
 
-func (self *Server) Initialize() error {
-	self.populateDefaults()
+func (server *Server) Initialize() error {
+	server.populateDefaults()
 
 	// if we haven't explicitly set a filesystem, create it
-	if self.fs == nil {
-		if strings.Contains(self.RootPath, `://`) {
-			if mnt, err := NewMountFromSpec(`/:` + self.RootPath); err == nil {
-				self.SetFileSystem(mnt)
+	if server.fs == nil {
+		if strings.Contains(server.RootPath, `://`) {
+			if mnt, err := NewMountFromSpec(`/:` + server.RootPath); err == nil {
+				server.SetFileSystem(mnt)
 			} else {
 				return fmt.Errorf("root mount: %v", err)
 			}
 		} else {
-			if v, err := fileutil.ExpandUser(self.RootPath); err == nil {
-				self.RootPath = v
+			if v, err := fileutil.ExpandUser(server.RootPath); err == nil {
+				server.RootPath = v
 			}
 
-			if v, err := filepath.Abs(self.RootPath); err == nil {
-				self.RootPath = v
+			if v, err := filepath.Abs(server.RootPath); err == nil {
+				server.RootPath = v
 			} else {
 				return fmt.Errorf("root path: %v", err)
 			}
 
-			self.SetFileSystem(http.Dir(self.RootPath))
+			server.SetFileSystem(http.Dir(server.RootPath))
 		}
 	}
 
-	log.Debugf("rootfs: %T(%v)", self.fs, self.RootPath)
+	log.Debugf("rootfs: %T(%v)", server.fs, server.RootPath)
 
 	// allocate ephemeral address if we're supposed to
-	if addr, port, err := net.SplitHostPort(self.Address); err == nil {
+	if addr, port, err := net.SplitHostPort(server.Address); err == nil {
 		if port == `0` {
 			if allocated, err := netutil.EphemeralPort(); err == nil {
-				self.Address = fmt.Sprintf("%v:%d", addr, allocated)
+				server.Address = fmt.Sprintf("%v:%d", addr, allocated)
 			} else {
 				return err
 			}
 		}
 	}
 
-	if err := self.initJaegerTracing(); err != nil {
+	if err := server.initJaegerTracing(); err != nil {
 		return fmt.Errorf("jaeger: %v", err)
 	}
 
 	// if configured, this path must exist (relative to RootPath or the root filesystem) or Diecast will refuse to start
-	if self.VerifyFile != `` {
-		if verify, err := self.fs.Open(self.VerifyFile); err == nil {
+	if server.VerifyFile != `` {
+		if verify, err := server.fs.Open(server.VerifyFile); err == nil {
 			verify.Close()
 		} else {
-			return fmt.Errorf("Failed to open verification file %q: %v.", self.VerifyFile, err)
+			return fmt.Errorf("failed to open verification file %q: %v", server.VerifyFile, err)
 		}
 	}
 
-	if err := self.setupServer(); err != nil {
+	if err := server.setupServer(); err != nil {
 		return err
 	}
 
-	if err := self.Bindings.init(self); err != nil {
+	if err := server.Bindings.init(server); err != nil {
 		return fmt.Errorf("async bindings: %v", err)
 	}
 
-	self.initialized = true
+	server.initialized = true
 
-	if self.DisableCommands {
+	if server.DisableCommands {
 		log.Noticef("Not executing PrestartCommand because DisableCommands is set")
 		return nil
-	} else if _, err := self.RunStartCommand(self.PrestartCommands, false); err != nil {
+	} else if _, err := server.RunStartCommand(server.PrestartCommands, false); err != nil {
 		return err
 	} else {
 		return nil
 	}
 }
 
-func (self *Server) prestart() error {
-	if !self.initialized {
-		if err := self.Initialize(); err != nil {
+func (server *Server) prestart() error {
+	if !server.initialized {
+		if err := server.Initialize(); err != nil {
 			return err
 		}
 	}
 
 	go func() {
-		if self.DisableCommands {
+		if server.DisableCommands {
 			log.Noticef("Not executing StartCommand because DisableCommands is set")
 			return
 		}
 
-		eoc, err := self.RunStartCommand(self.StartCommands, true)
+		eoc, err := server.RunStartCommand(server.StartCommands, true)
 
 		if eoc {
 			defer func() {
-				self.cleanupCommands()
+				server.cleanupCommands()
 				os.Exit(0)
 			}()
 		}
@@ -696,28 +697,28 @@ func (self *Server) prestart() error {
 	return nil
 }
 
-func (self *Server) initJaegerTracing() error {
+func (server *Server) initJaegerTracing() error {
 	// if enabled, initialize tracing (Jaeger/OpenTracing)
-	if jc := self.JaegerConfig; jc != nil && jc.Enable {
+	if jc := server.JaegerConfig; jc != nil && jc.Enable {
 		if cfg, err := jaegercfg.FromEnv(); err == nil {
-			self.jaegerCfg = cfg
+			server.jaegerCfg = cfg
 		} else {
 			return fmt.Errorf("config: %v", err)
 		}
 
-		if self.jaegerCfg.ServiceName == `` {
-			self.jaegerCfg.ServiceName = sliceutil.OrString(jc.ServiceName, `diecast`)
+		if server.jaegerCfg.ServiceName == `` {
+			server.jaegerCfg.ServiceName = sliceutil.OrString(jc.ServiceName, `diecast`)
 		}
 
-		if self.jaegerCfg.Sampler == nil {
-			self.jaegerCfg.Sampler = new(jaegercfg.SamplerConfig)
+		if server.jaegerCfg.Sampler == nil {
+			server.jaegerCfg.Sampler = new(jaegercfg.SamplerConfig)
 		}
 
-		if self.jaegerCfg.Reporter == nil {
-			self.jaegerCfg.Reporter = new(jaegercfg.ReporterConfig)
+		if server.jaegerCfg.Reporter == nil {
+			server.jaegerCfg.Reporter = new(jaegercfg.ReporterConfig)
 		}
 
-		if r := self.jaegerCfg.Reporter; r != nil {
+		if r := server.jaegerCfg.Reporter; r != nil {
 			if jc.QueueSize > 0 {
 				r.QueueSize = jc.QueueSize
 			}
@@ -739,7 +740,7 @@ func (self *Server) initJaegerTracing() error {
 			}
 		}
 
-		if s := self.jaegerCfg.Sampler; s != nil {
+		if s := server.jaegerCfg.Sampler; s != nil {
 			if s.Type == `` {
 				s.Type = jaeger.SamplerTypeConst
 				s.Param = 1
@@ -763,7 +764,7 @@ func (self *Server) initJaegerTracing() error {
 
 		if jc.FlushInterval != `` {
 			if bfi := typeutil.Duration(jc.FlushInterval); bfi >= (1 * time.Millisecond) {
-				self.jaegerCfg.Reporter.BufferFlushInterval = bfi
+				server.jaegerCfg.Reporter.BufferFlushInterval = bfi
 			} else {
 				return fmt.Errorf("invalid flush interval (minimum: 1ms)")
 			}
@@ -771,38 +772,38 @@ func (self *Server) initJaegerTracing() error {
 
 		if len(jc.Tags) > 0 {
 			for k, v := range jc.Tags {
-				self.jaegerCfg.Tags = append(self.jaegerCfg.Tags, opentracing.Tag{
+				server.jaegerCfg.Tags = append(server.jaegerCfg.Tags, opentracing.Tag{
 					Key:   k,
 					Value: v,
 				})
 			}
 		}
 
-		self.jaegerCfg.Tags = append(self.jaegerCfg.Tags, opentracing.Tag{
+		server.jaegerCfg.Tags = append(server.jaegerCfg.Tags, opentracing.Tag{
 			Key:   `diecast-version`,
 			Value: ApplicationVersion,
 		})
 
-		if ott, otc, err := self.jaegerCfg.NewTracer(); err == nil {
-			self.opentrace = ott
-			self.otcloser = otc
+		if ott, otc, err := server.jaegerCfg.NewTracer(); err == nil {
+			server.opentrace = ott
+			server.otcloser = otc
 
-			opentracing.SetGlobalTracer(self.opentrace)
+			opentracing.SetGlobalTracer(server.opentrace)
 
 			var logline string
 
-			if v := self.jaegerCfg.Reporter.CollectorEndpoint; v != `` {
+			if v := server.jaegerCfg.Reporter.CollectorEndpoint; v != `` {
 				logline = fmt.Sprintf("collector at %s", v)
-			} else if v := self.jaegerCfg.Reporter.LocalAgentHostPort; v != `` {
+			} else if v := server.jaegerCfg.Reporter.LocalAgentHostPort; v != `` {
 				logline = fmt.Sprintf("agent at %s", v)
 			}
 
 			if logline != `` {
-				log.Debugf("trace: Jaeger tracing enabled: service=%s send to %s", self.jaegerCfg.ServiceName, logline)
+				log.Debugf("trace: Jaeger tracing enabled: service=%s send to %s", server.jaegerCfg.ServiceName, logline)
 
-				if len(self.jaegerCfg.Tags) > 0 {
+				if len(server.jaegerCfg.Tags) > 0 {
 					log.Debugf("trace: global tags:")
-					for _, tag := range self.jaegerCfg.Tags {
+					for _, tag := range server.jaegerCfg.Tags {
 						log.Debugf("trace: + %s: %v", tag.Key, typeutil.V(tag.Value))
 					}
 				}
@@ -817,12 +818,12 @@ func (self *Server) initJaegerTracing() error {
 
 // Perform an end-to-end render of a single path, writing the output to the given writer,
 // then exit.
-func (self *Server) RenderPath(w io.Writer, path string) error {
+func (server *Server) RenderPath(w io.Writer, path string) error {
 	path = `/` + strings.TrimPrefix(path, `/`)
 
 	var rw = httptest.NewRecorder()
 	var req = httptest.NewRequest(http.MethodGet, path, nil)
-	self.ServeHTTP(rw, req)
+	server.ServeHTTP(rw, req)
 
 	if !rw.Flushed {
 		rw.Flush()
@@ -832,13 +833,13 @@ func (self *Server) RenderPath(w io.Writer, path string) error {
 		_, err := io.Copy(w, res.Body)
 		return err
 	} else {
-		errbody, _ := ioutil.ReadAll(res.Body)
+		errbody, _ := io.ReadAll(res.Body)
 		return fmt.Errorf("render failed: %v", sliceutil.Or(string(errbody), res.Status))
 	}
 }
 
 // Perform a single request to the server and return an http.Response.
-func (self *Server) GetResponse(method string, path string, body io.Reader, params map[string]interface{}, headers map[string]interface{}) *http.Response {
+func (server *Server) GetResponse(method string, path string, body io.Reader, params map[string]any, headers map[string]any) *http.Response {
 	path = `/` + strings.TrimPrefix(path, `/`)
 
 	var rw = httptest.NewRecorder()
@@ -852,7 +853,7 @@ func (self *Server) GetResponse(method string, path string, body io.Reader, para
 		req.Header.Set(k, typeutil.String(v))
 	}
 
-	self.ServeHTTP(rw, req)
+	server.ServeHTTP(rw, req)
 
 	if !rw.Flushed {
 		rw.Flush()
@@ -862,14 +863,14 @@ func (self *Server) GetResponse(method string, path string, body io.Reader, para
 }
 
 // Return a URL string that can be used to perform requests from the local machine.
-func (self *Server) LocalURL() string {
-	return self.bestInternalLoopbackUrl(nil)
+func (server *Server) LocalURL() string {
+	return server.bestInternalLoopbackUrl(nil)
 }
 
 // Start a long-running webserver.  If provided, the functions provided will be run in parallel
 // after the server has started.  If any of them return a non-nil error, the server will stop and
 // this method will return that error.
-func (self *Server) Serve(workers ...ServeFunc) error {
+func (server *Server) Serve(workers ...ServeFunc) error {
 	var serveable Serveable
 	var useTLS bool
 	var useUDP bool
@@ -877,16 +878,16 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 	var servechan = make(chan error)
 
 	// fire off some goroutines for the prestart and start commands (if configured)
-	if err := self.prestart(); err != nil {
+	if err := server.prestart(); err != nil {
 		return err
 	}
 
 	var srv = &http.Server{
-		Handler: self,
+		Handler: server,
 	}
 
 	// work out if we're starting a UNIX socket server
-	if addr := self.Address; strings.HasPrefix(addr, `unix:`) {
+	if addr := server.Address; strings.HasPrefix(addr, `unix:`) {
 		useSocket = strings.TrimPrefix(addr, `unix:`)
 
 		if useSocket == `` {
@@ -897,7 +898,7 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 	}
 
 	// setup TLSConfig
-	if ssl := self.TLS; ssl != nil && ssl.Enable {
+	if ssl := server.TLS; ssl != nil && ssl.Enable {
 		var tc = new(tls.Config)
 
 		ssl.CertFile = fileutil.MustExpandUser(ssl.CertFile)
@@ -923,7 +924,7 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 				tc.ClientAuth = tls.RequireAndVerifyClientCert
 			default:
 				return fmt.Errorf(
-					"Invalid value %q for 'ssl_client_certs': must be one of %q, %q, %q, %q.",
+					"invalid value %q for 'ssl_client_certs': must be one of %q, %q, %q, %q",
 					mode,
 					`request`,
 					`any`,
@@ -950,7 +951,7 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 	}
 
 	// wrap all the various protocol implementations in a common interface
-	switch strings.ToLower(self.Protocol) {
+	switch strings.ToLower(server.Protocol) {
 	case ``, `http`:
 		serveable = srv
 	case `http2`:
@@ -966,7 +967,7 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 		serveable = srv
 
 	default:
-		return fmt.Errorf("unknown protocol %q", self.Protocol)
+		return fmt.Errorf("unknown protocol %q", server.Protocol)
 	}
 
 	// take a wildly different path if we're listening on a unix socket
@@ -992,7 +993,7 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 		if listener, err := net.Listen(network, useSocket); err == nil {
 			go func() {
 				if useTLS {
-					servechan <- serveable.ServeTLS(listener, self.TLS.CertFile, self.TLS.KeyFile)
+					servechan <- serveable.ServeTLS(listener, server.TLS.CertFile, server.TLS.KeyFile)
 				} else {
 					servechan <- serveable.Serve(listener)
 				}
@@ -1005,7 +1006,7 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 	} else {
 		go func() {
 			if useTLS {
-				servechan <- serveable.ListenAndServeTLS(self.TLS.CertFile, self.TLS.KeyFile)
+				servechan <- serveable.ListenAndServeTLS(server.TLS.CertFile, server.TLS.KeyFile)
 			} else {
 				servechan <- serveable.ListenAndServe()
 			}
@@ -1015,7 +1016,7 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 	if len(workers) > 0 {
 		for _, worker := range workers {
 			go func(w ServeFunc) {
-				servechan <- w(self)
+				servechan <- w(server)
 			}(worker)
 		}
 	}
@@ -1023,37 +1024,37 @@ func (self *Server) Serve(workers ...ServeFunc) error {
 	return <-servechan
 }
 
-func (self *Server) ListenAndServe(address string) error {
-	self.Address = address
-	return self.Serve()
+func (server *Server) ListenAndServe(address string) error {
+	server.Address = address
+	return server.Serve()
 }
 
-func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (server *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// make sure we close the body no matter what
 	if req.Body != nil {
 		defer req.Body.Close()
 	}
 
 	// set Connection header
-	if !self.PreserveConnections {
+	if !server.PreserveConnections {
 		w.Header().Set(`Connection`, `close`)
 	}
 
 	// initialize if necessary. an error here is severe and panics
-	if !self.initialized {
-		if err := self.Initialize(); err != nil {
+	if !server.initialized {
+		if err := server.Initialize(); err != nil {
 			panic(err.Error())
 		}
 	}
 
 	// perform rate limiting check
-	if rl := self.RateLimit; rl != nil && rl.Enable && rl.Limit != `` {
-		if self.rateLimiter == nil {
+	if rl := server.RateLimit; rl != nil && rl.Enable && rl.Limit != `` {
+		if server.rateLimiter == nil {
 			var lim = ratelimit.CreateLimit(rl.Limit)
-			self.rateLimiter = &lim
+			server.rateLimiter = &lim
 		}
 
-		if err := self.rateLimiter.Hit(rl.KeyFor(req)); err != nil {
+		if err := server.rateLimiter.Hit(rl.KeyFor(req)); err != nil {
 			var didPenalty bool
 
 			// impose sleep penalty if specified
@@ -1065,7 +1066,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			}
 
 			if !didPenalty {
-				self.respondError(w, req, err, http.StatusTooManyRequests)
+				server.respondError(w, req, err, http.StatusTooManyRequests)
 				return
 			}
 		}
@@ -1077,7 +1078,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	httputil.RequestSetValue(req, ContextResponseKey, interceptor)
 
 	// process the before stack
-	for i, before := range self.BeforeHandlers {
+	for i, before := range server.BeforeHandlers {
 		if proceed := before(interceptor, req); !proceed {
 			log.Debugf(
 				"[%s] processing halted by middleware %d (msg: %v)",
@@ -1086,25 +1087,25 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				httputil.RequestGetValue(req, ContextErrorKey),
 			)
 
-			self.respondError(interceptor, req, fmt.Errorf("Middleware halted request"), http.StatusInternalServerError)
+			server.respondError(interceptor, req, fmt.Errorf("middleware halted request"), http.StatusInternalServerError)
 			return
 		}
 	}
 
 	// finally, pass the request on to the ServeMux router
-	self.mux.ServeHTTP(interceptor, req)
+	server.mux.ServeHTTP(interceptor, req)
 
 	// process the middlewares
-	for _, after := range self.AfterHandlers {
+	for _, after := range server.AfterHandlers {
 		after(interceptor, req)
 	}
 }
 
 // return whether the request path matches any of the configured TemplatePatterns.
-func (self *Server) shouldApplyTemplate(requestPath string) bool {
+func (server *Server) shouldApplyTemplate(requestPath string) bool {
 	var baseName = filepath.Base(requestPath)
 
-	for _, pattern := range self.TemplatePatterns {
+	for _, pattern := range server.TemplatePatterns {
 		if strings.HasPrefix(pattern, `/`) {
 			if match, err := filepath.Match(pattern, requestPath); err == nil && match {
 				return true
@@ -1120,10 +1121,10 @@ func (self *Server) shouldApplyTemplate(requestPath string) bool {
 }
 
 // return whether the request path matches any of the configured AutocompressPatterns.
-func (self *Server) shouldAutocompress(requestPath string) bool {
+func (server *Server) shouldAutocompress(requestPath string) bool {
 	var baseName = filepath.Base(requestPath)
 
-	for _, pattern := range self.AutocompressPatterns {
+	for _, pattern := range server.AutocompressPatterns {
 		if strings.HasPrefix(pattern, `/`) {
 			if match, err := filepath.Match(pattern, requestPath); err == nil && match {
 				return true
@@ -1139,10 +1140,10 @@ func (self *Server) shouldAutocompress(requestPath string) bool {
 }
 
 // return whether the request path should automatically have layouts applied
-func (self *Server) shouldApplyLayout(requestPath string) bool {
+func (server *Server) shouldApplyLayout(requestPath string) bool {
 	var baseName = filepath.Base(requestPath)
 
-	for _, pattern := range self.AutolayoutPatterns {
+	for _, pattern := range server.AutolayoutPatterns {
 		if strings.HasPrefix(pattern, `/`) {
 			if match, err := filepath.Match(pattern, requestPath); err == nil && match {
 				return true
@@ -1158,7 +1159,7 @@ func (self *Server) shouldApplyLayout(requestPath string) bool {
 }
 
 // render a template, write the output to the given ResponseWriter
-func (self *Server) applyTemplate(
+func (server *Server) applyTemplate(
 	w http.ResponseWriter,
 	req *http.Request,
 	requestPath string,
@@ -1182,23 +1183,23 @@ func (self *Server) applyTemplate(
 		}
 
 		// add all includes from the current item
-		if err := self.appendIncludes(&fragments, header); err != nil {
+		if err := server.appendIncludes(&fragments, header); err != nil {
 			return err
 		}
 	}
 
-	var earlyData = self.requestToEvalData(req, header)
+	var earlyData = server.requestToEvalData(req, header)
 
 	// get a reference to a set of standard functions that won't have a scope yet
-	var earlyFuncs = self.GetTemplateFunctions(earlyData, header)
+	var earlyFuncs = server.GetTemplateFunctions(earlyData, header)
 
 	// only process layouts if we're supposed to
-	if self.EnableLayouts && !forceSkipLayout && self.shouldApplyLayout(requestPath) {
+	if server.EnableLayouts && !forceSkipLayout && server.shouldApplyLayout(requestPath) {
 		// files starting with "_" are partials and should not have layouts applied
 		if !strings.HasPrefix(path.Base(requestPath), `_`) {
 			// if no layouts were explicitly specified, and a layout named "default" exists, add it to the list
 			if len(layouts) == 0 {
-				if _, err := self.LoadLayout(`default`); err == nil {
+				if _, err := server.LoadLayout(`default`); err == nil {
 					layouts = append(layouts, `default`)
 				}
 			}
@@ -1206,7 +1207,7 @@ func (self *Server) applyTemplate(
 			if len(layouts) > 0 {
 				for _, layoutName := range layouts {
 					if layoutName, err := EvalInline(layoutName, nil, earlyFuncs); err == nil {
-						if layoutFile, err := self.LoadLayout(layoutName); err == nil {
+						if layoutFile, err := server.LoadLayout(layoutName); err == nil {
 							if err := fragments.Parse(LayoutTemplateName, layoutFile); err != nil {
 								return err
 							}
@@ -1232,10 +1233,10 @@ func (self *Server) applyTemplate(
 	}
 
 	// get the merged header from all layouts, includes, and the template we're rendering
-	var finalHeader = fragments.Header(self)
+	var finalHeader = fragments.Header(server)
 
 	// add all includes
-	if err := self.appendIncludes(&fragments, &finalHeader); err != nil {
+	if err := server.appendIncludes(&fragments, &finalHeader); err != nil {
 		return err
 	}
 
@@ -1249,7 +1250,7 @@ func (self *Server) applyTemplate(
 		return fmt.Errorf("locale: %v", err)
 	}
 
-	if funcs, data, err := self.GetTemplateData(req, &finalHeader); err == nil {
+	if funcs, data, err := server.GetTemplateData(req, &finalHeader); err == nil {
 		var start = time.Now()
 		var fallingThrough bool
 
@@ -1331,13 +1332,13 @@ func (self *Server) applyTemplate(
 					finalHeader.Redirect = redir
 					break SwitchCaseLoop
 
-				} else if swTemplate, err := self.fs.Open(usePath); err == nil {
+				} else if swTemplate, err := server.fs.Open(usePath); err == nil {
 					if swHeader, swData, err := SplitTemplateHeaderContent(swTemplate); err == nil {
 						if fh, err := finalHeader.Merge(swHeader); err == nil {
 							log.Debugf("[%s] Switch case %d matched, switching to template %v", reqid(req), i, usePath)
 							// httputil.RequestSetValue(req, SwitchCaseKey, usePath)
 
-							return self.applyTemplate(
+							return server.applyTemplate(
 								w,
 								req,
 								requestPath,
@@ -1395,11 +1396,11 @@ func (self *Server) applyTemplate(
 
 		switch finalHeader.Renderer {
 		case ``, `html`:
-			if r, ok := GetRendererForFilename(requestPath, self); ok {
+			if r, ok := GetRendererForFilename(requestPath, server); ok {
 				postTemplateRenderer = r
 			}
 		default:
-			if r, err := GetRenderer(finalHeader.Renderer, self); err == nil {
+			if r, err := GetRenderer(finalHeader.Renderer, server); err == nil {
 				postTemplateRenderer = r
 			} else {
 				return err
@@ -1407,7 +1408,7 @@ func (self *Server) applyTemplate(
 		}
 
 		// evaluate and render the template first
-		if baseRenderer, err := GetRenderer(``, self); err == nil {
+		if baseRenderer, err := GetRenderer(``, server); err == nil {
 			// if a user-specified renderer was provided, take the rendered output and
 			// pass it into that renderer.  return the result
 			if postTemplateRenderer != nil {
@@ -1423,7 +1424,7 @@ func (self *Server) applyTemplate(
 					renderOpts.MimeType = res.Header.Get(`Content-Type`)
 					renderOpts.Input = res.Body
 				} else {
-					renderOpts.Input = ioutil.NopCloser(bytes.NewBuffer(templateData))
+					renderOpts.Input = io.NopCloser(bytes.NewBuffer(templateData))
 				}
 
 				if err == nil {
@@ -1432,7 +1433,7 @@ func (self *Server) applyTemplate(
 
 					postTemplateRenderer.SetPrewriteFunc(func(r *http.Request) {
 						reqtime(r, `tpl`, time.Since(start))
-						writeRequestTimerHeaders(self, w, r)
+						writeRequestTimerHeaders(server, w, r)
 					})
 
 					return postTemplateRenderer.Render(w, req, renderOpts)
@@ -1444,7 +1445,7 @@ func (self *Server) applyTemplate(
 
 				baseRenderer.SetPrewriteFunc(func(r *http.Request) {
 					reqtime(r, `tpl`, time.Since(start))
-					writeRequestTimerHeaders(self, w, r)
+					writeRequestTimerHeaders(server, w, r)
 				})
 
 				return baseRenderer.Render(w, req, renderOpts)
@@ -1454,7 +1455,7 @@ func (self *Server) applyTemplate(
 		}
 	} else if redir, ok := err.(RedirectTo); ok {
 		log.Debugf("[%s] Performing 307 Temporary Redirect to %v due to binding response handler.", reqid(req), redir)
-		writeRequestTimerHeaders(self, w, req)
+		writeRequestTimerHeaders(server, w, req)
 		http.Redirect(w, req, redir.Error(), http.StatusTemporaryRedirect)
 		return nil
 	} else {
@@ -1464,21 +1465,21 @@ func (self *Server) applyTemplate(
 
 // Retrieves the set of standard template functions, as well as functions for working
 // with data in the current request.
-func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *TemplateHeader) FuncMap {
+func (server *Server) GetTemplateFunctions(data map[string]any, header *TemplateHeader) FuncMap {
 	var funcs = make(FuncMap)
 
-	for k, v := range GetStandardFunctions(self) {
+	for k, v := range GetStandardFunctions(server) {
 		funcs[k] = v
 	}
 
-	if self.AdditionalFunctions != nil {
-		for k, v := range self.AdditionalFunctions {
+	if server.AdditionalFunctions != nil {
+		for k, v := range server.AdditionalFunctions {
 			funcs[k] = v
 		}
 	}
 
 	// fn payload: Return the body supplied with the request used to generate the current view.
-	funcs[`payload`] = func(key ...string) interface{} {
+	funcs[`payload`] = func(key ...string) any {
 		if len(key) == 0 {
 			return data
 		} else {
@@ -1487,18 +1488,18 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// fn querystrings: Return a map of all of the query string parameters in the current URL.
-	funcs[`querystrings`] = func() map[string]interface{} {
+	funcs[`querystrings`] = func() map[string]any {
 		if reqinfo, ok := data[`_request`].(*RequestInfo); ok {
 			return reqinfo.URL.Query
 		}
 
-		return make(map[string]interface{})
+		return make(map[string]any)
 	}
 
 	// fn cookie: return a cookie value
-	funcs[`cookie`] = func(key interface{}, fallbacks ...interface{}) interface{} {
+	funcs[`cookie`] = func(key any, fallbacks ...any) any {
 		if len(fallbacks) == 0 {
-			fallbacks = []interface{}{``}
+			fallbacks = []any{``}
 		}
 
 		if reqinfo, ok := data[`_request`].(*RequestInfo); ok {
@@ -1513,9 +1514,9 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// fn qs: Return the value of query string parameter *key* in the current URL, or return *fallback*.
-	funcs[`qs`] = func(key interface{}, fallbacks ...interface{}) interface{} {
+	funcs[`qs`] = func(key any, fallbacks ...any) any {
 		if len(fallbacks) == 0 {
-			fallbacks = []interface{}{``}
+			fallbacks = []any{``}
 		}
 
 		if reqinfo, ok := data[`_request`].(*RequestInfo); ok {
@@ -1531,9 +1532,9 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 
 	// fn headers: Return the value of the *header* HTTP request header from the request used to
 	//             generate the current view.
-	funcs[`headers`] = func(key string, fallbacks ...interface{}) string {
+	funcs[`headers`] = func(key string, fallbacks ...any) string {
 		if len(fallbacks) == 0 {
-			fallbacks = []interface{}{``}
+			fallbacks = []any{``}
 		}
 
 		if reqinfo, ok := data[`_request`].(*RequestInfo); ok {
@@ -1548,7 +1549,7 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// fn param: Return the value of the named or indexed URL parameter, or nil of none are present.
-	funcs[`param`] = func(nameOrIndex interface{}, fallbacks ...interface{}) interface{} {
+	funcs[`param`] = func(nameOrIndex any, fallbacks ...any) any {
 		var params []KV
 
 		if reqinfo, ok := data[`_request`].(*RequestInfo); ok {
@@ -1581,8 +1582,8 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// fn var: Set the runtime variable *name* to *value*.
-	funcs[`var`] = func(name string, vI ...interface{}) interface{} {
-		var value interface{}
+	funcs[`var`] = func(name string, vI ...any) any {
+		var value any
 
 		switch len(vI) {
 		case 0:
@@ -1598,13 +1599,13 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// fn varset: Treat the runtime variable *name* as a map, setting *key* to *value*.
-	funcs[`varset`] = func(name string, key string, vI ...interface{}) interface{} {
-		var value interface{}
+	funcs[`varset`] = func(name string, key string, vI ...any) any {
+		var value any
 		var path = makeVarKey(name)
 
 		switch len(vI) {
 		case 0:
-			value = make(map[string]interface{})
+			value = make(map[string]any)
 		case 1:
 			value = vI[0]
 		default:
@@ -1616,8 +1617,8 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// fn push: Append to variable *name* to *value*.
-	funcs[`push`] = func(name string, vI ...interface{}) interface{} {
-		var values []interface{}
+	funcs[`push`] = func(name string, vI ...any) any {
+		var values []any
 		var key = makeVarKey(name)
 
 		if existing := maputil.DeepGet(data, key); existing != nil {
@@ -1631,8 +1632,8 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// fn pop: Remove the last item from *name* and return it.
-	funcs[`pop`] = func(name string) interface{} {
-		var out interface{}
+	funcs[`pop`] = func(name string) any {
+		var out any
 		var key = makeVarKey(name)
 
 		if existing := maputil.DeepGet(data, key); existing != nil {
@@ -1655,7 +1656,7 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// fn increment: Increment a named variable by an amount.
-	funcs[`increment`] = func(name string, incr ...interface{}) interface{} {
+	funcs[`increment`] = func(name string, incr ...any) any {
 		var key = makeVarKey(name)
 		var count float64
 		var incrV float64 = typeutil.OrFloat(0, incr...)
@@ -1676,7 +1677,7 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// fn incrementByValue: Add a number to a counter tracking the number of occurrences of a specific value.
-	funcs[`incrementByValue`] = func(name string, value interface{}, incr ...interface{}) interface{} {
+	funcs[`incrementByValue`] = func(name string, value any, incr ...any) any {
 		var key = makeVarKey(name, fmt.Sprintf("%v", value))
 		var count float64
 		var incrV float64 = typeutil.OrFloat(0, incr...)
@@ -1698,7 +1699,7 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 
 	// read a file from the serving path
 	funcs[`read`] = func(filename string) (string, error) {
-		if data, err := readFromFS(self.fs, filename); err == nil {
+		if data, err := readFromFS(server.fs, filename); err == nil {
 			return string(data), nil
 		} else {
 			return ``, err
@@ -1706,8 +1707,8 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	// read a file from the serving path and parse it as a template, returning the output.
-	funcs[`render`] = func(filename string, overrides ...map[string]interface{}) (string, error) {
-		if tpl, err := readFromFS(self.fs, filename); err == nil {
+	funcs[`render`] = func(filename string, overrides ...map[string]any) (string, error) {
+		if tpl, err := readFromFS(server.fs, filename); err == nil {
 			var d = data
 
 			if len(overrides) > 0 && overrides[0] != nil {
@@ -1779,12 +1780,12 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 		}
 
 		// add server global preferred locale and country
-		if self.Locale != `` {
-			if tag, err := language.Parse(self.Locale); err == nil {
+		if server.Locale != `` {
+			if tag, err := language.Parse(server.Locale); err == nil {
 				locales = append(locales, tag.String())
 				locales = append(locales, i18nTagBase(tag))
 			} else {
-				log.Warningf("i18n: invalid global locale %q", self.Locale)
+				log.Warningf("i18n: invalid global locale %q", server.Locale)
 			}
 		}
 
@@ -1832,9 +1833,9 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 		locales = sliceutil.CompactString(locales)
 		locales = sliceutil.UniqueStrings(locales)
 
-		for _, translations := range []map[string]interface{}{
+		for _, translations := range []map[string]any{
 			header.Translations,
-			self.Translations,
+			server.Translations,
 		} {
 			for _, l := range locales {
 				if t, ok := translations[string(l)]; ok {
@@ -1848,8 +1849,8 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 
 	// fn jwt: generate a new JSON Web Token using the named configuration
 	funcs[`jwt`] = func(jwtConfigName string) (string, error) {
-		if len(self.JWT) > 0 {
-			if cfg, ok := self.JWT[jwtConfigName]; ok && cfg != nil {
+		if len(server.JWT) > 0 {
+			if cfg, ok := server.JWT[jwtConfigName]; ok && cfg != nil {
 				return cfg.Issue(data, funcs)
 			}
 		}
@@ -1859,9 +1860,9 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 
 	// fn jwtSign: generates a signature for the given input.  If the input is a map or array, it will be
 	// JSON-encoded before signing.
-	funcs[`jwtSign`] = func(jwtConfigName string, input interface{}) (string, error) {
-		if len(self.JWT) > 0 {
-			if cfg, ok := self.JWT[jwtConfigName]; ok && cfg != nil {
+	funcs[`jwtSign`] = func(jwtConfigName string, input any) (string, error) {
+		if len(server.JWT) > 0 {
+			if cfg, ok := server.JWT[jwtConfigName]; ok && cfg != nil {
 				if typeutil.IsScalar(input) {
 					return cfg.SignedString(typeutil.String(input))
 				} else {
@@ -1874,8 +1875,8 @@ func (self *Server) GetTemplateFunctions(data map[string]interface{}, header *Te
 	}
 
 	funcs[`jwtSecret`] = func(jwtConfigName string) (string, error) {
-		if len(self.JWT) > 0 {
-			if cfg, ok := self.JWT[jwtConfigName]; ok && cfg != nil {
+		if len(server.JWT) > 0 {
+			if cfg, ok := server.JWT[jwtConfigName]; ok && cfg != nil {
 				return EvalInline(cfg.Secret, data, funcs)
 			}
 		}
@@ -1895,58 +1896,58 @@ func makeVarKey(key string, post ...string) []string {
 	return output
 }
 
-func (self *Server) LoadLayout(name string) (io.Reader, error) {
-	return self.fs.Open(fmt.Sprintf("%s/%s.html", self.LayoutPath, name))
+func (server *Server) LoadLayout(name string) (io.Reader, error) {
+	return server.fs.Open(fmt.Sprintf("%s/%s.html", server.LayoutPath, name))
 }
 
-func (self *Server) ToTemplateName(requestPath string) string {
+func (server *Server) ToTemplateName(requestPath string) string {
 	return requestPath
 }
 
 // gets a FuncMap and data usable in templates and error pages alike, before bindings are evaluated.
-func (self *Server) getPreBindingData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}) {
-	var data = self.requestToEvalData(req, header)
-	var funcs = self.GetTemplateFunctions(data, header)
+func (server *Server) getPreBindingData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]any) {
+	var data = server.requestToEvalData(req, header)
+	var funcs = server.GetTemplateFunctions(data, header)
 
-	data[`vars`] = make(map[string]interface{})
+	data[`vars`] = make(map[string]any)
 
-	var publicMountDetails = make([]map[string]interface{}, 0)
+	var publicMountDetails = make([]map[string]any, 0)
 
-	for _, mount := range self.MountConfigs {
-		publicMountDetails = append(publicMountDetails, map[string]interface{}{
+	for _, mount := range server.MountConfigs {
+		publicMountDetails = append(publicMountDetails, map[string]any{
 			`from`: mount.Mount,
 			`to`:   mount.To,
 		})
 	}
 
-	data[`diecast`] = map[string]interface{}{
-		`binding_prefix`:    self.BindingPrefix,
-		`route_prefix`:      self.rp(),
-		`template_patterns`: self.TemplatePatterns,
-		`try_local_first`:   self.TryLocalFirst,
-		`index_file`:        self.IndexFile,
-		`verify_file`:       self.VerifyFile,
+	data[`diecast`] = map[string]any{
+		`binding_prefix`:    server.BindingPrefix,
+		`route_prefix`:      server.rp(),
+		`template_patterns`: server.TemplatePatterns,
+		`try_local_first`:   server.TryLocalFirst,
+		`index_file`:        server.IndexFile,
+		`verify_file`:       server.VerifyFile,
 		`mounts`:            publicMountDetails,
 	}
 
-	self.evalPageData(false, req, header, funcs, data)
+	server.evalPageData(false, req, header, funcs, data)
 
 	return funcs, data
 }
 
-func (self *Server) evalPageData(final bool, req *http.Request, header *TemplateHeader, funcs FuncMap, data map[string]interface{}) map[string]interface{} {
+func (server *Server) evalPageData(final bool, _ *http.Request, header *TemplateHeader, funcs FuncMap, data map[string]any) map[string]any {
 	// Evaluate "page" data: this data is templatized, but does not have access
 	//                       to the output of bindings
 	// ---------------------------------------------------------------------------------------------
-	var pageData = make(map[string]interface{})
+	var pageData = make(map[string]any)
 
 	if header != nil {
-		var applyPageFn = func(value interface{}, path []string, isLeaf bool) error {
+		var applyPageFn = func(value any, path []string, isLeaf bool) error {
 
 			if isLeaf {
-				switch value.(type) {
+				switch vtyped := value.(type) {
 				case string:
-					if v, err := EvalInline(value.(string), data, funcs); err == nil {
+					if v, err := EvalInline(vtyped, data, funcs); err == nil {
 						value = v
 					} else {
 						return err
@@ -1967,14 +1968,14 @@ func (self *Server) evalPageData(final bool, req *http.Request, header *Template
 		}
 
 		// add default page object values
-		maputil.Walk(self.DefaultPageObject, applyPageFn)
+		maputil.Walk(server.DefaultPageObject, applyPageFn)
 
 		// then pepper in whatever values came from the aggregated headers from
 		// the layout, includes, and target template
 		maputil.Walk(header.Page, applyPageFn)
 
 		// if there were override items specified (e.g.: via the command line), add them now
-		maputil.Walk(self.OverridePageObject, applyPageFn)
+		maputil.Walk(server.OverridePageObject, applyPageFn)
 	}
 
 	data[`page`] = pageData
@@ -1983,23 +1984,23 @@ func (self *Server) evalPageData(final bool, req *http.Request, header *Template
 	return pageData
 }
 
-func (self *Server) updateBindings(data map[string]interface{}, with map[string]interface{}) {
+func (server *Server) updateBindings(data map[string]any, with map[string]any) {
 	data[`bindings`] = with
 	data[`b`] = with
 }
 
-func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]interface{}, error) {
-	var funcs, data = self.getPreBindingData(req, header)
+func (server *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (FuncMap, map[string]any, error) {
+	var funcs, data = server.getPreBindingData(req, header)
 
 	// Evaluate "bindings": Bindings have access to $.page, and each subsequent binding has access
 	//                      to all binding output that preceded it.  This allows bindings to be
 	//                      pipelined, using the output of one request as the input of the next.
 	// ---------------------------------------------------------------------------------------------
-	var bindings = maputil.M(&self.sharedBindingData).MapNative()
+	var bindings = maputil.M(&server.sharedBindingData).MapNative()
 	var bindingsToEval = make([]Binding, 0)
 
 	// only use top-level bindings that
-	bindingsToEval = append(bindingsToEval, self.Bindings.perRequestBindings()...)
+	bindingsToEval = append(bindingsToEval, server.Bindings.perRequestBindings()...)
 
 	if header != nil {
 		bindingsToEval = append(bindingsToEval, header.Bindings...)
@@ -2010,7 +2011,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 			binding.Name = fmt.Sprintf("binding%d", i)
 		}
 
-		binding.server = self
+		binding.server = server
 
 		var start = time.Now()
 		describeTimer(fmt.Sprintf("binding-%s", binding.Name), fmt.Sprintf("Diecast Bindings: %s", binding.Name))
@@ -2025,7 +2026,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 
 		// pagination data
 		if pgConfig := binding.Paginate; pgConfig != nil {
-			var results = make([]map[string]interface{}, 0)
+			var results = make([]map[string]any, 0)
 			var proceed = true
 			var total int64
 			var count int64
@@ -2044,7 +2045,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 				data[`page`] = lastPage
 
 				if len(binding.Params) == 0 {
-					binding.Params = make(map[string]interface{})
+					binding.Params = make(map[string]any)
 				}
 
 				// eval the URL
@@ -2130,7 +2131,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 					lastPage = thisPage
 
 					bindings[binding.Name] = results
-					self.updateBindings(data, bindings)
+					server.updateBindings(data, bindings)
 				} else if redir, ok := err.(RedirectTo); ok {
 					return funcs, nil, redir
 				} else {
@@ -2147,22 +2148,22 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 					}
 				}
 
-				self.updateBindings(data, bindings)
+				server.updateBindings(data, bindings)
 				page++
 			}
 
 			bindings[binding.Name] = results
-			self.updateBindings(data, bindings)
+			server.updateBindings(data, bindings)
 
 		} else if binding.Repeat == `` {
 			bindings[binding.Name] = binding.Fallback
-			self.updateBindings(data, bindings)
+			server.updateBindings(data, bindings)
 
 			v, err := binding.tracedEvaluate(req, header, data, funcs)
 
 			if err == nil && v != nil {
 				bindings[binding.Name] = v
-				self.updateBindings(data, bindings)
+				server.updateBindings(data, bindings)
 			} else if redir, ok := err.(RedirectTo); ok {
 				return funcs, nil, redir
 			} else if v == nil && binding.Fallback != nil {
@@ -2177,7 +2178,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 				}
 			}
 		} else {
-			var results = make([]interface{}, 0)
+			var results = make([]any, 0)
 
 			var repeatExpr = fmt.Sprintf("{{ range $index, $item := (%v) }}\n", binding.Repeat)
 			repeatExpr += fmt.Sprintf("%v\n", binding.Resource)
@@ -2204,7 +2205,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 				if err == nil {
 					results = append(results, v)
 					bindings[binding.Name] = results
-					self.updateBindings(data, bindings)
+					server.updateBindings(data, bindings)
 				} else if redir, ok := err.(RedirectTo); ok {
 					return funcs, nil, redir
 				} else {
@@ -2219,7 +2220,7 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 					}
 				}
 
-				self.updateBindings(data, bindings)
+				server.updateBindings(data, bindings)
 			}
 
 		}
@@ -2227,10 +2228,10 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		reqtime(req, fmt.Sprintf("binding-%s", binding.Name), time.Since(start))
 
 		// re-evaluate page based on new binding results
-		self.evalPageData(false, req, header, funcs, data)
+		server.evalPageData(false, req, header, funcs, data)
 	}
 
-	self.updateBindings(data, bindings)
+	server.updateBindings(data, bindings)
 
 	// Evaluate "flags" data: this data is templatized, and has access to $.page and $.bindings
 	// ---------------------------------------------------------------------------------------------
@@ -2238,11 +2239,11 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 		var flags = make(map[string]bool)
 
 		for name, def := range header.FlagDefs {
-			switch def.(type) {
+			switch def := def.(type) {
 			case bool:
-				flags[name] = def.(bool)
+				flags[name] = def
 			default:
-				if flag, err := EvalInline(fmt.Sprintf("%v", def), data, funcs); err == nil {
+				if flag, err := EvalInline(typeutil.String(def), data, funcs); err == nil {
 					flags[name] = typeutil.V(flag).Bool()
 				} else {
 					return nil, nil, fmt.Errorf("flags: %v", err)
@@ -2254,15 +2255,15 @@ func (self *Server) GetTemplateData(req *http.Request, header *TemplateHeader) (
 	}
 
 	// the final pass on page; any empty values resulting from this are final
-	self.evalPageData(true, req, header, funcs, data)
+	server.evalPageData(true, req, header, funcs, data)
 
 	return funcs, data, nil
 }
 
-func (self *Server) tryAutoindex() (http.File, string, bool) {
-	if autoindex, err := self.fs.Open(self.AutoindexTemplate); err == nil {
+func (server *Server) tryAutoindex() (http.File, string, bool) {
+	if autoindex, err := server.fs.Open(server.AutoindexTemplate); err == nil {
 		return autoindex, `text/html`, true
-	} else if autoindex, err := FS(false).Open(self.AutoindexTemplate); err == nil {
+	} else if autoindex, err := http.FS(embedded).Open(server.AutoindexTemplate); err == nil {
 		return autoindex, `text/html`, true
 	} else {
 		return nil, ``, false
@@ -2271,9 +2272,9 @@ func (self *Server) tryAutoindex() (http.File, string, bool) {
 
 // Attempt to resolve the given path into a real file and return that file and mime type.
 // Non-existent files, unreadable files, and directories will return an error.
-func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.File, string, error) {
+func (server *Server) tryLocalFile(requestPath string, _ *http.Request) (http.File, string, error) {
 	// if we got here, try to serve the file from the filesystem
-	if file, err := self.fs.Open(requestPath); err == nil {
+	if file, err := server.fs.Open(requestPath); err == nil {
 		if stat, err := file.Stat(); err == nil {
 			if !stat.IsDir() {
 				if mimetype, err := figureOutMimeType(stat.Name(), file); err == nil {
@@ -2282,7 +2283,7 @@ func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.Fi
 					return file, ``, err
 				}
 			} else {
-				return file, ``, DirectoryErr
+				return file, ``, ErrIsDirectory
 			}
 		} else {
 			return file, ``, fmt.Errorf("failed to stat file %v: %v", requestPath, err)
@@ -2294,7 +2295,7 @@ func (self *Server) tryLocalFile(requestPath string, req *http.Request) (http.Fi
 
 // Try to load the given path from each of the mounts, and return the matching mount and its response
 // if found.
-func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *MountResponse, error) {
+func (server *Server) tryMounts(requestPath string, req *http.Request) (Mount, *MountResponse, error) {
 	var body *RequestBody
 
 	if rb := reqbody(req); rb != nil {
@@ -2306,7 +2307,7 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 	var lastErr error
 
 	// find a mount that has this file
-	for _, mount := range self.Mounts {
+	for _, mount := range server.Mounts {
 		// closing the RequestBody resets the reader to the beginning
 		body.Close()
 
@@ -2333,11 +2334,11 @@ func (self *Server) tryMounts(requestPath string, req *http.Request) (Mount, *Mo
 	return nil, nil, lastErr
 }
 
-func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resErr error, code int) {
+func (server *Server) respondError(w http.ResponseWriter, req *http.Request, resErr error, code int) {
 	var tmpl = NewTemplate(`error`, HtmlEngine)
 
 	if resErr == nil {
-		resErr = fmt.Errorf("Unknown Error")
+		resErr = fmt.Errorf("unknown Error")
 	}
 
 	if c := httputil.RequestGetValue(req, ContextStatusKey).Int(); c > 0 {
@@ -2345,12 +2346,12 @@ func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resEr
 	}
 
 	for _, filename := range []string{
-		fmt.Sprintf("%s/%d.html", self.ErrorsPath, code),
-		fmt.Sprintf("%s/%dxx.html", self.ErrorsPath, int(code/100.0)),
-		fmt.Sprintf("%s/default.html", self.ErrorsPath),
+		fmt.Sprintf("%s/%d.html", server.ErrorsPath, code),
+		fmt.Sprintf("%s/%dxx.html", server.ErrorsPath, int(code/100.0)),
+		fmt.Sprintf("%s/default.html", server.ErrorsPath),
 	} {
-		if f, err := self.fs.Open(filename); err == nil {
-			funcs, errorData := self.getPreBindingData(req, self.BaseHeader)
+		if f, err := server.fs.Open(filename); err == nil {
+			funcs, errorData := server.getPreBindingData(req, server.BaseHeader)
 			if msg := httputil.RequestGetValue(req, ContextErrorKey).String(); msg != `` {
 				errorData[`error`] = msg
 			} else {
@@ -2382,7 +2383,7 @@ func (self *Server) respondError(w http.ResponseWriter, req *http.Request, resEr
 }
 
 func SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, error) {
-	if data, err := ioutil.ReadAll(reader); err == nil {
+	if data, err := io.ReadAll(reader); err == nil {
 		// chop off shebang line
 		if bytes.HasPrefix(data, []byte("#!")) {
 			// first possible position for a \n after the shebang is nl=2
@@ -2421,10 +2422,10 @@ func SplitTemplateHeaderContent(reader io.Reader) (*TemplateHeader, []byte, erro
 	}
 }
 
-func (self *Server) appendIncludes(fragments *FragmentSet, header *TemplateHeader) error {
+func (server *Server) appendIncludes(fragments *FragmentSet, header *TemplateHeader) error {
 	if header != nil {
 		for name, includePath := range header.Includes {
-			if includeFile, err := self.fs.Open(includePath); err == nil {
+			if includeFile, err := server.fs.Open(includePath); err == nil {
 				defer includeFile.Close()
 
 				log.Debugf("Include template %q from file %s", name, includePath)
@@ -2464,11 +2465,11 @@ func reqres(req *http.Request) *statusInterceptor {
 	panic("no ResponseWriter for request")
 }
 
-func (self *Server) actionForRequest(req *http.Request) http.HandlerFunc {
+func (server *Server) actionForRequest(req *http.Request) http.HandlerFunc {
 	var route = req.URL.Path
 
-	for _, action := range self.Actions {
-		var actionPath = filepath.Join(self.rp(), action.Path)
+	for _, action := range server.Actions {
+		var actionPath = filepath.Join(server.rp(), action.Path)
 
 		if actionPath == route {
 			var methods = sliceutil.Stringify(action.Method)
@@ -2490,18 +2491,18 @@ func (self *Server) actionForRequest(req *http.Request) http.HandlerFunc {
 	return nil
 }
 
-func (self *Server) rp() string {
-	return strings.TrimSuffix(self.RoutePrefix, `/`)
+func (server *Server) rp() string {
+	return strings.TrimSuffix(server.RoutePrefix, `/`)
 }
 
-func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader) map[string]interface{} {
-	var rv = map[string]interface{}{}
+func (server *Server) requestToEvalData(req *http.Request, header *TemplateHeader) map[string]any {
+	var rv = map[string]any{}
 
 	var request = RequestInfo{
-		Headers: make(map[string]interface{}),
+		Headers: make(map[string]any),
 		Cookies: make(map[string]Cookie),
 		URL: RequestUrlInfo{
-			Query: make(map[string]interface{}),
+			Query: make(map[string]any),
 		},
 	}
 
@@ -2660,13 +2661,13 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 	}
 
 	// environment variables
-	var env = make(map[string]interface{})
+	var env = make(map[string]any)
 
 	for _, pair := range os.Environ() {
 		key, value := stringutil.SplitPair(pair, `=`)
 		key = envKeyNorm(key)
 
-		if self.mayExposeEnvVar(key) {
+		if server.mayExposeEnvVar(key) {
 			env[key] = stringutil.Autotype(value)
 		}
 	}
@@ -2676,7 +2677,7 @@ func (self *Server) requestToEvalData(req *http.Request, header *TemplateHeader)
 	return rv
 }
 
-func (self *Server) RunStartCommand(scmds []*StartCommand, waitForCommand bool) (bool, error) {
+func (server *Server) RunStartCommand(scmds []*StartCommand, waitForCommand bool) (bool, error) {
 	for _, scmd := range scmds {
 		if cmdline := scmd.Command; cmdline != `` {
 			if tokens, err := shellwords.Parse(cmdline); err == nil {
@@ -2685,7 +2686,7 @@ func (self *Server) RunStartCommand(scmds []*StartCommand, waitForCommand bool) 
 					Setpgid: true,
 				}
 
-				var env = make(map[string]interface{})
+				var env = make(map[string]any)
 
 				for _, pair := range os.Environ() {
 					key, value := stringutil.SplitPair(pair, `=`)
@@ -2697,14 +2698,14 @@ func (self *Server) RunStartCommand(scmds []*StartCommand, waitForCommand bool) 
 				}
 
 				env[`DIECAST`] = true
-				env[`DIECAST_BIN`] = self.BinPath
-				env[`DIECAST_DEBUG`] = self.EnableDebugging
-				env[`DIECAST_ADDRESS`] = self.Address
-				env[`DIECAST_ROOT`] = self.RootPath
-				env[`DIECAST_PATH_LAYOUTS`] = self.LayoutPath
-				env[`DIECAST_PATH_ERRORS`] = self.ErrorsPath
-				env[`DIECAST_BINDING_PREFIX`] = self.BindingPrefix
-				env[`DIECAST_ROUTE_PREFIX`] = self.rp()
+				env[`DIECAST_BIN`] = server.BinPath
+				env[`DIECAST_DEBUG`] = server.EnableDebugging
+				env[`DIECAST_ADDRESS`] = server.Address
+				env[`DIECAST_ROOT`] = server.RootPath
+				env[`DIECAST_PATH_LAYOUTS`] = server.LayoutPath
+				env[`DIECAST_PATH_ERRORS`] = server.ErrorsPath
+				env[`DIECAST_BINDING_PREFIX`] = server.BindingPrefix
+				env[`DIECAST_ROUTE_PREFIX`] = server.rp()
 
 				for key, value := range env {
 					scmd.cmd.Env = append(scmd.cmd.Env, fmt.Sprintf("%v=%v", key, value))
@@ -2758,16 +2759,16 @@ func (self *Server) RunStartCommand(scmds []*StartCommand, waitForCommand bool) 
 	return false, nil
 }
 
-func (self *Server) mayExposeEnvVar(name string) bool {
+func (server *Server) mayExposeEnvVar(name string) bool {
 	name = envKeyNorm(name)
 
-	for _, f := range self.ExposeEnvVars {
+	for _, f := range server.ExposeEnvVars {
 		if glob.MustCompile(envKeyNorm(f)).Match(name) {
 			return true
 		}
 	}
 
-	for _, f := range self.FilterEnvVars {
+	for _, f := range server.FilterEnvVars {
 		if glob.MustCompile(envKeyNorm(f)).Match(name) {
 			return false
 		}
@@ -2776,8 +2777,8 @@ func (self *Server) mayExposeEnvVar(name string) bool {
 	return true
 }
 
-func (self *Server) cleanupCommands() {
-	for _, psc := range self.PrestartCommands {
+func (server *Server) cleanupCommands() {
+	for _, psc := range server.PrestartCommands {
 		if psc.cmd != nil {
 			if proc := psc.cmd.Process; proc != nil {
 				proc.Kill()
@@ -2785,7 +2786,7 @@ func (self *Server) cleanupCommands() {
 		}
 	}
 
-	for _, sc := range self.StartCommands {
+	for _, sc := range server.StartCommands {
 		if sc.cmd != nil {
 			if proc := sc.cmd.Process; proc != nil {
 				proc.Kill()
@@ -2795,45 +2796,45 @@ func (self *Server) cleanupCommands() {
 }
 
 // called by the cleanup middleware to log the completed request according to LogFormat.
-func (self *Server) logreq(w http.ResponseWriter, req *http.Request) {
-	if self.Log.Disable {
+func (server *Server) logreq(_ http.ResponseWriter, req *http.Request) {
+	if server.Log.Disable {
 		return
 	}
 
 	if tm := getRequestTimer(req); tm != nil {
-		var format = logFormats[self.Log.Format]
+		var format = logFormats[server.Log.Format]
 
 		if format == `` {
-			if self.Log.Format != `` {
-				format = self.Log.Format
+			if server.Log.Format != `` {
+				format = server.Log.Format
 			} else {
 				return
 			}
 		}
 
-		if self.logwriter == nil {
+		if server.logwriter == nil {
 			// discard by default, unless some brave configuration below changes this
-			self.logwriter = ioutil.Discard
+			server.logwriter = io.Discard
 
-			switch lf := strings.ToLower(self.Log.Destination); lf {
+			switch lf := strings.ToLower(server.Log.Destination); lf {
 			case ``, `none`, `false`:
 				return
 			case `-`, `stdout`:
-				self.isTerminalOutput = true
-				self.logwriter = os.Stdout
+				server.isTerminalOutput = true
+				server.logwriter = os.Stdout
 			case `stderr`:
-				self.isTerminalOutput = true
-				self.logwriter = os.Stderr
+				server.isTerminalOutput = true
+				server.logwriter = os.Stderr
 			case `syslog`:
 				log.Warningf("logfile: %q destination is not implemented", lf)
 				return
 			default:
-				if self.Log.Truncate {
-					os.Truncate(self.Log.Destination, 0)
+				if server.Log.Truncate {
+					os.Truncate(server.Log.Destination, 0)
 				}
 
-				if f, err := os.OpenFile(self.Log.Destination, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
-					self.logwriter = f
+				if f, err := os.OpenFile(server.Log.Destination, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+					server.logwriter = f
 				} else {
 					log.Warningf("logfile: failed to open logfile: %v", err)
 					return
@@ -2845,7 +2846,7 @@ func (self *Server) logreq(w http.ResponseWriter, req *http.Request) {
 		rh, rp := stringutil.SplitPair(req.RemoteAddr, `:`)
 		var code = typeutil.String(interceptor.code)
 
-		if self.isTerminalOutput && self.Log.Colorize {
+		if server.isTerminalOutput && server.Log.Colorize {
 			if interceptor.code < 300 {
 				code = log.CSprintf("${green}%d${reset}", interceptor.code)
 			} else if interceptor.code < 400 {
@@ -2857,7 +2858,7 @@ func (self *Server) logreq(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-		var logContext = maputil.M(map[string]interface{}{
+		var logContext = maputil.M(map[string]any{
 			`host`:                req.Host,
 			`method`:              req.Method,
 			`protocol_major`:      req.ProtoMajor,
@@ -2878,42 +2879,42 @@ func (self *Server) logreq(w http.ResponseWriter, req *http.Request) {
 			`url`:                 req.URL.String(),
 		})
 
-		logContext.Fprintf(self.logwriter, format)
+		logContext.Fprintf(server.logwriter, format)
 	} else {
 		bugWarning()
 	}
 }
 
-func (self *Server) bindingTimeout() time.Duration {
-	if t := typeutil.Duration(self.BindingTimeout); t > 0 {
+func (server *Server) bindingTimeout() time.Duration {
+	if t := typeutil.Duration(server.BindingTimeout); t > 0 {
 		return t
 	} else {
 		return DefaultBindingTimeout
 	}
 }
 
-func (self *Server) bestInternalLoopbackUrl(req *http.Request) string {
-	if self.BindingPrefix != `` {
-		return self.BindingPrefix
+func (server *Server) bestInternalLoopbackUrl(req *http.Request) string {
+	if server.BindingPrefix != `` {
+		return server.BindingPrefix
 	}
 
 	var proto string
 
-	if self.TLS != nil && self.TLS.Enable {
+	if server.TLS != nil && server.TLS.Enable {
 		proto = `https`
 	} else {
 		proto = `http`
 	}
 
-	if strings.HasPrefix(self.Address, `unix:`) {
-		var path = self.Address
+	if strings.HasPrefix(server.Address, `unix:`) {
+		var path = server.Address
 
 		path = strings.TrimPrefix(path, `unix:`)
 		path = strings.ReplaceAll(path, `/`, weirdPathsInHostnamesPlaceholder)
 
 		return proto + `+unix://` + path
 
-	} else if h, p, err := net.SplitHostPort(self.Address); err == nil {
+	} else if h, p, err := net.SplitHostPort(server.Address); err == nil {
 		switch h {
 		case `0.0.0.0`, `::/0`, `[::/0]`:
 			return proto + `://localhost:` + p
@@ -2923,24 +2924,8 @@ func (self *Server) bestInternalLoopbackUrl(req *http.Request) string {
 	if req != nil && req.Host != `` {
 		return proto + `://` + req.Host
 	} else {
-		return proto + `://` + self.Address
+		return proto + `://` + server.Address
 	}
-}
-
-func appendTemplate(dest io.Writer, src io.Reader, name string, hasLayout bool) error {
-	if hasLayout {
-		dest.Write([]byte("\n{{ define \"" + name + "\" }}\n"))
-	}
-
-	if _, err := io.Copy(dest, src); err != nil {
-		return err
-	}
-
-	if hasLayout {
-		dest.Write([]byte("\n{{ end }}\n"))
-	}
-
-	return nil
 }
 
 func i18nTagBase(tag language.Tag) string {
@@ -3010,11 +2995,11 @@ func formatRequest(req *http.Request) string {
 		}
 	}
 
-	data, err := ioutil.ReadAll(req.Body)
+	data, err := io.ReadAll(req.Body)
 	req.Body.Close()
 
 	if err == nil {
-		req.Body = ioutil.NopCloser(bytes.NewBuffer(data))
+		req.Body = io.NopCloser(bytes.NewBuffer(data))
 		return strings.Join(request, "\r\n") + "\r\n\r\n" + string(data)
 	} else {
 		request = append(request, fmt.Sprintf("\nFAILED to read body: %v", err))

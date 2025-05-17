@@ -5,8 +5,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -23,48 +21,47 @@ import (
 
 var DefaultProxyMountTimeout = time.Duration(10) * time.Second
 var MaxBufferedBodySize int64 = 16535
-var zeroDialer net.Dialer
 
 type ProxyMount struct {
-	MountPoint              string                 `json:"-"`
-	URL                     string                 `json:"-"`
-	Method                  string                 `json:"method,omitempty"`
-	Headers                 map[string]interface{} `json:"headers,omitempty"`
-	ResponseHeaders         map[string]interface{} `json:"response_headers,omitempty"`
-	ResponseCode            int                    `json:"response_code"`
-	RedirectOnSuccess       string                 `json:"redirect_on_success"`
-	Params                  map[string]interface{} `json:"params,omitempty"`
-	Timeout                 interface{}            `json:"timeout,omitempty"`
-	PassthroughRequests     bool                   `json:"passthrough_requests"`
-	PassthroughHeaders      bool                   `json:"passthrough_headers"`
-	PassthroughQueryStrings bool                   `json:"passthrough_query_strings"`
-	PassthroughBody         bool                   `json:"passthrough_body"`
-	PassthroughErrors       bool                   `json:"passthrough_errors"`
-	PassthroughRedirects    bool                   `json:"passthrough_redirects"`
-	PassthroughUserAgent    bool                   `json:"passthrough_user_agent"`
-	StripPathPrefix         string                 `json:"strip_path_prefix"`
-	AppendPathPrefix        string                 `json:"append_path_prefix"`
-	Insecure                bool                   `json:"insecure"`
-	BodyBufferSize          int64                  `json:"body_buffer_size"`
-	CloseConnection         *bool                  `json:"close_connection"`
+	MountPoint              string         `json:"-"`
+	URL                     string         `json:"-"`
+	Method                  string         `json:"method,omitempty"`
+	Headers                 map[string]any `json:"headers,omitempty"`
+	ResponseHeaders         map[string]any `json:"response_headers,omitempty"`
+	ResponseCode            int            `json:"response_code"`
+	RedirectOnSuccess       string         `json:"redirect_on_success"`
+	Params                  map[string]any `json:"params,omitempty"`
+	Timeout                 any            `json:"timeout,omitempty"`
+	PassthroughRequests     bool           `json:"passthrough_requests"`
+	PassthroughHeaders      bool           `json:"passthrough_headers"`
+	PassthroughQueryStrings bool           `json:"passthrough_query_strings"`
+	PassthroughBody         bool           `json:"passthrough_body"`
+	PassthroughErrors       bool           `json:"passthrough_errors"`
+	PassthroughRedirects    bool           `json:"passthrough_redirects"`
+	PassthroughUserAgent    bool           `json:"passthrough_user_agent"`
+	StripPathPrefix         string         `json:"strip_path_prefix"`
+	AppendPathPrefix        string         `json:"append_path_prefix"`
+	Insecure                bool           `json:"insecure"`
+	BodyBufferSize          int64          `json:"body_buffer_size"`
+	CloseConnection         *bool          `json:"close_connection"`
 	Client                  *http.Client
 	urlRewriteFrom          string
 	urlRewriteTo            string
 }
 
-func (self *ProxyMount) GetMountPoint() string {
-	return self.MountPoint
+func (mount *ProxyMount) GetMountPoint() string {
+	return mount.MountPoint
 }
 
-func (self *ProxyMount) GetTarget() string {
-	return self.URL
+func (mount *ProxyMount) GetTarget() string {
+	return mount.URL
 }
 
-func (self *ProxyMount) WillRespondTo(name string, req *http.Request, requestBody io.Reader) bool {
-	return strings.HasPrefix(name, self.GetMountPoint())
+func (mount *ProxyMount) WillRespondTo(name string, req *http.Request, requestBody io.Reader) bool {
+	return strings.HasPrefix(name, mount.GetMountPoint())
 }
 
-func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (res *MountResponse, err error) {
+func (mount *ProxyMount) OpenWithType(name string, req *http.Request, requestBody io.Reader) (res *MountResponse, err error) {
 	var tracer opentracing.Tracer
 	var spanopts []opentracing.StartSpanOption
 	var childSpan opentracing.Span
@@ -76,13 +73,13 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		spanopts = append(spanopts, opentracing.ChildOf(parentSpan.Context()))
 		spanopts = append(spanopts, opentracing.Tag{
 			Key:   `diecast.mount`,
-			Value: self.MountPoint,
+			Value: mount.MountPoint,
 		})
 	} else {
 		tracer = new(opentracing.NoopTracer)
 	}
 
-	var traceName = fmt.Sprintf("Mount: %s", self.MountPoint)
+	var traceName = fmt.Sprintf("Mount: %s", mount.MountPoint)
 	var traceHeaders = make(http.Header)
 
 	childSpan = tracer.StartSpan(traceName, spanopts...)
@@ -92,7 +89,7 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 		opentracing.HTTPHeadersCarrier(traceHeaders),
 	)
 
-	res, err = self.openWithType(name, req, requestBody, traceHeaders)
+	res, err = mount.openWithType(name, req, requestBody, traceHeaders)
 
 	if err == nil {
 		if res.RedirectTo != `` {
@@ -109,20 +106,20 @@ func (self *ProxyMount) OpenWithType(name string, req *http.Request, requestBody
 	return
 }
 
-func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody io.Reader, xhdr http.Header) (*MountResponse, error) {
+func (mount *ProxyMount) openWithType(name string, req *http.Request, requestBody io.Reader, _ http.Header) (*MountResponse, error) {
 	var id = reqid(req)
 	var proxyURI string
 	var timeout time.Duration
 
-	if self.Client == nil {
-		if t, ok := self.Timeout.(string); ok {
+	if mount.Client == nil {
+		if t, ok := mount.Timeout.(string); ok {
 			if tm, err := time.ParseDuration(t); err == nil {
 				timeout = tm
 			} else {
 				log.Warningf("[%s] proxy: INVALID TIMEOUT %q (%v), using default", id, t, err)
 				timeout = DefaultProxyMountTimeout
 			}
-		} else if tm, ok := self.Timeout.(time.Duration); ok {
+		} else if tm, ok := mount.Timeout.(time.Duration); ok {
 			timeout = tm
 		}
 
@@ -130,22 +127,22 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 			timeout = DefaultProxyMountTimeout
 		}
 
-		self.Client = &http.Client{
+		mount.Client = &http.Client{
 			// TODO: things and stuff to make this use *transportAwareRoundTripper
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: self.Insecure,
+					InsecureSkipVerify: mount.Insecure,
 				},
 			},
 			Timeout: timeout,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				if self.PassthroughRedirects {
+				if mount.PassthroughRedirects {
 					return http.ErrUseLastResponse
-				} else if self.urlRewriteTo == `` {
+				} else if mount.urlRewriteTo == `` {
 					if len(via) > 0 {
-						self.urlRewriteFrom = via[len(via)-1].URL.String()
-						self.urlRewriteFrom = strings.TrimSuffix(self.urlRewriteFrom, `/`)
-						self.urlRewriteTo = req.URL.String()
+						mount.urlRewriteFrom = via[len(via)-1].URL.String()
+						mount.urlRewriteFrom = strings.TrimSuffix(mount.urlRewriteFrom, `/`)
+						mount.urlRewriteTo = req.URL.String()
 					}
 				}
 
@@ -154,8 +151,8 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 		}
 	}
 
-	if req != nil && (self.PassthroughRequests || self.PassthroughQueryStrings) {
-		if newURL, err := url.Parse(self.url()); err == nil {
+	if req != nil && (mount.PassthroughRequests || mount.PassthroughQueryStrings) {
+		if newURL, err := url.Parse(mount.url()); err == nil {
 			req.URL.Scheme = newURL.Scheme
 			req.URL.Host = newURL.Host
 
@@ -180,16 +177,16 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 
 			proxyURI = req.URL.String()
 		} else {
-			return nil, fmt.Errorf("Failed to parse proxy URL: %v", err)
+			return nil, fmt.Errorf("failed to parse proxy URL: %v", err)
 		}
 	} else {
 		proxyURI = strings.Join([]string{
-			strings.TrimSuffix(self.url(), `/`),
+			strings.TrimSuffix(mount.url(), `/`),
 			strings.TrimPrefix(name, `/`),
 		}, `/`)
 	}
 
-	var method = strings.ToUpper(self.Method)
+	var method = strings.ToUpper(mount.Method)
 
 	if method == `` {
 		if req != nil {
@@ -200,15 +197,15 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 	}
 
 	if newReq, err := http.NewRequest(method, proxyURI, nil); err == nil {
-		if pp := self.StripPathPrefix; pp != `` {
+		if pp := mount.StripPathPrefix; pp != `` {
 			newReq.URL.Path = strings.TrimPrefix(newReq.URL.Path, pp)
 		}
 
-		if pp := self.AppendPathPrefix; pp != `` {
+		if pp := mount.AppendPathPrefix; pp != `` {
 			newReq.URL.Path = pp + newReq.URL.Path
 		}
 
-		if req != nil && (self.PassthroughRequests || self.PassthroughHeaders) {
+		if req != nil && (mount.PassthroughRequests || mount.PassthroughHeaders) {
 			for name, values := range req.Header {
 				for _, value := range values {
 					newReq.Header.Set(name, value)
@@ -222,13 +219,13 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 		}
 
 		// user-agent is either ours, overridden in explicit headers below, or passthrough from request
-		if !self.PassthroughUserAgent {
+		if !mount.PassthroughUserAgent {
 			newReq.Header.Set(`User-Agent`, DiecastUserAgentString)
 		}
 
 		// option to control whether we tell the remote server to close the connection
-		if self.CloseConnection != nil {
-			if c := *self.CloseConnection; c {
+		if mount.CloseConnection != nil {
+			if c := *mount.CloseConnection; c {
 				newReq.Header.Set(`Connection`, `close`)
 			} else {
 				newReq.Header.Set(`Connection`, `keep-alive`)
@@ -236,26 +233,26 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 		}
 
 		// add explicit headers to new request
-		for name, value := range self.Headers {
+		for name, value := range mount.Headers {
 			newReq.Header.Set(name, typeutil.String(value))
 		}
 
 		newReq.Header.Set(`Accept-Encoding`, `identity`)
 
 		// inject params into new request
-		for name, value := range self.Params {
+		for name, value := range mount.Params {
 			if newReq.URL.Query().Get(name) == `` {
 				log.Debugf("[%s] proxy: [Q] %v=%v", id, name, value)
 				httputil.SetQ(newReq.URL, name, value)
 			}
 		}
 
-		if requestBody != nil && (self.PassthroughRequests || self.PassthroughBody) {
+		if requestBody != nil && (mount.PassthroughRequests || mount.PassthroughBody) {
 			var buf bytes.Buffer
 			var bufsz int64 = MaxBufferedBodySize
 
-			if self.BodyBufferSize > 0 {
-				bufsz = self.BodyBufferSize
+			if mount.BodyBufferSize > 0 {
+				bufsz = mount.BodyBufferSize
 			}
 
 			if n, err := io.CopyN(&buf, requestBody, bufsz); err == nil {
@@ -299,7 +296,7 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 		// -----------------------------------------------------------------------------------------
 		log.Debugf("[%s] proxy: sending request to %s://%s", id, newReq.URL.Scheme, newReq.URL.Host)
 		var reqStartAt = time.Now()
-		response, err := self.Client.Do(newReq)
+		response, err := mount.Client.Do(newReq)
 		log.Debugf("[%s] proxy: responded in %v", id, time.Since(reqStartAt))
 
 		if err == nil {
@@ -308,22 +305,22 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 			}
 
 			// add explicit response headers to response
-			for name, value := range self.ResponseHeaders {
+			for name, value := range mount.ResponseHeaders {
 				response.Header.Set(name, typeutil.String(value))
 			}
 
 			// override the response status code (if specified)
-			if self.ResponseCode > 0 {
-				response.StatusCode = self.ResponseCode
+			if mount.ResponseCode > 0 {
+				response.StatusCode = mount.ResponseCode
 			}
 
 			// provide a header redirect if so requested
-			if response.StatusCode < 400 && self.RedirectOnSuccess != `` {
+			if response.StatusCode < 400 && mount.RedirectOnSuccess != `` {
 				if response.StatusCode < 300 {
 					response.StatusCode = http.StatusTemporaryRedirect
 				}
 
-				response.Header.Set(`Location`, self.RedirectOnSuccess)
+				response.Header.Set(`Location`, mount.RedirectOnSuccess)
 			}
 
 			log.Debugf("[%s] proxy: HTTP %v", id, response.Status)
@@ -345,7 +342,7 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 				response.ContentLength,
 			)
 
-			if response.StatusCode < 400 || self.PassthroughErrors {
+			if response.StatusCode < 400 || mount.PassthroughErrors {
 				var responseBody io.Reader
 
 				if body, err := httputil.DecodeResponse(response); err == nil {
@@ -357,7 +354,7 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 					return nil, err
 				}
 
-				if data, err := ioutil.ReadAll(responseBody); err == nil {
+				if data, err := io.ReadAll(responseBody); err == nil {
 					var payload = bytes.NewReader(data)
 
 					// correct the length, which is now potentially decompressed and longer
@@ -377,7 +374,7 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 					return nil, fmt.Errorf("proxy response: %v", err)
 				}
 			} else {
-				if data, err := ioutil.ReadAll(response.Body); err == nil {
+				if data, err := io.ReadAll(response.Body); err == nil {
 					for _, line := range stringutil.SplitLines(data, "\n") {
 						log.Debugf("[%s] proxy: [B] %s", id, line)
 					}
@@ -385,7 +382,7 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 
 				log.Debugf("[%s] proxy: %s %s: %s", id, method, newReq.URL, response.Status)
 
-				return nil, MountHaltErr
+				return nil, ErrMountHalt
 			}
 		} else {
 			return nil, err
@@ -395,31 +392,31 @@ func (self *ProxyMount) openWithType(name string, req *http.Request, requestBody
 	}
 }
 
-func (self *ProxyMount) url() string {
-	var uri = self.URL
+func (mount *ProxyMount) url() string {
+	var uri = mount.URL
 
-	if from := self.urlRewriteFrom; from != `` {
-		if to := self.urlRewriteTo; to != `` {
+	if from := mount.urlRewriteFrom; from != `` {
+		if to := mount.urlRewriteTo; to != `` {
 			uri = strings.Replace(uri, from, to, 1)
 
-			log.Debugf("Rewriting %v to %v due to earlier redirect", self.urlRewriteFrom, self.urlRewriteTo)
+			log.Debugf("Rewriting %v to %v due to earlier redirect", mount.urlRewriteFrom, mount.urlRewriteTo)
 		}
 	}
 
 	return uri
 }
 
-func (self *ProxyMount) String() string {
+func (mount *ProxyMount) String() string {
 	return fmt.Sprintf(
 		"%v -> %v %v (passthrough requests=%v errors=%v)",
-		self.MountPoint,
-		strings.ToUpper(sliceutil.OrString(self.Method, `<method>`)),
-		self.url(),
-		self.PassthroughRequests,
-		self.PassthroughErrors,
+		mount.MountPoint,
+		strings.ToUpper(sliceutil.OrString(mount.Method, `<method>`)),
+		mount.url(),
+		mount.PassthroughRequests,
+		mount.PassthroughErrors,
 	)
 }
 
-func (self *ProxyMount) Open(name string) (http.File, error) {
-	return openAsHttpFile(self, name)
+func (mount *ProxyMount) Open(name string) (http.File, error) {
+	return openAsHttpFile(mount, name)
 }

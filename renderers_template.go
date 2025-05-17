@@ -2,7 +2,7 @@ package diecast
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -15,25 +15,25 @@ type TemplateRenderer struct {
 	prewrite PrewriteFunc
 }
 
-func (self *TemplateRenderer) ShouldPrerender() bool {
+func (renderer *TemplateRenderer) ShouldPrerender() bool {
 	return false
 }
 
-func (self *TemplateRenderer) SetServer(server *Server) {
-	self.server = server
+func (renderer *TemplateRenderer) SetServer(server *Server) {
+	renderer.server = server
 }
 
-func (self *TemplateRenderer) SetPrewriteFunc(fn PrewriteFunc) {
-	self.prewrite = fn
+func (renderer *TemplateRenderer) SetPrewriteFunc(fn PrewriteFunc) {
+	renderer.prewrite = fn
 }
 
-func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
+func (renderer *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
 	if len(options.Fragments) == 0 {
-		return fmt.Errorf("Must specify a non-empty FragmentSet to TemplateRenderer")
+		return fmt.Errorf("must specify a non-empty FragmentSet to TemplateRenderer")
 	}
 
 	if options.Input != nil {
-		var data, err = ioutil.ReadAll(options.Input)
+		var data, err = io.ReadAll(options.Input)
 		options.Input.Close()
 
 		if err == nil {
@@ -45,11 +45,11 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 
 	// create the template and make it aware of our custom functions
 	var tmpl = NewTemplate(
-		self.server.ToTemplateName(options.RequestedPath),
+		renderer.server.ToTemplateName(options.RequestedPath),
 		GetEngineForFile(options.RequestedPath),
 	)
 
-	if fn := self.prewrite; fn != nil {
+	if fn := renderer.prewrite; fn != nil {
 		tmpl.SetPrewriteFunc(func() {
 			fn(req)
 		})
@@ -97,10 +97,10 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 		}
 
 		// this entire if-block is just for debugging templates
-		if self.server.ShouldReturnSource(req) {
+		if renderer.server.ShouldReturnSource(req) {
 			w.Header().Set(`Content-Type`, `text/plain; charset=utf-8`)
 
-			if fn := self.prewrite; fn != nil {
+			if fn := renderer.prewrite; fn != nil {
 				fn(req)
 			}
 
@@ -136,7 +136,7 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 				return tmpl.renderWithRequest(req, w, options.Data, ``)
 			}
 		}
-	} else if self.server.ShouldReturnSource(req) {
+	} else if renderer.server.ShouldReturnSource(req) {
 		var tplstr string
 		var lines = strings.Split(string(options.Fragments.DebugOutput()), "\n")
 		var lineNoSpaces = fmt.Sprintf("%d", len(fmt.Sprintf("%d", len(lines)))+1)
@@ -149,7 +149,7 @@ func (self *TemplateRenderer) Render(w http.ResponseWriter, req *http.Request, o
 
 		w.Header().Set(`Content-Type`, `text/plain; charset=utf-8`)
 
-		if fn := self.prewrite; fn != nil {
+		if fn := renderer.prewrite; fn != nil {
 			fn(req)
 		}
 

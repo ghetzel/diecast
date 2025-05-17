@@ -18,7 +18,7 @@ import (
 var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
 var DefaultObjectifyKeyValueSeparator = `=`
 
-func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
+func loadStandardFunctionsCollections(funcs FuncMap, _ *Server) funcGroup {
 	var group = funcGroup{
 		Name: `Arrays and Objects`,
 		Description: `For converting, modifying, and filtering arrays, objects, and arrays of ` +
@@ -46,8 +46,8 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`a`, `b`, `c`, `d`},
 					},
 				},
-				Function: func(array interface{}, values ...interface{}) ([]interface{}, error) {
-					var out = make([]interface{}, 0)
+				Function: func(array any, values ...any) ([]any, error) {
+					var out = make([]any, 0)
 
 					if array != nil && !typeutil.IsArray(array) {
 						out = sliceutil.Sliceify(array)
@@ -87,7 +87,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: 10,
 					},
 				},
-				Function: func(pagenum interface{}, perpage interface{}) int {
+				Function: func(pagenum any, perpage any) int {
 					var factor = typeutil.V(pagenum).Int() - 1
 					var per = typeutil.V(perpage).Int()
 
@@ -115,9 +115,9 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []int{3, 2, 1},
 					},
 				},
-				Function: func(input interface{}) []interface{} {
+				Function: func(input any) []any {
 					var array = sliceutil.Sliceify(input)
-					var output = make([]interface{}, len(array))
+					var output = make([]any, len(array))
 
 					for i := 0; i < len(array); i++ {
 						output[len(array)-1-i] = array[i]
@@ -147,14 +147,14 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []int{1, 3, 5},
 					}, {
 						Code: `filter [{"active": true, "a": 1}, {"b": 2}, {"active": true, "c": 3}] "{{ .active }}"`,
-						Return: []map[string]interface{}{
+						Return: []map[string]any{
 							{"active": true, "a": 1},
 							{"active": true, "c": 3},
 						},
 					},
 				},
-				Function: func(input interface{}, expr string) ([]interface{}, error) {
-					var out = make([]interface{}, 0)
+				Function: func(input any, expr string) ([]any, error) {
+					var out = make([]any, 0)
 
 					for i, value := range sliceutil.Sliceify(input) {
 						var tmpl = NewTemplate(`inline`, TextEngine)
@@ -223,7 +223,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						},
 					},
 				},
-				Function: func(in interface{}, expr string, negate ...bool) ([]string, error) {
+				Function: func(in any, expr string, negate ...bool) ([]string, error) {
 					if rx, err := regexp.Compile(expr); err == nil {
 						var lines []string
 						var doNegate bool = (len(negate) > 0 && negate[0])
@@ -276,13 +276,13 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `filterByKey [{"id": "a", "value": 1}, {"id": "b", "value": 1}, {"id": "c", "value": 2}] 1`,
-						Return: []map[string]interface{}{
+						Return: []map[string]any{
 							{"id": "a", "value": 1},
 							{"id": "b", "value": 1},
 						},
 					},
 				},
-				Function: func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
+				Function: func(input any, key string, exprs ...any) ([]any, error) {
 					return filterByKey(funcs, input, key, exprs...)
 				},
 			}, {
@@ -308,13 +308,13 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `firstByKey [{"id": "a", "value": 1}, {"id": "b", "value": 1}, {"id": "c", "value": 2}] 1`,
-						Return: map[string]interface{}{
+						Return: map[string]any{
 							"id":    "a",
 							"value": 1,
 						},
 					},
 				},
-				Function: func(input interface{}, key string, exprs ...interface{}) (interface{}, error) {
+				Function: func(input any, key string, exprs ...any) (any, error) {
 					if v, err := filterByKey(funcs, input, key, exprs...); err == nil {
 						return sliceutil.First(v), nil
 					} else {
@@ -344,15 +344,15 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `transformValues [{"name": "alice"}, {"name": "mallory"}, {"name": "bob"}] "name" "{{ upper . }}"`,
-						Return: []map[string]interface{}{
+						Return: []map[string]any{
 							{"name": `ALICE`},
 							{"name": `MALLORY`},
 							{"name": `BOB`},
 						},
 					},
 				},
-				Function: func(input interface{}, key string, expr string) ([]interface{}, error) {
-					var out = make([]interface{}, 0)
+				Function: func(input any, key string, expr string) ([]any, error) {
+					var out = make([]any, 0)
 
 					for i, obj := range sliceutil.Sliceify(input) {
 						var tmpl = NewTemplate(`inline`, TextEngine)
@@ -411,19 +411,19 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `uniqueByKey [{"id": "a", "value": 1}, {"id": "b", "value": 1}, {"id": "c", "value": 2}] "value"`,
-						Return: []map[string]interface{}{
+						Return: []map[string]any{
 							{"id": "a", "value": 1},
 							{"id": "c", "value": 2},
 						},
 					}, {
 						Description: `Here we provide an expression that will normalize the value of the "name" field before performing the unique operation.`,
 						Code:        `uniqueByKey [{"name": "bob", "i": 1}, {"name": "BOB", "i": 2}, {"name": "Bob", "i": 3}] "name" "{{ upper . }}"`,
-						Return: []map[string]interface{}{
+						Return: []map[string]any{
 							{"name": "BOB", "i": 1},
 						},
 					},
 				},
-				Function: func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
+				Function: func(input any, key string, exprs ...any) ([]any, error) {
 					return uniqByKey(funcs, input, key, false, exprs...)
 				},
 			}, {
@@ -450,19 +450,19 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `uniqByKeyLast [{"id": "a", "value": 1}, {"id": "b", "value": 1}, {"id": "c", "value": 2}] "value"`,
-						Return: []map[string]interface{}{
+						Return: []map[string]any{
 							{"id": "b", "value": 1},
 							{"id": "c", "value": 2},
 						},
 					}, {
 						Description: `Here we provide an expression that will normalize the value of the "name" field before performing the unique operation.`,
 						Code:        `uniqueByKey [{"name": "bob", "i": 1}, {"name": "BOB", "i": 2}, {"name": "Bob", "i": 3}] "name" "{{ upper . }}"`,
-						Return: []map[string]interface{}{
+						Return: []map[string]any{
 							{"name": "BOB", "i": 3},
 						},
 					},
 				},
-				Function: func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
+				Function: func(input any, key string, exprs ...any) ([]any, error) {
 					return uniqByKey(funcs, input, key, true, exprs...)
 				},
 			}, {
@@ -489,14 +489,14 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `sortByKey [{"name": "bob"}, {"name": "Mallory"}, {"name": "ALICE"}] "name"`,
-						Return: []map[string]interface{}{
+						Return: []map[string]any{
 							{"name": "ALICE"},
 							{"name": "bob"},
 							{"name": "Mallory"},
 						},
 					},
 				},
-				Function: func(input interface{}, key string) ([]interface{}, error) {
+				Function: func(input any, key string) ([]any, error) {
 					var out = sliceutil.Sliceify(input)
 					sort.Slice(out, func(i int, j int) bool {
 						var mI = maputil.M(out[i])
@@ -533,14 +533,14 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `rSortByKey [{"name": "bob"}, {"name": "Mallory"}, {"name": "ALICE"}] "name"`,
-						Return: []map[string]interface{}{
+						Return: []map[string]any{
 							{"name": "Mallory"},
 							{"name": "bob"},
 							{"name": "ALICE"},
 						},
 					},
 				},
-				Function: func(input interface{}, key string) ([]interface{}, error) {
+				Function: func(input any, key string) ([]any, error) {
 					var out = sliceutil.Sliceify(input)
 					sort.Slice(out, func(i int, j int) bool {
 						var mI = maputil.M(out[i])
@@ -576,14 +576,14 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `isortByKey [{"name": "Bob"}, {"name": "Mallory"}, {"name": "Alice"}] "name"`,
-						Return: []map[string]interface{}{
+						Return: []map[string]any{
 							{"name": "Alice"},
 							{"name": "Bob"},
 							{"name": "Mallory"},
 						},
 					},
 				},
-				Function: func(input interface{}, key string) ([]interface{}, error) {
+				Function: func(input any, key string) ([]any, error) {
 					var out = sliceutil.Sliceify(input)
 					sort.Slice(out, func(i int, j int) bool {
 						var mI = maputil.M(out[i])
@@ -617,14 +617,14 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `irSortByKey [{"name": "Bob"}, {"name": "Mallory"}, {"name": "Alice"}] "name"`,
-						Return: []map[string]interface{}{
+						Return: []map[string]any{
 							{"name": "Mallory"},
 							{"name": "Bob"},
 							{"name": "Alice"},
 						},
 					},
 				},
-				Function: func(input interface{}, key string) ([]interface{}, error) {
+				Function: func(input any, key string) ([]any, error) {
 					var out = sliceutil.Sliceify(input)
 					sort.Slice(out, func(i int, j int) bool {
 						var mI = maputil.M(out[i])
@@ -659,7 +659,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`Bob`, `Mallory`, `Alice`},
 					},
 				},
-				Function: func(input interface{}, key string, additionalKeys ...interface{}) []interface{} {
+				Function: func(input any, key string, additionalKeys ...any) []any {
 					var out = maputil.Pluck(input, strings.Split(key, `.`))
 
 					for _, ak := range sliceutil.Stringify(additionalKeys) {
@@ -684,7 +684,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`id`, `value`},
 					},
 				},
-				Function: func(input interface{}) []interface{} {
+				Function: func(input any) []any {
 					return maputil.Keys(input)
 				},
 			}, {
@@ -700,10 +700,10 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code:   `values {"id": "a", "value": 1}`,
-						Return: []interface{}{`a`, 1},
+						Return: []any{`a`, 1},
 					},
 				},
-				Function: func(input interface{}) []interface{} {
+				Function: func(input any) []any {
 					return maputil.MapValues(input)
 				},
 			}, {
@@ -749,8 +749,8 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: `Bob`,
 					},
 				},
-				Function: func(input interface{}, key interface{}, fallback ...interface{}) interface{} {
-					var fb interface{}
+				Function: func(input any, key any, fallback ...any) any {
+					var fb any
 
 					if len(fallback) > 0 {
 						fb = fallback[0]
@@ -786,7 +786,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Description: `The value to set.`,
 					},
 				},
-				Function: func(input interface{}, key interface{}, value interface{}) error {
+				Function: func(input any, key any, value any) error {
 					var split []string
 
 					if typeutil.IsArray(key) {
@@ -821,10 +821,10 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []int{1, 3, 5, 8},
 					},
 				},
-				Function: func(input interface{}, key string) ([]interface{}, error) {
-					var values = make([]interface{}, 0)
+				Function: func(input any, key string) ([]any, error) {
+					var values = make([]any, 0)
 
-					if err := maputil.Walk(input, func(value interface{}, path []string, isLeaf bool) error {
+					if err := maputil.Walk(input, func(value any, path []string, isLeaf bool) error {
 						if isLeaf && path[len(path)-1] == key {
 							values = append(values, value)
 						}
@@ -868,9 +868,9 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: false,
 					},
 				},
-				Function: func(want interface{}, input interface{}) bool {
+				Function: func(want any, input any) bool {
 					for _, have := range sliceutil.Sliceify(input) {
-						if eq, err := stringutil.RelaxedEqual(have, want); err == nil && eq == true {
+						if eq, err := stringutil.RelaxedEqual(have, want); err == nil && eq {
 							return true
 						}
 					}
@@ -902,10 +902,10 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: false,
 					},
 				},
-				Function: func(input interface{}, wants ...interface{}) bool {
+				Function: func(input any, wants ...any) bool {
 					for _, have := range sliceutil.Sliceify(input) {
 						for _, want := range wants {
-							if eq, err := stringutil.RelaxedEqual(have, want); err == nil && eq == true {
+							if eq, err := stringutil.RelaxedEqual(have, want); err == nil && eq {
 								return true
 							}
 						}
@@ -937,12 +937,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: -1,
 					},
 				},
-				Function: func(slice interface{}, value interface{}) (index int) {
+				Function: func(slice any, value any) (index int) {
 					index = -1
 
 					if typeutil.IsArray(slice) {
-						sliceutil.Each(slice, func(i int, v interface{}) error {
-							if eq, err := stringutil.RelaxedEqual(v, value); err == nil && eq == true {
+						sliceutil.Each(slice, func(i int, v any) error {
+							if eq, err := stringutil.RelaxedEqual(v, value); err == nil && eq {
 								index = i
 								return sliceutil.Stop
 							} else {
@@ -990,13 +990,13 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`e`},
 					},
 				},
-				Function: func(slice interface{}, from interface{}, to interface{}) []interface{} {
+				Function: func(slice any, from any, to any) []any {
 					return sliceutil.Slice(slice, int(typeutil.Int(from)), int(typeutil.Int(to)))
 				},
 			}, {
 				Name:    `sslice`,
 				Summary: `Identical to [slice](#fn-slice), but returns an array of strings.`,
-				Function: func(slice interface{}, from interface{}, to interface{}) []string {
+				Function: func(slice any, from any, to any) []string {
 					return sliceutil.StringSlice(slice, int(typeutil.Int(from)), int(typeutil.Int(to)))
 				},
 			}, {
@@ -1015,7 +1015,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`a`, `b`, `c`},
 					},
 				},
-				Function: func(slice interface{}) []interface{} {
+				Function: func(slice any) []any {
 					return sliceutil.Unique(slice)
 				},
 			}, {
@@ -1034,7 +1034,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`a`, `a`, `b`, `b`, `b`, `c`},
 					},
 				},
-				Function: func(slice interface{}) []interface{} {
+				Function: func(slice any) []any {
 					return sliceutil.Flatten(slice)
 				},
 			}, {
@@ -1053,7 +1053,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`a`, `b`, `c`},
 					},
 				},
-				Function: func(slice interface{}) []interface{} {
+				Function: func(slice any) []any {
 					return sliceutil.Compact(slice)
 				},
 			}, {
@@ -1072,8 +1072,8 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: `a`,
 					},
 				},
-				Function: func(slice interface{}) (out interface{}, err error) {
-					err = sliceutil.Each(slice, func(i int, value interface{}) error {
+				Function: func(slice any) (out any, err error) {
+					err = sliceutil.Each(slice, func(i int, value any) error {
 						out = value
 						return sliceutil.Stop
 					})
@@ -1100,7 +1100,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{},
 					},
 				},
-				Function: func(slice interface{}) ([]interface{}, error) {
+				Function: func(slice any) ([]any, error) {
 					return sliceutil.Rest(slice), nil
 				},
 			}, {
@@ -1119,8 +1119,8 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: `d`,
 					},
 				},
-				Function: func(slice interface{}) (out interface{}, err error) {
-					err = sliceutil.Each(slice, func(i int, value interface{}) error {
+				Function: func(slice any) (out any, err error) {
+					err = sliceutil.Each(slice, func(i int, value any) error {
 						out = value
 						return nil
 					})
@@ -1143,7 +1143,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: 4,
 					},
 				},
-				Function: func(in interface{}) int {
+				Function: func(in any) int {
 					return sliceutil.Len(in)
 				},
 			}, {
@@ -1162,7 +1162,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`a`, `b`, `c`, `d`},
 					},
 				},
-				Function: func(input interface{}) []interface{} {
+				Function: func(input any) []any {
 					var out = sliceutil.Sliceify(input)
 
 					sort.Slice(out, func(i, j int) bool {
@@ -1190,7 +1190,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`d`, `c`, `b`, `a`},
 					},
 				},
-				Function: func(input interface{}) []interface{} {
+				Function: func(input any) []any {
 					var out = sliceutil.Sliceify(input)
 
 					sort.Slice(out, func(i, j int) bool {
@@ -1218,7 +1218,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`ALICE`, `bob`, `Mallory`},
 					},
 				},
-				Function: func(input interface{}) []interface{} {
+				Function: func(input any) []any {
 					var out = sliceutil.Sliceify(input)
 
 					sort.Slice(out, func(i, j int) bool {
@@ -1246,7 +1246,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`Mallory`, `bob`, `ALICE`},
 					},
 				},
-				Function: func(input interface{}, keys ...string) []interface{} {
+				Function: func(input any, keys ...string) []any {
 					var out = sliceutil.Sliceify(input)
 
 					sort.Slice(out, func(i, j int) bool {
@@ -1274,7 +1274,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: `b`,
 					},
 				},
-				Function: func(slice interface{}) (interface{}, error) {
+				Function: func(slice any) (any, error) {
 					return commonses(slice, `most`)
 				},
 			}, {
@@ -1293,7 +1293,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: `c`,
 					},
 				},
-				Function: func(slice interface{}) (interface{}, error) {
+				Function: func(slice any) (any, error) {
 					return commonses(slice, `least`)
 				},
 			}, {
@@ -1318,14 +1318,14 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []int{4},
 					},
 				},
-				Function: func(slice interface{}) []interface{} {
+				Function: func(slice any) []any {
 					return sliceutil.Sliceify(slice)
 				},
 			}, {
 				Name: `stringify`,
 				Summary: `Identical to [sliceify](#fn-sliceify), but converts all values to ` +
 					`strings and returns an array of strings.`,
-				Function: func(slice interface{}) []string {
+				Function: func(slice any) []string {
 					return sliceutil.Stringify(slice)
 				},
 			}, {
@@ -1352,7 +1352,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{},
 					},
 				},
-				Function: func(first interface{}, second interface{}) []interface{} {
+				Function: func(first any, second any) []any {
 					return sliceutil.Intersect(first, second)
 				},
 			}, {
@@ -1379,13 +1379,13 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`a`, `b`, `c`},
 					},
 				},
-				Function: func(first interface{}, second interface{}) []interface{} {
+				Function: func(first any, second any) []any {
 					return sliceutil.Difference(first, second)
 				},
 			}, {
 				Name:    `mapify`,
 				Summary: `Return the given value returned as a rangeable object.`,
-				Function: func(input interface{}) map[string]interface{} {
+				Function: func(input any) map[string]any {
 					return maputil.DeepCopy(input)
 				},
 			}, {
@@ -1407,16 +1407,16 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `onlyKeys {"a": 1, "b": 2, "c": 3} "a" "c"`,
-						Return: map[string]interface{}{
+						Return: map[string]any{
 							`a`: 1,
 							`c`: 3,
 						},
 					},
 				},
-				Function: func(input interface{}, keys ...string) map[string]interface{} {
+				Function: func(input any, keys ...string) map[string]any {
 					var out = maputil.DeepCopy(input)
 
-					for k, _ := range out {
+					for k := range out {
 						if !sliceutil.ContainsString(keys, k) {
 							delete(out, k)
 						}
@@ -1443,12 +1443,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `exceptKeys {"a": 1, "b": 2, "c": 3} "a" "c"`,
-						Return: map[string]interface{}{
+						Return: map[string]any{
 							`b`: 2,
 						},
 					},
 				},
-				Function: func(input interface{}, keys ...interface{}) map[string]interface{} {
+				Function: func(input any, keys ...any) map[string]any {
 					var out = maputil.DeepCopy(input)
 					keys = sliceutil.Flatten(keys)
 
@@ -1477,19 +1477,19 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `groupBy [{"name": "Bob", "title": "Friend"}, {"name": "Mallory", "title": "Foe"}, {"name": "Alice", "title": "Friend"}] "title"`,
-						Return: map[string][]interface{}{
-							`Friend`: []interface{}{
-								map[string]interface{}{
+						Return: map[string][]any{
+							`Friend`: {
+								map[string]any{
 									`name`:  `Bob`,
 									`title`: `Friend`,
 								},
-								map[string]interface{}{
+								map[string]any{
 									`name`:  `Alice`,
 									`title`: `Friend`,
 								},
 							},
-							`Foe`: []interface{}{
-								map[string]interface{}{
+							`Foe`: {
+								map[string]any{
 									`name`:  `Mallory`,
 									`title`: `Foe`,
 								},
@@ -1497,12 +1497,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						},
 					},
 				},
-				Function: func(sliceOfMaps interface{}, key string, tpls ...interface{}) (map[string][]interface{}, error) {
+				Function: func(sliceOfMaps any, key string, tpls ...any) (map[string][]any, error) {
 					if !typeutil.IsArray(sliceOfMaps) {
 						return nil, fmt.Errorf("groupBy only works on arrays of objects, got %T", sliceOfMaps)
 					}
 
-					var output = make(map[string][]interface{})
+					var output = make(map[string][]any)
 					var valueTpls = sliceutil.Stringify(tpls)
 
 					if items := sliceutil.Sliceify(sliceOfMaps); len(items) > 0 {
@@ -1524,10 +1524,10 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 										if err := tmpl.Render(output, value, ``); err == nil {
 											value = stringutil.Autotype(output.String())
 										} else {
-											return nil, fmt.Errorf("Key Template failed: %v", err)
+											return nil, fmt.Errorf("key Template failed: %v", err)
 										}
 									} else {
-										return nil, fmt.Errorf("Failed to parse Key template: %v", err)
+										return nil, fmt.Errorf("failed to parse Key template: %v", err)
 									}
 								}
 							}
@@ -1537,7 +1537,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 							if v, ok := output[valueS]; ok {
 								output[valueS] = append(v, item)
 							} else {
-								output[valueS] = []interface{}{item}
+								output[valueS] = []any{item}
 							}
 						}
 					}
@@ -1564,9 +1564,9 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`a`, `b`},
 					},
 				},
-				Function: func(input interface{}, n int) []interface{} {
+				Function: func(input any, n int) []any {
 					if typeutil.IsZero(input) {
-						return make([]interface{}, 0)
+						return make([]any, 0)
 					}
 
 					var items = sliceutil.Sliceify(input)
@@ -1597,9 +1597,9 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`c`, `d`},
 					},
 				},
-				Function: func(input interface{}, n int) []interface{} {
+				Function: func(input any, n int) []any {
 					if typeutil.IsZero(input) {
-						return make([]interface{}, 0)
+						return make([]any, 0)
 					}
 
 					var items = sliceutil.Sliceify(input)
@@ -1626,9 +1626,9 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`d`, `c`, `b`, `a`},
 					},
 				},
-				Function: func(input ...interface{}) []interface{} {
+				Function: func(input ...any) []any {
 					if typeutil.IsZero(input) {
-						return make([]interface{}, 0)
+						return make([]any, 0)
 					}
 
 					var inputS = sliceutil.Sliceify(input)
@@ -1657,7 +1657,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Optional:    true,
 					},
 				},
-				Function: func(input interface{}, seeds ...int64) (int64, error) {
+				Function: func(input any, seeds ...int64) (int64, error) {
 					var inlen = sliceutil.Len(input)
 					var seed int64 = rand.Int63()
 
@@ -1708,10 +1708,10 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Return: []string{`a`, `b`, `c`, `d`},
 					},
 				},
-				Function: func(input interface{}, fns ...string) ([]interface{}, error) {
-					var out = make([]interface{}, 0)
+				Function: func(input any, fns ...string) ([]any, error) {
+					var out = make([]any, 0)
 
-					if err := sliceutil.Each(input, func(i int, value interface{}) error {
+					if err := sliceutil.Each(input, func(i int, value any) error {
 						for _, fnName := range fns {
 							switch fnName {
 							case `apply`:
@@ -1791,12 +1791,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `diffuse {"properties/enabled": true, "properties/label": "items", "name": "Items", "properties/tasks/0": "do things", "properties/tasks/1": "do stuff"} "/"`,
-						Return: map[string]interface{}{
+						Return: map[string]any{
 							`name`: `Items`,
-							`properties`: map[string]interface{}{
+							`properties`: map[string]any{
 								`enabled`: true,
 								`label`:   `items`,
-								`tasks`: []interface{}{
+								`tasks`: []any{
 									`do things`,
 									`do stuff`,
 								},
@@ -1804,11 +1804,11 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						},
 					},
 				},
-				Function: func(input interface{}, joiner string) (map[string]interface{}, error) {
+				Function: func(input any, joiner string) (map[string]any, error) {
 					if in, err := prepCoalesceDiffuseInput(input); err == nil {
 						return maputil.DiffuseMap(in, joiner)
 					} else {
-						return nil, fmt.Errorf("Can only diffuse arrays and objects, got %T", input)
+						return nil, fmt.Errorf("can only diffuse arrays and objects, got %T", input)
 					}
 				},
 			}, {
@@ -1827,11 +1827,11 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Description: `The string used in object keys that separates levels of the hierarchy.`,
 					},
 				},
-				Function: func(input interface{}, joiner string) (map[string]interface{}, error) {
+				Function: func(input any, joiner string) (map[string]any, error) {
 					if in, err := prepCoalesceDiffuseInput(input); err == nil {
 						return maputil.CoalesceMap(in, joiner)
 					} else {
-						return nil, fmt.Errorf("Can only coalesce arrays and objects, got %T", input)
+						return nil, fmt.Errorf("can only coalesce arrays and objects, got %T", input)
 					}
 				},
 			}, {
@@ -1848,7 +1848,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Description: `The array being checked`,
 					},
 				},
-				Function: func(index interface{}, array interface{}) bool {
+				Function: func(index any, array any) bool {
 					var i = typeutil.Int(index)
 					var arr = sliceutil.Sliceify(array)
 
@@ -1868,7 +1868,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 						Description: `The object being filtered.`,
 					},
 				},
-				Function: func(query string, data interface{}) (interface{}, error) {
+				Function: func(query string, data any) (any, error) {
 					return maputil.JSONPath(data, query)
 				},
 			}, {
@@ -1897,20 +1897,20 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `objectify [{"label": "First Name", "value": "firstName"}, {"label": "Last Name", "value": "lastName"}] "value" "label"`,
-						Return: map[string]interface{}{
+						Return: map[string]any{
 							`firstName`: `First Name`,
 							`lastName`:  `Last Name`,
 						},
 					}, {
 						Code: `objectify ["test=true", "hello=there"]`,
-						Return: map[string]interface{}{
+						Return: map[string]any{
 							`test`:  true,
 							`hello`: `there`,
 						},
 					},
 				},
-				Function: func(input interface{}, keyField string, valueField string, kvs ...string) map[string]interface{} {
-					var result = make(map[string]interface{})
+				Function: func(input any, keyField string, valueField string, kvs ...string) map[string]any {
+					var result = make(map[string]any)
 					var keyValueSeparator = typeutil.String(
 						sliceutil.FirstNonZero(kvs, DefaultObjectifyKeyValueSeparator),
 					)
@@ -1930,7 +1930,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 
 						for _, item := range items {
 							var key string
-							var value interface{}
+							var value any
 
 							if typeutil.IsMap(item) {
 								if keyField != `` {
@@ -1975,8 +1975,8 @@ func loadStandardFunctionsCollections(funcs FuncMap, server *Server) funcGroup {
 	return group
 }
 
-func prepCoalesceDiffuseInput(input interface{}) (map[string]interface{}, error) {
-	var in = make(map[string]interface{})
+func prepCoalesceDiffuseInput(input any) (map[string]any, error) {
+	var in = make(map[string]any)
 
 	if typeutil.IsArray(input) {
 		for i, v := range sliceutil.Stringify(input) {
@@ -1985,7 +1985,7 @@ func prepCoalesceDiffuseInput(input interface{}) (map[string]interface{}, error)
 	} else if typeutil.IsMap(input) {
 		in = typeutil.MapNative(input)
 	} else {
-		return nil, fmt.Errorf("Can only diffuse arrays and objects, got %T", input)
+		return nil, fmt.Errorf("can only diffuse arrays and objects, got %T", input)
 	}
 
 	return in, nil

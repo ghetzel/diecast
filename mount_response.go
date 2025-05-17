@@ -11,129 +11,129 @@ import (
 type MountResponse struct {
 	ContentType        string
 	StatusCode         int
-	Metadata           map[string]interface{}
+	Metadata           map[string]any
 	RedirectTo         string
 	RedirectCode       int
-	payload            interface{}
+	payload            any
 	name               string
 	size               int64
 	underlyingFile     http.File
 	underlyingFileInfo os.FileInfo
 }
 
-func NewMountResponse(name string, size int64, payload interface{}) *MountResponse {
+func NewMountResponse(name string, size int64, payload any) *MountResponse {
 	return &MountResponse{
 		ContentType: `application/octet-stream`,
 		StatusCode:  http.StatusOK,
-		Metadata:    make(map[string]interface{}),
+		Metadata:    make(map[string]any),
 		payload:     payload,
 		name:        name,
 		size:        size,
 	}
 }
 
-func (self *MountResponse) setUnderlyingFile(file http.File, info os.FileInfo) {
-	self.underlyingFile = file
-	self.underlyingFileInfo = info
+func (response *MountResponse) setUnderlyingFile(file http.File, info os.FileInfo) {
+	response.underlyingFile = file
+	response.underlyingFileInfo = info
 }
 
-func (self *MountResponse) GetPayload() interface{} {
-	return self.payload
+func (response *MountResponse) GetPayload() any {
+	return response.payload
 }
 
-func (self *MountResponse) GetFile() http.File {
-	if file, ok := self.payload.(http.File); ok {
+func (response *MountResponse) GetFile() http.File {
+	if file, ok := response.payload.(http.File); ok {
 		return file
 	} else {
-		return self
+		return response
 	}
 }
 
-func (self *MountResponse) Read(p []byte) (int, error) {
-	if self.payload == nil {
-		return 0, fmt.Errorf("Cannot read from closed response")
-	} else if reader, ok := self.payload.(io.Reader); ok {
+func (response *MountResponse) Read(p []byte) (int, error) {
+	if response.payload == nil {
+		return 0, fmt.Errorf("cannot read from closed response")
+	} else if reader, ok := response.payload.(io.Reader); ok {
 		return reader.Read(p)
 	} else {
-		return 0, fmt.Errorf("Payload does not implement io.ReadSeeker")
+		return 0, fmt.Errorf("payload does not implement io.ReadSeeker")
 	}
 }
 
-func (self *MountResponse) Seek(offset int64, whence int) (int64, error) {
-	if seeker, ok := self.payload.(io.Seeker); ok {
+func (response *MountResponse) Seek(offset int64, whence int) (int64, error) {
+	if seeker, ok := response.payload.(io.Seeker); ok {
 		return seeker.Seek(offset, whence)
 	} else {
-		return 0, fmt.Errorf("Payload is not seekable")
+		return 0, fmt.Errorf("payload is not seekable")
 	}
 }
 
-func (self *MountResponse) Close() error {
-	if closer, ok := self.payload.(io.Closer); ok {
+func (response *MountResponse) Close() error {
+	if closer, ok := response.payload.(io.Closer); ok {
 		if err := closer.Close(); err != nil {
 			return err
 		}
 	}
 
-	self.payload = nil
+	response.payload = nil
 	return nil
 }
 
-func (self *MountResponse) Readdir(count int) ([]os.FileInfo, error) {
-	if self.underlyingFileInfo != nil {
-		return self.underlyingFile.Readdir(count)
+func (response *MountResponse) Readdir(count int) ([]os.FileInfo, error) {
+	if response.underlyingFileInfo != nil {
+		return response.underlyingFile.Readdir(count)
 	} else {
 		return nil, fmt.Errorf("readdir() not available on this response object")
 	}
 }
 
-func (self *MountResponse) Name() string {
-	if self.underlyingFileInfo != nil {
-		return self.underlyingFileInfo.Name()
+func (response *MountResponse) Name() string {
+	if response.underlyingFileInfo != nil {
+		return response.underlyingFileInfo.Name()
 	} else {
-		return self.name
+		return response.name
 	}
 }
 
-func (self *MountResponse) Size() int64 {
-	if self.underlyingFileInfo != nil {
-		return self.underlyingFileInfo.Size()
+func (response *MountResponse) Size() int64 {
+	if response.underlyingFileInfo != nil {
+		return response.underlyingFileInfo.Size()
 	} else {
-		return self.size
+		return response.size
 	}
 }
 
-func (self *MountResponse) Mode() os.FileMode {
-	if self.underlyingFileInfo != nil {
-		return self.underlyingFileInfo.Mode()
+func (response *MountResponse) Mode() os.FileMode {
+	if response.underlyingFileInfo != nil {
+		return response.underlyingFileInfo.Mode()
 	} else {
 		return 0666
 	}
 }
 
-func (self *MountResponse) ModTime() time.Time {
-	if self.underlyingFileInfo != nil {
-		return self.underlyingFileInfo.ModTime()
+func (response *MountResponse) ModTime() time.Time {
+	if response.underlyingFileInfo != nil {
+		return response.underlyingFileInfo.ModTime()
 	} else {
 		return time.Now()
 	}
 }
 
-func (self *MountResponse) IsDir() bool {
-	if self.underlyingFileInfo != nil {
-		return self.underlyingFileInfo.IsDir()
+func (response *MountResponse) IsDir() bool {
+	if response.underlyingFileInfo != nil {
+		return response.underlyingFileInfo.IsDir()
 	} else {
 		return false
 	}
 }
 
-func (self *MountResponse) Sys() interface{} {
-	if self.underlyingFileInfo != nil {
-		return self.underlyingFileInfo.Sys()
+func (response *MountResponse) Sys() any {
+	if response.underlyingFileInfo != nil {
+		return response.underlyingFileInfo.Sys()
 	} else {
 		return nil
 	}
 }
 
-func (self *MountResponse) Stat() (os.FileInfo, error) {
-	return self, nil
+func (response *MountResponse) Stat() (os.FileInfo, error) {
+	return response, nil
 }

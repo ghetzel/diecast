@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -16,23 +15,22 @@ import (
 )
 
 var ooxmlTemplatedElements = etree.MustCompilePath(`//`)
-var etreeMaxAncestors = 3
 
 type OOXMLRenderer struct {
 	server *Server
 }
 
-func (self *OOXMLRenderer) ShouldPrerender() bool {
+func (renderer *OOXMLRenderer) ShouldPrerender() bool {
 	return false
 }
 
-func (self *OOXMLRenderer) SetServer(server *Server) {
-	self.server = server
+func (renderer *OOXMLRenderer) SetServer(server *Server) {
+	renderer.server = server
 }
 
-func (self *OOXMLRenderer) SetPrewriteFunc(fn PrewriteFunc) {}
+func (renderer *OOXMLRenderer) SetPrewriteFunc(fn PrewriteFunc) {}
 
-func (self *OOXMLRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
+func (renderer *OOXMLRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
 	if options.Input != nil {
 		defer options.Input.Close()
 
@@ -59,7 +57,7 @@ func (self *OOXMLRenderer) Render(w http.ResponseWriter, req *http.Request, opti
 
 			if ra, ok := options.Input.(io.ReaderAt); ok {
 				input = ra
-			} else if inputData, err := ioutil.ReadAll(options.Input); err == nil {
+			} else if inputData, err := io.ReadAll(options.Input); err == nil {
 				var r = bytes.NewReader(inputData)
 
 				input = r
@@ -107,7 +105,7 @@ func (self *OOXMLRenderer) Render(w http.ResponseWriter, req *http.Request, opti
 									if err == nil {
 										var multiFirst *etree.Element
 										var tmpl string
-										var overrideMap = make(map[string]interface{})
+										var overrideMap = make(map[string]any)
 
 										if overrides := maputil.M(options.Data).Get(`page.renderers.ooxml`).MapNative(); len(overrides) > 0 {
 											if oc, err := maputil.CoalesceMap(overrides, `/`); err == nil {
@@ -214,19 +212,4 @@ func (self *OOXMLRenderer) Render(w http.ResponseWriter, req *http.Request, opti
 	} else {
 		return fmt.Errorf("empty input")
 	}
-}
-func isDescendantOrSibling(parent *etree.Element, candidate *etree.Element) bool {
-	if candidate == parent {
-		return true
-	} else if elp := candidate.Parent(); elp != nil {
-		for _, c := range elp.ChildElements() {
-			if c == parent {
-				return true
-			}
-		}
-
-		return isDescendantOrSibling(parent, elp)
-	}
-
-	return false
 }

@@ -3,15 +3,12 @@ package diecast
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
-	"sync"
 
 	"github.com/ghetzel/go-stockutil/executil"
 )
 
 var SassIndentString = `    `
-var callbackMap sync.Map
 var DartSassBin = executil.Env(`DIECAST_SASS_BIN`, `sass`)
 
 type SassRenderer struct {
@@ -19,28 +16,28 @@ type SassRenderer struct {
 	prewrite PrewriteFunc
 }
 
-func (self *SassRenderer) ShouldPrerender() bool {
+func (renderer *SassRenderer) ShouldPrerender() bool {
 	return true
 }
 
-func (self *SassRenderer) SetPrewriteFunc(fn PrewriteFunc) {
-	self.prewrite = fn
+func (renderer *SassRenderer) SetPrewriteFunc(fn PrewriteFunc) {
+	renderer.prewrite = fn
 }
 
-func (self *SassRenderer) SetServer(server *Server) {
-	self.server = server
+func (renderer *SassRenderer) SetServer(server *Server) {
+	renderer.server = server
 }
 
-func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
+func (renderer *SassRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
 	defer options.Input.Close()
 
 	var sass = executil.Command(DartSassBin, `--stdin`)
 
 	if _, err := io.Copy(sass, options.Input); err == nil {
-		if output, err := ioutil.ReadAll(sass); err == nil {
+		if output, err := io.ReadAll(sass); err == nil {
 			w.Header().Set(`Content-Type`, `text/css; charset=utf-8`)
 
-			if fn := self.prewrite; fn != nil {
+			if fn := renderer.prewrite; fn != nil {
 				fn(req)
 			}
 
@@ -50,6 +47,6 @@ func (self *SassRenderer) Render(w http.ResponseWriter, req *http.Request, optio
 			return fmt.Errorf("sass error: %v", err)
 		}
 	} else {
-		return fmt.Errorf("Cannot read render input: %v", err)
+		return fmt.Errorf("cannot read render input: %v", err)
 	}
 }

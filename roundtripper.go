@@ -12,16 +12,16 @@ type transportAwareRoundTripper struct {
 	transport *http.Transport
 }
 
-func (self *transportAwareRoundTripper) SetTransport(t *http.Transport) {
-	self.transport = t
+func (rtt *transportAwareRoundTripper) SetTransport(t *http.Transport) {
+	rtt.transport = t
 }
 
-func (self *transportAwareRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	if self.transport == nil {
-		self.transport = http.DefaultTransport.(*http.Transport)
+func (rtt *transportAwareRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	if rtt.transport == nil {
+		rtt.transport = http.DefaultTransport.(*http.Transport)
 	}
 
-	var perReqTransport = self.transport.Clone()
+	var perReqTransport = rtt.transport.Clone()
 
 	if socketPath := httputil.RequestGetValue(req, `diecastSocketPath`); socketPath.String() != `` {
 		perReqTransport.DialContext = func(_ context.Context, _, _ string) (net.Conn, error) {

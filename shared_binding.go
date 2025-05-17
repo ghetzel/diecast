@@ -13,7 +13,7 @@ var SharedBindingPollInterval time.Duration = 100 * time.Millisecond
 
 type SharedBindingSet []*Binding
 
-func (self SharedBindingSet) init(server *Server) error {
+func (set SharedBindingSet) init(server *Server) error {
 	go func(s *Server) {
 		if SharedBindingPollInterval > 0 {
 			for at := range time.NewTicker(SharedBindingPollInterval).C {
@@ -21,14 +21,14 @@ func (self SharedBindingSet) init(server *Server) error {
 					break
 				}
 
-				for i, binding := range self {
+				for i, binding := range set {
 					if ri := typeutil.Duration(binding.Interval); ri > 0 {
 						if binding.lastRefreshedAt.IsZero() || time.Since(binding.lastRefreshedAt) >= ri {
 							if binding.Name == `` {
 								binding.Name = fmt.Sprintf("shared.%d", i)
 							}
 
-							go self.refreshAndStore(server, binding)
+							go set.refreshAndStore(server, binding)
 						}
 					}
 				}
@@ -39,7 +39,7 @@ func (self SharedBindingSet) init(server *Server) error {
 	return nil
 }
 
-func (self SharedBindingSet) refreshAndStore(server *Server, binding *Binding) {
+func (set SharedBindingSet) refreshAndStore(server *Server, binding *Binding) {
 	if binding.syncing {
 		return
 	} else {
@@ -62,8 +62,8 @@ func (self SharedBindingSet) refreshAndStore(server *Server, binding *Binding) {
 	}
 }
 
-func (self SharedBindingSet) perRequestBindings() (bindings []Binding) {
-	for _, b := range self {
+func (set SharedBindingSet) perRequestBindings() (bindings []Binding) {
+	for _, b := range set {
 		if b.Interval == `` {
 			bindings = append(bindings, *b)
 		}

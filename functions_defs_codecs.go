@@ -24,7 +24,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
+func loadStandardFunctionsCodecs(_ FuncMap, _ *Server) funcGroup {
 	return funcGroup{
 		Name:        `Encoding and Decoding`,
 		Description: `For encoding typed data and data structures into well-known formats like JSON, CSV, and TSV.`,
@@ -45,7 +45,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Description: `The string to indent successive tiers in the document hierarchy with.`,
 					},
 				},
-				Function: func(value interface{}, indent ...string) (string, error) {
+				Function: func(value any, indent ...string) (string, error) {
 					var indentString = `  `
 
 					if len(indent) > 0 {
@@ -125,7 +125,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Variadic: true,
 					},
 				},
-				Function: func(value interface{}, extensions ...string) (template.HTML, error) {
+				Function: func(value any, extensions ...string) (template.HTML, error) {
 					var input = typeutil.String(value)
 					var output = blackfriday.Run(
 						[]byte(input),
@@ -159,7 +159,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Description: `An array of values that represent the column names of the table being created.`,
 					},
 				},
-				Function: func(columns []interface{}, rows []interface{}) (string, error) {
+				Function: func(columns []any, rows []any) (string, error) {
 					return delimited(',', columns, rows)
 				},
 			}, {
@@ -176,7 +176,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Description: `An array of values that represent the column names of the table being created.`,
 					},
 				},
-				Function: func(columns []interface{}, rows []interface{}) (string, error) {
+				Function: func(columns []any, rows []any) (string, error) {
 					return delimited('\t', columns, rows)
 				},
 			}, {
@@ -193,10 +193,10 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Description: `The raw HTML snippet you sneakily want to sneak past the HTML sanitizer for reasons.`,
 					},
 				},
-				Function: func(value interface{}) (template.HTML, error) {
-					switch value.(type) {
+				Function: func(value any) (template.HTML, error) {
+					switch value := value.(type) {
 					case *goquery.Document:
-						if doc, err := value.(*goquery.Document).Html(); err == nil {
+						if doc, err := value.Html(); err == nil {
 							return template.HTML(doc), nil
 						} else {
 							return ``, err
@@ -216,12 +216,12 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Description: `The document to sanitize.`,
 					},
 				},
-				Function: func(value interface{}) (template.HTML, error) {
+				Function: func(value any) (template.HTML, error) {
 					var document string
 
-					switch value.(type) {
+					switch value := value.(type) {
 					case *goquery.Document:
-						if doc, err := value.(*goquery.Document).Html(); err == nil {
+						if doc, err := value.Html(); err == nil {
 							document = doc
 						} else {
 							return ``, err
@@ -322,7 +322,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Description: `A key-value object of query string values to add to the URL.`,
 					},
 				},
-				Function: func(base string, queries ...map[string]interface{}) (string, error) {
+				Function: func(base string, queries ...map[string]any) (string, error) {
 					if u, err := url.Parse(base); err == nil {
 						for _, qs := range queries {
 							for k, v := range qs {
@@ -434,7 +434,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						if p := u.Port(); p != `` {
 							return int(typeutil.Int(p)), nil
 						} else {
-							return 0, fmt.Errorf("Invalid port number")
+							return 0, fmt.Errorf("invalid port number")
 						}
 					} else {
 						return 0, err
@@ -507,13 +507,13 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 				Examples: []funcExample{
 					{
 						Code: `urlQuery "https://example.com:8443/path/to/file.xml?lang=en&active=true#s6.9"`,
-						Return: map[string]interface{}{
+						Return: map[string]any{
 							`lang`:   `en`,
 							`active`: true,
 						},
 					},
 				},
-				Function: func(in string) (map[string]interface{}, error) {
+				Function: func(in string) (map[string]any, error) {
 					if u, err := url.Parse(in); err == nil {
 						return maputil.M(u.Query()).MapNative(), nil
 					} else {
@@ -560,7 +560,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Return: `68656c6c6f`,
 					},
 				},
-				Function: func(input interface{}) (string, error) {
+				Function: func(input any) (string, error) {
 					return hex.EncodeToString(toBytes(input)), nil
 				},
 			}, {
@@ -580,13 +580,13 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Return: `nbswy3dp`,
 					},
 				},
-				Function: func(input interface{}) string {
+				Function: func(input any) string {
 					return Base32Alphabet.EncodeToString(toBytes(input))
 				},
 			}, {
 				Name:    `base58`,
 				Summary: `Encode the given bytes with the Base58 (Bitcoin alphabet) encoding scheme.`,
-				Function: func(input interface{}) string {
+				Function: func(input any) string {
 					return base58.Encode(toBytes(input))
 				},
 			}, {
@@ -639,7 +639,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Return: `aGVsbG8_eWVzPXRoaXMmaXM9ZG9nIw==`,
 					},
 				},
-				Function: func(input interface{}, encoding ...string) string {
+				Function: func(input any, encoding ...string) string {
 					if len(encoding) == 0 {
 						encoding = []string{`standard`}
 					}
@@ -673,7 +673,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Return: []byte{'h', 'e', 'l', 'l', 'o'},
 					},
 				},
-				Function: func(input interface{}) ([]byte, error) {
+				Function: func(input any) ([]byte, error) {
 					return hex.DecodeString(typeutil.String(input))
 				},
 			}, {
@@ -692,13 +692,13 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Return: []byte{'h', 'e', 'l', 'l', 'o'},
 					},
 				},
-				Function: func(input interface{}) ([]byte, error) {
+				Function: func(input any) ([]byte, error) {
 					return Base32Alphabet.DecodeString(typeutil.String(input))
 				},
 			}, {
 				Name:    `unbase58`,
 				Summary: `Decode the given Base58-encoded string (Bitcoin alphabet) into bytes.`,
-				Function: func(input interface{}) []byte {
+				Function: func(input any) []byte {
 					return base58.Decode(typeutil.String(input))
 				},
 			}, {
@@ -754,7 +754,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 						Return: []byte("hello?yes=this&is=dog#"),
 					},
 				},
-				Function: func(input interface{}, encoding ...string) ([]byte, error) {
+				Function: func(input any, encoding ...string) ([]byte, error) {
 					var s = typeutil.String(input)
 
 					if len(encoding) == 0 {
@@ -779,7 +779,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `httpStatusText`,
 				Summary: `Return a human-readable description of the given HTTP error code.`,
-				Function: func(code interface{}) string {
+				Function: func(code any) string {
 					return http.StatusText(int(typeutil.Int(code)))
 				},
 				Examples: []funcExample{
@@ -797,7 +797,7 @@ func loadStandardFunctionsCodecs(funcs FuncMap, server *Server) funcGroup {
 			}, {
 				Name:    `chr2str`,
 				Summary: `Takes an array of integers representing Unicode codepoints and returns the resulting string.`,
-				Function: func(codepoints interface{}) string {
+				Function: func(codepoints any) string {
 					var points = sliceutil.Sliceify(codepoints)
 					var chars = make([]rune, len(points))
 

@@ -39,7 +39,7 @@ func TestStaticServer(t *testing.T) {
 	doTestServerRequest(server, `GET`, `/index.html`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
-			assert.Contains(string(w.Body.Bytes()), `Hello`)
+			assert.Contains(w.Body.String(), `Hello`)
 		})
 
 	doTestServerRequest(server, `GET`, `/css/bootstrap.min.css`,
@@ -80,7 +80,7 @@ func TestStaticServerWithRoutePrefix(t *testing.T) {
 	doTestServerRequest(server, `GET`, `/ui/index.html`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
-			assert.Contains(string(w.Body.Bytes()), `Hello`)
+			assert.Contains(w.Body.String(), `Hello`)
 		})
 
 	doTestServerRequest(server, `GET`, `/ui/js/jquery.min.js`,
@@ -161,13 +161,13 @@ func TestFilesInRootSubdirectories(t *testing.T) {
 	doTestServerRequest(server, `GET`, `/subdir1/`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
-			assert.Contains(string(w.Body.Bytes()), `Hello`)
+			assert.Contains(w.Body.String(), `Hello`)
 		})
 
 	doTestServerRequest(server, `GET`, `/subdir1/index.html`,
 		func(w *httptest.ResponseRecorder) {
 			assert.Equal(200, w.Code)
-			assert.Contains(string(w.Body.Bytes()), `Hello`)
+			assert.Contains(w.Body.String(), `Hello`)
 		})
 }
 

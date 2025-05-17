@@ -26,7 +26,7 @@ type RenderOptions struct {
 	FunctionSet   FuncMap
 	Input         io.ReadCloser
 	Fragments     FragmentSet
-	Data          map[string]interface{}
+	Data          map[string]any
 	MimeType      string
 	RequestedPath string
 	Timeout       time.Duration
@@ -51,7 +51,7 @@ func GetRenderer(name string, server *Server) (Renderer, error) {
 
 		return renderer, nil
 	} else {
-		return nil, fmt.Errorf("Unknown renderer %q", name)
+		return nil, fmt.Errorf("unknown renderer %q", name)
 	}
 }
 

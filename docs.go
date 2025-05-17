@@ -3,7 +3,7 @@ package diecast
 type funcExample struct {
 	Code        string
 	Description string
-	Return      interface{}
+	Return      any
 }
 
 type funcArg struct {
@@ -12,7 +12,7 @@ type funcArg struct {
 	Description string
 	Variadic    bool
 	Optional    bool
-	Default     interface{}
+	Default     any
 	Valid       []funcArg
 }
 
@@ -25,7 +25,7 @@ type funcDef struct {
 	Hidden    bool
 	Arguments []funcArg
 	Examples  []funcExample
-	Function  interface{} `json:"-"`
+	Function  any `json:"-"`
 }
 
 type funcGroup struct {
@@ -35,8 +35,8 @@ type funcGroup struct {
 	Skip        bool
 }
 
-func (self funcGroup) fn(name string) interface{} {
-	for _, fn := range self.Functions {
+func (group funcGroup) fn(name string) any {
+	for _, fn := range group.Functions {
 		if fn.Name == name {
 			return fn.Function
 		}
@@ -47,8 +47,8 @@ func (self funcGroup) fn(name string) interface{} {
 
 type funcGroups []funcGroup
 
-func (self funcGroups) PopulateFuncMap(funcs FuncMap) {
-	for _, group := range self {
+func (group funcGroups) PopulateFuncMap(funcs FuncMap) {
+	for _, group := range group {
 		if group.Skip {
 			continue
 		}

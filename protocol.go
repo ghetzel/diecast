@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -18,10 +17,10 @@ type Protocol interface {
 	Retrieve(*ProtocolRequest) (*ProtocolResponse, error)
 }
 
-type ProtocolConfig map[string]interface{}
+type ProtocolConfig map[string]any
 
-func (self ProtocolConfig) Get(key string, fallbacks ...interface{}) typeutil.Variant {
-	var v = maputil.M(self).Get(key)
+func (config ProtocolConfig) Get(key string, fallbacks ...any) typeutil.Variant {
+	var v = maputil.M(config).Get(key)
 
 	if v.IsNil() {
 		if len(fallbacks) > 0 {
@@ -40,14 +39,14 @@ type ProtocolRequest struct {
 	Binding           *Binding
 	Request           *http.Request
 	Header            *TemplateHeader
-	TemplateData      map[string]interface{}
+	TemplateData      map[string]any
 	TemplateFuncs     FuncMap
 	DefaultTimeout    time.Duration
-	AdditionalHeaders map[string]interface{}
+	AdditionalHeaders map[string]any
 }
 
-func (self *ProtocolRequest) ReadFile(filename string) ([]byte, error) {
-	if b := self.Binding; b != nil {
+func (config *ProtocolRequest) ReadFile(filename string) ([]byte, error) {
+	if b := config.Binding; b != nil {
 		if s := b.server; s != nil {
 			return readFromFS(s.fs, filename)
 		}
@@ -56,11 +55,11 @@ func (self *ProtocolRequest) ReadFile(filename string) ([]byte, error) {
 	return nil, fmt.Errorf("no such file or directory")
 }
 
-func (self *ProtocolRequest) Template(input interface{}) (typeutil.Variant, error) {
+func (config *ProtocolRequest) Template(input any) (typeutil.Variant, error) {
 	// only do template evaluation if the input is a string that contains "{{" and "}}"
 	if vS := typeutil.String(input); strings.Contains(vS, `{{`) && strings.Contains(vS, `}}`) {
-		if len(self.TemplateFuncs) > 0 {
-			if v, err := EvalInline(vS, self.TemplateData, self.TemplateFuncs); err == nil {
+		if len(config.TemplateFuncs) > 0 {
+			if v, err := EvalInline(vS, config.TemplateData, config.TemplateFuncs); err == nil {
 				return typeutil.V(v), nil
 			} else {
 				return typeutil.V(nil), err
@@ -71,11 +70,11 @@ func (self *ProtocolRequest) Template(input interface{}) (typeutil.Variant, erro
 	return typeutil.V(input), nil
 }
 
-func (self *ProtocolRequest) Conf(proto string, key string, fallbacks ...interface{}) typeutil.Variant {
-	if self.Binding != nil {
-		if self.Binding.server != nil {
-			if len(self.Binding.server.Protocols) > 0 {
-				if cnf, ok := self.Binding.server.Protocols[proto]; ok {
+func (config *ProtocolRequest) Conf(proto string, key string, fallbacks ...any) typeutil.Variant {
+	if config.Binding != nil {
+		if config.Binding.server != nil {
+			if len(config.Binding.server.Protocols) > 0 {
+				if cnf, ok := config.Binding.server.Protocols[proto]; ok {
 					return cnf.Get(key, fallbacks...)
 				}
 			}
@@ -92,7 +91,7 @@ func (self *ProtocolRequest) Conf(proto string, key string, fallbacks ...interfa
 type ProtocolResponse struct {
 	MimeType   string
 	StatusCode int
-	Raw        interface{}
+	Raw        any
 	data       io.ReadCloser
 }
 
@@ -104,29 +103,29 @@ func NewProtocolResponse(data io.ReadCloser) *ProtocolResponse {
 	}
 }
 
-func (self *ProtocolResponse) PeekLen() (int64, error) {
+func (config *ProtocolResponse) PeekLen() (int64, error) {
 	var buf = bytes.NewBuffer(nil)
 
-	if n, err := io.Copy(buf, self.data); err == nil {
-		self.data = ioutil.NopCloser(buf)
+	if n, err := io.Copy(buf, config.data); err == nil {
+		config.data = io.NopCloser(buf)
 		return n, nil
 	} else {
 		return 0, err
 	}
 }
 
-func (self *ProtocolResponse) Read(b []byte) (int, error) {
-	if self.data == nil {
+func (config *ProtocolResponse) Read(b []byte) (int, error) {
+	if config.data == nil {
 		return 0, io.EOF
 	} else {
-		return self.data.Read(b)
+		return config.data.Read(b)
 	}
 }
 
-func (self *ProtocolResponse) Close() error {
-	if self.data == nil {
+func (config *ProtocolResponse) Close() error {
+	if config.data == nil {
 		return nil
 	} else {
-		return self.data.Close()
+		return config.data.Close()
 	}
 }

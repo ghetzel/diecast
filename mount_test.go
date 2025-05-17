@@ -2,7 +2,7 @@ package diecast
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"testing"
@@ -12,17 +12,17 @@ import (
 
 type TestFileSystem map[string]http.File
 
-func (self TestFileSystem) Open(name string) (http.File, error) {
+func (fs TestFileSystem) Open(name string) (http.File, error) {
 	fmt.Printf("Opening %q\n", name)
 
-	if file, ok := self[name]; ok {
+	if file, ok := fs[name]; ok {
 		return file, nil
 	}
 
 	return nil, os.ErrNotExist
 }
 
-func getTestMounts(tt *require.Assertions) []Mount {
+func getTestMounts(_ *require.Assertions) []Mount {
 	var mounts = []Mount{
 		&FileMount{
 			Path:       `./tests/external_path/js`,
@@ -77,13 +77,13 @@ func TestMounts(t *testing.T) {
 	file, err = mount.Open(`/js/bootstrap.min.js`)
 	assert.Nil(err)
 
-	data, err = ioutil.ReadAll(file)
+	data, err = io.ReadAll(file)
 	assert.Nil(err)
 	assert.NotEmpty(data)
 	assert.Contains(string(data[:]), `Bootstrap`)
 
 	// nonexistent file error test
-	file, err = mount.Open(`/js/nonexistent.whatever`)
+	_, err = mount.Open(`/js/nonexistent.whatever`)
 	assert.NotNil(err)
 
 	// MOUNT 1

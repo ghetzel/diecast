@@ -27,7 +27,7 @@ type candidateFile struct {
 	MimeType      string
 	RedirectTo    string
 	RedirectCode  int
-	Headers       map[string]interface{}
+	Headers       map[string]any
 	PathParams    []KV
 	ForceTemplate bool
 }
@@ -35,23 +35,23 @@ type candidateFile struct {
 // The main entry point for handling requests not otherwise intercepted by Actions or User Routes.
 //
 // The Process:
-//     1. Build a list of paths to try based on the requested path.  This is how things like
-//        expanding "/thing" -> "/thing/index.html" OR "/thing.html" works.
 //
-//     2. For each path, do the following:
+//  1. Build a list of paths to try based on the requested path.  This is how things like
+//     expanding "/thing" -> "/thing/index.html" OR "/thing.html" works.
 //
-//        a. try to find a local file named X in the webroot
-//        b.
+//  2. For each path, do the following:
 //
-func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
+//     a. try to find a local file named X in the webroot
+//     b.
+func (server *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 	var id = reqid(req)
-	var prefix = fmt.Sprintf("%s/", self.rp())
+	var prefix = fmt.Sprintf("%s/", server.rp())
 	var lastErr error
 	var serveFile *candidateFile
 
 	if strings.HasPrefix(req.URL.Path, prefix) {
 		// get a sequence of paths to search
-		var requestPaths = self.candidatePathsForRequest(req)
+		var requestPaths = server.candidatePathsForRequest(req)
 		var localCandidate *candidateFile
 		var mountCandidate *candidateFile
 		var autoindexCandidate *candidateFile
@@ -64,7 +64,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 			// log.Debugf("[%s] try local file: %s", id, rPath)
 
 			// actually try to stat the file from the filesystem rooted at RootPath
-			if file, mimetype, err := self.tryLocalFile(rPath, req); err == nil {
+			if file, mimetype, err := server.tryLocalFile(rPath, req); err == nil {
 				if localCandidate == nil {
 					// log.Debugf("[%s] found local file: %s", id, rPath)
 					localCandidate = &candidateFile{
@@ -78,7 +78,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 					break
 				}
 			} else if IsDirectoryErr(err) {
-				if archive, mimetype, err := self.streamAutoArchiveDirectory(file, rPath, req); err == nil {
+				if archive, mimetype, err := server.streamAutoArchiveDirectory(file, rPath, req); err == nil {
 					localCandidate = &candidateFile{
 						Type:     `local`,
 						Source:   httpFilename(archive),
@@ -86,8 +86,8 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 						Data:     archive,
 						MimeType: mimetype,
 					}
-				} else if self.Autoindex {
-					if file, mimetype, ok := self.tryAutoindex(); ok {
+				} else if server.Autoindex {
+					if file, mimetype, ok := server.tryAutoindex(); ok {
 						if autoindexCandidate == nil {
 							// log.Debugf("[%s] found autoindex template for %s", id, rPath)
 							autoindexCandidate = &candidateFile{
@@ -106,22 +106,20 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 
 		// if we're not interested in local files first (therefore, we need to try the mounts anyway), or
 		// we ARE trying local first, but nothing came back, then try searching mounts
-		if !self.TryLocalFirst || localCandidate == nil {
+		if !server.TryLocalFirst || localCandidate == nil {
 			for _, rPath := range requestPaths {
-				if mount, mountResponse, err := self.tryMounts(rPath, req); err == nil && mountResponse != nil {
-					if mountCandidate == nil {
-						// log.Debugf("[%s] found mount response: %s", id, rPath)
-						mountCandidate = &candidateFile{
-							Type:         `mount`,
-							Source:       mountSummary(mount),
-							Path:         rPath,
-							Data:         mountResponse.GetFile(),
-							MimeType:     mountResponse.ContentType,
-							StatusCode:   mountResponse.StatusCode,
-							Headers:      mountResponse.Metadata,
-							RedirectTo:   mountResponse.RedirectTo,
-							RedirectCode: mountResponse.RedirectCode,
-						}
+				if mount, mountResponse, err := server.tryMounts(rPath, req); err == nil && mountResponse != nil {
+					// log.Debugf("[%s] found mount response: %s", id, rPath)
+					mountCandidate = &candidateFile{
+						Type:         `mount`,
+						Source:       mountSummary(mount),
+						Path:         rPath,
+						Data:         mountResponse.GetFile(),
+						MimeType:     mountResponse.ContentType,
+						StatusCode:   mountResponse.StatusCode,
+						Headers:      mountResponse.Metadata,
+						RedirectTo:   mountResponse.RedirectTo,
+						RedirectCode: mountResponse.RedirectCode,
 					}
 
 					break
@@ -150,7 +148,7 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 		}
 
 		if lastErr == nil {
-			if self.TryLocalFirst {
+			if server.TryLocalFirst {
 				if localCandidate != nil {
 					serveFile = localCandidate
 				} else if mountCandidate != nil {
@@ -188,58 +186,58 @@ func (self *Server) handleRequest(w http.ResponseWriter, req *http.Request) {
 					http.Redirect(w, req, serveFile.RedirectTo, rcode)
 					log.Debugf("[%s] path %v redirecting to %v (HTTP %d)", id, serveFile.Path, serveFile.RedirectTo, rcode)
 					return
-				} else if handled := self.handleCandidateFile(w, req, serveFile); handled {
+				} else if handled := server.handleCandidateFile(w, req, serveFile); handled {
 					return
 				}
 			}
 		}
 	}
 
-	if self.hasUserRoutes {
-		self.handlersEnsureRouter()
-		self.userRouter.ServeHTTP(w, req)
+	if server.hasUserRoutes {
+		server.handlersEnsureRouter()
+		server.userRouter.ServeHTTP(w, req)
 	} else if lastErr != nil {
 		// something else went sideways
-		self.respondError(w, req, fmt.Errorf("an error occurred accessing %s: %v", req.URL.Path, lastErr), http.StatusServiceUnavailable)
+		server.respondError(w, req, fmt.Errorf("an error occurred accessing %s: %v", req.URL.Path, lastErr), http.StatusServiceUnavailable)
 	} else {
 		// if we got *here*, then File Not Found
-		self.respondError(w, req, fmt.Errorf("file %q was not found.", req.URL.Path), http.StatusNotFound)
+		server.respondError(w, req, fmt.Errorf("file %q was not found", req.URL.Path), http.StatusNotFound)
 	}
 }
 
-func (self *Server) candidatePathsForRequest(req *http.Request) []string {
+func (server *Server) candidatePathsForRequest(req *http.Request) []string {
 	var requestPaths = []string{
 		req.URL.Path,
 	}
 
 	// if we're looking at a directory, throw in the index file if the path as given doesn't respond
 	if strings.HasSuffix(req.URL.Path, `/`) {
-		requestPaths = append(requestPaths, path.Join(req.URL.Path, self.IndexFile))
+		requestPaths = append(requestPaths, path.Join(req.URL.Path, server.IndexFile))
 
-		for _, ext := range self.TryExtensions {
-			var base = filepath.Base(self.IndexFile)
-			base = strings.TrimSuffix(base, filepath.Ext(self.IndexFile))
+		for _, ext := range server.TryExtensions {
+			var base = filepath.Base(server.IndexFile)
+			base = strings.TrimSuffix(base, filepath.Ext(server.IndexFile))
 
 			requestPaths = append(requestPaths, path.Join(req.URL.Path, fmt.Sprintf("%s.%s", base, ext)))
 		}
 
-		for _, ext := range self.TryExtensions {
+		for _, ext := range server.TryExtensions {
 			requestPaths = append(requestPaths, strings.TrimSuffix(req.URL.Path, `/`)+`.`+ext)
 		}
 
 	} else if path.Ext(req.URL.Path) == `` {
 		// if we're requesting a path without a file extension, try an index file in a directory with that name,
 		// then try just <filename>.html
-		requestPaths = append(requestPaths, fmt.Sprintf("%s/%s", req.URL.Path, self.IndexFile))
+		requestPaths = append(requestPaths, fmt.Sprintf("%s/%s", req.URL.Path, server.IndexFile))
 
-		for _, ext := range self.TryExtensions {
+		for _, ext := range server.TryExtensions {
 			requestPaths = append(requestPaths, fmt.Sprintf("%s.%s", req.URL.Path, ext))
 		}
 	}
 
 	// finally, add handlers for implementing routing
 	if parent := path.Dir(req.URL.Path); parent != `.` {
-		for _, ext := range self.TryExtensions {
+		for _, ext := range server.TryExtensions {
 			requestPaths = append(requestPaths, fmt.Sprintf("%s/index__id.%s", strings.TrimSuffix(parent, `/`), ext))
 
 			if base := strings.TrimSuffix(parent, `/`); base != `` {
@@ -253,13 +251,13 @@ func (self *Server) candidatePathsForRequest(req *http.Request) []string {
 
 	// trim RoutePrefix from the front of all paths
 	for i, rPath := range requestPaths {
-		requestPaths[i] = strings.TrimPrefix(rPath, self.rp())
+		requestPaths[i] = strings.TrimPrefix(rPath, server.rp())
 	}
 
 	return requestPaths
 }
 
-func (self *Server) handleCandidateFile(
+func (server *Server) handleCandidateFile(
 	w http.ResponseWriter,
 	req *http.Request,
 	file *candidateFile,
@@ -286,11 +284,11 @@ func (self *Server) handleCandidateFile(
 	}
 
 	// we got a real actual file here, figure out if we're templating it or not
-	if file.ForceTemplate || self.shouldApplyTemplate(file.Path) {
+	if file.ForceTemplate || server.shouldApplyTemplate(file.Path) {
 		// tease the template header out of the file
 		if header, templateData, err := SplitTemplateHeaderContent(file.Data); err == nil {
 			// render the final template and write it out
-			if err := self.applyTemplate(
+			if err := server.applyTemplate(
 				w,
 				req,
 				file.Path,
@@ -299,13 +297,13 @@ func (self *Server) handleCandidateFile(
 				file.PathParams,
 				file.MimeType,
 			); err != nil {
-				self.respondError(w, req, fmt.Errorf("render template: %v", err), http.StatusInternalServerError)
+				server.respondError(w, req, fmt.Errorf("render template: %v", err), http.StatusInternalServerError)
 			}
 		} else {
-			self.respondError(w, req, fmt.Errorf("parse template: %v", err), http.StatusInternalServerError)
+			server.respondError(w, req, fmt.Errorf("parse template: %v", err), http.StatusInternalServerError)
 		}
 	} else {
-		var funcs, data = self.getPreBindingData(req, nil)
+		var funcs, data = server.getPreBindingData(req, nil)
 		var renderOptions = RenderOptions{
 			Input:       file.Data,
 			FunctionSet: funcs,
@@ -314,16 +312,16 @@ func (self *Server) handleCandidateFile(
 
 		if rendererName := httputil.Q(req, `renderer`); rendererName == `` {
 			io.Copy(w, file.Data)
-		} else if renderer, err := GetRenderer(rendererName, self); err == nil {
+		} else if renderer, err := GetRenderer(rendererName, server); err == nil {
 			if err := renderer.Render(w, req, renderOptions); err != nil {
-				self.respondError(w, req, err, http.StatusInternalServerError)
+				server.respondError(w, req, err, http.StatusInternalServerError)
 			}
-		} else if renderer, ok := GetRendererForFilename(file.Path, self); ok {
+		} else if renderer, ok := GetRendererForFilename(file.Path, server); ok {
 			if err := renderer.Render(w, req, renderOptions); err != nil {
-				self.respondError(w, req, err, http.StatusInternalServerError)
+				server.respondError(w, req, err, http.StatusInternalServerError)
 			}
 		} else {
-			self.respondError(w, req, fmt.Errorf("Unknown renderer %q", rendererName), http.StatusBadRequest)
+			server.respondError(w, req, fmt.Errorf("unknown renderer %q", rendererName), http.StatusBadRequest)
 		}
 	}
 
@@ -331,8 +329,8 @@ func (self *Server) handleCandidateFile(
 }
 
 // recursively walks the server filesystem, copying each file into a ZIP archive that is then exposed as a candidate for the response
-func (self *Server) streamAutoArchiveDirectory(root http.File, requestPath string, req *http.Request) (http.File, string, error) {
-	if !self.shouldAutocompress(requestPath) {
+func (server *Server) streamAutoArchiveDirectory(root http.File, requestPath string, _ *http.Request) (http.File, string, error) {
+	if !server.shouldAutocompress(requestPath) {
 		return nil, ``, io.EOF
 	}
 
@@ -341,7 +339,7 @@ func (self *Server) streamAutoArchiveDirectory(root http.File, requestPath strin
 	var archive = zip.NewWriter(&buf)
 
 	// walk all files recursively under root
-	if err := self.walkHttpFile(requestPath, root, func(path string, f http.File, s os.FileInfo) error {
+	if err := server.walkHttpFile(requestPath, root, func(path string, f http.File, s os.FileInfo) error {
 		defer f.Close()
 
 		path = strings.TrimPrefix(path, requestPath)
@@ -372,7 +370,7 @@ func (self *Server) streamAutoArchiveDirectory(root http.File, requestPath strin
 	}
 }
 
-func (self *Server) walkHttpFile(path string, startFile http.File, fileFn func(string, http.File, os.FileInfo) error) error {
+func (server *Server) walkHttpFile(path string, startFile http.File, fileFn func(string, http.File, os.FileInfo) error) error {
 	if s, err := startFile.Stat(); err == nil {
 		if s.IsDir() {
 			path = strings.TrimSuffix(path, `/`) + `/`
@@ -388,8 +386,8 @@ func (self *Server) walkHttpFile(path string, startFile http.File, fileFn func(s
 					for _, c := range children {
 						var subpath = filepath.Join(path, c.Name())
 
-						if subfile, err := self.fs.Open(subpath); err == nil {
-							var err = self.walkHttpFile(subpath, subfile, fileFn)
+						if subfile, err := server.fs.Open(subpath); err == nil {
+							var err = server.walkHttpFile(subpath, subfile, fileFn)
 
 							subfile.Close()
 

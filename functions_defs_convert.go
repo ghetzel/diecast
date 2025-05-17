@@ -6,7 +6,7 @@ import (
 
 var ConvertRoundToPlaces = 12
 
-func loadStandardFunctionsConvert(funcs FuncMap, server *Server) funcGroup {
+func loadStandardFunctionsConvert(_ FuncMap, _ *Server) funcGroup {
 	return funcGroup{
 		Name:        `Unit Conversions`,
 		Description: `Used to convert numeric values between different unit systems.`,

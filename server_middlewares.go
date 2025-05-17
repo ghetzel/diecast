@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"image"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -32,33 +31,33 @@ import (
 // in the stack (true) or to stop processing the request immediately (false).
 type Middleware func(w http.ResponseWriter, req *http.Request) bool
 
-func (self *Server) setupServer() error {
-	if err := self.configureTls(); err != nil {
+func (server *Server) setupServer() error {
+	if err := server.configureTls(); err != nil {
 		return err
 	}
 
-	if err := self.registerInternalRoutes(); err != nil {
+	if err := server.registerInternalRoutes(); err != nil {
 		return err
 	}
 
-	self.BeforeHandlers = []Middleware{
-		self.middlewareStartRequest,
-		self.middlewareParseRequestBody,
-		self.middlewareDebugRequest,
-		self.middlewareInjectHeaders,
-		self.middlewareProcessAuthenticators,
-		self.middlewareCsrf,
+	server.BeforeHandlers = []Middleware{
+		server.middlewareStartRequest,
+		server.middlewareParseRequestBody,
+		server.middlewareDebugRequest,
+		server.middlewareInjectHeaders,
+		server.middlewareProcessAuthenticators,
+		server.middlewareCsrf,
 	}
 
-	self.AfterHandlers = []http.HandlerFunc{
-		self.afterFinalizeAndLog,
+	server.AfterHandlers = []http.HandlerFunc{
+		server.afterFinalizeAndLog,
 	}
 
 	return nil
 }
 
-func (self *Server) traceName(candidate string) string {
-	if jc := self.JaegerConfig; jc != nil && jc.Enable {
+func (server *Server) traceName(candidate string) string {
+	if jc := server.JaegerConfig; jc != nil && jc.Enable {
 		for _, mapping := range jc.OperationsMappings {
 			if newName, matched := mapping.TraceName(candidate); matched {
 				return newName
@@ -69,11 +68,11 @@ func (self *Server) traceName(candidate string) string {
 	return candidate
 }
 
-func (self *Server) traceNameFromRequest(req *http.Request) string {
-	return self.traceName(fmt.Sprintf("%s %s", req.Method, req.URL.Path))
+func (server *Server) traceNameFromRequest(req *http.Request) string {
+	return server.traceName(fmt.Sprintf("%s %s", req.Method, req.URL.Path))
 }
 
-func (self *Server) requestIdFromRequest(req *http.Request) string {
+func (server *Server) requestIdFromRequest(req *http.Request) string {
 	if id := req.Header.Get(`traceparent`); id != `` {
 		return id
 	} else if id := maputil.M(
@@ -90,25 +89,25 @@ func (self *Server) requestIdFromRequest(req *http.Request) string {
 }
 
 // setup request (generate ID, intercept ResponseWriter to get status code, set context variables)
-func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Request) bool {
-	var requestId = self.requestIdFromRequest(req)
+func (server *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Request) bool {
+	var requestId = server.requestIdFromRequest(req)
 
 	log.Debugf("[%s] %s", requestId, strings.Repeat(`-`, 69))
 	log.Debugf("[%s] %s %s (%s)", requestId, req.Method, req.RequestURI, req.RemoteAddr)
 
 	// setup opentracing for this request (if we should)
-	if self.opentrace != nil {
-		if traceName := self.traceNameFromRequest(req); traceName != `` {
+	if server.opentrace != nil {
+		if traceName := server.traceNameFromRequest(req); traceName != `` {
 			var span opentracing.Span
 
 			// continue an existing span or start a new one
-			if wctx, err := self.opentrace.Extract(
+			if wctx, err := server.opentrace.Extract(
 				opentracing.HTTPHeaders,
 				opentracing.HTTPHeadersCarrier(req.Header),
 			); err == nil {
-				span = self.opentrace.StartSpan(traceName, ext.RPCServerOption(wctx))
+				span = server.opentrace.StartSpan(traceName, ext.RPCServerOption(wctx))
 			} else {
-				span = self.opentrace.StartSpan(traceName)
+				span = server.opentrace.StartSpan(traceName)
 			}
 
 			if span != nil {
@@ -129,7 +128,7 @@ func (self *Server) middlewareStartRequest(w http.ResponseWriter, req *http.Requ
 	return true
 }
 
-func (self *Server) middlewareParseRequestBody(w http.ResponseWriter, req *http.Request) bool {
+func (server *Server) middlewareParseRequestBody(w http.ResponseWriter, req *http.Request) bool {
 	if reqbody(req) != nil {
 		return true
 	}
@@ -146,7 +145,7 @@ func (self *Server) middlewareParseRequestBody(w http.ResponseWriter, req *http.
 	if req.Body != nil && req.ContentLength > 0 {
 		defer req.Body.Close()
 
-		if data, err := ioutil.ReadAll(req.Body); err == nil {
+		if data, err := io.ReadAll(req.Body); err == nil {
 			body.Raw = data
 			body.String = string(data)
 			body.Loaded = true
@@ -169,10 +168,10 @@ func (self *Server) middlewareParseRequestBody(w http.ResponseWriter, req *http.
 }
 
 // handle request dumper (for debugging)
-func (self *Server) middlewareDebugRequest(w http.ResponseWriter, req *http.Request) bool {
-	if len(self.DebugDumpRequests) > 0 {
+func (server *Server) middlewareDebugRequest(w http.ResponseWriter, req *http.Request) bool {
+	if len(server.DebugDumpRequests) > 0 {
 		log.Debugf("[%s] middleware: request dumper", reqid(req))
-		for match, destdir := range self.DebugDumpRequests {
+		for match, destdir := range server.DebugDumpRequests {
 			var filename string
 
 			if fileutil.DirExists(destdir) {
@@ -199,11 +198,11 @@ func (self *Server) middlewareDebugRequest(w http.ResponseWriter, req *http.Requ
 }
 
 // inject global headers
-func (self *Server) middlewareInjectHeaders(w http.ResponseWriter, req *http.Request) bool {
-	if len(self.GlobalHeaders) > 0 {
+func (server *Server) middlewareInjectHeaders(w http.ResponseWriter, req *http.Request) bool {
+	if len(server.GlobalHeaders) > 0 {
 		log.Debugf("[%s] middleware: inject global headers", reqid(req))
 
-		for k, v := range self.GlobalHeaders {
+		for k, v := range server.GlobalHeaders {
 			if typeutil.IsArray(v) {
 				for _, i := range sliceutil.Stringify(v) {
 					w.Header().Add(k, i)
@@ -220,11 +219,11 @@ func (self *Server) middlewareInjectHeaders(w http.ResponseWriter, req *http.Req
 }
 
 // process authenticators
-func (self *Server) middlewareProcessAuthenticators(w http.ResponseWriter, req *http.Request) bool {
-	if len(self.Authenticators) > 0 {
+func (server *Server) middlewareProcessAuthenticators(w http.ResponseWriter, req *http.Request) bool {
+	if len(server.Authenticators) > 0 {
 		log.Debugf("[%s] middleware: process authenticators", reqid(req))
 
-		if auth, err := self.Authenticators.Authenticator(req); err == nil {
+		if auth, err := server.Authenticators.Authenticator(req); err == nil {
 			if auth != nil {
 				if auth.IsCallback(req.URL) {
 					auth.Callback(w, req)
@@ -235,7 +234,7 @@ func (self *Server) middlewareProcessAuthenticators(w http.ResponseWriter, req *
 				}
 			}
 		} else {
-			self.respondError(w, req, err, http.StatusInternalServerError)
+			server.respondError(w, req, err, http.StatusInternalServerError)
 		}
 	}
 
@@ -244,7 +243,7 @@ func (self *Server) middlewareProcessAuthenticators(w http.ResponseWriter, req *
 }
 
 // cleanup request tracing info
-func (self *Server) afterFinalizeAndLog(w http.ResponseWriter, req *http.Request) {
+func (server *Server) afterFinalizeAndLog(w http.ResponseWriter, req *http.Request) {
 	// log.Debugf("[%s] after: finalize and log request", reqid(req))
 	var took time.Duration
 
@@ -262,33 +261,33 @@ func (self *Server) afterFinalizeAndLog(w http.ResponseWriter, req *http.Request
 		ot.Finish()
 	}
 
-	self.logreq(w, req)
+	server.logreq(w, req)
 	removeRequestTimer(req)
 }
 
 // adds a pile of TLS configuration for the benefit of the various HTTP clients uses to do things so
 // that you have an alternative to "insecure: true"; a ray of sunlight in the dark sky of practical modern web cryptosystems.
-func (self *Server) configureTls() error {
+func (server *Server) configureTls() error {
 	// if we're appending additional trusted certs (for Bindings and other internal HTTP clients)
-	if len(self.TrustedRootPEMs) > 0 {
+	if len(server.TrustedRootPEMs) > 0 {
 		// get the existing system CA bundle
 		if syspool, err := x509.SystemCertPool(); err == nil {
 			// append each cert
-			for _, pemfile := range self.TrustedRootPEMs {
+			for _, pemfile := range server.TrustedRootPEMs {
 				// must be a readable PEM file
 				if pem, err := fileutil.ReadAll(pemfile); err == nil {
 					if !syspool.AppendCertsFromPEM(pem) {
-						return fmt.Errorf("Failed to append certificate %s", pemfile)
+						return fmt.Errorf("failed to append certificate %s", pemfile)
 					}
 				} else {
-					return fmt.Errorf("Failed to read certificate %s: %v", pemfile, err)
+					return fmt.Errorf("failed to read certificate %s: %v", pemfile, err)
 				}
 			}
 
 			// this is what http.Client.Transport.TLSClientConfig.RootCAs will become
-			self.altRootCaPool = syspool
+			server.altRootCaPool = syspool
 		} else {
-			return fmt.Errorf("Failed to retrieve system CA pool: %v", err)
+			return fmt.Errorf("failed to retrieve system CA pool: %v", err)
 		}
 	}
 
@@ -296,14 +295,14 @@ func (self *Server) configureTls() error {
 }
 
 // adds routes for things like favicon and actions.
-func (self *Server) registerInternalRoutes() error {
+func (server *Server) registerInternalRoutes() error {
 	// setup handler for template tree
-	self.mux.HandleFunc(self.rp()+`/`, self.handleRequest)
+	server.mux.HandleFunc(server.rp()+`/`, server.handleRequest)
 
 	// add favicon.ico handler (if specified)
-	var faviconRoute = `/` + filepath.Join(self.rp(), `favicon.ico`)
+	var faviconRoute = `/` + filepath.Join(server.rp(), `favicon.ico`)
 
-	self.mux.HandleFunc(faviconRoute, func(w http.ResponseWriter, req *http.Request) {
+	server.mux.HandleFunc(faviconRoute, func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
 		case http.MethodGet:
 			defer req.Body.Close()
@@ -313,10 +312,10 @@ func (self *Server) registerInternalRoutes() error {
 
 			// before we do anything, make sure this file wouldn't be served
 			// through our current application
-			self.handleRequest(recorder, req)
+			server.handleRequest(recorder, req)
 
 			if recorder.Code < 400 {
-				for k, vs := range recorder.HeaderMap {
+				for k, vs := range recorder.Result().Header {
 					for _, v := range vs {
 						w.Header().Add(k, v)
 					}
@@ -325,11 +324,11 @@ func (self *Server) registerInternalRoutes() error {
 				io.Copy(w, recorder.Body)
 			} else {
 				// no favicon cached, so we gotta decode it
-				if len(self.faviconImageIco) == 0 {
+				if len(server.faviconImageIco) == 0 {
 					var icon io.ReadCloser
 
-					if self.FaviconPath != `` {
-						if file, err := self.fs.Open(self.FaviconPath); err == nil {
+					if server.FaviconPath != `` {
+						if file, err := server.fs.Open(server.FaviconPath); err == nil {
 							icon = file
 						}
 					}
@@ -342,7 +341,7 @@ func (self *Server) registerInternalRoutes() error {
 						var buf = bytes.NewBuffer(nil)
 
 						if err := ico.Encode(buf, img); err == nil {
-							self.faviconImageIco = buf.Bytes()
+							server.faviconImageIco = buf.Bytes()
 						} else {
 							log.Debugf("favicon encode: %v", err)
 						}
@@ -351,31 +350,31 @@ func (self *Server) registerInternalRoutes() error {
 					}
 				}
 
-				if len(self.faviconImageIco) > 0 {
+				if len(server.faviconImageIco) > 0 {
 					w.Header().Set(`Content-Type`, `image/x-icon`)
-					w.Write(self.faviconImageIco)
+					w.Write(server.faviconImageIco)
 				}
 			}
 		}
 	})
 
 	// add action handlers
-	for i, action := range self.Actions {
-		var hndPath = filepath.Join(self.rp(), action.Path)
+	for i, action := range server.Actions {
+		var hndPath = filepath.Join(server.rp(), action.Path)
 
 		if executil.IsRoot() && !executil.EnvBool(`DIECAST_ALLOW_ROOT_ACTIONS`) {
-			return fmt.Errorf("Refusing to start as root with actions specified.  Override with the environment variable DIECAST_ALLOW_ROOT_ACTIONS=true")
+			return fmt.Errorf("refusing to start as root with actions specified.  Override with the environment variable DIECAST_ALLOW_ROOT_ACTIONS=true")
 		}
 
 		if action.Path == `` {
 			return fmt.Errorf("Action %d: Must specify a 'path'", i)
 		}
 
-		self.mux.HandleFunc(hndPath, func(w http.ResponseWriter, req *http.Request) {
-			if handler := self.actionForRequest(req); handler != nil {
+		server.mux.HandleFunc(hndPath, func(w http.ResponseWriter, req *http.Request) {
+			if handler := server.actionForRequest(req); handler != nil {
 				handler(w, req)
 			} else {
-				http.Error(w, fmt.Sprintf("cannot find handler for action"), http.StatusInternalServerError)
+				http.Error(w, "cannot find handler for action", http.StatusInternalServerError)
 			}
 		})
 

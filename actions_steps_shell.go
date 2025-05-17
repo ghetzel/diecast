@@ -29,21 +29,21 @@ import (
 //
 // Command options specified as an object:
 //
-//	data:
-//		command:   				# interpreted the same as above (string or array)
-// 		inherit: true|false 	# whether the current shell environment should be inherited by the command
-//      env:
-//			X: abc
-//			Y: zyx
+//		data:
+//			command:   				# interpreted the same as above (string or array)
+//			inherit: true|false 	# whether the current shell environment should be inherited by the command
+//	     env:
+//				X: abc
+//				Y: zyx
 //
 // -------------------------------------------------------------------------------------------------
 type ShellStep struct{}
 
-func (self *ShellStep) Perform(config *StepConfig, w http.ResponseWriter, req *http.Request, prev *StepConfig) (interface{}, error) {
+func (step *ShellStep) Perform(config *StepConfig, w http.ResponseWriter, req *http.Request, prev *StepConfig) (any, error) {
 	var cmd *executil.Cmd
-	var command interface{}
+	var command any
 	var inherit = true
-	var env = make(map[string]interface{})
+	var env = make(map[string]any)
 
 	// parse options format
 	if typeutil.IsMap(config.Data) {
@@ -69,22 +69,22 @@ func (self *ShellStep) Perform(config *StepConfig, w http.ResponseWriter, req *h
 					defer os.Remove(tmpfile)
 					args = []string{shell, tmpfile}
 				} else {
-					return nil, fmt.Errorf("Failed write temporary file: %v", err)
+					return nil, fmt.Errorf("failed write temporary file: %v", err)
 				}
 			} else {
-				return nil, fmt.Errorf("Cannot locate user shell")
+				return nil, fmt.Errorf("cannot locate user shell")
 			}
 		} else if a, err := shellwords.Parse(script); err == nil {
 			args = a
 		} else {
-			return nil, fmt.Errorf("Failed to parse command line: %v", err)
+			return nil, fmt.Errorf("failed to parse command line: %v", err)
 		}
 	}
 
 	if len(args) > 0 {
 		cmd = executil.Command(args[0], args[1:]...)
 	} else {
-		return nil, fmt.Errorf("Command array cannot be empty")
+		return nil, fmt.Errorf("command array cannot be empty")
 	}
 
 	if cmd != nil {

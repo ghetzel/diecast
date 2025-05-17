@@ -20,23 +20,23 @@ type PdfRenderer struct {
 	prewrite PrewriteFunc
 }
 
-func (self *PdfRenderer) ShouldPrerender() bool {
+func (renderer *PdfRenderer) ShouldPrerender() bool {
 	return false
 }
 
-func (self *PdfRenderer) SetServer(server *Server) {
-	self.server = server
+func (renderer *PdfRenderer) SetServer(server *Server) {
+	renderer.server = server
 }
 
-func (self *PdfRenderer) SetPrewriteFunc(fn PrewriteFunc) {
-	self.prewrite = fn
+func (renderer *PdfRenderer) SetPrewriteFunc(fn PrewriteFunc) {
+	renderer.prewrite = fn
 }
 
-func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
+func (renderer *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
 	defer options.Input.Close()
 
 	if httputil.QBool(req, `__subrender`) {
-		if fn := self.prewrite; fn != nil {
+		if fn := renderer.prewrite; fn != nil {
 			fn(req)
 		}
 
@@ -52,7 +52,7 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 
 		defer browser.Close()
 
-		var subaddr = self.server.Address
+		var subaddr = renderer.server.Address
 
 		if strings.HasPrefix(subaddr, `:`) {
 			subaddr = `127.0.0.1` + subaddr
@@ -81,7 +81,7 @@ func (self *PdfRenderer) Render(w http.ResponseWriter, req *http.Request, option
 
 			w.Header().Set(`Content-Disposition`, fmt.Sprintf("inline; filename=%q", rewrittenFilename))
 
-			if fn := self.prewrite; fn != nil {
+			if fn := renderer.prewrite; fn != nil {
 				fn(req)
 			}
 

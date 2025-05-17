@@ -11,7 +11,7 @@ import (
 	"github.com/montanaflynn/stats"
 )
 
-func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
+func loadStandardFunctionsMath(_ FuncMap, _ *Server) funcGroup {
 	var group = funcGroup{
 		Name:        `Math and Statistics`,
 		Description: `These functions implement basic mathematical and statistical operations on numbers.`,
@@ -65,7 +65,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Variadic:    true,
 					},
 				},
-				Function: func(values ...interface{}) float64 {
+				Function: func(values ...any) float64 {
 					out, _ := calcFn(`+`, values...)
 					return out
 				},
@@ -80,7 +80,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Variadic:    true,
 					},
 				},
-				Function: func(values ...interface{}) float64 {
+				Function: func(values ...any) float64 {
 					out, _ := calcFn(`-`, values...)
 					return out
 				},
@@ -95,7 +95,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Variadic:    true,
 					},
 				},
-				Function: func(values ...interface{}) float64 {
+				Function: func(values ...any) float64 {
 					out, _ := calcFn(`*`, values...)
 					return out
 				},
@@ -110,7 +110,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Variadic:    true,
 					},
 				},
-				Function: func(values ...interface{}) (float64, error) {
+				Function: func(values ...any) (float64, error) {
 					return calcFn(`/`, values...)
 				},
 			}, {
@@ -124,7 +124,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Variadic:    true,
 					},
 				},
-				Function: func(values ...interface{}) (float64, error) {
+				Function: func(values ...any) (float64, error) {
 					return calcFn(`%`, values...)
 				},
 			}, {
@@ -138,7 +138,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Variadic:    true,
 					},
 				},
-				Function: func(values ...interface{}) (float64, error) {
+				Function: func(values ...any) (float64, error) {
 					return calcFn(`^`, values...)
 				},
 			}, {
@@ -158,7 +158,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Default:     0,
 					},
 				},
-				Function: func(max interface{}, starts ...interface{}) []int {
+				Function: func(max any, starts ...any) []int {
 					var start = 0
 
 					if len(starts) > 0 {
@@ -168,7 +168,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 					if v, err := stringutil.ConvertToInteger(max); err == nil {
 						var seq = make([]int, v)
 
-						for i, _ := range seq {
+						for i := range seq {
 							seq[i] = start + i
 						}
 
@@ -187,7 +187,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The number to round.`,
 					},
 				},
-				Function: func(in interface{}, places ...int) (float64, error) {
+				Function: func(in any, places ...int) (float64, error) {
 					if inF, err := stringutil.ConvertToFloat(in); err == nil {
 						var n = 0
 
@@ -214,7 +214,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The number to operate on.`,
 					},
 				},
-				Function: func(value interface{}) float64 {
+				Function: func(value any) float64 {
 					return -1 * typeutil.V(value).Float()
 				},
 			}, {
@@ -227,7 +227,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The number to test.`,
 					},
 				},
-				Function: func(number interface{}) bool {
+				Function: func(number any) bool {
 					return (math.Mod(typeutil.Float(number), 2) == 0)
 				},
 			}, {
@@ -240,7 +240,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The number to test.`,
 					},
 				},
-				Function: func(number interface{}) bool {
+				Function: func(number any) bool {
 					return (math.Mod(typeutil.Float(number), 2) != 0)
 				},
 			}, {
@@ -253,7 +253,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The number to operate on.`,
 					},
 				},
-				Function: func(number interface{}) float64 {
+				Function: func(number any) float64 {
 					return math.Abs(typeutil.Float(number))
 				},
 			}, {
@@ -266,7 +266,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The number to operate on.`,
 					},
 				},
-				Function: func(number interface{}) float64 {
+				Function: func(number any) float64 {
 					return math.Ceil(typeutil.Float(number))
 				},
 			}, {
@@ -279,7 +279,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The number to operate on.`,
 					},
 				},
-				Function: func(number interface{}) float64 {
+				Function: func(number any) float64 {
 					return math.Floor(typeutil.Float(number))
 				},
 			}, {
@@ -292,7 +292,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The value (in radians) to operate on.`,
 					},
 				},
-				Function: func(rad interface{}) float64 {
+				Function: func(rad any) float64 {
 					return math.Sin(typeutil.Float(rad))
 				},
 			}, {
@@ -305,7 +305,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The value (in radians) to operate on.`,
 					},
 				},
-				Function: func(rad interface{}) float64 {
+				Function: func(rad any) float64 {
 					return math.Cos(typeutil.Float(rad))
 				},
 			}, {
@@ -318,7 +318,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The value (in radians) to operate on.`,
 					},
 				},
-				Function: func(rad interface{}) float64 {
+				Function: func(rad any) float64 {
 					return math.Tan(typeutil.Float(rad))
 				},
 			}, {
@@ -331,7 +331,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The value (in radians) to operate on.`,
 					},
 				},
-				Function: func(rad interface{}) float64 {
+				Function: func(rad any) float64 {
 					return math.Asin(typeutil.Float(rad))
 				},
 			}, {
@@ -344,7 +344,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The value (in radians) to operate on.`,
 					},
 				},
-				Function: func(rad interface{}) float64 {
+				Function: func(rad any) float64 {
 					return math.Acos(typeutil.Float(rad))
 				},
 			}, {
@@ -357,7 +357,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The value (in radians) to operate on.`,
 					},
 				},
-				Function: func(rad interface{}) float64 {
+				Function: func(rad any) float64 {
 					return math.Atan(typeutil.Float(rad))
 				},
 			}, {
@@ -370,7 +370,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The value (in degrees) to convert.`,
 					},
 				},
-				Function: func(deg interface{}) float64 {
+				Function: func(deg any) float64 {
 					return typeutil.Float(deg) * (math.Pi / 180)
 				},
 			}, {
@@ -383,7 +383,7 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 						Description: `The value (in radians) to convert.`,
 					},
 				},
-				Function: func(rad interface{}) float64 {
+				Function: func(rad any) float64 {
 					return typeutil.Float(rad) * (180 / math.Pi)
 				},
 			},
@@ -436,10 +436,10 @@ func loadStandardFunctionsMath(funcs FuncMap, server *Server) funcGroup {
 				},
 			},
 			Function: func(statsFn statsUnaryFn) statsTplFunc {
-				return func(in interface{}) (float64, error) {
+				return func(in any) (float64, error) {
 					var input []float64
 
-					if err := sliceutil.Each(in, func(i int, value interface{}) error {
+					if err := sliceutil.Each(in, func(i int, value any) error {
 						if v, err := stringutil.ConvertToFloat(value); err == nil {
 							input = append(input, v)
 						} else {

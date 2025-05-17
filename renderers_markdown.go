@@ -1,7 +1,7 @@
 package diecast
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/microcosm-cc/bluemonday"
@@ -13,22 +13,22 @@ type MarkdownRenderer struct {
 	prewrite PrewriteFunc
 }
 
-func (self *MarkdownRenderer) ShouldPrerender() bool {
+func (renderer *MarkdownRenderer) ShouldPrerender() bool {
 	return true
 }
 
-func (self *MarkdownRenderer) SetServer(server *Server) {
-	self.server = server
+func (renderer *MarkdownRenderer) SetServer(server *Server) {
+	renderer.server = server
 }
 
-func (self *MarkdownRenderer) SetPrewriteFunc(fn PrewriteFunc) {
-	self.prewrite = fn
+func (renderer *MarkdownRenderer) SetPrewriteFunc(fn PrewriteFunc) {
+	renderer.prewrite = fn
 }
 
-func (self *MarkdownRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
+func (renderer *MarkdownRenderer) Render(w http.ResponseWriter, req *http.Request, options RenderOptions) error {
 	defer options.Input.Close()
 
-	if input, err := ioutil.ReadAll(options.Input); err == nil {
+	if input, err := io.ReadAll(options.Input); err == nil {
 		var output = blackfriday.Run(
 			input,
 			blackfriday.WithExtensions(blackfriday.CommonExtensions),
@@ -38,7 +38,7 @@ func (self *MarkdownRenderer) Render(w http.ResponseWriter, req *http.Request, o
 
 		w.Header().Set(`Content-Type`, `text/html; charset=utf-8`)
 
-		if fn := self.prewrite; fn != nil {
+		if fn := renderer.prewrite; fn != nil {
 			fn(req)
 		}
 

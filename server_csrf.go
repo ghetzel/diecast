@@ -6,7 +6,6 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -39,7 +38,7 @@ type CsrfMethod string
 
 const (
 	DoubleSubmitCookie CsrfMethod = `cookie`
-	HMAC                          = `hmac`
+	HMAC               CsrfMethod = `hmac`
 )
 
 type CSRF struct {
@@ -58,52 +57,52 @@ type CSRF struct {
 	// PrivateKey              string     `yaml:"private_key"             json:"private_key"`             // Provide a base64-encoded private key for use with the HMAC method of token validation
 }
 
-func (self *CSRF) GetHeaderName() string {
-	if self.HeaderName != `` {
-		return self.HeaderName
+func (csrf *CSRF) GetHeaderName() string {
+	if csrf.HeaderName != `` {
+		return csrf.HeaderName
 	} else {
 		return DefaultCsrfHeaderName
 	}
 }
 
-func (self *CSRF) GetFormFieldName() string {
-	if self.FormFieldName != `` {
-		return self.FormFieldName
+func (csrf *CSRF) GetFormFieldName() string {
+	if csrf.FormFieldName != `` {
+		return csrf.FormFieldName
 	} else {
 		return DefaultCsrfFormFieldName
 	}
 }
 
-func (self *CSRF) GetCookieName() string {
-	if c := self.Cookie; c != nil && c.Name != `` {
+func (csrf *CSRF) GetCookieName() string {
+	if c := csrf.Cookie; c != nil && c.Name != `` {
 		return c.Name
 	} else {
 		return DefaultCsrfCookieName
 	}
 }
 
-func (self *CSRF) Handle(w http.ResponseWriter, req *http.Request) bool {
-	if self.Enable {
+func (csrf *CSRF) Handle(w http.ResponseWriter, req *http.Request) bool {
+	if csrf.Enable {
 		log.Debugf("[%s] middleware: check csrf", reqid(req))
-		self.generateTokenForRequest(w, req, false)
+		csrf.generateTokenForRequest(w, req, false)
 
 		switch req.Method {
 		case http.MethodGet, http.MethodHead, http.MethodOptions, http.MethodTrace:
 			break
 		default:
-			if !self.IsExempt(req) {
+			if !csrf.IsExempt(req) {
 				// if we're validating the request, then we've "consumed" this token and
 				// should force-regenerate a new one
-				self.generateTokenForRequest(w, req, true)
+				csrf.generateTokenForRequest(w, req, true)
 				var creq = req.Clone(req.Context())
 
 				if req.Body != nil {
-					if body, err := ioutil.ReadAll(req.Body); err == nil {
+					if body, err := io.ReadAll(req.Body); err == nil {
 						req.Body.Close()
-						creq.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-						req.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-					} else if self.server != nil {
-						self.server.respondError(w, req, err, http.StatusBadRequest)
+						creq.Body = io.NopCloser(bytes.NewBuffer(body))
+						req.Body = io.NopCloser(bytes.NewBuffer(body))
+					} else if csrf.server != nil {
+						csrf.server.respondError(w, req, err, http.StatusBadRequest)
 					} else {
 						http.Error(w, err.Error(), http.StatusBadRequest)
 						return false
@@ -111,9 +110,9 @@ func (self *CSRF) Handle(w http.ResponseWriter, req *http.Request) bool {
 				}
 
 				// if the token is missing/invalid, stop here and return an error
-				if !self.Verify(creq) {
-					if self.server != nil {
-						self.server.respondError(w, req, fmt.Errorf("CSRF validation failed"), http.StatusBadRequest)
+				if !csrf.Verify(creq) {
+					if csrf.server != nil {
+						csrf.server.respondError(w, req, fmt.Errorf("cSRF validation failed"), http.StatusBadRequest)
 					} else {
 						http.Error(w, "CSRF validation failed", http.StatusBadRequest)
 					}
@@ -130,20 +129,20 @@ func (self *CSRF) Handle(w http.ResponseWriter, req *http.Request) bool {
 }
 
 // Retrieve the user-submitted token that can be forged.
-func (self *CSRF) getUserSubmittedToken(req *http.Request) ([]byte, bool) {
+func (csrf *CSRF) getUserSubmittedToken(req *http.Request) ([]byte, bool) {
 	// first try to get the token from the header
-	if token := req.Header.Get(self.GetHeaderName()); token != `` {
+	if token := req.Header.Get(csrf.GetHeaderName()); token != `` {
 		return b58decode(token), true
 	}
 
 	// then try getting it from a form field
-	if token := req.PostFormValue(self.GetFormFieldName()); token != `` {
+	if token := req.PostFormValue(csrf.GetFormFieldName()); token != `` {
 		return b58decode(token), true
 	}
 
 	// Finally, try a multipart value.
 	if req.MultipartForm != nil {
-		if values, ok := req.MultipartForm.Value[self.GetFormFieldName()]; ok && len(values) > 0 && values[0] != `` {
+		if values, ok := req.MultipartForm.Value[csrf.GetFormFieldName()]; ok && len(values) > 0 && values[0] != `` {
 			return b58decode(values[0]), true
 		}
 	}
@@ -152,8 +151,8 @@ func (self *CSRF) getUserSubmittedToken(req *http.Request) ([]byte, bool) {
 }
 
 // Retrieve the cookie token that is harder to forge.
-func (self *CSRF) getCookieToken(req *http.Request) ([]byte, bool) {
-	if cookie, err := req.Cookie(self.GetCookieName()); err == nil {
+func (csrf *CSRF) getCookieToken(req *http.Request) ([]byte, bool) {
+	if cookie, err := req.Cookie(csrf.GetCookieName()); err == nil {
 		if cookie.Value != `` {
 			return b58decode(cookie.Value), true
 		}
@@ -164,9 +163,9 @@ func (self *CSRF) getCookieToken(req *http.Request) ([]byte, bool) {
 
 // Verifies that the token that came in via the CSRF cookie and the one that came in
 // as part of the request headers/body are, in fact, the same.
-func (self *CSRF) Verify(req *http.Request) bool {
-	if cookieToken, ok := self.getCookieToken(req); ok {
-		if userToken, ok := self.getUserSubmittedToken(req); ok {
+func (csrf *CSRF) Verify(req *http.Request) bool {
+	if cookieToken, ok := csrf.getCookieToken(req); ok {
+		if userToken, ok := csrf.getUserSubmittedToken(req); ok {
 			if subtle.ConstantTimeCompare(cookieToken, userToken) == 1 {
 				return true
 			}
@@ -176,14 +175,14 @@ func (self *CSRF) Verify(req *http.Request) bool {
 	return false
 }
 
-func (self *CSRF) cookieFor(token string) *http.Cookie {
+func (csrf *CSRF) cookieFor(token string) *http.Cookie {
 	var cookie = new(http.Cookie)
-	cookie.Name = self.GetCookieName()
+	cookie.Name = csrf.GetCookieName()
 	cookie.Value = token
 	cookie.Path = `/`
 	cookie.MaxAge = 31536000
 
-	if c := self.Cookie; c != nil {
+	if c := csrf.Cookie; c != nil {
 		if c.MaxAge != nil {
 			cookie.MaxAge = *c.MaxAge
 		}
@@ -212,10 +211,10 @@ func (self *CSRF) cookieFor(token string) *http.Cookie {
 	return cookie
 }
 
-func (self *CSRF) generateTokenForRequest(w http.ResponseWriter, req *http.Request, forceRegen bool) {
+func (csrf *CSRF) generateTokenForRequest(w http.ResponseWriter, req *http.Request, forceRegen bool) {
 	var data []byte
 
-	if cookieToken, ok := self.getCookieToken(req); ok && len(cookieToken) == CsrfTokenLength && !forceRegen {
+	if cookieToken, ok := csrf.getCookieToken(req); ok && len(cookieToken) == CsrfTokenLength && !forceRegen {
 		data = cookieToken
 	} else {
 		data = make([]byte, CsrfTokenLength)
@@ -233,22 +232,22 @@ func (self *CSRF) generateTokenForRequest(w http.ResponseWriter, req *http.Reque
 
 	// set the cookie
 	w.Header().Set(`Vary`, `Cookie`)
-	w.Header().Set(self.GetHeaderName(), token)
-	var cookie = self.cookieFor(token)
+	w.Header().Set(csrf.GetHeaderName(), token)
+	var cookie = csrf.cookieFor(token)
 	http.SetCookie(w, cookie)
 }
 
-func (self *CSRF) shouldPostprocessRequest(w http.ResponseWriter, req *http.Request) bool {
+func (csrf *CSRF) shouldPostprocessRequest(w http.ResponseWriter, _ *http.Request) bool {
 	var mediaTypes = DefaultCsrfInjectMediaTypes
 	var resMediaType = w.Header().Get(`Content-Type`)
 
-	if len(self.InjectableMediaTypes) > 0 {
-		mediaTypes = self.InjectableMediaTypes
+	if len(csrf.InjectableMediaTypes) > 0 {
+		mediaTypes = csrf.InjectableMediaTypes
 	}
 
 	for _, ct := range mediaTypes {
 		if mt, _, err := mime.ParseMediaType(resMediaType); err == nil {
-			if strings.ToLower(ct) == strings.ToLower(mt) {
+			if strings.EqualFold(ct, mt) {
 				return true
 			}
 		}
@@ -257,9 +256,9 @@ func (self *CSRF) shouldPostprocessRequest(w http.ResponseWriter, req *http.Requ
 	return false
 }
 
-func (self *CSRF) IsExempt(req *http.Request) bool {
+func (csrf *CSRF) IsExempt(req *http.Request) bool {
 	if req != nil {
-		for _, pattern := range self.Except {
+		for _, pattern := range csrf.Except {
 			if m, err := filepath.Match(pattern, req.URL.Path); err == nil && m {
 				return true
 			}
@@ -269,11 +268,11 @@ func (self *CSRF) IsExempt(req *http.Request) bool {
 	return false
 }
 
-func (self *Server) middlewareCsrf(w http.ResponseWriter, req *http.Request) bool {
+func (server *Server) middlewareCsrf(w http.ResponseWriter, req *http.Request) bool {
 	// enforce CSRF protection (if configured)
-	if csrf := self.CSRF; csrf != nil && csrf.Enable {
+	if csrf := server.CSRF; csrf != nil && csrf.Enable {
 		if !csrf.registered {
-			csrf.server = self
+			csrf.server = server
 
 			// Okay, so...
 			//
@@ -320,7 +319,9 @@ func (self *Server) middlewareCsrf(w http.ResponseWriter, req *http.Request) boo
 							log.Debugf("[%s] injecting form field", reqid(req))
 
 							var start = time.Now()
-							defer reqtime(req, `csrf-inject`, time.Since(start))
+							defer func() {
+								reqtime(req, `csrf-inject`, time.Since(start))
+							}()
 
 							if doc, err := htmldoc(in); err == nil {
 								doc.Find(csrf.InjectFormFieldSelector).Each(func(i int, form *goquery.Selection) {
@@ -351,11 +352,11 @@ func (self *Server) middlewareCsrf(w http.ResponseWriter, req *http.Request) boo
 				return in, nil
 			})
 
-			if self.BaseHeader == nil {
-				self.BaseHeader = new(TemplateHeader)
+			if server.BaseHeader == nil {
+				server.BaseHeader = new(TemplateHeader)
 			}
 
-			self.BaseHeader.Postprocessors = append([]string{`__diecast_csrf`}, self.BaseHeader.Postprocessors...)
+			server.BaseHeader.Postprocessors = append([]string{`__diecast_csrf`}, server.BaseHeader.Postprocessors...)
 			csrf.registered = true
 		}
 

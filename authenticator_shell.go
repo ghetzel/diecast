@@ -46,34 +46,34 @@ func NewShellAuthenticator(config *AuthenticatorConfig) (*ShellAuthenticator, er
 	return auth, nil
 }
 
-func (self *ShellAuthenticator) Name() string {
-	if self.config != nil && self.config.Name != `` {
-		return self.config.Name
+func (auth *ShellAuthenticator) Name() string {
+	if auth.config != nil && auth.config.Name != `` {
+		return auth.config.Name
 	} else {
 		return `ShellAuthenticator`
 	}
 }
 
-func (self *ShellAuthenticator) IsCallback(_ *url.URL) bool {
+func (auth *ShellAuthenticator) IsCallback(_ *url.URL) bool {
 	return false
 }
 
-func (self *ShellAuthenticator) Callback(w http.ResponseWriter, req *http.Request) {
+func (auth *ShellAuthenticator) Callback(w http.ResponseWriter, req *http.Request) {
 
 }
 
-func (self *ShellAuthenticator) Authenticate(w http.ResponseWriter, req *http.Request) bool {
+func (auth *ShellAuthenticator) Authenticate(w http.ResponseWriter, req *http.Request) bool {
 	var id = reqid(req)
-	var config = self.config
+	var config = auth.config
 
 	var disableCookies = config.O(`disable_cookies`).Bool()
 	var action string
 	var stdin io.Reader
-	var body map[string]interface{}
+	var body map[string]any
 
 	if req.ContentLength != 0 {
 		if err := httputil.ParseRequest(req, &body); err != nil {
-			log.Warningf("[%s] %T: parse error: %v", id, self, err)
+			log.Warningf("[%s] %T: parse error: %v", id, auth, err)
 			return false
 		}
 	}
@@ -85,7 +85,7 @@ func (self *ShellAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 	if cookie, err := req.Cookie(config.O(`cookie_name`, DefaultShellSessionCookieName).String()); disableCookies || err == http.ErrNoCookie {
 		action = `create`
 		stdin = nil
-	} else if self.deauthPath != nil && self.deauthPath.Match(req.URL.Path) {
+	} else if auth.deauthPath != nil && auth.deauthPath.Match(req.URL.Path) {
 		action = `remove`
 		stdin = bytes.NewBufferString(cookie.Value)
 	} else {
@@ -102,11 +102,11 @@ func (self *ShellAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 		if args, err := shellwords.Parse(cmdline); err == nil {
 			cmd = exec.Command(args[0], args[1:]...)
 		} else {
-			log.Warningf("[%s] %T: invalid command: %v", id, self, err)
+			log.Warningf("[%s] %T: invalid command: %v", id, auth, err)
 			return false
 		}
 	} else {
-		log.Warningf("[%s] %T: empty command", id, self)
+		log.Warningf("[%s] %T: empty command", id, auth)
 		return false
 	}
 
@@ -125,7 +125,7 @@ func (self *ShellAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 			cmd.Env = append(cmd.Env, fmt.Sprintf("DIECAST_AUTH_BODY_%s=%v", strings.ToUpper(stringutil.Underscore(k)), v))
 		}
 	} else {
-		log.Warningf("[%s] %T: body parse error: %v", id, self, err)
+		log.Warningf("[%s] %T: body parse error: %v", id, auth, err)
 		return false
 	}
 
@@ -149,7 +149,7 @@ func (self *ShellAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 	if err := cmd.Run(); err == nil {
 		// print any error output that came out
 		for _, line := range strings.Split(stderr.String(), "\n") {
-			log.Warningf("[%s] %T: error: %s", id, self, line)
+			log.Warningf("[%s] %T: error: %s", id, auth, line)
 		}
 
 		// prep the cookie

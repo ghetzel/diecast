@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"strings"
 	"sync"
 	"time"
@@ -73,24 +73,23 @@ var redisBlacklistedCommands = []string{
 // The Redis binding protocol is used to retrieve or modify items in a Redis server.
 // It is specified with URLs that use the redis://[host[:port]]/db/key scheme.
 //
-// Protocol Options
+// # Protocol Options
 //
-// - redis.default_host (localhost:6379)
-//   Specifies the hostname:port to use if a resource URI does not specify one.
+//   - redis.default_host (localhost:6379)
+//     Specifies the hostname:port to use if a resource URI does not specify one.
 //
-// - redis.max_idle (10)
-//   The maximum number of idle connections to maintain in a connection pool.
+//   - redis.max_idle (10)
+//     The maximum number of idle connections to maintain in a connection pool.
 //
-// - redis.idle_timeout (120s)
-//   The maximum idle time of a connection before it is closed.
+//   - redis.idle_timeout (120s)
+//     The maximum idle time of a connection before it is closed.
 //
-// - redis.max_lifetime (10m)
-//   The maximum amount of time a connection can remain open before being recycled.
-//
+//   - redis.max_lifetime (10m)
+//     The maximum amount of time a connection can remain open before being recycled.
 type RedisProtocol struct {
 }
 
-func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, error) {
+func (protocol *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, error) {
 	var pid = rr.URL.Host
 
 	if pid == `` {
@@ -104,7 +103,7 @@ func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, err
 	}
 
 	if first, _ := stringutil.SplitPair(rr.Verb, ` `); sliceutil.ContainsString(redisBlacklistedCommands, first) {
-		return nil, fmt.Errorf("The %q command is not permitted", rr.Verb)
+		return nil, fmt.Errorf("the %q command is not permitted", rr.Verb)
 	}
 
 	var pool *redis.Pool
@@ -150,23 +149,23 @@ func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, err
 			var response = &ProtocolResponse{
 				Raw:        reply,
 				StatusCode: 200,
-				data:       ioutil.NopCloser(buf),
+				data:       io.NopCloser(buf),
 			}
 
-			switch reply.(type) {
+			switch replytyped := reply.(type) {
 			case error:
-				return response, reply.(error)
+				return response, replytyped
 			case int64, string, []byte:
 				response.MimeType = `text/plain; charset=utf-8`
 				buf.Write([]byte(typeutil.String(reply)))
 
-			case []interface{}:
+			case []any:
 				response.MimeType = `application/json; charset=utf-8`
 
 				// handles H-series replies (maps represented as arrays of alternating keys, values)
 				if strings.HasPrefix(rr.Verb, `H`) {
-					var obj = make(map[string]interface{})
-					var values = sliceutil.Stringify(reply)
+					var obj = make(map[string]any)
+					var values = sliceutil.Stringify(replytyped)
 
 					for i, value := range values {
 						if i%2 == 0 {
@@ -180,7 +179,7 @@ func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, err
 
 					reply = obj
 				} else {
-					var values = reply.([]interface{})
+					var values = replytyped
 
 					switch rr.Verb {
 					case `TIME`:
@@ -194,7 +193,7 @@ func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, err
 					return response, err
 				}
 			default:
-				return nil, fmt.Errorf("Unsupported response type %T", reply)
+				return nil, fmt.Errorf("unsupported response type %T", reply)
 			}
 
 			return response, nil
@@ -202,6 +201,6 @@ func (self *RedisProtocol) Retrieve(rr *ProtocolRequest) (*ProtocolResponse, err
 			return nil, err
 		}
 	} else {
-		return nil, fmt.Errorf("Cannot obtain Redis connection: %v", err)
+		return nil, fmt.Errorf("cannot obtain Redis connection: %v", err)
 	}
 }

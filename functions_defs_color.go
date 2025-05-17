@@ -13,7 +13,7 @@ import (
 const DefaultColorPalette = `munin`
 
 var palettes = map[string][]string{
-	`spectrum14`: []string{
+	`spectrum14`: {
 		`#ECB796`,
 		`#DC8F70`,
 		`#B2A470`,
@@ -29,7 +29,7 @@ var palettes = map[string][]string{
 		`#649EB9`,
 		`#387AA3`,
 	},
-	`colorwheel`: []string{
+	`colorwheel`: {
 		`#CB513A`,
 		`#73C03A`,
 		`#65B9AC`,
@@ -39,7 +39,7 @@ var palettes = map[string][]string{
 		`#858772`,
 		`#B5B6A9`,
 	},
-	`spectrum2000`: []string{
+	`spectrum2000`: {
 		`#57306F`,
 		`#514C76`,
 		`#646583`,
@@ -60,7 +60,7 @@ var palettes = map[string][]string{
 		`#580839`,
 		`#31082B`,
 	},
-	`spectrum2001`: []string{
+	`spectrum2001`: {
 		`#2F243F`,
 		`#3C2C55`,
 		`#4A3768`,
@@ -81,7 +81,7 @@ var palettes = map[string][]string{
 		`#3D1818`,
 		`#320A1B`,
 	},
-	`classic9`: []string{
+	`classic9`: {
 		`#2F254A`,
 		`#491D37`,
 		`#7C2626`,
@@ -94,7 +94,7 @@ var palettes = map[string][]string{
 		`#4A6860`,
 		`#423D4F`,
 	},
-	`cool`: []string{
+	`cool`: {
 		`#5E9D2F`,
 		`#73C03A`,
 		`#4682B4`,
@@ -104,7 +104,7 @@ var palettes = map[string][]string{
 		`#A47493`,
 		`#C09FB5`,
 	},
-	`munin`: []string{
+	`munin`: {
 		`#00CC00`,
 		`#0066B3`,
 		`#FF8000`,
@@ -137,7 +137,7 @@ var palettes = map[string][]string{
 	},
 }
 
-func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
+func loadStandardFunctionsColor(_ FuncMap, _ *Server) funcGroup {
 	return funcGroup{
 		Name:        `Color Manipulation`,
 		Description: `Used to parse, manipulate, and adjust string representations of visible colors.`,
@@ -162,7 +162,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 						Return: `#FF4D4D`,
 					},
 				},
-				Function: func(color interface{}, percent float64) (string, error) {
+				Function: func(color any, percent float64) (string, error) {
 					if c, err := colorutil.Lighten(color, int(percent)); err == nil {
 						return c.String(), nil
 					} else {
@@ -189,7 +189,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 						Return: `#B30000`,
 					},
 				},
-				Function: func(color interface{}, percent float64) (string, error) {
+				Function: func(color any, percent float64) (string, error) {
 					if c, err := colorutil.Darken(color, int(percent)); err == nil {
 						return c.String(), nil
 					} else {
@@ -216,7 +216,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 						Return: `#c42b21`,
 					},
 				},
-				Function: func(color interface{}, percent float64) (string, error) {
+				Function: func(color any, percent float64) (string, error) {
 					if c, err := colorutil.Saturate(color, int(percent)); err == nil {
 						return c.String(), nil
 					} else {
@@ -243,7 +243,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 						Return: `#96544f`,
 					},
 				},
-				Function: func(color interface{}, percent float64) (string, error) {
+				Function: func(color any, percent float64) (string, error) {
 					if c, err := colorutil.Desaturate(color, int(percent)); err == nil {
 						return c.String(), nil
 					} else {
@@ -275,7 +275,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 						Return: `#8A3360`,
 					},
 				},
-				Function: func(first interface{}, second interface{}, weight float64) (string, error) {
+				Function: func(first any, second any, weight float64) (string, error) {
 					if c, err := colorutil.MixN(first, second, weight); err == nil {
 						return c.String(), nil
 					} else {
@@ -298,7 +298,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 						Return: `#FF0000`,
 					},
 				},
-				Function: func(color interface{}) (string, error) {
+				Function: func(color any) (string, error) {
 					if c, err := colorutil.Parse(color); err == nil {
 						return c.String(), nil
 					} else {
@@ -321,7 +321,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 					},
 				},
 				Summary: `Convert the given color to an "rgb()" or "rgba()" value.`,
-				Function: func(color interface{}) (string, error) {
+				Function: func(color any) (string, error) {
 					if c, err := colorutil.Parse(color); err == nil {
 						return c.StringRGBA(), nil
 					} else {
@@ -344,7 +344,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 						Return: `hsl(0, 100%, 50%)`,
 					},
 				},
-				Function: func(color interface{}) (string, error) {
+				Function: func(color any) (string, error) {
 					if c, err := colorutil.Parse(color); err == nil {
 						return c.StringHSLA(), nil
 					} else {
@@ -369,7 +369,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 						Return: `#416C69`,
 					},
 				},
-				Function: func(value interface{}) string {
+				Function: func(value any) string {
 					var mmh3 = murmur3.New64().Sum([]byte(typeutil.V(value).String()))
 
 					if len(mmh3) >= 3 {
@@ -404,7 +404,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 						Return: palettes[DefaultColorPalette][len(palettes[DefaultColorPalette])-1],
 					},
 				},
-				Function: func(index interface{}, paletteName ...string) (string, error) {
+				Function: func(index any, paletteName ...string) (string, error) {
 					var name = DefaultColorPalette
 
 					if len(paletteName) > 0 && paletteName[0] != `` {
@@ -422,7 +422,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 						var color = palette[i]
 						return color, nil
 					} else {
-						return ``, fmt.Errorf("Unknown color palette %q", name)
+						return ``, fmt.Errorf("unknown color palette %q", name)
 					}
 				},
 			}, {
@@ -448,7 +448,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server *Server) funcGroup {
 						palettes[name] = colors
 						return nil
 					} else {
-						return fmt.Errorf("Must provide a name for the color palette being defined")
+						return fmt.Errorf("must provide a name for the color palette being defined")
 					}
 				},
 			}, {

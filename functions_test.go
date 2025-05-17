@@ -14,7 +14,7 @@ func TestCollectionFunctions(t *testing.T) {
 	var assert = require.New(t)
 	var fns = GetStandardFunctions(nil)
 
-	var page = fns[`page`].(func(interface{}, interface{}) int)
+	var page = fns[`page`].(func(any, any) int)
 
 	assert.Zero(page(0, 0))
 	assert.Zero(page(0, -25))
@@ -28,7 +28,7 @@ func TestCollectionFunctions(t *testing.T) {
 	assert.Equal(75, page(4, 25))
 	assert.Equal(100, page(5, 25))
 
-	var isLastElement = fns[`isLastElement`].(func(index interface{}, array interface{}) bool)
+	var isLastElement = fns[`isLastElement`].(func(index any, array any) bool)
 	var arr = []string{`a`, `b`, `c`}
 
 	assert.False(isLastElement(-1, arr), arr)
@@ -37,13 +37,13 @@ func TestCollectionFunctions(t *testing.T) {
 	assert.True(isLastElement(2, arr), arr)
 	assert.False(isLastElement(3, arr), arr)
 
-	var longestString = fns[`longestString`].(func(interface{}) string)
+	var longestString = fns[`longestString`].(func(any) string)
 	assert.Equal(`three`, longestString([]string{`one`, `two`, `three`, `four`, `five`}))
 	assert.Equal(`four`, longestString([]string{`one`, `two`, `four`, `five`}))
 	assert.Equal(`five`, longestString([]string{`one`, `two`, `five`}))
 	assert.Equal(`one`, longestString([]string{`one`, `two`}))
 
-	var shuffle = fns[`shuffleInPlace`].(func(input interface{}, seeds ...int64) (int64, error))
+	var shuffle = fns[`shuffleInPlace`].(func(input any, seeds ...int64) (int64, error))
 	var x = []string{`a`, `b`, `c`, `d`, `e`, `f`, `g`}
 
 	shuffle(x, 42)
@@ -55,7 +55,7 @@ func TestCollectionFunctions(t *testing.T) {
 	shuffle(x, 42)
 	assert.Equal([]string{"b", "g", "e", "f", "d", "a", "c"}, x)
 
-	var filterLines = fns[`filterLines`].(func(in interface{}, expr string, negate ...bool) ([]string, error))
+	var filterLines = fns[`filterLines`].(func(in any, expr string, negate ...bool) ([]string, error))
 	var res, err = filterLines(
 		"# Hello\n# Author: Me\necho hello\nexit 1",
 		"^#",
@@ -84,7 +84,7 @@ func TestCollectionFunctionsCodecs(t *testing.T) {
 	var assert = require.New(t)
 	var fns = GetStandardFunctions(nil)
 
-	var chr2str = fns[`chr2str`].(func(codepoints interface{}) string)
+	var chr2str = fns[`chr2str`].(func(codepoints any) string)
 
 	assert.Equal(`HELLO`, chr2str([]uint8{72, 69, 76, 76, 79}))
 	assert.Equal(`THERE`, chr2str([]uint8{84, 72, 69, 82, 69}))
@@ -94,8 +94,8 @@ func TestTimeFunctions(t *testing.T) {
 	var assert = require.New(t)
 	var fns = GetStandardFunctions(nil)
 
-	var isOlderThan = fns[`isOlderThan`].(func(t interface{}, d interface{}, tm ...interface{}) (bool, error))
-	var isNewerThan = fns[`isNewerThan`].(func(t interface{}, d interface{}, tm ...interface{}) (bool, error))
+	var isOlderThan = fns[`isOlderThan`].(func(t any, d any, tm ...any) (bool, error))
+	var isNewerThan = fns[`isNewerThan`].(func(t any, d any, tm ...any) (bool, error))
 
 	b, err := isOlderThan(time.Now().Add(-1*time.Hour), "30m")
 	assert.NoError(err)
@@ -136,13 +136,13 @@ func TestMiscFunctions(t *testing.T) {
 	var assert = require.New(t)
 	var fns = GetStandardFunctions(nil)
 
-	var fn_switch = fns[`switch`].(func(input interface{}, fallback interface{}, pairs ...interface{}) interface{})
+	var fn_switch = fns[`switch`].(func(input any, fallback any, pairs ...any) any)
 
 	assert.Equal(`1`, fn_switch(`a`, `fallback`, `a`, `1`, `b`, `2`))
 	assert.Equal(`2`, fn_switch(`b`, `fallback`, `a`, `1`, `b`, `2`))
 	assert.Equal(`fallback`, fn_switch(`c`, `fallback`, `a`, `1`, `b`, `2`))
 
-	var fn_random = fns[`random`].(func(bounds ...interface{}) int64)
+	var fn_random = fns[`random`].(func(bounds ...any) int64)
 
 	for i := 0; i < 100000; i++ {
 		var v = fn_random()

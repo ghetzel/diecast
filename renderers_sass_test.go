@@ -5,7 +5,7 @@ package diecast
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http/httptest"
 	"testing"
 
@@ -30,7 +30,7 @@ func TestSassRenderer(t *testing.T) {
 	var testsass = `$c1: red; $c2: blue; .parent { td { color: $c1; } tr { color: $c2 }}; @import '/css/for-sass';`
 
 	assert.NoError(renderer.Render(recorder, request, RenderOptions{
-		Input: ioutil.NopCloser(bytes.NewBufferString(testsass)),
+		Input: io.NopCloser(bytes.NewBufferString(testsass)),
 	}))
 
 	var res = recorder.Result()

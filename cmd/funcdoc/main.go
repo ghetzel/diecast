@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -93,7 +93,7 @@ func GenerateFunctionDocs(funcs diecast.FuncMap, sourcefile string) (functionDoc
 	}
 }
 
-func getFnSignature(fn interface{}, inArgNames []string) (string, string, error) {
+func getFnSignature(fn any, inArgNames []string) (string, string, error) {
 	fn = typeutil.ResolveValue(fn)
 
 	if typeutil.IsKind(fn, reflect.Func) {
@@ -108,7 +108,7 @@ func getFnSignature(fn interface{}, inArgNames []string) (string, string, error)
 			var typename = inT.Name()
 
 			switch typename {
-			case `interface{}`, ``:
+			case `any`, ``:
 				typename = `any`
 			}
 
@@ -129,7 +129,7 @@ func getFnSignature(fn interface{}, inArgNames []string) (string, string, error)
 			var typename = outT.Name()
 
 			switch typename {
-			case `interface{}`:
+			case `any`:
 				typename = `any`
 			}
 
@@ -148,7 +148,7 @@ func getFnSignature(fn interface{}, inArgNames []string) (string, string, error)
 func main() {
 	if f, err := os.Open(`docs/functions_pre.md`); err == nil {
 		defer f.Close()
-		if data, err := ioutil.ReadAll(f); err == nil {
+		if data, err := io.ReadAll(f); err == nil {
 			fmt.Printf("%s\n", string(data))
 		}
 	}
@@ -215,7 +215,7 @@ func main() {
 
 	if f, err := os.Open(`docs/functions_post.md`); err == nil {
 		defer f.Close()
-		if data, err := ioutil.ReadAll(f); err == nil {
+		if data, err := io.ReadAll(f); err == nil {
 			fmt.Printf("%s\n", string(data))
 		}
 	}

@@ -1,6 +1,6 @@
 package diecast
 
-func loadRuntimeFunctionsVariables(server *Server) funcGroup {
+func loadRuntimeFunctionsVariables(_ *Server) funcGroup {
 	return funcGroup{
 		Name: `Dynamic Variables`,
 		Description: `A set of functions that allow for custom data to be set, retrieved, and removed at runtime; ` +
@@ -36,10 +36,10 @@ func loadRuntimeFunctionsVariables(server *Server) funcGroup {
 						Return: `Hello`,
 					}, {
 						Code: `var "this.is.a.value" true`,
-						Return: map[string]interface{}{
-							`this`: map[string]interface{}{
-								`is`: map[string]interface{}{
-									`a`: map[string]interface{}{
+						Return: map[string]any{
+							`this`: map[string]any{
+								`is`: map[string]any{
+									`a`: map[string]any{
 										`value`: true,
 									},
 								},
@@ -73,8 +73,8 @@ func loadRuntimeFunctionsVariables(server *Server) funcGroup {
 						Return: []int{123, 456},
 					}, {
 						Code: `push "users.names" "Bob"`,
-						Return: map[string]interface{}{
-							`users`: map[string]interface{}{
+						Return: map[string]any{
+							`users`: map[string]any{
 								`names`: []string{`Alice`, `Bob`},
 							},
 						},

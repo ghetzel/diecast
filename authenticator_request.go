@@ -49,34 +49,34 @@ func NewRequestAuthenticator(config *AuthenticatorConfig) (*RequestAuthenticator
 	return auth, nil
 }
 
-func (self *RequestAuthenticator) Name() string {
-	if self.config != nil && self.config.Name != `` {
-		return self.config.Name
+func (auth *RequestAuthenticator) Name() string {
+	if auth.config != nil && auth.config.Name != `` {
+		return auth.config.Name
 	} else {
 		return `RequestAuthenticator`
 	}
 }
 
-func (self *RequestAuthenticator) IsCallback(_ *url.URL) bool {
+func (auth *RequestAuthenticator) IsCallback(_ *url.URL) bool {
 	return false
 }
 
-func (self *RequestAuthenticator) Callback(w http.ResponseWriter, req *http.Request) {
+func (auth *RequestAuthenticator) Callback(w http.ResponseWriter, req *http.Request) {
 
 }
 
-func (self *RequestAuthenticator) Authenticate(w http.ResponseWriter, req *http.Request) bool {
-	if len(self.methods) > 0 {
-		if !sliceutil.ContainsString(self.methods, req.Method) {
+func (auth *RequestAuthenticator) Authenticate(w http.ResponseWriter, req *http.Request) bool {
+	if len(auth.methods) > 0 {
+		if !sliceutil.ContainsString(auth.methods, req.Method) {
 			httputil.RequestSetValue(req, ContextErrorKey, fmt.Sprintf("HTTP method %s is not permitted", req.Method))
 			return false
 		}
 	}
 
 	// if remotes are specified, one must match
-	if len(self.remotes) > 0 {
+	if len(auth.remotes) > 0 {
 		if addr, _, err := net.SplitHostPort(req.RemoteAddr); err == nil && addr != `` {
-			for i, remote := range self.remotes {
+			for i, remote := range auth.remotes {
 				if addr == remote {
 					log.Debugf(
 						"[%s] request-auth: permitting address %v (in remote %d; exact match: %v)",
@@ -86,7 +86,7 @@ func (self *RequestAuthenticator) Authenticate(w http.ResponseWriter, req *http.
 						remote,
 					)
 					return true
-				} else if ipnet, ok := self.remoteNets[remote]; ok && ipnet != nil {
+				} else if ipnet, ok := auth.remoteNets[remote]; ok && ipnet != nil {
 					if ip := net.ParseIP(addr); ip != nil {
 						if ipnet.Contains(ip) {
 							log.Debugf(

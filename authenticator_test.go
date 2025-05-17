@@ -2,7 +2,6 @@ package diecast
 
 import (
 	"encoding/base64"
-	"fmt"
 	"net/http/httptest"
 	"net/url"
 	"testing"
@@ -10,14 +9,6 @@ import (
 	"github.com/ghetzel/testify/require"
 	htpasswd "github.com/tg123/go-htpasswd"
 )
-
-func musturl(in string) *url.URL {
-	if u, err := url.Parse(in); err == nil {
-		return u
-	} else {
-		panic(fmt.Sprintf("invalid url: %v", err))
-	}
-}
 
 func TestAuthenticatorConfigs(t *testing.T) {
 	var assert = require.New(t)
@@ -61,12 +52,14 @@ func TestAuthenticatorConfigs(t *testing.T) {
 func TestBasicAuthenticator(t *testing.T) {
 	var assert = require.New(t)
 	auth, err := NewBasicAuthenticator(&AuthenticatorConfig{
-		Options: map[string]interface{}{
-			`credentials`: map[string]interface{}{
+		Options: map[string]any{
+			`credentials`: map[string]any{
 				`tester01`: `{SHA}u3/Rg4+2cdohm4CmQtP9Qq45HX0=`,
 			},
 		},
 	})
+
+	assert.NoError(err)
 
 	htp, err := htpasswd.AcceptSha(`{SHA}u3/Rg4+2cdohm4CmQtP9Qq45HX0=`)
 	assert.NoError(err)

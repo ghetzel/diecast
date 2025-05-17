@@ -7,13 +7,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
 	"os"
 	"path"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -34,7 +33,7 @@ var Base32Alphabet = base32.NewEncoding(`abcdefghijklmnopqrstuvwxyz234567`)
 var globalFunctions = make(FuncMap)
 
 // Register a function that will be available to all template expressions, wherever they appear.
-func RegisterGlobalFunction(name string, fn interface{}) {
+func RegisterGlobalFunction(name string, fn any) {
 	if fn != nil {
 		globalFunctions[name] = fn
 	} else {
@@ -48,30 +47,30 @@ type fileInfo struct {
 	os.FileInfo
 }
 
-func (self *fileInfo) toMap() map[string]interface{} {
-	var full = path.Join(self.Parent, self.Name())
+func (info *fileInfo) toMap() map[string]any {
+	var full = path.Join(info.Parent, info.Name())
 
-	var data = map[string]interface{}{
-		`name`:          self.Name(),
+	var data = map[string]any{
+		`name`:          info.Name(),
 		`path`:          full,
-		`size`:          self.Size(),
-		`last_modified`: self.ModTime(),
-		`directory`:     self.IsDir(),
+		`size`:          info.Size(),
+		`last_modified`: info.ModTime(),
+		`directory`:     info.IsDir(),
 	}
 
-	if !self.IsDir() {
+	if !info.IsDir() {
 		data[`mimetype`] = fileutil.GetMimeType(full)
 	}
 
 	return data
 }
 
-func (self *fileInfo) MarshalJSON() ([]byte, error) {
-	return json.Marshal(self.toMap())
+func (info *fileInfo) MarshalJSON() ([]byte, error) {
+	return json.Marshal(info.toMap())
 }
 
-func (self *fileInfo) String() string {
-	return path.Join(self.Parent, self.Name())
+func (info *fileInfo) String() string {
+	return path.Join(info.Parent, info.Name())
 }
 
 type statsUnaryFn func(stats.Float64Data) (float64, error)
@@ -164,9 +163,9 @@ func GetStandardFunctions(server *Server) FuncMap {
 	return funcs
 }
 
-type statsTplFunc func(in interface{}) (float64, error) // {}
+type statsTplFunc func(in any) (float64, error) // {}
 
-func delimited(comma rune, header []interface{}, lines []interface{}) (string, error) {
+func delimited(comma rune, header []any, lines []any) (string, error) {
 	var output = bytes.NewBufferString(``)
 	var csvwriter = csv.NewWriter(output)
 	csvwriter.Comma = comma
@@ -209,7 +208,7 @@ func delimited(comma rune, header []interface{}, lines []interface{}) (string, e
 	return output.String(), nil
 }
 
-func tmFmt(value interface{}, format ...string) (string, error) {
+func tmFmt(value any, format ...string) (string, error) {
 	if value == nil || typeutil.String(value) == `` {
 		return ``, nil
 	}
@@ -298,7 +297,7 @@ func tmFmt(value interface{}, format ...string) (string, error) {
 	return vStr, nil
 }
 
-func calcFn(op string, values ...interface{}) (float64, error) {
+func calcFn(op string, values ...any) (float64, error) {
 	var valuesF = make([]float64, len(values))
 
 	for i, v := range values {
@@ -346,8 +345,8 @@ func calcFn(op string, values ...interface{}) (float64, error) {
 	}
 }
 
-func filterByKey(funcs FuncMap, input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
-	var out = make([]interface{}, 0)
+func filterByKey(funcs FuncMap, input any, key string, exprs ...any) ([]any, error) {
+	var out = make([]any, 0)
 	var expr = sliceutil.First(exprs)
 	var exprStr = fmt.Sprintf("%v", expr)
 
@@ -390,8 +389,8 @@ func filterByKey(funcs FuncMap, input interface{}, key string, exprs ...interfac
 	return out, nil
 }
 
-func uniqByKey(funcs FuncMap, input interface{}, key string, saveLast bool, exprs ...interface{}) ([]interface{}, error) {
-	var out = make([]interface{}, 0)
+func uniqByKey(funcs FuncMap, input any, key string, saveLast bool, exprs ...any) ([]any, error) {
+	var out = make([]any, 0)
 	var expr = sliceutil.First(exprs)
 	var exprStr = fmt.Sprintf("%v", expr)
 	var valuesEncountered = make(map[string]int)
@@ -442,34 +441,10 @@ func uniqByKey(funcs FuncMap, input interface{}, key string, saveLast bool, expr
 	return out, nil
 }
 
-func sorter(input interface{}, reverse bool, keys ...string) []interface{} {
-	var out = sliceutil.Sliceify(input)
+func commonses(slice any, cmp string) (any, error) {
+	var counts = make(map[any]int)
 
-	sort.Slice(out, func(i, j int) bool {
-		var iVal, jVal string
-
-		if len(keys) > 0 {
-			iVal = maputil.DeepGetString(out[i], strings.Split(keys[0], `.`))
-			jVal = maputil.DeepGetString(out[j], strings.Split(keys[0], `.`))
-		} else {
-			iVal, _ = stringutil.ToString(out[i])
-			jVal, _ = stringutil.ToString(out[j])
-		}
-
-		if reverse {
-			return iVal > jVal
-		} else {
-			return iVal < jVal
-		}
-	})
-
-	return out
-}
-
-func commonses(slice interface{}, cmp string) (interface{}, error) {
-	var counts = make(map[interface{}]int)
-
-	if err := sliceutil.Each(slice, func(i int, value interface{}) error {
+	if err := sliceutil.Each(slice, func(i int, value any) error {
 		if c, ok := counts[value]; ok {
 			counts[value] = c + 1
 		} else {
@@ -478,7 +453,7 @@ func commonses(slice interface{}, cmp string) (interface{}, error) {
 
 		return nil
 	}); err == nil {
-		var out interface{}
+		var out any
 		var threshold int
 
 		for value, count := range counts {
@@ -498,7 +473,7 @@ func commonses(slice interface{}, cmp string) (interface{}, error) {
 					threshold = count
 				}
 			default:
-				return nil, fmt.Errorf("Unknown comparator %q", cmp)
+				return nil, fmt.Errorf("unknown comparator %q", cmp)
 			}
 		}
 
@@ -508,13 +483,13 @@ func commonses(slice interface{}, cmp string) (interface{}, error) {
 	}
 }
 
-func htmlNodeToMap(node *html.Node) map[string]interface{} {
-	var output = make(map[string]interface{})
+func htmlNodeToMap(node *html.Node) map[string]any {
+	var output = make(map[string]any)
 
 	if node != nil && node.Type == html.ElementNode {
 		var text = ``
-		var children = make([]map[string]interface{}, 0)
-		var attrs = make(map[string]interface{})
+		var children = make([]map[string]any, 0)
+		var attrs = make(map[string]any)
 
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			switch child.Type {
@@ -556,7 +531,7 @@ func htmlNodeToMap(node *html.Node) map[string]interface{} {
 	return output
 }
 
-func getSunriseSunset(latitude float64, longitude float64, atTime ...interface{}) (time.Time, time.Time, error) {
+func getSunriseSunset(latitude float64, longitude float64, atTime ...any) (time.Time, time.Time, error) {
 	var at time.Time
 
 	if len(atTime) > 0 {
@@ -588,8 +563,8 @@ func getSunriseSunset(latitude float64, longitude float64, atTime ...interface{}
 	}
 }
 
-func timeCmp(before bool, first interface{}, secondI ...interface{}) (bool, error) {
-	var second interface{}
+func timeCmp(before bool, first any, secondI ...any) (bool, error) {
+	var second any
 
 	if len(secondI) == 0 {
 		second = first
@@ -630,7 +605,7 @@ func timeDelta(now time.Time, tm time.Time, dur time.Duration, lte bool) (bool, 
 	}
 }
 
-func cmp(op string, first interface{}, second interface{}) (bool, error) {
+func cmp(op string, first any, second any) (bool, error) {
 	fStr, ok1 := first.(string)
 	sStr, ok2 := second.(string)
 
@@ -645,7 +620,7 @@ func cmp(op string, first interface{}, second interface{}) (bool, error) {
 		case `le`:
 			return fStr <= sStr, nil
 		default:
-			return false, fmt.Errorf("Invalid operator %q", op)
+			return false, fmt.Errorf("invalid operator %q", op)
 		}
 	} else {
 		var fVal = typeutil.Float(first)
@@ -661,7 +636,7 @@ func cmp(op string, first interface{}, second interface{}) (bool, error) {
 		case `le`:
 			return fVal <= sVal, nil
 		default:
-			return false, fmt.Errorf("Invalid operator %q", op)
+			return false, fmt.Errorf("invalid operator %q", op)
 		}
 	}
 }
@@ -717,7 +692,7 @@ func toMarkdownExt(extensions ...string) blackfriday.Extensions {
 
 }
 
-func htmldoc(docI interface{}) (*goquery.Document, error) {
+func htmldoc(docI any) (*goquery.Document, error) {
 	if d, ok := docI.(*goquery.Document); ok {
 		return d, nil
 	} else if d, ok := docI.(string); ok {
@@ -725,11 +700,11 @@ func htmldoc(docI interface{}) (*goquery.Document, error) {
 	} else if d, ok := docI.(template.HTML); ok {
 		return goquery.NewDocumentFromReader(bytes.NewBufferString(string(d)))
 	} else {
-		return nil, fmt.Errorf("Expected a HTML document string or object, got: %T", docI)
+		return nil, fmt.Errorf("expected a HTML document string or object, got: %T", docI)
 	}
 }
 
-func htmlModify(docI interface{}, selector string, action string, k string, v interface{}, extra ...interface{}) (template.HTML, error) {
+func htmlModify(docI any, selector string, action string, k string, v any, extra ...any) (template.HTML, error) {
 	if doc, err := htmldoc(docI); err == nil {
 		switch action {
 		case `remove`:
@@ -807,7 +782,7 @@ func walkNodeTree(node *html.Node, fn func(child *html.Node) bool) {
 	}
 }
 
-func toBytes(input interface{}) []byte {
+func toBytes(input any) []byte {
 	var in []byte
 
 	if v, ok := input.([]byte); ok {
@@ -822,7 +797,7 @@ func toBytes(input interface{}) []byte {
 func readFromFS(fs http.FileSystem, filename string) ([]byte, error) {
 	if file, err := fs.Open(filename); err == nil {
 		defer file.Close()
-		return ioutil.ReadAll(file)
+		return io.ReadAll(file)
 	} else {
 		return nil, err
 	}

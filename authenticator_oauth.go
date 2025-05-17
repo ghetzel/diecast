@@ -1,6 +1,7 @@
 package diecast
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -27,7 +28,7 @@ var oauthSessions sync.Map
 type oauthSession struct {
 	State      string
 	Code       string
-	Properties map[string]interface{}
+	Properties map[string]any
 	Token      *oauth2.Token
 	Scheme     string
 	Domain     string
@@ -55,15 +56,15 @@ func NewOauthAuthenticator(config *AuthenticatorConfig) (*OauthAuthenticator, er
 	}
 
 	if auth.oauth2config.ClientID == `` {
-		return nil, fmt.Errorf("The 'client_id' option is required for OauthAuthenticator")
+		return nil, fmt.Errorf("the 'client_id' option is required for OauthAuthenticator")
 	}
 
 	if auth.oauth2config.ClientSecret == `` {
-		return nil, fmt.Errorf("The 'secret' option is required for OauthAuthenticator")
+		return nil, fmt.Errorf("the 'secret' option is required for OauthAuthenticator")
 	}
 
 	if auth.oauth2config.RedirectURL == `` {
-		return nil, fmt.Errorf("The 'callback' option is required for OauthAuthenticator")
+		return nil, fmt.Errorf("the 'callback' option is required for OauthAuthenticator")
 	}
 
 	switch endpoint := config.O(`provider`).String(); endpoint {
@@ -90,26 +91,26 @@ func NewOauthAuthenticator(config *AuthenticatorConfig) (*OauthAuthenticator, er
 		}
 
 		if auth.oauth2config.Endpoint.AuthURL == `` || auth.oauth2config.Endpoint.TokenURL == `` {
-			return nil, fmt.Errorf("Custom OAuth2 endpoint must specify the 'auth_url' and 'token_url' options.")
+			return nil, fmt.Errorf("custom OAuth2 endpoint must specify the 'auth_url' and 'token_url' options")
 		}
 
-		return nil, fmt.Errorf("Unrecognized OAuth2 endpoint %q", endpoint)
+		return nil, fmt.Errorf("unrecognized OAuth2 endpoint %q", endpoint)
 	}
 
 	return auth, nil
 }
 
-func (self *OauthAuthenticator) Name() string {
-	if self.config != nil && self.config.Name != `` {
-		return self.config.Name
+func (auth *OauthAuthenticator) Name() string {
+	if auth.config != nil && auth.config.Name != `` {
+		return auth.config.Name
 	} else {
 		return `OauthAuthenticator`
 	}
 }
 
-func (self *OauthAuthenticator) IsCallback(u *url.URL) bool {
-	if self.config != nil {
-		if cb, err := url.Parse(self.config.CallbackPath); err == nil {
+func (auth *OauthAuthenticator) IsCallback(u *url.URL) bool {
+	if auth.config != nil {
+		if cb, err := url.Parse(auth.config.CallbackPath); err == nil {
 			if strings.TrimSuffix(cb.Path, `/`) == strings.TrimSuffix(u.Path, `/`) {
 				return true
 			}
@@ -120,20 +121,20 @@ func (self *OauthAuthenticator) IsCallback(u *url.URL) bool {
 }
 
 // OAuth2: Leg 2: receive callback from consent page, validate session, and set session cookie
-func (self *OauthAuthenticator) Callback(w http.ResponseWriter, req *http.Request) {
+func (auth *OauthAuthenticator) Callback(w http.ResponseWriter, req *http.Request) {
 	var sid = httputil.Q(req, `state`)
 	var code = httputil.Q(req, `code`)
 
 	if sessionI, ok := oauthSessions.Load(sid); ok {
 		if session, ok := sessionI.(*oauthSession); ok {
 			if session.State == sid {
-				if token, err := self.oauth2config.Exchange(oauth2.NoContext, code); err == nil {
+				if token, err := auth.oauth2config.Exchange(context.Background(), code); err == nil {
 					session.Code = code
 					session.Token = token
 
 					// give the client their session ID
 					var cookie = &http.Cookie{
-						Name:     self.cookieName,
+						Name:     auth.cookieName,
 						Value:    session.State,
 						Path:     `/`,
 						Domain:   session.Domain,
@@ -142,8 +143,8 @@ func (self *OauthAuthenticator) Callback(w http.ResponseWriter, req *http.Reques
 						SameSite: http.SameSiteStrictMode,
 					}
 
-					if self.sessionDuration > 0 {
-						cookie.Expires = time.Now().Add(self.sessionDuration)
+					if auth.sessionDuration > 0 {
+						cookie.Expires = time.Now().Add(auth.sessionDuration)
 					}
 
 					http.SetCookie(w, cookie)
@@ -162,8 +163,8 @@ func (self *OauthAuthenticator) Callback(w http.ResponseWriter, req *http.Reques
 	}
 }
 
-func (self *OauthAuthenticator) Authenticate(w http.ResponseWriter, req *http.Request) bool {
-	if cookie, err := req.Cookie(self.cookieName); err == nil {
+func (auth *OauthAuthenticator) Authenticate(w http.ResponseWriter, req *http.Request) bool {
+	if cookie, err := req.Cookie(auth.cookieName); err == nil {
 		if sessionI, ok := oauthSessions.Load(cookie.Value); ok {
 			if session, ok := sessionI.(*oauthSession); ok {
 				if session.State == cookie.Value {
@@ -180,14 +181,14 @@ func (self *OauthAuthenticator) Authenticate(w http.ResponseWriter, req *http.Re
 		// store the session pre-authenticated stub
 		oauthSessions.Store(sid, &oauthSession{
 			State:      sid,
-			Properties: make(map[string]interface{}),
+			Properties: make(map[string]any),
 			Domain:     req.URL.Host,
 			Scheme:     req.URL.Scheme,
 			Path:       req.URL.Path,
 		})
 
 		// ...then redirect them to the auth page
-		http.Redirect(w, req, self.oauth2config.AuthCodeURL(sid), http.StatusTemporaryRedirect)
+		http.Redirect(w, req, auth.oauth2config.AuthCodeURL(sid), http.StatusTemporaryRedirect)
 		return true
 	}
 

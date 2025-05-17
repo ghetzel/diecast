@@ -15,12 +15,12 @@ import (
 )
 
 type MountConfig struct {
-	Mount   string                 `yaml:"mount"   json:"mount"`   // The URL path that this mount will respond to
-	To      string                 `yaml:"to"      json:"to"`      // The upstream URL or local filesystem path that will serve this path
-	Options map[string]interface{} `yaml:"options" json:"options"` // Mount-specific options
+	Mount   string         `yaml:"mount"   json:"mount"`   // The URL path that this mount will respond to
+	To      string         `yaml:"to"      json:"to"`      // The upstream URL or local filesystem path that will serve this path
+	Options map[string]any `yaml:"options" json:"options"` // Mount-specific options
 }
 
-var MountHaltErr = errors.New(`mount halted`)
+var ErrMountHalt = errors.New(`mount halted`)
 
 type Mount interface {
 	Open(string) (http.File, error)
@@ -94,7 +94,7 @@ func IsSameMount(first Mount, second Mount) bool {
 }
 
 func IsHardStop(err error) bool {
-	if err == MountHaltErr {
+	if err == ErrMountHalt {
 		return true
 	} else if _, ok := err.(*url.Error); ok {
 		return true
@@ -124,7 +124,7 @@ func openAsHttpFile(mount Mount, name string) (http.File, error) {
 		if hfile, ok := file.GetPayload().(http.File); ok && hfile != nil {
 			return hfile, nil
 		} else {
-			return nil, fmt.Errorf("Wrong response type")
+			return nil, fmt.Errorf("wrong response type")
 		}
 	} else {
 		return nil, err

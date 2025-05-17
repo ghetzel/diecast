@@ -9,7 +9,7 @@ import (
 	strip "github.com/grokify/html-strip-tags-go"
 )
 
-func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGroup {
+func loadStandardFunctionsHtmlProcessing(_ FuncMap, _ *Server) funcGroup {
 	var group = funcGroup{
 		Name:        `HTML Processing`,
 		Description: `Used to parse and modify HTML documents.`,
@@ -19,7 +19,7 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 				Summary: `Removes all HTML tags from a given input string, leaving behind only the ` +
 					`textual content of the nodes. Only text nodes are preserved; attribute names ` +
 					`and values, and comments, will be omitted.`,
-				Function: func(in interface{}) string {
+				Function: func(in any) string {
 					var stripped = strip.StripTags(fmt.Sprintf("%v", in))
 					stripped = htmlmain.UnescapeString(stripped)
 					return stripped
@@ -41,8 +41,8 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 						Description: `A CSS selector that targets the elements that will be returned.`,
 					},
 				},
-				Function: func(docI interface{}, selector string) ([]map[string]interface{}, error) {
-					var elements = make([]map[string]interface{}, 0)
+				Function: func(docI any, selector string) ([]map[string]any, error) {
+					var elements = make([]map[string]any, 0)
 
 					if doc, err := htmldoc(docI); err == nil {
 						doc.Find(selector).Each(func(i int, match *goquery.Selection) {
@@ -74,7 +74,7 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 						Description: `A CSS selector that targets the elements that will be returned.`,
 					},
 				},
-				Function: func(docI interface{}, selector string) (template.HTML, error) {
+				Function: func(docI any, selector string) (template.HTML, error) {
 					return htmlModify(docI, selector, `remove`, ``, nil)
 				},
 			}, {
@@ -91,7 +91,7 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 						Description: `A CSS selector that targets the elements that will be returned.`,
 					},
 				},
-				Function: func(docI interface{}, selector string, classes ...string) (template.HTML, error) {
+				Function: func(docI any, selector string, classes ...string) (template.HTML, error) {
 					return htmlModify(docI, selector, `add-class`, ``, classes)
 				},
 			}, {
@@ -108,7 +108,7 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 						Description: `A CSS selector that targets the elements that will be returned.`,
 					},
 				},
-				Function: func(docI interface{}, selector string, classes ...string) (template.HTML, error) {
+				Function: func(docI any, selector string, classes ...string) (template.HTML, error) {
 					return htmlModify(docI, selector, `remove-class`, ``, classes)
 				},
 			}, {
@@ -133,7 +133,7 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 						Description: `The value to set the matching attributes to.`,
 					},
 				},
-				Function: func(docI interface{}, selector string, name string, value interface{}) (template.HTML, error) {
+				Function: func(docI any, selector string, name string, value any) (template.HTML, error) {
 					return htmlModify(docI, selector, `set-attr`, name, value)
 				},
 			}, {
@@ -164,7 +164,7 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 							`expression can be referenced using a "$", e.g.: ${1}, ${2}, ${name}.`,
 					},
 				},
-				Function: func(document interface{}, selector string, attribute string, find string, replace interface{}) (template.HTML, error) {
+				Function: func(document any, selector string, attribute string, find string, replace any) (template.HTML, error) {
 					return htmlModify(document, selector, `find-replace-attr`, attribute, replace, find)
 				},
 			}, {
@@ -191,7 +191,7 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 							`expression can be referenced using a "$", e.g.: ${1}, ${2}, ${name}.`,
 					},
 				},
-				Function: func(document interface{}, selector string, find string, replace interface{}) (template.HTML, error) {
+				Function: func(document any, selector string, find string, replace any) (template.HTML, error) {
 					return htmlModify(document, selector, `find-replace-text`, ``, replace, find)
 				},
 			}, {
@@ -208,7 +208,7 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server *Server) funcGrou
 						Description: `A CSS selector that targets the element whose contents will be returned.`,
 					},
 				},
-				Function: func(docI interface{}, selector string) (template.HTML, error) {
+				Function: func(docI any, selector string) (template.HTML, error) {
 					if doc, err := htmldoc(docI); err == nil {
 						if contents, err := doc.Find(selector).Html(); err == nil {
 							return template.HTML(contents), nil

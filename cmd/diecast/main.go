@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -344,13 +343,13 @@ func main() {
 		}
 
 		if !isatty.IsTerminal(os.Stdin.Fd()) {
-			var input interface{}
+			var input any
 
 			if err := json.NewDecoder(os.Stdin).Decode(&input); err == nil {
 				if typeutil.IsMap(input) {
 					server.DefaultPageObject = typeutil.MapNative(input)
 				} else {
-					server.DefaultPageObject = map[string]interface{}{
+					server.DefaultPageObject = map[string]any{
 						`data`: input,
 					}
 				}
@@ -483,7 +482,7 @@ func appendDataFile(data *maputil.Map, baseK string, filename string) {
 	if file, err := os.Open(filename); err == nil {
 		defer file.Close()
 
-		var parsed interface{}
+		var parsed any
 		var err error
 
 		var ext = filepath.Ext(filename)
@@ -495,7 +494,7 @@ func appendDataFile(data *maputil.Map, baseK string, filename string) {
 		case `.txt`:
 			var pM = maputil.M(nil)
 
-			if b, err := ioutil.ReadAll(file); err == nil {
+			if b, err := io.ReadAll(file); err == nil {
 				for _, line := range strings.Split(string(b), "\n") {
 					line = strings.TrimSpace(line)
 
@@ -542,7 +541,7 @@ func appendDataFile(data *maputil.Map, baseK string, filename string) {
 	}
 }
 
-func populateFlags(into map[string]interface{}, from []string) {
+func populateFlags(into map[string]any, from []string) {
 	for _, pair := range from {
 		key, value := stringutil.SplitPair(pair, `=`)
 		maputil.DeepSet(into, strings.Split(key, `.`), stringutil.Autotype(value))
