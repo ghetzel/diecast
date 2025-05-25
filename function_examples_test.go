@@ -42,7 +42,6 @@ func TestFunctionExamples(t *testing.T) {
 				assert.NotNil(tmpl, msg)
 
 				tmpl.SetContext(ctx)
-
 				assert.EqualValues(fmt.Sprintf("%v", example.Return), tmpl.String(), msg)
 			}
 		}

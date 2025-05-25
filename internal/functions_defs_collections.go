@@ -846,7 +846,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 							},
 						},
 						Code:   `get $.input "properties.info.age"`,
-						Return: `<no value>`,
+						Return: ``,
 					}, {
 						Input: map[string]any{
 							"properties": map[string]any{

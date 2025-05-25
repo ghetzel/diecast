@@ -54,6 +54,14 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 					},
 				},
 				Function: calcFn,
+				Examples: []FuncExample{
+					{Code: `calc "+" -3 -2 5`, Return: 0},
+					{Code: `calc "-" 10 6 4 2`, Return: -2},
+					{Code: `calc "*" 5 5 5 5 5`, Return: 3125},
+					{Code: `calc "/" 10000 1000 100 10 1`, Return: 0.01},
+					{Code: `calc "^" 2 3 4 5 6`, Return: 2.3485425827738332e+108},
+					{Code: `calc "%" 54321 12345 4940`, Return: 1},
+				},
 			}, {
 				Name:    `add`,
 				Summary: `Return the sum of all of the given values.`,
@@ -158,18 +166,32 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Default:     0,
 					},
 				},
+				Examples: []FuncExample{
+					{Code: `sequence 5`, Return: []int{0, 1, 2, 3, 4}},
+					{Code: `sequence 5 1`, Return: []int{1, 2, 3, 4, 5}},
+					{Code: `sequence 4 0 3`, Return: []int{0, 3, 6, 9}},
+					{Code: `sequence 4 1 3`, Return: []int{1, 4, 7, 10}},
+					{Code: `sequence 5 0 0`, Return: []int{0, 0, 0, 0, 0}},
+				},
 				Function: func(max any, starts ...any) []int {
-					var start = 0
+					var start int = 0
+					var step int = 1
 
 					if len(starts) > 0 {
-						start = int(typeutil.Int(starts[0]))
+						if !typeutil.IsEmpty(starts[0]) {
+							start = int(typeutil.Int(starts[0]))
+						}
+
+						if len(starts) > 1 {
+							step = int(typeutil.Int(starts[1]))
+						}
 					}
 
 					if v, err := stringutil.ConvertToInteger(max); err == nil {
 						var seq = make([]int, v)
 
 						for i, _ := range seq {
-							seq[i] = start + i
+							seq[i] = start + (i * step)
 						}
 
 						return seq
@@ -187,21 +209,27 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `The number to round.`,
 					},
 				},
-				Function: func(in any, places ...int) (float64, error) {
-					if inF, err := stringutil.ConvertToFloat(in); err == nil {
-						var n = 0
+				Examples: []FuncExample{
+					{Code: `round 0`, Return: 0},
+					{Code: `round 1`, Return: 1},
+					{Code: `round 1.5537 4`, Return: 1.5537},
+					{Code: `round 1.5537 3`, Return: 1.554},
+					{Code: `round 1.5537 2`, Return: 1.55},
+					{Code: `round 1.5537 1`, Return: 1.6},
+					{Code: `round 1.5537 0`, Return: 2},
+				},
+				Function: func(in any, places ...int) float64 {
+					var value = typeutil.Float(in)
+					var n = 0
 
-						if len(places) > 0 {
-							n = places[0]
-						}
+					if len(places) > 0 {
+						n = places[0]
+					}
 
-						if n > 0 {
-							return mathutil.RoundPlaces(inF, n), nil
-						} else {
-							return mathutil.Round(inF), nil
-						}
+					if n > 0 {
+						return mathutil.RoundPlaces(value, n)
 					} else {
-						return 0, err
+						return mathutil.Round(value)
 					}
 				},
 			}, {
@@ -214,8 +242,17 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `The number to operate on.`,
 					},
 				},
+				Examples: []FuncExample{
+					{Code: `negate -1`, Return: 1},
+					{Code: `negate 0`, Return: 0},
+					{Code: `negate 1`, Return: -1},
+				},
 				Function: func(value any) float64 {
-					return -1 * typeutil.V(value).Float()
+					if typeutil.IsZero(value) {
+						return 0
+					}
+
+					return -1 * typeutil.Float(value)
 				},
 			}, {
 				Name:    `isEven`,
@@ -226,6 +263,15 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Type:        `float, integer`,
 						Description: `The number to test.`,
 					},
+				},
+				Examples: []FuncExample{
+					{Code: `isEven -3`, Return: false},
+					{Code: `isEven -2`, Return: true},
+					{Code: `isEven -1`, Return: false},
+					{Code: `isEven 0`, Return: true},
+					{Code: `isEven 1`, Return: false},
+					{Code: `isEven 2`, Return: true},
+					{Code: `isEven 3`, Return: false},
 				},
 				Function: func(number any) bool {
 					return (math.Mod(typeutil.Float(number), 2) == 0)
@@ -240,6 +286,15 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `The number to test.`,
 					},
 				},
+				Examples: []FuncExample{
+					{Code: `isOdd -3`, Return: true},
+					{Code: `isOdd -2`, Return: false},
+					{Code: `isOdd -1`, Return: true},
+					{Code: `isOdd 0`, Return: false},
+					{Code: `isOdd 1`, Return: true},
+					{Code: `isOdd 2`, Return: false},
+					{Code: `isOdd 3`, Return: true},
+				},
 				Function: func(number any) bool {
 					return (math.Mod(typeutil.Float(number), 2) != 0)
 				},
@@ -252,6 +307,15 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Type:        `float, integer`,
 						Description: `The number to operate on.`,
 					},
+				},
+				Examples: []FuncExample{
+					{Code: `abs -3`, Return: 3},
+					{Code: `abs -2`, Return: 2},
+					{Code: `abs -1`, Return: 1},
+					{Code: `abs 0`, Return: 0},
+					{Code: `abs 1`, Return: 1},
+					{Code: `abs 2`, Return: 2},
+					{Code: `abs 3`, Return: 3},
 				},
 				Function: func(number any) float64 {
 					return math.Abs(typeutil.Float(number))
@@ -266,6 +330,15 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `The number to operate on.`,
 					},
 				},
+				Examples: []FuncExample{
+					{Code: `ceil -3.1`, Return: -3},
+					{Code: `ceil -2.1`, Return: -2},
+					{Code: `ceil -1.1`, Return: -1},
+					{Code: `ceil 0`, Return: 0},
+					{Code: `ceil 1.1`, Return: 2},
+					{Code: `ceil 2.1`, Return: 3},
+					{Code: `ceil 3.1`, Return: 4},
+				},
 				Function: func(number any) float64 {
 					return math.Ceil(typeutil.Float(number))
 				},
@@ -278,6 +351,15 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Type:        `float, integer`,
 						Description: `The number to operate on.`,
 					},
+				},
+				Examples: []FuncExample{
+					{Code: `floor -3.1`, Return: -4},
+					{Code: `floor -2.1`, Return: -3},
+					{Code: `floor -1.1`, Return: -2},
+					{Code: `floor 0`, Return: 0},
+					{Code: `floor 1.1`, Return: 1},
+					{Code: `floor 2.1`, Return: 2},
+					{Code: `floor 3.1`, Return: 3},
 				},
 				Function: func(number any) float64 {
 					return math.Floor(typeutil.Float(number))
@@ -292,6 +374,11 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `The value (in radians) to operate on.`,
 					},
 				},
+				Examples: []FuncExample{
+					{Code: `sin 0`, Return: 0},
+					{Code: `sin 0.5`, Return: 0.479425538604203},
+					{Code: `sin 1.5707963268`, Return: 1},
+				},
 				Function: func(rad any) float64 {
 					return math.Sin(typeutil.Float(rad))
 				},
@@ -304,6 +391,11 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Type:        `float, integer`,
 						Description: `The value (in radians) to operate on.`,
 					},
+				},
+				Examples: []FuncExample{
+					{Code: `cos 0`, Return: 1},
+					{Code: `cos 0.5`, Return: 0.8775825618903728},
+					{Code: `cos 1`, Return: 0.5403023058681398},
 				},
 				Function: func(rad any) float64 {
 					return math.Cos(typeutil.Float(rad))
@@ -370,6 +462,13 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `The value (in degrees) to convert.`,
 					},
 				},
+				Examples: []FuncExample{
+					{Code: `deg2rad 0`, Return: 0},
+					{Code: `deg2rad 90`, Return: math.Pi / 2},
+					{Code: `deg2rad 180`, Return: math.Pi},
+					{Code: `deg2rad 270`, Return: (3 * math.Pi) / 2},
+					{Code: `deg2rad 360`, Return: 2 * math.Pi},
+				},
 				Function: func(deg any) float64 {
 					return typeutil.Float(deg) * (math.Pi / 180)
 				},
@@ -383,8 +482,27 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `The value (in radians) to convert.`,
 					},
 				},
-				Function: func(rad any) float64 {
-					return typeutil.Float(rad) * (180 / math.Pi)
+				Examples: []FuncExample{
+					{Code: `rad2deg 6.2831853072`, Return: 360},
+					{Code: `rad2deg 3.141592653`, Return: 180},
+					{Code: `rad2deg 1.5707963268`, Return: 90},
+					{Code: `rad2deg 0`, Return: 0},
+					{Code: `rad2deg 6.2831853072 10`, Return: 360.0000000012},
+					{Code: `rad2deg 3.141592653 10`, Return: 179.9999999662},
+					{Code: `rad2deg 1.5707963268 10`, Return: 90.0000000003},
+					{Code: `rad2deg 0 10`, Return: 0},
+				},
+				Function: func(rad any, places ...any) float64 {
+					var rplaces int = 0
+
+					if len(places) > 0 {
+						rplaces = typeutil.NInt(places[0])
+					}
+
+					return mathutil.RoundPlaces(
+						typeutil.Float(rad)*(180/math.Pi),
+						rplaces,
+					)
 				},
 			},
 		},

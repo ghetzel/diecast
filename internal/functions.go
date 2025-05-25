@@ -138,9 +138,6 @@ func GetFunctions(server ServerProxy) (FuncGroups, FuncMap) {
 	// Colors
 	groups = append(groups, loadStandardFunctionsColor(funcs, server))
 
-	// Unit Conversions
-	groups = append(groups, loadStandardFunctionsConvert(funcs, server))
-
 	// Template Introspection functions
 	groups = append(groups, loadStandardFunctionsIntrospection(funcs, server))
 

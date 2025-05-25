@@ -141,7 +141,12 @@ func (template *Template) String() string {
 		var dst bytes.Buffer
 
 		if err := template.Render(template.ctx, &dst); err == nil {
-			return dst.String()
+			switch out := dst.String(); out {
+			case `<no value>`:
+				return ``
+			default:
+				return out
+			}
 		} else {
 			return fmt.Sprintf("<!-- TEMPLATE ERROR: %v -->", err)
 		}
