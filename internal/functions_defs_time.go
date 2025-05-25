@@ -51,15 +51,42 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `now`,
-						Return: `2010-05-01T13:04:00-05:00`,
+						Code:     `now`,
+						Return:   `2010-05-01T13:04:00-05:00`,
+						SkipTest: true,
 					}, {
-						Code:   `now "ansic"`,
-						Return: `Mon Jan  2 22:04:05 2006`,
+						Code:     `now "ansic"`,
+						Return:   `Mon Jan  2 22:04:05 2006`,
+						SkipTest: true,
 					},
 				},
 				Function: func(format ...string) (string, error) {
 					return tmFmt(time.Now(), format...)
+				},
+			}, {
+				Name:    `nowutc`,
+				Summary: `Return the current time, optionally formatted using the given format.`,
+				Arguments: []FuncArg{
+					{
+						Name:        `format`,
+						Type:        `string`,
+						Optional:    true,
+						Description: `How to format the time output. See [Time Formats](#time-formats) for how to use format strings.`,
+					},
+				},
+				Examples: []FuncExample{
+					{
+						Code:     `nowutc`,
+						Return:   `2010-05-01T13:04:00-05:00`,
+						SkipTest: true,
+					}, {
+						Code:     `nowutc "ansic"`,
+						Return:   `Mon Jan  2 22:04:05 2006`,
+						SkipTest: true,
+					},
+				},
+				Function: func(format ...string) (string, error) {
+					return tmFmt(time.Now().UTC(), format...)
 				},
 			}, {
 				Name: `addTime`,
@@ -79,15 +106,17 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `addTime "2h30m"`,
-						Return: `2010-05-01T15:34:00-05:00`,
+						Code:     `addTime "2h30m"`,
+						Return:   `2010-05-01T15:34:00-05:00`,
+						SkipTest: true,
 					}, {
 						Code:   `addTime "-14d" "2011-10-21T12:00:00-08:00"`,
-						Return: `2011-10-07T12:00:00-08:00`,
+						Return: `2011-10-07 12:00:00 -0800 -0800`,
 					},
 				},
-				Function: func(durationString string, atI ...interface{}) (time.Time, error) {
+				Function: func(durationString string, atI ...any) (time.Time, error) {
 					var at = time.Now()
+					var invert bool
 
 					if len(atI) > 0 {
 						if tm, err := stringutil.ConvertToTime(atI[0]); err == nil {
@@ -97,10 +126,19 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 						}
 					}
 
+					if strings.HasPrefix(durationString, `-`) {
+						durationString = durationString[1:]
+						invert = true
+					}
+
 					if duration, err := timeutil.ParseDuration(durationString); err == nil {
+						if invert {
+							duration = -1 * duration
+						}
+
 						return at.Add(duration), nil
 					} else {
-						return time.Time{}, err
+						return time.Time{}, fmt.Errorf("bad duration: %v", err)
 					}
 				},
 			}, {
@@ -121,14 +159,15 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `ago "1d"`,
-						Return: `2006-01-01 15:04:05Z07:00`,
+						Code:     `ago "1d"`,
+						Return:   `2006-01-01 15:04:05Z07:00`,
+						SkipTest: true,
 					}, {
 						Code:   `ago "45d" "2020-02-15T00:00:00Z"`,
 						Return: `2020-01-01 00:00:00 +0000 UTC`,
 					},
 				},
-				Function: func(durationString string, fromTime ...interface{}) (time.Time, error) {
+				Function: func(durationString string, fromTime ...any) (time.Time, error) {
 					var from = time.Now()
 
 					if len(fromTime) > 0 {
@@ -172,14 +211,16 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `since "2010-05-01T13:04:15-05:00`,
-						Return: ``,
+						Code:     `since "2010-05-01T13:04:15-05:00"`,
+						Return:   `(duration since given time)`,
+						SkipTest: true,
 					}, {
-						Code:   `since "-14d" "2011-10-21T12:00:00-08:00"`,
-						Return: `2011-10-07T12:00:00-08:00`,
+						Code:     `since "2011-10-21T12:00:00-08:00" "hour"`,
+						Return:   `(duration since given time rounded to nearest hour)`,
+						SkipTest: true,
 					},
 				},
-				Function: func(at interface{}, interval ...string) (time.Duration, error) {
+				Function: func(at any, interval ...string) (time.Duration, error) {
 					if tm, err := stringutil.ConvertToTime(at); err == nil {
 						var since = time.Since(tm)
 
@@ -250,7 +291,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 				Examples: []FuncExample{
 					{
 						Code:   `duration 127 "s"`,
-						Return: `0001-01-01 00:02:07 +0000 UTC`,
+						Return: `02:07`,
 					}, {
 						Code:   `duration 127 "s" "kitchen"`,
 						Return: `12:02AM`,
@@ -262,7 +303,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 						Return: `02:07`,
 					},
 				},
-				Function: func(value interface{}, unit string, formats ...string) (string, error) {
+				Function: func(value any, unit string, formats ...string) (string, error) {
 					var duration time.Duration
 
 					if vD, ok := value.(time.Duration); ok {
@@ -319,7 +360,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `The time being checked.`,
 					},
 				},
-				Function: func(first interface{}, secondI ...interface{}) (bool, error) {
+				Function: func(first any, secondI ...any) (bool, error) {
 					return timeCmp(true, first, secondI...)
 				},
 			}, {
@@ -336,7 +377,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `The time being checked.`,
 					},
 				},
-				Function: func(first interface{}, secondI ...interface{}) (bool, error) {
+				Function: func(first any, secondI ...any) (bool, error) {
 					return timeCmp(false, first, secondI...)
 				},
 			}, {
@@ -359,7 +400,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 						Default:     `(the current time)`,
 					},
 				},
-				Function: func(firstI interface{}, secondI interface{}, tm ...interface{}) (bool, error) {
+				Function: func(firstI any, secondI any, tm ...any) (bool, error) {
 					var now = time.Now()
 
 					if len(tm) > 0 && tm[0] != nil {
@@ -406,7 +447,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 						Default:     `(the current time)`,
 					},
 				},
-				Function: func(t interface{}, d interface{}, tm ...interface{}) (bool, error) {
+				Function: func(t any, d any, tm ...any) (bool, error) {
 					var now = time.Now()
 
 					if len(tm) > 0 && tm[0] != nil {
@@ -444,7 +485,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 						Default:     `(the current time)`,
 					},
 				},
-				Function: func(t interface{}, d interface{}, tm ...interface{}) (bool, error) {
+				Function: func(t any, d any, tm ...any) (bool, error) {
 					var now = time.Now()
 
 					if len(tm) > 0 && tm[0] != nil {
@@ -472,7 +513,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `A string that will be scanned for values that look like dates and times.`,
 					},
 				},
-				Function: func(baseI interface{}) (time.Time, error) {
+				Function: func(baseI any) (time.Time, error) {
 					if base, err := stringutil.ToString(baseI); err == nil {
 						if tm, err := stringutil.ConvertToTime(base); err == nil {
 							return tm, nil
@@ -550,7 +591,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 						Default:     `(the current time)`,
 					},
 				},
-				Function: func(latitude float64, longitude float64, atTime ...interface{}) (time.Time, error) {
+				Function: func(latitude float64, longitude float64, atTime ...any) (time.Time, error) {
 					sr, _, err := getSunriseSunset(latitude, longitude, atTime...)
 					return sr, err
 				},
@@ -574,7 +615,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 						Default:     `(the current time)`,
 					},
 				},
-				Function: func(latitude float64, longitude float64, atTime ...interface{}) (time.Time, error) {
+				Function: func(latitude float64, longitude float64, atTime ...any) (time.Time, error) {
 					_, ss, err := getSunriseSunset(latitude, longitude, atTime...)
 					return ss, err
 				},
@@ -592,7 +633,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `The second time being computed.`,
 					},
 				},
-				Function: func(firstI interface{}, secondI interface{}) (time.Duration, error) {
+				Function: func(firstI any, secondI any) (time.Duration, error) {
 					if first, err := stringutil.ConvertToTime(firstI); err == nil {
 						if second, err := stringutil.ConvertToTime(secondI); err == nil {
 							return first.Sub(second), nil

@@ -13,13 +13,13 @@ import (
 type SandboxCommandHandler func(*SandboxMessage) *SandboxMessage
 
 type SandboxMessage struct {
-	Command      string        `json:"command"`
-	Args         []interface{} `json:"args"`
-	Response     interface{}   `json:"response"`
-	Missing      bool          `json:"missing"`
-	ErrorMessage string        `json:"error"`
-	RequestedAt  time.Time     `json:"requested_at"`
-	RespondedAt  time.Time     `json:"responded_at"`
+	Command      string    `json:"command"`
+	Args         []any     `json:"args"`
+	Response     any       `json:"response"`
+	Missing      bool      `json:"missing"`
+	ErrorMessage string    `json:"error"`
+	RequestedAt  time.Time `json:"requested_at"`
+	RespondedAt  time.Time `json:"responded_at"`
 }
 
 // Returns a string representation of the function signature this message represents.
@@ -98,7 +98,7 @@ func (self *Sandbox) RegisterHandler(commandName string, handler SandboxCommandH
 
 // Executes the given command, passing it the supplied arguments in the order they are given.
 // Any output from the executed command will be returned, or an error if one occurred.
-func (self *Sandbox) Call(commandName string, args ...interface{}) (interface{}, error) {
+func (self *Sandbox) Call(commandName string, args ...any) (any, error) {
 	if handler, ok := self.commandRoutes.Get(commandName).Value.(SandboxCommandHandler); ok {
 		var msg = handler(&SandboxMessage{
 			Command:     commandName,

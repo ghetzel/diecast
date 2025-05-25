@@ -42,11 +42,11 @@ func RegisterRendererByMIME(mediaType string, cfg RendererConfig) {
 }
 
 type RendererConfig struct {
-	Type    string                 `yaml:"type"`
-	Options map[string]interface{} `yaml:"options"`
-	Only    interface{}            `yaml:"only"`
-	Except  interface{}            `yaml:"except"`
-	Methods interface{}            `yaml:"methods"`
+	Type    string         `yaml:"type"`
+	Options map[string]any `yaml:"options"`
+	Only    any            `yaml:"only"`
+	Except  any            `yaml:"except"`
+	Methods any            `yaml:"methods"`
 }
 
 // Return whether the given request is eligible for rendering.
@@ -55,7 +55,7 @@ func (self *RendererConfig) ShouldApplyTo(req *http.Request) bool {
 }
 
 // Return a typeutil.Variant containing the value at the named option key, or a fallback value.
-func (self *RendererConfig) Option(name string, fallbacks ...interface{}) typeutil.Variant {
+func (self *RendererConfig) Option(name string, fallbacks ...any) typeutil.Variant {
 	return maputil.M(self.Options).Get(name, fallbacks...)
 }
 

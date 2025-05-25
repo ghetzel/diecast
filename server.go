@@ -38,11 +38,11 @@ type ServerPaths struct {
 }
 
 type RequestOptions struct {
-	Headers map[string]interface{} `yaml:"headers"`
+	Headers map[string]any `yaml:"headers"`
 }
 
 type ResponseOptions struct {
-	Headers map[string]interface{} `yaml:"headers"`
+	Headers map[string]any `yaml:"headers"`
 }
 
 type DefaultOptions struct {
@@ -142,7 +142,7 @@ func (self *Server) OnStart(fn ServerStartFunc) {
 }
 
 // Simulates a single request, returning the http.Response that would be sent to a client, and an error should one occur.
-func (self *Server) SimulateRequest(method string, path string, body io.Reader, qs map[string]interface{}, header map[string]interface{}) (*http.Response, error) {
+func (self *Server) SimulateRequest(method string, path string, body io.Reader, qs map[string]any, header map[string]any) (*http.Response, error) {
 	var wr = httptest.NewRecorder()
 	var req = httptest.NewRequest(
 		typeutil.OrString(method, http.MethodGet),
@@ -313,7 +313,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // When data is a Map or Array, it will be encoded and returned as JSON with Content-Type: application/json.
 //
 // All other conditions will convert the data to []byte and write that out directly.
-func (self *Server) writeResponse(ctx *Context, data interface{}, code ...int) {
+func (self *Server) writeResponse(ctx *Context, data any, code ...int) {
 	var req = ctx.Request()
 	var httpStatus int = ctx.Code()
 

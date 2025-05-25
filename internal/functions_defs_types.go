@@ -36,13 +36,13 @@ func loadStandardFunctionsTypes(funcs FuncMap, server ServerProxy) FuncGroup {
 			}, {
 				Name:    `isNotZero`,
 				Summary: `Return whether the given *value* is NOT a zero-valued variable.`,
-				Function: func(value interface{}) bool {
+				Function: func(value any) bool {
 					return !typeutil.IsZero(value)
 				},
 			}, {
 				Name:    `isNotEmpty`,
 				Summary: `Return whether the given *value* is NOT empty.`,
-				Function: func(value interface{}) bool {
+				Function: func(value any) bool {
 					return !typeutil.IsEmpty(value)
 				},
 			}, {
@@ -52,19 +52,19 @@ func loadStandardFunctionsTypes(funcs FuncMap, server ServerProxy) FuncGroup {
 			}, {
 				Name:    `isMap`,
 				Summary: `Return whether the given *value* is a key-value map type.`,
-				Function: func(value interface{}) bool {
+				Function: func(value any) bool {
 					return typeutil.IsKind(value, reflect.Map)
 				},
 			}, {
 				Name:    `isTime`,
 				Summary: `Return whether the given *value* is parsable as a date/time value.`,
-				Function: func(value interface{}) bool {
+				Function: func(value any) bool {
 					return !typeutil.V(value).Time().IsZero()
 				},
 			}, {
 				Name:    `isDuration`,
 				Summary: `Return whether the given *value* is parsable as a duration.`,
-				Function: func(value interface{}) bool {
+				Function: func(value any) bool {
 					return (typeutil.V(value).Duration() != 0)
 				},
 			}, {
@@ -80,7 +80,7 @@ func loadStandardFunctionsTypes(funcs FuncMap, server ServerProxy) FuncGroup {
 				Name:    `asInt`,
 				Aliases: []string{`i`},
 				Summary: `Attempt to convert the given *value* to an integer.`,
-				Function: func(value interface{}) (int64, error) {
+				Function: func(value any) (int64, error) {
 					if v, err := stringutil.ConvertToInteger(value); err == nil {
 						return v, nil
 					} else {

@@ -9,7 +9,7 @@ import (
 	"text/template/parse"
 )
 
-type FuncMap map[string]interface{}
+type FuncMap map[string]any
 
 const TextEngine string = `text`
 const HtmlEngine string = `html`
@@ -50,6 +50,7 @@ func (self *GolangTemplate) init() error {
 		if tmpl, err := htemplate.New(self.name).Funcs(
 			self.hfuncs(),
 		).Parse(self.body); err == nil {
+			tmpl.Option("missingkey=zero")
 			self.html = tmpl
 			self.text = nil
 		} else {
@@ -59,6 +60,7 @@ func (self *GolangTemplate) init() error {
 		if tmpl, err := ttemplate.New(self.name).Funcs(
 			self.tfuncs(),
 		).Parse(self.body); err == nil {
+			tmpl.Option("missingkey=zero")
 			self.html = nil
 			self.text = tmpl
 		} else {
@@ -129,7 +131,7 @@ func (self *GolangTemplate) Delims(left, right string) *GolangTemplate {
 	return self
 }
 
-func (self *GolangTemplate) Execute(wr io.Writer, data interface{}) error {
+func (self *GolangTemplate) Execute(wr io.Writer, data any) error {
 	if self.html != nil {
 		return self.html.Execute(wr, data)
 	} else {
@@ -137,7 +139,7 @@ func (self *GolangTemplate) Execute(wr io.Writer, data interface{}) error {
 	}
 }
 
-func (self *GolangTemplate) ExecuteTemplate(wr io.Writer, name string, data interface{}) error {
+func (self *GolangTemplate) ExecuteTemplate(wr io.Writer, name string, data any) error {
 	if self.html != nil {
 		return self.html.ExecuteTemplate(wr, name, data)
 	} else {
@@ -146,7 +148,7 @@ func (self *GolangTemplate) ExecuteTemplate(wr io.Writer, name string, data inte
 }
 
 // Backwards compat with 1.x
-func (self *GolangTemplate) Render(wr io.Writer, data interface{}, name string) error {
+func (self *GolangTemplate) Render(wr io.Writer, data any, name string) error {
 	if self.html != nil {
 		return self.html.ExecuteTemplate(wr, name, data)
 	} else {

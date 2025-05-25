@@ -41,7 +41,7 @@ func loadStandardFunctionsPath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Return: `file`,
 					},
 				},
-				Function: func(value interface{}, extnames ...string) string {
+				Function: func(value any, extnames ...string) string {
 					var base = path.Base(fmt.Sprintf("%v", value))
 
 					if ext := typeutil.String(sliceutil.FirstNonZero(extnames)); ext != `` {
@@ -66,7 +66,7 @@ func loadStandardFunctionsPath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Return: `.jpg`,
 					},
 				},
-				Function: func(value interface{}) string {
+				Function: func(value any) string {
 					return path.Ext(fmt.Sprintf("%v", value))
 				},
 			}, {
@@ -85,7 +85,7 @@ func loadStandardFunctionsPath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Return: `/this/is/my`,
 					},
 				},
-				Function: func(value interface{}) string {
+				Function: func(value any) string {
 					return path.Dir(fmt.Sprintf("%v", value))
 				},
 			}, {
@@ -105,7 +105,7 @@ func loadStandardFunctionsPath(funcs FuncMap, server ServerProxy) FuncGroup {
 						Return: `/this/is/my/file.jpg`,
 					},
 				},
-				Function: func(values ...interface{}) string {
+				Function: func(values ...any) string {
 					return path.Join(sliceutil.Stringify(sliceutil.Flatten(values))...)
 				},
 			}, {
@@ -127,7 +127,7 @@ func loadStandardFunctionsPath(funcs FuncMap, server ServerProxy) FuncGroup {
 			// 	Examples: []FuncExample{
 			// 		{
 			// 			Code: `dir`,
-			// 			Return: []map[string]interface{}{
+			// 			Return: []map[string]any{
 			// 				{
 			// 					`name`:          `file.jpg`,
 			// 					`path`:          `/this/is/my/file.jpg`,
@@ -152,10 +152,10 @@ func loadStandardFunctionsPath(funcs FuncMap, server ServerProxy) FuncGroup {
 			// 			},
 			// 		},
 			// 	},
-			// 	Function: func(dirs ...string) ([]map[string]interface{}, error) {
+			// 	Function: func(dirs ...string) ([]map[string]any, error) {
 			// 		var dir string
 			// 		var glob string
-			// 		var entries = make([]map[string]interface{}, 0)
+			// 		var entries = make([]map[string]any, 0)
 
 			// 		if len(dirs) == 0 || dirs[0] == `` || dirs[0] == `.` || dirs[0] == `/` {
 			// 			if server != nil {
@@ -273,21 +273,26 @@ func loadStandardFunctionsPath(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `mimetype "file.jpg"`,
-						Return: map[string]interface{}{},
+						Code:   `mimeparams "file.jpg"`,
+						Return: map[string]any{},
 					}, {
-						Code: `mimetype "index.html"`,
-						Return: map[string]interface{}{
+						Code: `mimeparams "index.html"`,
+						Return: map[string]any{
 							`charset`: `utf-8`,
 						},
 					},
 				},
-				Function: func(filename string) map[string]interface{} {
+				Function: func(filename string) map[string]any {
 					_, params := stringutil.SplitPair(fileutil.GetMimeType(path.Ext(filename)), `;`)
-					var kv = make(map[string]interface{})
+					var kv = make(map[string]any)
 
 					for _, paramPair := range strings.Split(params, `;`) {
-						key, value := stringutil.SplitPair(paramPair, `=`)
+						key, value := stringutil.SplitPairTrimSpace(paramPair, `=`)
+
+						if len(key) == 0 {
+							continue
+						}
+
 						kv[key] = stringutil.Autotype(value)
 					}
 

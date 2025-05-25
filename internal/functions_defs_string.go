@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -222,8 +223,10 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 			}, {
 				Name:    `ltrim`,
 				Summary: `Return the given string with any leading whitespace removed.`,
-				Function: func(in interface{}, str string) string {
-					return strings.TrimPrefix(fmt.Sprintf("%v", in), str)
+				Function: func(in any) string {
+					return strings.TrimLeftFunc(typeutil.String(in), func(r rune) bool {
+						return unicode.IsSpace(r)
+					})
 				},
 				Arguments: []FuncArg{
 					{
@@ -234,8 +237,8 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `trim " Hello   World  "`,
-						Return: `Hello  World  `,
+						Code:   `ltrim " Hello   World  "`,
+						Return: `Hello   World  `,
 					},
 				},
 			}, {
@@ -273,7 +276,7 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 			}, {
 				Name:    `rxreplace`,
 				Summary: `Return the given string with all substrings matching the given regular expression replaced with another string.`,
-				Function: func(in interface{}, pattern string, repl string) (string, error) {
+				Function: func(in any, pattern string, repl string) (string, error) {
 					if inS, err := stringutil.ToString(in); err == nil {
 						if rx, err := regexp.Compile(pattern); err == nil {
 							return rx.ReplaceAllString(inS, repl), nil
@@ -308,11 +311,11 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 			}, {
 				Name:    `concat`,
 				Summary: `Return the string that results in stringifying and joining all of the given arguments.`,
-				Function: func(in ...interface{}) string {
+				Function: func(in ...any) string {
 					var out = make([]string, len(in))
 
 					for i, v := range in {
-						out[i] = fmt.Sprintf("%v", v)
+						out[i] = typeutil.String(v)
 					}
 
 					return strings.Join(out, ``)
@@ -328,14 +331,16 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 				Examples: []FuncExample{
 					{
 						Code:   `concat "There are " 5 " apples, yes it's " true`,
-						Return: `There are 5 apples, yes it's true.`,
+						Return: `There are 5 apples, yes it's true`,
 					},
 				},
 			}, {
 				Name:    `rtrim`,
 				Summary: `Return the given string with any trailing whitespace removed.`,
-				Function: func(in interface{}, str string) string {
-					return strings.TrimSuffix(fmt.Sprintf("%v", in), str)
+				Function: func(in any) string {
+					return strings.TrimRightFunc(typeutil.String(in), func(r rune) bool {
+						return unicode.IsSpace(r)
+					})
 				},
 				Arguments: []FuncArg{
 					{
@@ -346,8 +351,8 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `trim " Hello   World  "`,
-						Return: ` Hello  World`,
+						Code:   `rtrim " Hello   World  "`,
+						Return: ` Hello   World`,
 					},
 				},
 			}, {
@@ -373,7 +378,7 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `split "this is a sentence."`,
+						Code:   `split "this is a sentence." " "`,
 						Return: []string{`this`, `is`, `a`, `sentence.`},
 					},
 				},
@@ -399,26 +404,44 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `join [1, 2, 3] ","`,
+						Input:  []int{1, 2, 3},
+						Code:   `join $.input ","`,
 						Return: `1,2,3`,
 					}, {
-						Code:   `join {"a": 1, "b": 2, "c": 3} "=" "&"`,
+						Input: map[string]any{
+							`a`: 1,
+							`b`: 2,
+							`c`: 3,
+						},
+						Code:   `join $.input "=" "&"`,
 						Return: `a=1&b=2&c=3`,
 					},
 				},
-				Function: func(input interface{}, delimiter string, outerDelimiter ...string) string {
+				Function: func(input any, delimiter string, outerDelimiter ...string) string {
+					var parts []string
+
 					if typeutil.IsMap(input) {
-						var od = ``
+						var inner string = delimiter
 
 						if len(outerDelimiter) > 0 {
-							od = outerDelimiter[0]
+							delimiter = outerDelimiter[0]
 						}
 
-						return maputil.Join(input, delimiter, od)
+						var m = maputil.M(input)
+
+						for _, key := range m.StringKeys() {
+							parts = append(parts, strings.Join([]string{
+								key,
+								m.String(key),
+							}, inner))
+						}
 					} else {
-						var inStr = sliceutil.Stringify(input)
-						return strings.Join(inStr, delimiter)
+						parts = sliceutil.Stringify(input)
 					}
+
+					sort.Strings(parts)
+
+					return strings.Join(parts, delimiter)
 				},
 			}, {
 				Name: `strcount`,
@@ -432,7 +455,7 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 			}, {
 				Name:    `camelize`,
 				Summary: `Reformat the given string by changing it into camelCase capitalization.`,
-				Function: func(s interface{}) string {
+				Function: func(s any) string {
 					var str = stringutil.Camelize(s)
 
 					for i, v := range str {
@@ -523,20 +546,20 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 				Examples: []FuncExample{
 					{
 						Code:   `trim " Hello   World  "`,
-						Return: `Hello  World`,
+						Return: `Hello   World`,
 					}, {
 						Code:   `trim "'hello world'" "'"`,
 						Return: `hello world`,
 					},
 				},
-				Function: func(in interface{}, cuts ...string) string {
-					var cutset = ``
+				Function: func(in any, cuts ...string) string {
+					var cutset string
 
 					if len(cuts) > 0 {
 						cutset = strings.Join(cuts, ``)
 					}
 
-					if cutset == `` {
+					if len(cutset) == 0 {
 						return strings.TrimSpace(typeutil.String(in))
 					} else {
 						return strings.Trim(typeutil.String(in), cutset)
@@ -555,7 +578,7 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `upper "This is a thing`,
+						Code:   `upper "This is a thing"`,
 						Return: `THIS IS A THING`,
 					},
 				},
@@ -613,7 +636,7 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 						Return: true,
 					},
 				},
-				Function: func(value interface{}, prefix string, suffix string) bool {
+				Function: func(value any, prefix string, suffix string) bool {
 					if v := fmt.Sprintf("%v", value); strings.HasPrefix(v, prefix) && strings.HasSuffix(v, suffix) {
 						return true
 					}
@@ -623,7 +646,7 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 			}, {
 				Name:    `percent`,
 				Summary: `Takes an integer or decimal value and returns it formatted as a percentage.`,
-				Function: func(value interface{}, args ...interface{}) (string, error) {
+				Function: func(value any, args ...any) (string, error) {
 					if v, err := stringutil.ConvertToFloat(value); err == nil {
 						var outOf = 100.0
 						var format = "%.f"
@@ -709,7 +732,7 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 				Name: `thousandify`,
 				Summary: `Take a number and reformat it to be more readable by adding a separator ` +
 					`between every three successive places.`,
-				Function: func(value interface{}, sepDec ...string) string {
+				Function: func(value any, sepDec ...string) string {
 					var separator string
 					var decimal string
 
@@ -727,14 +750,14 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 				Name: `splitWords`,
 				Summary: `Detect word boundaries in a given string and split that string into an ` +
 					`array where each element is a word.`,
-				Function: func(in interface{}) []string {
+				Function: func(in any) []string {
 					return stringutil.SplitWords(fmt.Sprintf("%v", in))
 				},
 			}, {
 				Name: `elideWords`,
 				Summary: `Takes an input string and counts the number of words in it. If that number ` +
 					`exceeds a given count, the string will be truncated to be equal to that number of words.`,
-				Function: func(in interface{}, wordcount int) string {
+				Function: func(in any, wordcount int) string {
 					return stringutil.ElideWords(fmt.Sprintf("%v", in), wordcount)
 				},
 				Arguments: []FuncArg{
@@ -758,21 +781,9 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 					},
 				},
 			}, {
-				Name:    `elide`,
-				Summary: `Takes an input string and ensures it is no longer than a given number of characters.`,
-				Function: func(in interface{}, charcount int) string {
-					var inS = fmt.Sprintf("%v", in)
-
-					if len(inS) > charcount {
-						inS = inS[0:charcount]
-					}
-
-					if match := rxutil.Match(`(\W*\s+[\w\.\(\)\[\]\{\}]{0,16})$`, inS); match != nil {
-						inS = match.ReplaceGroup(1, ``)
-					}
-
-					return inS
-				},
+				Name:     `elide`,
+				Summary:  `Takes an input string and ensures it is no longer than a given number of characters.`,
+				Function: stringutil.Elide,
 				Arguments: []FuncArg{
 					{
 						Name:        `input`,
@@ -807,7 +818,7 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `What to return if the named emoji is not found.`,
 					},
 				},
-				Function: func(in interface{}, fallbacks ...string) string {
+				Function: func(in any, fallbacks ...string) string {
 					var name = emojiKey(typeutil.String(in))
 
 					if emj, ok := emojiCodeMap[name]; ok {
@@ -867,7 +878,7 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 			}, {
 				Name:    `section`,
 				Summary: `Takes an input string, splits it on a given regular expression, and returns the nth field.`,
-				Function: func(in interface{}, field int, rx ...string) (string, error) {
+				Function: func(in any, field int, rx ...string) (string, error) {
 					var rxSplit = rxutil.Whitespace
 					var input = typeutil.String(in)
 
@@ -879,7 +890,17 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 						}
 					}
 
-					if sections := rxSplit.Split(input, -1); field < len(sections) {
+					var sections = rxSplit.Split(input, -1)
+
+					if field < 0 {
+						field = field % len(sections)
+					} else if field == 0 {
+						return input, nil
+					} else {
+						field = (field - 1) % len(sections)
+					}
+
+					if field < len(sections) {
 						return sections[field], nil
 					} else {
 						return ``, nil
@@ -905,10 +926,10 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `section "this|is|a|row" 1 "|"`,
+						Code:   `section "this>is>a>row" 1 ">"`,
 						Return: `this`,
 					}, {
-						Code:   `section "this|is|a|row" 2 "|"`,
+						Code:   `section "this<is<a<row" 2 "<"`,
 						Return: `is`,
 					},
 				},
@@ -922,7 +943,7 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `The array of strings to scan.`,
 					},
 				},
-				Function: func(in interface{}) string {
+				Function: func(in any) string {
 					var longest string
 
 					for _, item := range sliceutil.Stringify(in) {
@@ -943,7 +964,7 @@ func loadStandardFunctionsString(funcs FuncMap, server ServerProxy) FuncGroup {
 						Description: `The array of strings to scan.`,
 					},
 				},
-				Function: func(in interface{}) string {
+				Function: func(in any) string {
 					var shortest string
 
 					for _, item := range sliceutil.Stringify(in) {

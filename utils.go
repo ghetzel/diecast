@@ -34,7 +34,7 @@ func IsGlobMatch(path string, pattern string) bool {
 	return globber.Match(path)
 }
 
-func AutoencodeByFilename(name string, data interface{}) ([]byte, string, error) {
+func AutoencodeByFilename(name string, data any) ([]byte, string, error) {
 	var ext string
 
 	ext = filepath.Base(name)
@@ -66,9 +66,9 @@ func AutoencodeByFilename(name string, data interface{}) ([]byte, string, error)
 
 func ShouldApplyTo(
 	req *http.Request,
-	exceptPatterns interface{},
-	onlyPatterns interface{},
-	methods interface{},
+	exceptPatterns any,
+	onlyPatterns any,
+	methods any,
 ) bool {
 	if mm := sliceutil.CompactString(sliceutil.Stringify(methods)); len(mm) > 0 {
 		var pass bool

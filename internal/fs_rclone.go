@@ -37,7 +37,7 @@ type RcloneFS struct {
 	Name    string
 	Type    string
 	Root    string
-	Options map[string]interface{}
+	Options map[string]any
 	vfs     rclone_fs.Fs
 	rcctx   context.Context
 }
@@ -50,7 +50,7 @@ func currentUser() string {
 	}
 }
 
-var DefaultRemoteTypeOptions = map[string]map[string]interface{}{
+var DefaultRemoteTypeOptions = map[string]map[string]any{
 	`s3`: {
 		`provider`: `AWS`,
 		`env_auth`: true,
@@ -66,7 +66,7 @@ var DefaultRemoteTypeOptions = map[string]map[string]interface{}{
 	},
 }
 
-func CreateRcloneFilesystem(name string, typeRootPair string, options map[string]interface{}) (*RcloneFS, error) {
+func CreateRcloneFilesystem(name string, typeRootPair string, options map[string]any) (*RcloneFS, error) {
 	var fstype, rt = stringutil.SplitPair(typeRootPair, `:`)
 	var rcfs = &RcloneFS{
 		Name:    name,
@@ -84,8 +84,8 @@ func CreateRcloneFilesystem(name string, typeRootPair string, options map[string
 
 // Returns a merged set of options that considers type-specific overrides and
 // all configuration sources.
-func (self *RcloneFS) opts() map[string]interface{} {
-	var options = make(map[string]interface{})
+func (self *RcloneFS) opts() map[string]any {
+	var options = make(map[string]any)
 
 	if defaults, ok := DefaultRemoteTypeOptions[self.Type]; ok {
 		for k, v := range defaults {
@@ -111,7 +111,7 @@ func (self *RcloneFS) validate() error {
 	}
 
 	if len(self.Options) == 0 {
-		self.Options = make(map[string]interface{})
+		self.Options = make(map[string]any)
 	}
 
 	self.rcctx = context.Background()
@@ -147,7 +147,7 @@ func (self *RcloneFS) validate() error {
 // Generate, write out, and make available the RClone configuration data.
 func (self *RcloneFS) generateAndSetRcloneConfig() error {
 	var path = self.workingConfigPath()
-	var opts = make(map[string]interface{})
+	var opts = make(map[string]any)
 
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
@@ -200,7 +200,7 @@ func (self *RcloneFS) workingConfigPath() string {
 }
 
 // Generate the RClone configuration for communicating with this media source.
-func (self *RcloneFS) rcloneConfigString(opts map[string]interface{}) string {
+func (self *RcloneFS) rcloneConfigString(opts map[string]any) string {
 	var lines = make([]string, 0)
 
 	lines = append(lines, fmt.Sprintf("[%s]", self.Name))

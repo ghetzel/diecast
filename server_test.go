@@ -21,7 +21,7 @@ func TestServerServeHTTP(t *testing.T) {
 			Data: `Greetings.`,
 		},
 		`/test.json`: {
-			Data: map[string]interface{}{
+			Data: map[string]any{
 				`hello`: `there`,
 			},
 		},
@@ -87,7 +87,7 @@ func TestServerWriteResponse(t *testing.T) {
 	// -------------------------------------------------------------------------------------------------------------------
 	w = httptest.NewRecorder()
 	ctx.Start(w, req)
-	server.writeResponse(ctx, map[string]interface{}{
+	server.writeResponse(ctx, map[string]any{
 		`hello`: `there`,
 	})
 
@@ -101,7 +101,7 @@ func TestServerWriteResponse(t *testing.T) {
 	w = httptest.NewRecorder()
 	ctx.Start(w, req)
 	req = httptest.NewRequest(`GET`, `/test`, nil)
-	server.writeResponse(ctx, []map[string]interface{}{
+	server.writeResponse(ctx, []map[string]any{
 		{
 			`hello`: `there`,
 		},
@@ -117,7 +117,7 @@ func TestServerWriteResponse(t *testing.T) {
 	w = httptest.NewRecorder()
 	req = httptest.NewRequest(`GET`, `/test.yaml`, nil)
 	ctx.Start(w, req)
-	server.writeResponse(ctx, []map[string]interface{}{
+	server.writeResponse(ctx, []map[string]any{
 		{
 			`hello`: `there`,
 		},
@@ -141,11 +141,11 @@ func TestServerWriteResponse(t *testing.T) {
 	ctx.Done()
 
 	// -------------------------------------------------------------------------------------------------------------------
-	// encoding error (relies on map[interface{}]interface{} being unmarshalble by encoding/json)
+	// encoding error (relies on map[any]any being unmarshalble by encoding/json)
 	w = httptest.NewRecorder()
 	req = httptest.NewRequest(`GET`, `/`, nil)
 	ctx.Start(w, req)
-	server.writeResponse(ctx, map[interface{}]interface{}{
+	server.writeResponse(ctx, map[any]any{
 		`hello`: `there`,
 	})
 	assert.Equal(t, http.StatusInternalServerError, w.Code)

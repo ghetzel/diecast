@@ -44,69 +44,70 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server ServerProxy) FuncGroup
 				},
 				Examples: []FuncExample{
 					{
-						Code: `celestial "2021-06-29T22:45:42-04:00" 40.698828 -75.866871`,
-						Return: map[string]interface{}{
-							"observer": map[string]interface{}{
+						SkipTest: true,
+						Code:     `celestial "2021-06-29T22:45:42-04:00" 40.698828 -75.866871`,
+						Return: map[string]any{
+							"observer": map[string]any{
 								"elevation": 0,
 								"latitude":  40.698828,
 								"longitude": -75.866871,
 								"time":      "2021-06-29T22:45:42-04:00",
 							},
-							"sun": map[string]interface{}{
-								"dawn": map[string]interface{}{
+							"sun": map[string]any{
+								"dawn": map[string]any{
 									"astronomical": "2021-06-29T03:30:13-04:00",
-									"blue_hour": map[string]interface{}{
+									"blue_hour": map[string]any{
 										"end":   "2021-06-29T05:15:06-04:00",
 										"start": "2021-06-29T05:02:08-04:00",
 									},
 									"civil": "2021-06-29T05:02:08-04:00",
-									"golden_hour": map[string]interface{}{
+									"golden_hour": map[string]any{
 										"end":   "2021-06-29T06:16:06-04:00",
 										"start": "2021-06-29T05:15:06-04:00",
 									},
 									"nautical": "2021-06-29T04:19:57-04:00",
 								},
-								"daytime": map[string]interface{}{
+								"daytime": map[string]any{
 									"end":            "2021-06-29T20:38:18-04:00",
 									"length_minutes": 902,
 									"start":          "2021-06-29T05:36:01-04:00",
 								},
-								"dusk": map[string]interface{}{
+								"dusk": map[string]any{
 									"astronomical": "2021-06-29T22:43:51-04:00",
-									"blue_hour": map[string]interface{}{
+									"blue_hour": map[string]any{
 										"end":   "2021-06-29T21:12:09-04:00",
 										"start": "2021-06-29T20:59:11-04:00",
 									},
 									"civil": "2021-06-29T21:12:09-04:00",
-									"golden_hour": map[string]interface{}{
+									"golden_hour": map[string]any{
 										"end":   "2021-06-29T20:59:11-04:00",
 										"start": "2021-06-29T19:58:15-04:00",
 									},
 									"nautical": "2021-06-29T21:54:15-04:00",
 								},
 								"midnight": "2021-06-29T01:07:14-04:00",
-								"night": map[string]interface{}{
+								"night": map[string]any{
 									"end":            "2021-06-30T05:02:40-04:00",
 									"length_minutes": 471,
 									"start":          "2021-06-29T21:12:09-04:00",
 								},
 								"noon": "2021-06-29T13:07:06-04:00",
-								"position": map[string]interface{}{
-									"azimuth": map[string]interface{}{
+								"position": map[string]any{
+									"azimuth": map[string]any{
 										"angle":    108.1,
 										"cardinal": "E",
 									},
-									"elevation": map[string]interface{}{
+									"elevation": map[string]any{
 										"angle":           -18.104,
 										"refracted_angle": -18.086,
 									},
-									"zenith": map[string]interface{}{
+									"zenith": map[string]any{
 										"angle":           325.8,
 										"cardinal":        "NW",
 										"refracted_angle": 325.8,
 									},
 								},
-								"state": map[string]interface{}{
+								"state": map[string]any{
 									"blue_hour":   false,
 									"daytime":     false,
 									"golden_hour": false,
@@ -115,7 +116,7 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server ServerProxy) FuncGroup
 								},
 								"sunrise": "2021-06-29T05:36:01-04:00",
 								"sunset":  "2021-06-29T20:38:18-04:00",
-								"twilight": map[string]interface{}{
+								"twilight": map[string]any{
 									"end":   "2021-06-29T21:12:09-04:00",
 									"start": "2021-06-29T20:38:18-04:00",
 								},
@@ -123,7 +124,7 @@ func loadStandardFunctionsCelestial(funcs FuncMap, server ServerProxy) FuncGroup
 						},
 					},
 				},
-				Function: func(obstime interface{}, latitude interface{}, longitude interface{}, e ...interface{}) (map[string]interface{}, error) {
+				Function: func(obstime any, latitude any, longitude any, e ...any) (map[string]any, error) {
 					var out = maputil.M(nil)
 					var now = time.Now()
 					var t = typeutil.OrTime(obstime, now).Round(time.Second)

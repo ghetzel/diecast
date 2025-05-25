@@ -45,12 +45,12 @@ func TestIsGlobMatch(t *testing.T) {
 	assert.False(t, IsGlobMatch(`/hello/there.html`, `[0-`))
 }
 
-type shouldApplyToFunc = func(*http.Request, interface{}, interface{}, interface{}) bool
+type shouldApplyToFunc = func(*http.Request, any, any, any) bool
 
 func TestShouldApplyTo(t *testing.T) {
 	for _, satfn := range []shouldApplyToFunc{
 		ShouldApplyTo,
-		func(req *http.Request, except interface{}, only interface{}, methods interface{}) bool {
+		func(req *http.Request, except any, only any, methods any) bool {
 			var c = new(ValidatorConfig)
 
 			c.Except = except
@@ -59,7 +59,7 @@ func TestShouldApplyTo(t *testing.T) {
 
 			return c.ShouldApplyTo(req)
 		},
-		func(req *http.Request, except interface{}, only interface{}, methods interface{}) bool {
+		func(req *http.Request, except any, only any, methods any) bool {
 			var c = new(RendererConfig)
 
 			c.Except = except

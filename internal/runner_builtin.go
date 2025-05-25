@@ -20,7 +20,7 @@ func (self *InProcessRunner) Init() error {
 	return nil
 }
 
-func (self *InProcessRunner) SetFunction(name string, fn interface{}) {
+func (self *InProcessRunner) SetFunction(name string, fn any) {
 	self.funcs.Set(name, fn)
 }
 
@@ -42,7 +42,7 @@ func (self *InProcessRunner) HandleMessage(req *SandboxMessage) *SandboxMessage 
 	return req
 }
 
-func callGoFunction(fn reflect.Value, inputs ...interface{}) (interface{}, error) {
+func callGoFunction(fn reflect.Value, inputs ...any) (any, error) {
 	var arguments = make([]reflect.Value, fn.Type().NumIn())
 
 	// loop through the arguments the target function takes, building an equally-sized list

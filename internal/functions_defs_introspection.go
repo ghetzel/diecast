@@ -18,11 +18,11 @@ func loadStandardFunctionsIntrospection(funcs FuncMap, server ServerProxy) FuncG
 			{
 				Name:    `templateKey`,
 				Summary: `Open the given file and retrieve the key from the page object defined in its header.`,
-				Function: func(filenameI interface{}, keyI interface{}, fallbacks ...interface{}) (interface{}, error) {
+				Function: func(filenameI any, keyI any, fallbacks ...any) (any, error) {
 					if filename, err := stringutil.ToString(filenameI); err == nil {
 						if key, err := stringutil.ToString(keyI); err == nil {
 							if file, err := os.Open(filename); err == nil {
-								var fallback interface{}
+								var fallback any
 
 								if values := sliceutil.Sliceify(sliceutil.Stringify(fallbacks)); len(values) > 0 {
 									fallback = values[0]

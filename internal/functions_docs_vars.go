@@ -2,7 +2,8 @@ package internal
 
 func loadRuntimeFunctionsVariables(server ServerProxy) FuncGroup {
 	return FuncGroup{
-		Name: `Dynamic Variables`,
+		Name:     `Dynamic Variables`,
+		SkipTest: true,
 		Description: `A set of functions that allow for custom data to be set, retrieved, and removed at runtime; ` +
 			`providing greater flexibility over standard template variables. All variables created or modified using ` +
 			`these functions are accessible under the global _$.vars_ object.  For example, a variable set with ` +
@@ -36,10 +37,10 @@ func loadRuntimeFunctionsVariables(server ServerProxy) FuncGroup {
 						Return: `Hello`,
 					}, {
 						Code: `var "this.is.a.value" true`,
-						Return: map[string]interface{}{
-							`this`: map[string]interface{}{
-								`is`: map[string]interface{}{
-									`a`: map[string]interface{}{
+						Return: map[string]any{
+							`this`: map[string]any{
+								`is`: map[string]any{
+									`a`: map[string]any{
 										`value`: true,
 									},
 								},
@@ -73,8 +74,8 @@ func loadRuntimeFunctionsVariables(server ServerProxy) FuncGroup {
 						Return: []int{123, 456},
 					}, {
 						Code: `push "users.names" "Bob"`,
-						Return: map[string]interface{}{
-							`users`: map[string]interface{}{
+						Return: map[string]any{
+							`users`: map[string]any{
 								`names`: []string{`Alice`, `Bob`},
 							},
 						},

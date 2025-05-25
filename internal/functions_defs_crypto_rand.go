@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bufio"
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/rand"
@@ -40,10 +41,21 @@ func hashingAlgo(alg string) (func() hash.Hash, error) {
 	}
 }
 
-func hashTheThing(fn string, input interface{}) (string, error) {
+func hashTheThing(fn string, input any) (string, error) {
 	if hasher, err := hashingAlgo(fn); err == nil {
-		var data = []byte(typeutil.String(input))
-		return hex.EncodeToString(hasher().Sum(data)), nil
+		var summer = hasher()
+		var str = typeutil.String(input)
+		var buf = bufio.NewWriter(summer)
+
+		if _, err := buf.WriteString(str); err == nil {
+			buf.Flush()
+
+			var data []byte
+			data = summer.Sum(data)
+			return hex.EncodeToString(data), nil
+		} else {
+			return ``, err
+		}
 	} else {
 		return ``, err
 	}
@@ -58,7 +70,7 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server ServerProxy) FuncGrou
 			{
 				Name:    `murmur3`,
 				Summary: `Hash the given data using the Murmur3 algorithm.`,
-				Function: func(input interface{}) uint64 {
+				Function: func(input any) uint64 {
 					return murmur3.Sum64(toBytes(input))
 				},
 			}, {
@@ -99,7 +111,7 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server ServerProxy) FuncGrou
 						},
 					},
 				},
-				Function: func(input interface{}, alg string) (string, error) {
+				Function: func(input any, alg string) (string, error) {
 					return hashTheThing(alg, input)
 				},
 			}, {
@@ -118,7 +130,7 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server ServerProxy) FuncGrou
 						Return: `d5ec75d5fe70d428685510fae36492d9`,
 					},
 				},
-				Function: func(input interface{}) (string, error) {
+				Function: func(input any) (string, error) {
 					return hashTheThing(`md5`, input)
 				},
 			}, {
@@ -137,7 +149,7 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server ServerProxy) FuncGrou
 						Return: `ee7161e0fe1a06be63f515302806b34437563c9e`,
 					},
 				},
-				Function: func(input interface{}) (string, error) {
+				Function: func(input any) (string, error) {
 					return hashTheThing(`sha1`, input)
 				},
 			}, {
@@ -156,7 +168,7 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server ServerProxy) FuncGrou
 						Return: `2d2e8b944f53164ee0aa8b1f98d75713c1b1bc6b9dd67591ef0a29e0`,
 					},
 				},
-				Function: func(input interface{}) (string, error) {
+				Function: func(input any) (string, error) {
 					return hashTheThing(`sha224`, input)
 				},
 			}, {
@@ -175,7 +187,7 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server ServerProxy) FuncGrou
 						Return: `df2191783c6f13274b7c54330a370d0480e82a8a54069b69de73cbfa69f8ea08`,
 					},
 				},
-				Function: func(input interface{}) (string, error) {
+				Function: func(input any) (string, error) {
 					return hashTheThing(`sha256`, input)
 				},
 			}, {
@@ -194,7 +206,7 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server ServerProxy) FuncGrou
 						Return: `d6d02abf2b495a6e4350fd985075c88e5a6807f8f79634ddde8529507a6145cb832f40fe0220f2af242a8a4b451fb7fc`,
 					},
 				},
-				Function: func(input interface{}) (string, error) {
+				Function: func(input any) (string, error) {
 					return hashTheThing(`sha384`, input)
 				},
 			}, {
@@ -213,7 +225,7 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server ServerProxy) FuncGrou
 						Return: `0f8ea05dd2936700d8f23d7ceb0c7dde03e8dd2dcac714eb465c658412600457ebd143bbf8a00eed47fa0a0677cf2f2ad08f882173546a647c6802ecb19aeeb9`,
 					},
 				},
-				Function: func(input interface{}) (string, error) {
+				Function: func(input any) (string, error) {
 					return hashTheThing(`sha512`, input)
 				},
 			}, {
@@ -232,7 +244,7 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server ServerProxy) FuncGrou
 						Description: `If specified, the number generated will be strictly less than this number.`,
 					},
 				},
-				Function: func(bounds ...interface{}) int64 {
+				Function: func(bounds ...any) int64 {
 					var min = int64(0)
 					var max = int64(math.MaxInt64)
 
@@ -298,7 +310,7 @@ func loadStandardFunctionsCryptoRand(funcs FuncMap, server ServerProxy) FuncGrou
 						Default:     `sha1`,
 					},
 				},
-				Function: func(input interface{}, secret string, alg ...string) (string, error) {
+				Function: func(input any, secret string, alg ...string) (string, error) {
 					if hasher, err := hashingAlgo(typeutil.OrString(alg, `sha1`)); err == nil {
 						var hmacca = hmac.New(hasher, []byte(secret))
 

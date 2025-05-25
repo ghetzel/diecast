@@ -37,7 +37,7 @@ var DefaultObjectifyKeyValueSeparator = `=`
 var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
 
 // Register a function that will be available to all template expressions, wherever they appear.
-func RegisterGlobalFunction(name string, fn interface{}) {
+func RegisterGlobalFunction(name string, fn any) {
 	if fn != nil {
 		BuiltinFunctions[name] = fn
 	} else {
@@ -51,10 +51,10 @@ type fileInfo struct {
 	os.FileInfo
 }
 
-func (self *fileInfo) toMap() map[string]interface{} {
+func (self *fileInfo) toMap() map[string]any {
 	var full = path.Join(self.Parent, self.Name())
 
-	var data = map[string]interface{}{
+	var data = map[string]any{
 		`name`:          self.Name(),
 		`path`:          full,
 		`size`:          self.Size(),
@@ -167,9 +167,9 @@ func GetStandardFunctions(server ServerProxy) FuncMap {
 	return funcs
 }
 
-type statsTplFunc func(in interface{}) (float64, error) // {}
+type statsTplFunc func(in any) (float64, error) // {}
 
-func delimited(comma rune, header []interface{}, lines []interface{}) (string, error) {
+func delimited(comma rune, header []any, lines []any) (string, error) {
 	var output = bytes.NewBufferString(``)
 	var csvwriter = csv.NewWriter(output)
 	csvwriter.Comma = comma
@@ -212,12 +212,17 @@ func delimited(comma rune, header []interface{}, lines []interface{}) (string, e
 	return output.String(), nil
 }
 
-func tmFmt(value interface{}, format ...string) (string, error) {
+func tmFmt(value any, format ...string) (string, error) {
 	if value == nil || typeutil.String(value) == `` {
 		return ``, nil
 	}
 
 	var v = typeutil.Time(value)
+
+	// epoch timestamps should always be treated as UTC
+	if typeutil.IsInteger(value) {
+		v = v.UTC()
+	}
 
 	if v.IsZero() {
 		return ``, fmt.Errorf("invalid time: %v", value)
@@ -301,7 +306,7 @@ func tmFmt(value interface{}, format ...string) (string, error) {
 	return vStr, nil
 }
 
-func calcFn(op string, values ...interface{}) (float64, error) {
+func calcFn(op string, values ...any) (float64, error) {
 	var valuesF = make([]float64, len(values))
 
 	for i, v := range values {
@@ -349,8 +354,8 @@ func calcFn(op string, values ...interface{}) (float64, error) {
 	}
 }
 
-func filterByKey(funcs FuncMap, input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
-	var out = make([]interface{}, 0)
+func filterByKey(funcs FuncMap, input any, key string, exprs ...any) ([]any, error) {
+	var out = make([]any, 0)
 	var expr = sliceutil.First(exprs)
 	var exprStr = fmt.Sprintf("%v", expr)
 
@@ -392,8 +397,8 @@ func filterByKey(funcs FuncMap, input interface{}, key string, exprs ...interfac
 	return out, nil
 }
 
-func uniqByKey(funcs FuncMap, input interface{}, key string, saveLast bool, exprs ...interface{}) ([]interface{}, error) {
-	var out = make([]interface{}, 0)
+func uniqByKey(funcs FuncMap, input any, key string, saveLast bool, exprs ...any) ([]any, error) {
+	var out = make([]any, 0)
 	var expr = sliceutil.First(exprs)
 	var exprStr = fmt.Sprintf("%v", expr)
 	var valuesEncountered = make(map[string]int)
@@ -409,7 +414,7 @@ func uniqByKey(funcs FuncMap, input interface{}, key string, saveLast bool, expr
 					if err := tmpl.ParseString(exprStr); err == nil {
 						var output = bytes.NewBuffer(nil)
 
-						if err := tmpl.Render(output, item, ``); err == nil {
+						if err := tmpl.Render(output, item, `inline`); err == nil {
 							valkey = output.String()
 						} else {
 							return nil, fmt.Errorf("item %d: %v", i, err)
@@ -443,7 +448,7 @@ func uniqByKey(funcs FuncMap, input interface{}, key string, saveLast bool, expr
 	return out, nil
 }
 
-func sorter(input interface{}, reverse bool, keys ...string) []interface{} {
+func sorter(input any, reverse bool, keys ...string) []any {
 	var out = sliceutil.Sliceify(input)
 
 	sort.Slice(out, func(i, j int) bool {
@@ -467,10 +472,10 @@ func sorter(input interface{}, reverse bool, keys ...string) []interface{} {
 	return out
 }
 
-func commonses(slice interface{}, cmp string) (interface{}, error) {
-	var counts = make(map[interface{}]int)
+func commonses(slice any, cmp string) (any, error) {
+	var counts = make(map[any]int)
 
-	if err := sliceutil.Each(slice, func(i int, value interface{}) error {
+	if err := sliceutil.Each(slice, func(i int, value any) error {
 		if c, ok := counts[value]; ok {
 			counts[value] = c + 1
 		} else {
@@ -479,7 +484,7 @@ func commonses(slice interface{}, cmp string) (interface{}, error) {
 
 		return nil
 	}); err == nil {
-		var out interface{}
+		var out any
 		var threshold int
 
 		for value, count := range counts {
@@ -509,13 +514,13 @@ func commonses(slice interface{}, cmp string) (interface{}, error) {
 	}
 }
 
-func htmlNodeToMap(node *html.Node) map[string]interface{} {
-	var output = make(map[string]interface{})
+func htmlNodeToMap(node *html.Node) map[string]any {
+	var output = make(map[string]any)
 
 	if node != nil && node.Type == html.ElementNode {
 		var text = ``
-		var children = make([]map[string]interface{}, 0)
-		var attrs = make(map[string]interface{})
+		var children = make([]map[string]any, 0)
+		var attrs = make(map[string]any)
 
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			switch child.Type {
@@ -557,7 +562,7 @@ func htmlNodeToMap(node *html.Node) map[string]interface{} {
 	return output
 }
 
-func getSunriseSunset(latitude float64, longitude float64, atTime ...interface{}) (time.Time, time.Time, error) {
+func getSunriseSunset(latitude float64, longitude float64, atTime ...any) (time.Time, time.Time, error) {
 	var at time.Time
 
 	if len(atTime) > 0 {
@@ -589,8 +594,8 @@ func getSunriseSunset(latitude float64, longitude float64, atTime ...interface{}
 	}
 }
 
-func timeCmp(before bool, first interface{}, secondI ...interface{}) (bool, error) {
-	var second interface{}
+func timeCmp(before bool, first any, secondI ...any) (bool, error) {
+	var second any
 
 	if len(secondI) == 0 {
 		second = first
@@ -631,7 +636,7 @@ func timeDelta(now time.Time, tm time.Time, dur time.Duration, lte bool) (bool, 
 	}
 }
 
-func cmp(op string, first interface{}, second interface{}) (bool, error) {
+func cmp(op string, first any, second any) (bool, error) {
 	fStr, ok1 := first.(string)
 	sStr, ok2 := second.(string)
 
@@ -718,7 +723,7 @@ func toMarkdownExt(extensions ...string) blackfriday.Extensions {
 
 }
 
-func htmldoc(docI interface{}) (*goquery.Document, error) {
+func htmldoc(docI any) (*goquery.Document, error) {
 	if d, ok := docI.(*goquery.Document); ok {
 		return d, nil
 	} else if d, ok := docI.(string); ok {
@@ -730,7 +735,7 @@ func htmldoc(docI interface{}) (*goquery.Document, error) {
 	}
 }
 
-func htmlModify(docI interface{}, selector string, action string, k string, v interface{}, extra ...interface{}) (template.HTML, error) {
+func htmlModify(docI any, selector string, action string, k string, v any, extra ...any) (template.HTML, error) {
 	if doc, err := htmldoc(docI); err == nil {
 		switch action {
 		case `remove`:
@@ -808,7 +813,7 @@ func walkNodeTree(node *html.Node, fn func(child *html.Node) bool) {
 	}
 }
 
-func toBytes(input interface{}) []byte {
+func toBytes(input any) []byte {
 	var in []byte
 
 	if v, ok := input.([]byte); ok {

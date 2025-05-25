@@ -15,12 +15,12 @@ import (
 
 // A layer represents a filesystem from which files can be retrieved and read.
 type Layer struct {
-	Type          string                 `yaml:"type"`
-	Options       map[string]interface{} `yaml:"options"`
-	RootDir       string                 `yaml:"root"`
-	Paths         []string               `yaml:"paths"`
-	HaltOnMissing bool                   `yaml:"haltOnMissing"`
-	HaltOnError   bool                   `yaml:"haltOnError"`
+	Type          string         `yaml:"type"`
+	Options       map[string]any `yaml:"options"`
+	RootDir       string         `yaml:"root"`
+	Paths         []string       `yaml:"paths"`
+	HaltOnMissing bool           `yaml:"haltOnMissing"`
+	HaltOnError   bool           `yaml:"haltOnError"`
 	fs            fs.FS
 	id            string
 }
@@ -33,7 +33,7 @@ func LayerFromString(spec string) (*Layer, error) {
 		idgen.Write([]byte(spec))
 
 		layer.id = fmt.Sprintf("%x", idgen.Sum(nil))
-		layer.Options = make(map[string]interface{})
+		layer.Options = make(map[string]any)
 		layer.RootDir = path.Clean(path.Join(s.Host, s.Path))
 
 		switch s.Scheme {
@@ -73,7 +73,7 @@ func (self *Layer) String() string {
 }
 
 // Return a typeutil.Variant containing the value at the named option key, or a fallback value.
-func (self *Layer) Option(name string, fallbacks ...interface{}) typeutil.Variant {
+func (self *Layer) Option(name string, fallbacks ...any) typeutil.Variant {
 	return maputil.M(self.Options).Get(name, fallbacks...)
 }
 

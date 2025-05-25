@@ -22,12 +22,12 @@ func RegisterValidator(name string, validator Validator) {
 }
 
 type ValidatorConfig struct {
-	Type     string                 `yaml:"type"`
-	Options  map[string]interface{} `yaml:"options"`
-	Only     interface{}            `yaml:"only"`
-	Except   interface{}            `yaml:"except"`
-	Methods  interface{}            `yaml:"methods"`
-	Optional bool                   `yaml:"optional"`
+	Type     string         `yaml:"type"`
+	Options  map[string]any `yaml:"options"`
+	Only     any            `yaml:"only"`
+	Except   any            `yaml:"except"`
+	Methods  any            `yaml:"methods"`
+	Optional bool           `yaml:"optional"`
 }
 
 // Return whether the given request is eligible for validation under normal circumstances.
@@ -36,7 +36,7 @@ func (self *ValidatorConfig) ShouldApplyTo(req *http.Request) bool {
 }
 
 // Return a typeutil.Variant containing the value at the named option key, or a fallback value.
-func (self *ValidatorConfig) Option(name string, fallbacks ...interface{}) typeutil.Variant {
+func (self *ValidatorConfig) Option(name string, fallbacks ...any) typeutil.Variant {
 	return maputil.M(self.Options).Get(name, fallbacks...)
 }
 

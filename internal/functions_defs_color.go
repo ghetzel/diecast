@@ -162,7 +162,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server ServerProxy) FuncGroup {
 						Return: `#FF4D4D`,
 					},
 				},
-				Function: func(color interface{}, percent float64) (string, error) {
+				Function: func(color any, percent float64) (string, error) {
 					if c, err := colorutil.Lighten(color, int(percent)); err == nil {
 						return c.String(), nil
 					} else {
@@ -189,7 +189,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server ServerProxy) FuncGroup {
 						Return: `#B30000`,
 					},
 				},
-				Function: func(color interface{}, percent float64) (string, error) {
+				Function: func(color any, percent float64) (string, error) {
 					if c, err := colorutil.Darken(color, int(percent)); err == nil {
 						return c.String(), nil
 					} else {
@@ -213,10 +213,10 @@ func loadStandardFunctionsColor(funcs FuncMap, server ServerProxy) FuncGroup {
 				Examples: []FuncExample{
 					{
 						Code:   `saturate "#ad4038" 20`,
-						Return: `#c42b21`,
+						Return: `#C42B21`,
 					},
 				},
-				Function: func(color interface{}, percent float64) (string, error) {
+				Function: func(color any, percent float64) (string, error) {
 					if c, err := colorutil.Saturate(color, int(percent)); err == nil {
 						return c.String(), nil
 					} else {
@@ -240,10 +240,10 @@ func loadStandardFunctionsColor(funcs FuncMap, server ServerProxy) FuncGroup {
 				Examples: []FuncExample{
 					{
 						Code:   `desaturate "#ad4038" 20`,
-						Return: `#96544f`,
+						Return: `#96544F`,
 					},
 				},
-				Function: func(color interface{}, percent float64) (string, error) {
+				Function: func(color any, percent float64) (string, error) {
 					if c, err := colorutil.Desaturate(color, int(percent)); err == nil {
 						return c.String(), nil
 					} else {
@@ -275,7 +275,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server ServerProxy) FuncGroup {
 						Return: `#8A3360`,
 					},
 				},
-				Function: func(first interface{}, second interface{}, weight float64) (string, error) {
+				Function: func(first any, second any, weight float64) (string, error) {
 					if c, err := colorutil.MixN(first, second, weight); err == nil {
 						return c.String(), nil
 					} else {
@@ -298,7 +298,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server ServerProxy) FuncGroup {
 						Return: `#FF0000`,
 					},
 				},
-				Function: func(color interface{}) (string, error) {
+				Function: func(color any) (string, error) {
 					if c, err := colorutil.Parse(color); err == nil {
 						return c.String(), nil
 					} else {
@@ -316,12 +316,12 @@ func loadStandardFunctionsColor(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `colorToHex "#FF0000"`,
+						Code:   `colorToRGB "#FF0000"`,
 						Return: `rgb(255, 0, 0)`,
 					},
 				},
 				Summary: `Convert the given color to an "rgb()" or "rgba()" value.`,
-				Function: func(color interface{}) (string, error) {
+				Function: func(color any) (string, error) {
 					if c, err := colorutil.Parse(color); err == nil {
 						return c.StringRGBA(), nil
 					} else {
@@ -340,11 +340,11 @@ func loadStandardFunctionsColor(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `colorToHex "#FF0000"`,
+						Code:   `colorToHSL "#FF0000"`,
 						Return: `hsl(0, 100%, 50%)`,
 					},
 				},
-				Function: func(color interface{}) (string, error) {
+				Function: func(color any) (string, error) {
 					if c, err := colorutil.Parse(color); err == nil {
 						return c.StringHSLA(), nil
 					} else {
@@ -369,7 +369,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server ServerProxy) FuncGroup {
 						Return: `#416C69`,
 					},
 				},
-				Function: func(value interface{}) string {
+				Function: func(value any) string {
 					var mmh3 = murmur3.New64().Sum([]byte(typeutil.V(value).String()))
 
 					if len(mmh3) >= 3 {
@@ -404,7 +404,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server ServerProxy) FuncGroup {
 						Return: palettes[DefaultColorPalette][len(palettes[DefaultColorPalette])-1],
 					},
 				},
-				Function: func(index interface{}, paletteName ...string) (string, error) {
+				Function: func(index any, paletteName ...string) (string, error) {
 					var name = DefaultColorPalette
 
 					if len(paletteName) > 0 && paletteName[0] != `` {

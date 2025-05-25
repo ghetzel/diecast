@@ -192,7 +192,7 @@ func (self *Context) ID() string {
 }
 
 // Set the value for a given key.
-func (self *Context) SetValue(key string, value interface{}) {
+func (self *Context) SetValue(key string, value any) {
 	self.datalock.Lock()
 	defer self.datalock.Unlock()
 
@@ -207,25 +207,25 @@ func (self *Context) SetValue(key string, value interface{}) {
 	}
 }
 
-func (self *Context) Set(key string, value interface{}) *Context {
+func (self *Context) Set(key string, value any) *Context {
 	self.SetValue(key, value)
 	return self
 }
 
 // Append a value to an array stored at key.  Existing non-array values will be converted
 // into an array first.
-func (self *Context) PushValue(key string, value interface{}) {
+func (self *Context) PushValue(key string, value any) {
 	self.datalock.Lock()
 	defer self.datalock.Unlock()
 
-	var repl []interface{}
+	var repl []any
 
 	if v := self.data.Get(key); v.IsArray() {
 		repl = append(sliceutil.Sliceify(v.Value), value)
 	} else if v.IsNil() {
-		repl = []interface{}{value}
+		repl = []any{value}
 	} else {
-		repl = []interface{}{v.Value, value}
+		repl = []any{v.Value, value}
 	}
 
 	if len(repl) == 0 {
@@ -235,7 +235,7 @@ func (self *Context) PushValue(key string, value interface{}) {
 	}
 }
 
-func (self *Context) Push(key string, value interface{}) *Context {
+func (self *Context) Push(key string, value any) *Context {
 	self.PushValue(key, value)
 	return self
 }
@@ -266,7 +266,7 @@ func (self *Context) Pop(key string) typeutil.Variant {
 }
 
 // Retrieve a value at the given key.
-func (self *Context) Get(key string, fallback ...interface{}) typeutil.Variant {
+func (self *Context) Get(key string, fallback ...any) typeutil.Variant {
 	self.datalock.Lock()
 	defer self.datalock.Unlock()
 
@@ -274,7 +274,7 @@ func (self *Context) Get(key string, fallback ...interface{}) typeutil.Variant {
 }
 
 // Return the current context data as a map.
-func (self *Context) Data() map[string]interface{} {
+func (self *Context) Data() map[string]any {
 	self.datalock.Lock()
 	defer self.datalock.Unlock()
 
@@ -335,7 +335,7 @@ func (self *Context) Code() int {
 // Evaluates the given value as a template if it is one, and returns the resulting value.  If the input
 // is not a string that contains template tags, the value will be enclosed unmodified in the returned
 // typeutil.Variant, accessible via its Value field.
-func (self *Context) Eval(value interface{}) (typeutil.Variant, error) {
+func (self *Context) Eval(value any) (typeutil.Variant, error) {
 	if value == nil {
 		return typeutil.Nil(), nil
 	} else if typeutil.IsKindOfString(value) {
@@ -358,7 +358,7 @@ func (self *Context) Eval(value interface{}) (typeutil.Variant, error) {
 }
 
 // A simple inline context-aware template string evaluator.
-func (self *Context) T(value interface{}) typeutil.Variant {
+func (self *Context) T(value any) typeutil.Variant {
 	if v, err := self.Eval(value); err == nil {
 		return v
 	} else {
@@ -393,76 +393,76 @@ func (self *Context) logPrefix() string {
 // The remaining functions implement the logging pseudointerface in go-stockutil/log such that
 // all context-specific log statements can be intercepted, formatted, and processed.
 
-func (self *Context) Log(level log.Level, args ...interface{}) {
-	log.Log(level, append([]interface{}{
+func (self *Context) Log(level log.Level, args ...any) {
+	log.Log(level, append([]any{
 		fmt.Sprintf("%22s ${cyan}\u2502${reset} "+self.logPrefix(), self.ID()),
 	}, args...)...)
 }
 
-func (self *Context) Logf(level log.Level, format string, args ...interface{}) {
-	log.Logf(level, "%22s ${cyan}\u2502${reset} "+self.logPrefix()+format, append([]interface{}{self.ID()}, args...)...)
+func (self *Context) Logf(level log.Level, format string, args ...any) {
+	log.Logf(level, "%22s ${cyan}\u2502${reset} "+self.logPrefix()+format, append([]any{self.ID()}, args...)...)
 }
 
-func (self *Context) Debug(args ...interface{}) {
+func (self *Context) Debug(args ...any) {
 	self.Log(log.DEBUG, args...)
 }
 
-func (self *Context) Info(args ...interface{}) {
+func (self *Context) Info(args ...any) {
 	self.Log(log.INFO, args...)
 }
 
-func (self *Context) Notice(args ...interface{}) {
+func (self *Context) Notice(args ...any) {
 	self.Log(log.NOTICE, args...)
 }
 
-func (self *Context) Warning(args ...interface{}) {
+func (self *Context) Warning(args ...any) {
 	self.Log(log.WARNING, args...)
 }
 
-func (self *Context) Error(args ...interface{}) {
+func (self *Context) Error(args ...any) {
 	self.Log(log.ERROR, args...)
 }
 
-func (self *Context) Fatal(args ...interface{}) {
+func (self *Context) Fatal(args ...any) {
 	self.Log(log.FATAL, args...)
 }
 
-func (self *Context) Critical(args ...interface{}) {
+func (self *Context) Critical(args ...any) {
 	self.Log(log.CRITICAL, args...)
 }
 
-func (self *Context) Panic(args ...interface{}) {
+func (self *Context) Panic(args ...any) {
 	self.Log(log.PANIC, args...)
 }
 
-func (self *Context) Debugf(format string, args ...interface{}) {
+func (self *Context) Debugf(format string, args ...any) {
 	self.Logf(log.DEBUG, format, args...)
 }
 
-func (self *Context) Infof(format string, args ...interface{}) {
+func (self *Context) Infof(format string, args ...any) {
 	self.Logf(log.INFO, format, args...)
 }
 
-func (self *Context) Noticef(format string, args ...interface{}) {
+func (self *Context) Noticef(format string, args ...any) {
 	self.Logf(log.NOTICE, format, args...)
 }
 
-func (self *Context) Warningf(format string, args ...interface{}) {
+func (self *Context) Warningf(format string, args ...any) {
 	self.Logf(log.WARNING, format, args...)
 }
 
-func (self *Context) Errorf(format string, args ...interface{}) {
+func (self *Context) Errorf(format string, args ...any) {
 	self.Logf(log.ERROR, format, args...)
 }
 
-func (self *Context) Fatalf(format string, args ...interface{}) {
+func (self *Context) Fatalf(format string, args ...any) {
 	self.Logf(log.FATAL, format, args...)
 }
 
-func (self *Context) Criticalf(format string, args ...interface{}) {
+func (self *Context) Criticalf(format string, args ...any) {
 	self.Logf(log.CRITICAL, format, args...)
 }
 
-func (self *Context) Panicf(format string, args ...interface{}) {
+func (self *Context) Panicf(format string, args ...any) {
 	self.Logf(log.PANIC, format, args...)
 }

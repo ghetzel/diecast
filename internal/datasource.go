@@ -3,13 +3,13 @@ package internal
 import "fmt"
 
 type DataSource struct {
-	ID        string      `yaml:"id"`
-	URL       string      `yaml:"url"`
-	Transform interface{} `yaml:"transform,omitempty"`
-	Content   interface{} `yaml:"content,omitempty"`
+	ID        string `yaml:"id"`
+	URL       string `yaml:"url"`
+	Transform any    `yaml:"transform,omitempty"`
+	Content   any    `yaml:"content,omitempty"`
 }
 
-func (self DataSource) Retrieve(ctx Contextable) (interface{}, error) {
+func (self DataSource) Retrieve(ctx Contextable) (any, error) {
 	if self.Content != nil {
 		return self.Content, nil
 	} else if u := ctx.T(self.URL).String(); u != `` {
@@ -21,7 +21,7 @@ func (self DataSource) Retrieve(ctx Contextable) (interface{}, error) {
 
 type DataSet []DataSource
 
-func (self DataSet) Retrieve(ctx Contextable) (map[string]interface{}, error) {
+func (self DataSet) Retrieve(ctx Contextable) (map[string]any, error) {
 	for i, ds := range self {
 		var target = ctx.T(ds.ID).String()
 

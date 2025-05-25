@@ -10,7 +10,7 @@ func TestSandboxMessage(t *testing.T) {
 	var msg = new(SandboxMessage)
 
 	msg.Command = `testFunc`
-	msg.Args = []interface{}{`hello`, true}
+	msg.Args = []any{`hello`, true}
 
 	require.Equal(t, `testFunc(string, bool) (any, error)`, msg.String())
 }

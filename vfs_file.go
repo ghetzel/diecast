@@ -7,9 +7,9 @@ import (
 )
 
 type File struct {
-	Path   string      `yaml:"path"`
-	Source string      `yaml:"source"`
-	Data   interface{} `yaml:"data"`
+	Path   string `yaml:"path"`
+	Source string `yaml:"source"`
+	Data   any    `yaml:"data"`
 }
 
 // returns an object that satisfies the fs.File interface and returns data as read from the Source

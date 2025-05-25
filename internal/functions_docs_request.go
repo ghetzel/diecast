@@ -84,8 +84,9 @@ func loadRuntimeFunctionsRequest(server ServerProxy) FuncGroup {
 			}, {
 				Name: `read`,
 			}, {
-				Name:    `i18n`,
-				Summary: `Return the translation text corresponding to the page's current locale, or from an explicitly-provided locale.`,
+				Name:     `i18n`,
+				SkipTest: true,
+				Summary:  `Return the translation text corresponding to the page's current locale, or from an explicitly-provided locale.`,
 				Arguments: []FuncArg{
 					{
 						Name:        `key`,

@@ -30,7 +30,7 @@ func loadStandardFunctionsLangHighlighting(funcs FuncMap, server ServerProxy) Fu
 						Description: `The source code to highlight.`,
 					},
 				},
-				Function: func(language string, in interface{}) (template.HTML, error) {
+				Function: func(language string, in any) (template.HTML, error) {
 					var out bytes.Buffer
 					var src = typeutil.String(in)
 

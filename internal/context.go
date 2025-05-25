@@ -1,50 +1,51 @@
 package internal
 
 import (
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"io/fs"
 	"net/http"
 	"time"
+
+	"github.com/ghetzel/go-stockutil/log"
+	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 type Contextable interface {
 	Code() int
-	Critical(args ...interface{})
-	Criticalf(format string, args ...interface{})
-	Data() map[string]interface{}
-	Debug(args ...interface{})
-	Debugf(format string, args ...interface{})
+	Critical(args ...any)
+	Criticalf(format string, args ...any)
+	Data() map[string]any
+	Debug(args ...any)
+	Debugf(format string, args ...any)
 	Done() time.Duration
-	Error(args ...interface{})
-	Errorf(format string, args ...interface{})
-	Eval(value interface{}) (typeutil.Variant, error)
-	Fatal(args ...interface{})
-	Fatalf(format string, args ...interface{})
-	Get(key string, fallback ...interface{}) typeutil.Variant
+	Error(args ...any)
+	Errorf(format string, args ...any)
+	Eval(value any) (typeutil.Variant, error)
+	Fatal(args ...any)
+	Fatalf(format string, args ...any)
+	Get(key string, fallback ...any) typeutil.Variant
 	Header() http.Header
 	ID() string
-	Info(args ...interface{})
-	Infof(format string, args ...interface{})
-	Log(level log.Level, args ...interface{})
-	Logf(level log.Level, format string, args ...interface{})
+	Info(args ...any)
+	Infof(format string, args ...any)
+	Log(level log.Level, args ...any)
+	Logf(level log.Level, format string, args ...any)
 	MarkTemplateSeen(name string) bool
-	Notice(args ...interface{})
-	Noticef(format string, args ...interface{})
+	Notice(args ...any)
+	Noticef(format string, args ...any)
 	Open(name string) (fs.File, error)
-	Panic(args ...interface{})
-	Panicf(format string, args ...interface{})
+	Panic(args ...any)
+	Panicf(format string, args ...any)
 	Pop(key string) typeutil.Variant
-	PushValue(key string, value interface{})
+	PushValue(key string, value any)
 	Request() *http.Request
 	RequestBasename() string
 	SetTypeHint(hint string)
-	SetValue(key string, value interface{})
+	SetValue(key string, value any)
 	StartHTTP(wr http.ResponseWriter, req *http.Request)
-	T(value interface{}) typeutil.Variant
+	T(value any) typeutil.Variant
 	TypeHint() string
-	Warning(args ...interface{})
-	Warningf(format string, args ...interface{})
+	Warning(args ...any)
+	Warningf(format string, args ...any)
 	WasTemplateSeen(name string) bool
 	Write(b []byte) (int, error)
 	WriteHeader(statusCode int)

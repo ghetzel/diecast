@@ -79,7 +79,7 @@ func loadStandardFunctionsComparisons(funcs FuncMap, server ServerProxy) FuncGro
 						Return: true,
 					},
 				},
-				Function: func(first interface{}, second interface{}) (bool, error) {
+				Function: func(first any, second any) (bool, error) {
 					eq, err := stringutil.RelaxedEqual(first, second)
 					return !eq, err
 				},
@@ -97,7 +97,7 @@ func loadStandardFunctionsComparisons(funcs FuncMap, server ServerProxy) FuncGro
 						Description: `The second value.`,
 					},
 				},
-				Function: func(first interface{}, second interface{}) (bool, error) {
+				Function: func(first any, second any) (bool, error) {
 					return cmp(`ge`, first, second)
 				},
 			}, {
@@ -114,7 +114,7 @@ func loadStandardFunctionsComparisons(funcs FuncMap, server ServerProxy) FuncGro
 						Description: `The second value.`,
 					},
 				},
-				Function: func(first interface{}, second interface{}) (bool, error) {
+				Function: func(first any, second any) (bool, error) {
 					return cmp(`ge`, first, second)
 				},
 			}, {
@@ -131,7 +131,7 @@ func loadStandardFunctionsComparisons(funcs FuncMap, server ServerProxy) FuncGro
 						Description: `The second value.`,
 					},
 				},
-				Function: func(first interface{}, second interface{}) (bool, error) {
+				Function: func(first any, second any) (bool, error) {
 					return cmp(`lt`, first, second)
 				},
 			}, {
@@ -148,7 +148,7 @@ func loadStandardFunctionsComparisons(funcs FuncMap, server ServerProxy) FuncGro
 						Description: `The second value.`,
 					},
 				},
-				Function: func(first interface{}, second interface{}) (bool, error) {
+				Function: func(first any, second any) (bool, error) {
 					return cmp(`le`, first, second)
 				},
 			}, {
@@ -169,7 +169,7 @@ func loadStandardFunctionsComparisons(funcs FuncMap, server ServerProxy) FuncGro
 						Description: `The second value.`,
 					},
 				},
-				Function: func(operator string, first interface{}, second interface{}) (bool, error) {
+				Function: func(operator string, first any, second any) (bool, error) {
 					switch operator {
 					case `gt`, `ge`, `lt`, `le`:
 						return cmp(operator, first, second)
@@ -196,7 +196,7 @@ func loadStandardFunctionsComparisons(funcs FuncMap, server ServerProxy) FuncGro
 						Description: `The value to match against.`,
 					},
 				},
-				Function: func(patterns interface{}, value interface{}) (bool, error) {
+				Function: func(patterns any, value any) (bool, error) {
 					for _, pattern := range sliceutil.Stringify(patterns) {
 						if rx, err := regexp.Compile(pattern); err == nil {
 							if rx.MatchString(typeutil.String(value)) {
@@ -246,7 +246,7 @@ func loadStandardFunctionsComparisons(funcs FuncMap, server ServerProxy) FuncGro
 						Return: `danger`,
 					},
 				},
-				Function: func(input interface{}, fallback interface{}, pairs ...interface{}) interface{} {
+				Function: func(input any, fallback any, pairs ...any) any {
 					for _, pair := range sliceutil.Chunks(pairs, 2) {
 						if len(pair) == 2 {
 							if eq, err := stringutil.RelaxedEqual(input, pair[0]); err == nil && eq {

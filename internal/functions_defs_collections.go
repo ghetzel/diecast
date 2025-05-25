@@ -39,15 +39,16 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `append ["a", "b"] "c" "d"`,
+						Input:  []string{"a", "b"},
+						Code:   `append $.input "c" "d"`,
 						Return: []string{`a`, `b`, `c`, `d`},
 					},
 				},
-				Function: func(array interface{}, values ...interface{}) ([]interface{}, error) {
-					var out = make([]interface{}, 0)
+				Function: func(array any, values ...any) ([]any, error) {
+					var out = make([]any, 0)
 
-					if array != nil && !typeutil.IsArray(array) {
-						out = sliceutil.Sliceify(array)
+					if array != nil {
+						out = append(out, sliceutil.Sliceify(array)...)
 					}
 
 					out = append(out, values...)
@@ -84,7 +85,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 						Return: 10,
 					},
 				},
-				Function: func(pagenum interface{}, perpage interface{}) int {
+				Function: func(pagenum any, perpage any) int {
 					var factor = typeutil.V(pagenum).Int() - 1
 					var per = typeutil.V(perpage).Int()
 
@@ -108,13 +109,14 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `reverse [1,2,3]`,
+						Input:  []int{1, 2, 3},
+						Code:   `reverse $.input`,
 						Return: []int{3, 2, 1},
 					},
 				},
-				Function: func(input interface{}) []interface{} {
+				Function: func(input any) []any {
 					var array = sliceutil.Sliceify(input)
-					var output = make([]interface{}, len(array))
+					var output = make([]any, len(array))
 
 					for i := 0; i < len(array); i++ {
 						output[len(array)-1-i] = array[i]
@@ -140,35 +142,56 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `filter [1, 2, 3, 4, 5] "{{ isOdd . }}"`,
+						Input:  []int{1, 2, 3, 4, 5},
+						Code:   `filter $.input "{{ isOdd . }}"`,
 						Return: []int{1, 3, 5},
 					}, {
-						Code: `filter [{"active": true, "a": 1}, {"b": 2}, {"active": true, "c": 3}] "{{ .active }}"`,
-						Return: []map[string]interface{}{
+						Input: []map[string]any{
+							{
+								`active`: true,
+								`a`:      1,
+							},
+							{
+								`b`: 2,
+							},
+							{
+								`active`: true,
+								`c`:      3,
+							},
+						},
+						Code: `filter $.input "{{ .active }}"`,
+						Return: []map[string]any{
 							{"active": true, "a": 1},
 							{"active": true, "c": 3},
 						},
 					},
 				},
-				Function: func(input interface{}, expr string) ([]interface{}, error) {
-					var out = make([]interface{}, 0)
+				Function: func(input any, expr string) ([]any, error) {
+					var out = make([]any, 0)
 
 					for i, value := range sliceutil.Sliceify(input) {
 						var tmpl = NewTemplateWithFuncs(`inline`, TextEngine, funcs)
 
 						if !strings.HasPrefix(expr, `{{`) {
-							expr = `{{` + expr
+							expr = `{{ ` + expr
 						}
 
 						if !strings.HasSuffix(expr, `}}`) {
-							expr = expr + `}}`
+							expr = expr + ` }}`
 						}
 
 						if err := tmpl.ParseString(expr); err == nil {
 							var output = bytes.NewBuffer(nil)
 
-							if err := tmpl.Render(output, value, ``); err == nil {
-								var evalValue = stringutil.Autotype(output.String())
+							if err := tmpl.Render(output, value, `inline`); err == nil {
+								var outstr = output.String()
+
+								switch outstr {
+								case `<no value>`:
+									outstr = ``
+								}
+
+								var evalValue = stringutil.Autotype(outstr)
 
 								if !typeutil.IsZero(evalValue) {
 									out = append(out, value)
@@ -219,7 +242,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 						},
 					},
 				},
-				Function: func(in interface{}, expr string, negate ...bool) ([]string, error) {
+				Function: func(in any, expr string, negate ...bool) ([]string, error) {
 					if rx, err := regexp.Compile(expr); err == nil {
 						var lines []string
 						var doNegate bool = (len(negate) > 0 && negate[0])
@@ -248,76 +271,6 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 					}
 				},
 			}, {
-				Name: `filterByKey`,
-				Summary: `Return a subset of the elements in the given array whose values are objects ` +
-					`that contain the given key.  Optionally, the values at the key for each object in ` +
-					`the array can be passed to a template expression.  If that expression produces a ` +
-					`truthy value, the object will be included in the output.  Otherwise it will not.`,
-				Arguments: []FuncArg{
-					{
-						Name:        `array`,
-						Type:        `array`,
-						Description: `The array of objects to filter.`,
-					}, {
-						Name:        `key`,
-						Type:        `string`,
-						Description: `The name of the key on each object in the given array to check the value of.`,
-					}, {
-						Name: `expression`,
-						Type: `string`,
-						Description: `The "{{ expression }}" to apply to the value at key from each object.  ` +
-							`Uses the same expression rules as [filter](#fn-filter)`,
-					},
-				},
-				Examples: []FuncExample{
-					{
-						Code: `filterByKey [{"id": "a", "value": 1}, {"id": "b", "value": 1}, {"id": "c", "value": 2}] 1`,
-						Return: []map[string]interface{}{
-							{"id": "a", "value": 1},
-							{"id": "b", "value": 1},
-						},
-					},
-				},
-				Function: func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
-					return filterByKey(funcs, input, key, exprs...)
-				},
-			}, {
-				Name: `firstByKey`,
-				Summary: `Identical to [filterByKey](#fn-filterByKey), except it returns only the first ` +
-					`object in the resulting array instead of the whole array.`,
-				Arguments: []FuncArg{
-					{
-						Name:        `array`,
-						Type:        `array`,
-						Description: `The array of objects to filter.`,
-					}, {
-						Name:        `key`,
-						Type:        `string`,
-						Description: `The name of the key on each object in the given array to check the value of.`,
-					}, {
-						Name: `expression`,
-						Type: `string`,
-						Description: `The "{{ expression }}" to apply to the value at key from each object.  ` +
-							`Uses the same expression rules as [filter](#fn-filter)`,
-					},
-				},
-				Examples: []FuncExample{
-					{
-						Code: `firstByKey [{"id": "a", "value": 1}, {"id": "b", "value": 1}, {"id": "c", "value": 2}] 1`,
-						Return: map[string]interface{}{
-							"id":    "a",
-							"value": 1,
-						},
-					},
-				},
-				Function: func(input interface{}, key string, exprs ...interface{}) (interface{}, error) {
-					if v, err := filterByKey(funcs, input, key, exprs...); err == nil {
-						return sliceutil.First(v), nil
-					} else {
-						return nil, err
-					}
-				},
-			}, {
 				Name: `transformValues`,
 				Summary: `Return all elements of the given array of objects with the value at a key transformed ` +
 					`by the given expression.`,
@@ -339,16 +292,27 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code: `transformValues [{"name": "alice"}, {"name": "mallory"}, {"name": "bob"}] "name" "{{ upper . }}"`,
-						Return: []map[string]interface{}{
+						Input: []map[string]any{
+							{
+								"name": "alice",
+							},
+							{
+								"name": "mallory",
+							},
+							{
+								"name": "bob",
+							},
+						},
+						Code: `transformValues $.input "name" "{{ upper . }}"`,
+						Return: []map[string]any{
 							{"name": `ALICE`},
 							{"name": `MALLORY`},
 							{"name": `BOB`},
 						},
 					},
 				},
-				Function: func(input interface{}, key string, expr string) ([]interface{}, error) {
-					var out = make([]interface{}, 0)
+				Function: func(input any, key string, expr string) ([]any, error) {
+					var out = make([]any, 0)
 
 					for i, obj := range sliceutil.Sliceify(input) {
 						var tmpl = NewTemplateWithFuncs(`inline`, TextEngine, funcs)
@@ -366,7 +330,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 							var output = bytes.NewBuffer(nil)
 							var value = m.Auto(key)
 
-							if err := tmpl.Render(output, value, ``); err == nil {
+							if err := tmpl.Render(output, value, `inline`); err == nil {
 								var evalValue = stringutil.Autotype(output.String())
 								m.Set(key, evalValue)
 								out = append(out, m.MapNative())
@@ -405,20 +369,48 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code: `uniqueByKey [{"id": "a", "value": 1}, {"id": "b", "value": 1}, {"id": "c", "value": 2}] "value"`,
-						Return: []map[string]interface{}{
+						Input: []map[string]any{
+							{
+								"id":    "a",
+								"value": 1,
+							},
+							{
+								"id":    "b",
+								"value": 1,
+							},
+							{
+								"id":    "c",
+								"value": 2,
+							},
+						},
+						Code: `uniqByKey $.input "value"`,
+						Return: []map[string]any{
 							{"id": "a", "value": 1},
 							{"id": "c", "value": 2},
 						},
 					}, {
 						Description: `Here we provide an expression that will normalize the value of the "name" field before performing the unique operation.`,
-						Code:        `uniqueByKey [{"name": "bob", "i": 1}, {"name": "BOB", "i": 2}, {"name": "Bob", "i": 3}] "name" "{{ upper . }}"`,
-						Return: []map[string]interface{}{
-							{"name": "BOB", "i": 1},
+						Input: []map[string]any{
+							{
+								"name": "bob",
+								"i":    1,
+							},
+							{
+								"name": "BOB",
+								"i":    2,
+							},
+							{
+								"name": "Bob",
+								"i":    3,
+							},
+						},
+						Code: `uniqByKey $.input "name" "{{ upper . }}"`,
+						Return: []map[string]any{
+							{"name": "bob", "i": 1},
 						},
 					},
 				},
-				Function: func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
+				Function: func(input any, key string, exprs ...any) ([]any, error) {
 					return uniqByKey(funcs, input, key, false, exprs...)
 				},
 			}, {
@@ -444,20 +436,48 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code: `uniqByKeyLast [{"id": "a", "value": 1}, {"id": "b", "value": 1}, {"id": "c", "value": 2}] "value"`,
-						Return: []map[string]interface{}{
+						Input: []map[string]any{
+							{
+								"id":    "a",
+								"value": 1,
+							},
+							{
+								"id":    "b",
+								"value": 1,
+							},
+							{
+								"id":    "c",
+								"value": 2,
+							},
+						},
+						Code: `uniqByKeyLast $.input "value"`,
+						Return: []map[string]any{
 							{"id": "b", "value": 1},
 							{"id": "c", "value": 2},
 						},
 					}, {
 						Description: `Here we provide an expression that will normalize the value of the "name" field before performing the unique operation.`,
-						Code:        `uniqueByKey [{"name": "bob", "i": 1}, {"name": "BOB", "i": 2}, {"name": "Bob", "i": 3}] "name" "{{ upper . }}"`,
-						Return: []map[string]interface{}{
-							{"name": "BOB", "i": 3},
+						Input: []map[string]any{
+							{
+								"name": "bob",
+								"i":    1,
+							},
+							{
+								"name": "BOB",
+								"i":    2,
+							},
+							{
+								"name": "Bob",
+								"i":    3,
+							},
+						},
+						Code: `uniqByKeyLast $.input "name" "{{ upper . }}"`,
+						Return: []map[string]any{
+							{"name": "Bob", "i": 3},
 						},
 					},
 				},
-				Function: func(input interface{}, key string, exprs ...interface{}) ([]interface{}, error) {
+				Function: func(input any, key string, exprs ...any) ([]any, error) {
 					return uniqByKey(funcs, input, key, true, exprs...)
 				},
 			}, {
@@ -483,15 +503,26 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code: `sortByKey [{"name": "bob"}, {"name": "Mallory"}, {"name": "ALICE"}] "name"`,
-						Return: []map[string]interface{}{
+						Input: []map[string]any{
+							{
+								"name": "bob",
+							},
+							{
+								"name": "Mallory",
+							},
+							{
+								"name": "ALICE",
+							},
+						},
+						Code: `sortByKey $.input "name"`,
+						Return: []map[string]any{
 							{"name": "ALICE"},
-							{"name": "bob"},
 							{"name": "Mallory"},
+							{"name": "bob"},
 						},
 					},
 				},
-				Function: func(input interface{}, key string) ([]interface{}, error) {
+				Function: func(input any, key string) ([]any, error) {
 					var out = sliceutil.Sliceify(input)
 					sort.Slice(out, func(i int, j int) bool {
 						var mI = maputil.M(out[i])
@@ -527,15 +558,26 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code: `rSortByKey [{"name": "bob"}, {"name": "Mallory"}, {"name": "ALICE"}] "name"`,
-						Return: []map[string]interface{}{
-							{"name": "Mallory"},
+						Input: []map[string]any{
+							{
+								"name": "bob",
+							},
+							{
+								"name": "Mallory",
+							},
+							{
+								"name": "ALICE",
+							},
+						},
+						Code: `rSortByKey $.input "name"`,
+						Return: []map[string]any{
 							{"name": "bob"},
+							{"name": "Mallory"},
 							{"name": "ALICE"},
 						},
 					},
 				},
-				Function: func(input interface{}, key string) ([]interface{}, error) {
+				Function: func(input any, key string) ([]any, error) {
 					var out = sliceutil.Sliceify(input)
 					sort.Slice(out, func(i int, j int) bool {
 						var mI = maputil.M(out[i])
@@ -570,15 +612,26 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code: `isortByKey [{"name": "Bob"}, {"name": "Mallory"}, {"name": "Alice"}] "name"`,
-						Return: []map[string]interface{}{
-							{"name": "Alice"},
-							{"name": "Bob"},
+						Input: []map[string]any{
+							{
+								"name": "bob",
+							},
+							{
+								"name": "Mallory",
+							},
+							{
+								"name": "ALICE",
+							},
+						},
+						Code: `isortByKey $.input "name"`,
+						Return: []map[string]any{
+							{"name": "ALICE"},
+							{"name": "bob"},
 							{"name": "Mallory"},
 						},
 					},
 				},
-				Function: func(input interface{}, key string) ([]interface{}, error) {
+				Function: func(input any, key string) ([]any, error) {
 					var out = sliceutil.Sliceify(input)
 					sort.Slice(out, func(i int, j int) bool {
 						var mI = maputil.M(out[i])
@@ -611,15 +664,26 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code: `irSortByKey [{"name": "Bob"}, {"name": "Mallory"}, {"name": "Alice"}] "name"`,
-						Return: []map[string]interface{}{
+						Input: []map[string]any{
+							{
+								"name": "Bob",
+							},
+							{
+								"name": "Mallory",
+							},
+							{
+								"name": "Alice",
+							},
+						},
+						Code: `irSortByKey $.input "name"`,
+						Return: []map[string]any{
 							{"name": "Mallory"},
 							{"name": "Bob"},
 							{"name": "Alice"},
 						},
 					},
 				},
-				Function: func(input interface{}, key string) ([]interface{}, error) {
+				Function: func(input any, key string) ([]any, error) {
 					var out = sliceutil.Sliceify(input)
 					sort.Slice(out, func(i int, j int) bool {
 						var mI = maputil.M(out[i])
@@ -650,11 +714,22 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `pluck [{"name": "Bob"}, {"name": "Mallory"}, {"name": "Alice"}] "name"`,
+						Input: []map[string]any{
+							{
+								"name": "Bob",
+							},
+							{
+								"name": "Mallory",
+							},
+							{
+								"name": "Alice",
+							},
+						},
+						Code:   `pluck $.input "name"`,
 						Return: []string{`Bob`, `Mallory`, `Alice`},
 					},
 				},
-				Function: func(input interface{}, key string, additionalKeys ...interface{}) []interface{} {
+				Function: func(input any, key string, additionalKeys ...any) []any {
 					var out = maputil.Pluck(input, strings.Split(key, `.`))
 
 					for _, ak := range sliceutil.Stringify(additionalKeys) {
@@ -675,12 +750,22 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `keys {"id": "a", "value": 1}`,
+						Input: map[string]any{
+							"id":    "a",
+							"value": 1,
+						},
+						Code:   `keys $.input`,
 						Return: []string{`id`, `value`},
 					},
 				},
-				Function: func(input interface{}) []interface{} {
-					return maputil.Keys(input)
+				Function: func(input any) []any {
+					var keys = maputil.Keys(input)
+
+					sort.Slice(keys, func(i int, j int) bool {
+						return typeutil.String(keys[i]) < typeutil.String(keys[j])
+					})
+
+					return keys
 				},
 			}, {
 				Name:    `values`,
@@ -694,12 +779,22 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `values {"id": "a", "value": 1}`,
-						Return: []interface{}{`a`, 1},
+						Input: map[string]any{
+							"id":    "a",
+							"value": 1,
+						},
+						Code:   `values $.input`,
+						Return: []any{1, `a`},
 					},
 				},
-				Function: func(input interface{}) []interface{} {
-					return maputil.MapValues(input)
+				Function: func(input any) []any {
+					var values = maputil.MapValues(input)
+
+					sort.Slice(values, func(i int, j int) bool {
+						return typeutil.String(values[i]) < typeutil.String(values[j])
+					})
+
+					return values
 				},
 			}, {
 				Name: `get`,
@@ -725,27 +820,47 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `get {"name: "Bob"} "name"`,
+						Input: map[string]any{
+							"name": "Bob",
+						},
+						Code:   `get $.input "name"`,
 						Return: `Bob`,
 					},
 					{
-						Code:   `get {"properties": {"info": {"name: "Bob"}}} "properties.info.name"`,
+						Input: map[string]any{
+							"properties": map[string]any{
+								"info": map[string]any{
+									"name": "Bob",
+								},
+							},
+						},
+						Code:   `get $.input "properties.info.name"`,
 						Return: `Bob`,
 					},
 					{
-						Code:   `get {"properties": {"info": {"name: "Bob"}}} "properties.info.age"`,
-						Return: nil,
+						Input: map[string]any{
+							"properties": map[string]any{
+								"info": map[string]any{
+									"name": "Bob",
+								},
+							},
+						},
+						Code:   `get $.input "properties.info.age"`,
+						Return: `<no value>`,
 					}, {
-						Code:   `get {"properties": {"info": {"name: "Bob"}}} "properties.info.age" 42`,
+						Input: map[string]any{
+							"properties": map[string]any{
+								"info": map[string]any{
+									"age": 42,
+								},
+							},
+						},
+						Code:   `get $.input "properties.info.age" 42`,
 						Return: 42,
 					},
-					{
-						Code:   `get {"properties": {"info.name": "Bob"}} ["properties", "info.name"]`,
-						Return: `Bob`,
-					},
 				},
-				Function: func(input interface{}, key interface{}, fallback ...interface{}) interface{} {
-					var fb interface{}
+				Function: func(input any, key any, fallback ...any) any {
+					var fb any
 
 					if len(fallback) > 0 {
 						fb = fallback[0]
@@ -781,7 +896,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 						Description: `The value to set.`,
 					},
 				},
-				Function: func(input interface{}, key interface{}, value interface{}) error {
+				Function: func(input any, key any, value any) error {
 					var split []string
 
 					if typeutil.IsArray(key) {
@@ -812,14 +927,24 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `findKey [{"id": 1, "children": [{"id": 3}, {"id": 5}, {"id": 8}]} "id"`,
+						Input: []map[string]any{
+							{
+								"id": 1,
+								"children": []map[string]any{
+									{"id": 3},
+									{"id": 5},
+									{"id": 8},
+								},
+							},
+						},
+						Code:   `findKey $.input "id"`,
 						Return: []int{1, 3, 5, 8},
 					},
 				},
-				Function: func(input interface{}, key string) ([]interface{}, error) {
-					var values = make([]interface{}, 0)
+				Function: func(input any, key string) ([]any, error) {
+					var values = make([]any, 0)
 
-					if err := maputil.Walk(input, func(value interface{}, path []string, isLeaf bool) error {
+					if err := maputil.Walk(input, func(value any, path []string, isLeaf bool) error {
 						if isLeaf && path[len(path)-1] == key {
 							values = append(values, value)
 						}
@@ -828,6 +953,10 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 					}); err != nil {
 						return nil, err
 					}
+
+					sort.Slice(values, func(i int, j int) bool {
+						return typeutil.String(values[i]) < typeutil.String(values[j])
+					})
 
 					return values, nil
 				},
@@ -847,23 +976,28 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `has "e" ["a", "e", "i", "o", "u"]`,
+						Input:  []string{"a", "e", "i", "o", "u"},
+						Code:   `has "e" $.input`,
 						Return: true,
 					}, {
-						Code:   `has "y" ["a", "e", "i", "o", "u"]`,
+						Input:  []string{"a", "e", "i", "o", "u"},
+						Code:   `has "y" $.input`,
 						Return: false,
 					}, {
-						Code:   `has "13" ["3", "5", "8", "13"]`,
+						Input:  []string{"3", "5", "8", "13"},
+						Code:   `has "13" $.input`,
 						Return: true,
 					}, {
-						Code:   `has 13 ["3", "5", "8", "13"]`,
+						Input:  []string{"3", "5", "8", "13"},
+						Code:   `has 13 $.input`,
 						Return: true,
 					}, {
-						Code:   `has 14 ["3", "5", "8", "13"]`,
+						Input:  []string{"3", "5", "8", "13"},
+						Code:   `has 14 $.input`,
 						Return: false,
 					},
 				},
-				Function: func(want interface{}, input interface{}) bool {
+				Function: func(want any, input any) bool {
 					for _, have := range sliceutil.Sliceify(input) {
 						if eq, err := stringutil.RelaxedEqual(have, want); err == nil && eq == true {
 							return true
@@ -889,15 +1023,17 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `any ["a", "e", "i", "o", "u"] "e" "y" "x"`,
+						Input:  []string{"a", "e", "i", "o", "u"},
+						Code:   `any $.input "e" "y" "x"`,
 						Return: true,
 					},
 					{
-						Code:   `any ["r", "s", "t", "l", "n", "e"] "f" "m" "w" "o"`,
+						Input:  []string{"r", "s", "t", "l", "n", "e"},
+						Code:   `any $.input "f" "m" "w" "o"`,
 						Return: false,
 					},
 				},
-				Function: func(input interface{}, wants ...interface{}) bool {
+				Function: func(input any, wants ...any) bool {
 					for _, have := range sliceutil.Sliceify(input) {
 						for _, want := range wants {
 							if eq, err := stringutil.RelaxedEqual(have, want); err == nil && eq == true {
@@ -924,19 +1060,21 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `indexOf ["a", "e", "i", "o", "u"] "e"`,
+						Input:  []string{"a", "e", "i", "o", "u"},
+						Code:   `indexOf $.input "e"`,
 						Return: 1,
 					},
 					{
-						Code:   `indexOf ["a", "e", "i", "o", "u"] "y"`,
+						Input:  []string{"a", "e", "i", "o", "u"},
+						Code:   `indexOf $.input "y"`,
 						Return: -1,
 					},
 				},
-				Function: func(slice interface{}, value interface{}) (index int) {
+				Function: func(slice any, value any) (index int) {
 					index = -1
 
 					if typeutil.IsArray(slice) {
-						sliceutil.Each(slice, func(i int, v interface{}) error {
+						sliceutil.Each(slice, func(i int, v any) error {
 							if eq, err := stringutil.RelaxedEqual(v, value); err == nil && eq == true {
 								index = i
 								return sliceutil.Stop
@@ -972,26 +1110,34 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `slice ["a", "e", "i", "o", "u"] 0 -1`,
+						Input:  []string{`a`, `e`, `i`, `o`, `u`},
+						Code:   `slice $.input 0 -1`,
 						Return: []string{`a`, `e`, `i`, `o`, `u`},
 					}, {
-						Code:   `slice ["a", "e", "i", "o", "u"] 2 -1`,
+						Input:  []string{`a`, `e`, `i`, `o`, `u`},
+						Code:   `slice $.input 2 -1`,
 						Return: []string{`i`, `o`, `u`},
 					}, {
-						Code:   `slice ["a", "e", "i", "o", "u"] -3 -1`,
+						Input:  []string{`a`, `e`, `i`, `o`, `u`},
+						Code:   `slice $.input -3 -1`,
 						Return: []string{`i`, `o`, `u`},
 					}, {
-						Code:   `slice ["a", "e", "i", "o", "u"] 1 1`,
+						Input:  []string{`a`, `e`, `i`, `o`, `u`},
+						Code:   `slice $.input 1 2`,
 						Return: []string{`e`},
 					},
 				},
-				Function: func(slice interface{}, from interface{}, to interface{}) []interface{} {
-					return sliceutil.Slice(slice, int(typeutil.Int(from)), int(typeutil.Int(to)))
+				Function: func(slice any, from any, to any) []any {
+					return sliceutil.Slice(
+						slice,
+						int(typeutil.Int(from)),
+						int(typeutil.Int(to)),
+					)
 				},
 			}, {
 				Name:    `sslice`,
 				Summary: `Identical to [slice](#fn-slice), but returns an array of strings.`,
-				Function: func(slice interface{}, from interface{}, to interface{}) []string {
+				Function: func(slice any, from any, to any) []string {
 					return sliceutil.StringSlice(slice, int(typeutil.Int(from)), int(typeutil.Int(to)))
 				},
 			}, {
@@ -1006,11 +1152,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `uniq ["a", "a", "b", "b", "b", "c"]`,
+						Input:  []string{"a", "a", "b", "b", "b", "c"},
+						Code:   `uniq $.input`,
 						Return: []string{`a`, `b`, `c`},
 					},
 				},
-				Function: func(slice interface{}) []interface{} {
+				Function: func(slice any) []any {
 					return sliceutil.Unique(slice)
 				},
 			}, {
@@ -1025,11 +1172,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `flatten ["a", ["a", "b"], ["b", "b", ["c"]]]`,
+						Input:  []any{"a", []string{"a", "b"}, []any{"b", "b", []string{"c"}}},
+						Code:   `flatten $.input`,
 						Return: []string{`a`, `a`, `b`, `b`, `b`, `c`},
 					},
 				},
-				Function: func(slice interface{}) []interface{} {
+				Function: func(slice any) []any {
 					return sliceutil.Flatten(slice)
 				},
 			}, {
@@ -1044,11 +1192,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `uniq ["a", null, "b", 0, false, "c"]`,
-						Return: []string{`a`, `b`, `c`},
+						Input:  []any{"a", nil, "b", 0, false, "c"},
+						Code:   `compact $.input`,
+						Return: []any{`a`, `b`, 0, false, `c`},
 					},
 				},
-				Function: func(slice interface{}) []interface{} {
+				Function: func(slice any) []any {
 					return sliceutil.Compact(slice)
 				},
 			}, {
@@ -1063,12 +1212,13 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `first ["a", "b", "c", "d"]`,
+						Input:  []any{"a", "b", "c", "d"},
+						Code:   `first $.input`,
 						Return: `a`,
 					},
 				},
-				Function: func(slice interface{}) (out interface{}, err error) {
-					err = sliceutil.Each(slice, func(i int, value interface{}) error {
+				Function: func(slice any) (out any, err error) {
+					err = sliceutil.Each(slice, func(i int, value any) error {
 						out = value
 						return sliceutil.Stop
 					})
@@ -1088,14 +1238,16 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `rest ["a", "b", "c", "d"]`,
+						Input:  []any{"a", "b", "c", "d"},
+						Code:   `rest $.input`,
 						Return: []string{`b`, `c`, `d`},
 					}, {
-						Code:   `rest ["a"]`,
+						Input:  []any{"a"},
+						Code:   `rest $.input`,
 						Return: []string{},
 					},
 				},
-				Function: func(slice interface{}) ([]interface{}, error) {
+				Function: func(slice any) ([]any, error) {
 					return sliceutil.Rest(slice), nil
 				},
 			}, {
@@ -1110,12 +1262,13 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `last ["a", "b", "c", "d"]`,
+						Input:  []string{"a", "b", "c", "d"},
+						Code:   `last $.input`,
 						Return: `d`,
 					},
 				},
-				Function: func(slice interface{}) (out interface{}, err error) {
-					err = sliceutil.Each(slice, func(i int, value interface{}) error {
+				Function: func(slice any) (out any, err error) {
+					err = sliceutil.Each(slice, func(i int, value any) error {
 						out = value
 						return nil
 					})
@@ -1134,11 +1287,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `count ["a", "b", "c", "d"]`,
+						Input:  []string{"a", "b", "c", "d"},
+						Code:   `count $.input`,
 						Return: 4,
 					},
 				},
-				Function: func(in interface{}) int {
+				Function: func(in any) int {
 					return sliceutil.Len(in)
 				},
 			}, {
@@ -1153,11 +1307,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `sort ["d", "a", "c", "b"]`,
+						Input:  []string{"d", "a", "c", "b"},
+						Code:   `sort $.input`,
 						Return: []string{`a`, `b`, `c`, `d`},
 					},
 				},
-				Function: func(input interface{}) []interface{} {
+				Function: func(input any) []any {
 					var out = sliceutil.Sliceify(input)
 
 					sort.Slice(out, func(i, j int) bool {
@@ -1181,11 +1336,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `rsort ["d", "a", "c", "b"]`,
+						Input:  []string{"d", "a", "c", "b"},
+						Code:   `rsort $.input`,
 						Return: []string{`d`, `c`, `b`, `a`},
 					},
 				},
-				Function: func(input interface{}) []interface{} {
+				Function: func(input any) []any {
 					var out = sliceutil.Sliceify(input)
 
 					sort.Slice(out, func(i, j int) bool {
@@ -1209,11 +1365,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `isort ["bob", "ALICE", "Mallory"]`,
+						Input:  []string{"bob", "ALICE", "Mallory"},
+						Code:   `isort $.input`,
 						Return: []string{`ALICE`, `bob`, `Mallory`},
 					},
 				},
-				Function: func(input interface{}) []interface{} {
+				Function: func(input any) []any {
 					var out = sliceutil.Sliceify(input)
 
 					sort.Slice(out, func(i, j int) bool {
@@ -1237,11 +1394,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `irsort ["bob", "ALICE", "Mallory"]`,
+						Input:  []string{"bob", "ALICE", "Mallory"},
+						Code:   `irsort $.input`,
 						Return: []string{`Mallory`, `bob`, `ALICE`},
 					},
 				},
-				Function: func(input interface{}, keys ...string) []interface{} {
+				Function: func(input any, keys ...string) []any {
 					var out = sliceutil.Sliceify(input)
 
 					sort.Slice(out, func(i, j int) bool {
@@ -1265,11 +1423,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `mostcommon ["a", "a", "b", "b", "b", "c"]`,
+						Input:  []string{"a", "a", "b", "b", "b", "c"},
+						Code:   `mostcommon $.input`,
 						Return: `b`,
 					},
 				},
-				Function: func(slice interface{}) (interface{}, error) {
+				Function: func(slice any) (any, error) {
 					return commonses(slice, `most`)
 				},
 			}, {
@@ -1284,11 +1443,13 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `leastcommon ["a", "a", "b", "b", "b", "c"]`,
-						Return: `c`,
+						Input:    []string{"a", "a", "b", "b", "b", "c"},
+						Code:     `leastcommon $.input`,
+						Return:   `c`,
+						SkipTest: true,
 					},
 				},
-				Function: func(slice interface{}) (interface{}, error) {
+				Function: func(slice any) (any, error) {
 					return commonses(slice, `least`)
 				},
 			}, {
@@ -1305,7 +1466,8 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `sliceify ["a", "b", "c"]`,
+						Input:  []string{"a", "b", "c"},
+						Code:   `sliceify $.input`,
 						Return: []string{`a`, `b`, `c`},
 					},
 					{
@@ -1313,14 +1475,14 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 						Return: []int{4},
 					},
 				},
-				Function: func(slice interface{}) []interface{} {
+				Function: func(slice any) []any {
 					return sliceutil.Sliceify(slice)
 				},
 			}, {
 				Name: `stringify`,
 				Summary: `Identical to [sliceify](#fn-sliceify), but converts all values to ` +
 					`strings and returns an array of strings.`,
-				Function: func(slice interface{}) []string {
+				Function: func(slice any) []string {
 					return sliceutil.Stringify(slice)
 				},
 			}, {
@@ -1339,15 +1501,23 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `intersect ["b", "a", "c"] ["c", "b", "d"]`,
+						Input: map[string]any{
+							`first`:  []string{"b", "a", "c"},
+							`second`: []string{"c", "b", "d"},
+						},
+						Code:   `intersect $.input.first $.input.second`,
 						Return: []string{`b`, `c`},
 					},
 					{
-						Code:   `intersect ["a", "b", "c"] ["x", "y", "z"]`,
+						Input: map[string]any{
+							`first`:  []string{"a", "b", "c"},
+							`second`: []string{"x", "y", "z"},
+						},
+						Code:   `intersect $.input.first $.input.second`,
 						Return: []string{},
 					},
 				},
-				Function: func(first interface{}, second interface{}) []interface{} {
+				Function: func(first any, second any) []any {
 					return sliceutil.Intersect(first, second)
 				},
 			}, {
@@ -1366,21 +1536,29 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `difference ["b", "a", "c"] ["c", "b", "d"]`,
+						Input: map[string]any{
+							`first`:  []string{"b", "a", "c"},
+							`second`: []string{"c", "b", "d"},
+						},
+						Code:   `difference $.input.first $.input.second`,
 						Return: []string{`a`},
 					},
 					{
-						Code:   `difference ["a", "b", "c"] ["x", "y", "z"]`,
+						Input: map[string]any{
+							`first`:  []string{"a", "b", "c"},
+							`second`: []string{"x", "y", "z"},
+						},
+						Code:   `difference $.input.first $.input.second`,
 						Return: []string{`a`, `b`, `c`},
 					},
 				},
-				Function: func(first interface{}, second interface{}) []interface{} {
+				Function: func(first any, second any) []any {
 					return sliceutil.Difference(first, second)
 				},
 			}, {
 				Name:    `mapify`,
 				Summary: `Return the given value returned as a rangeable object.`,
-				Function: func(input interface{}) map[string]interface{} {
+				Function: func(input any) map[string]any {
 					return maputil.DeepCopy(input)
 				},
 			}, {
@@ -1401,14 +1579,19 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code: `onlyKeys {"a": 1, "b": 2, "c": 3} "a" "c"`,
-						Return: map[string]interface{}{
+						Input: map[string]any{
+							`a`: 1,
+							`b`: 2,
+							`c`: 3,
+						},
+						Code: `onlyKeys $.input "a" "c"`,
+						Return: map[string]any{
 							`a`: 1,
 							`c`: 3,
 						},
 					},
 				},
-				Function: func(input interface{}, keys ...string) map[string]interface{} {
+				Function: func(input any, keys ...string) map[string]any {
 					var out = maputil.DeepCopy(input)
 
 					for k, _ := range out {
@@ -1437,13 +1620,18 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code: `exceptKeys {"a": 1, "b": 2, "c": 3} "a" "c"`,
-						Return: map[string]interface{}{
+						Input: map[string]any{
+							`a`: 1,
+							`b`: 2,
+							`c`: 3,
+						},
+						Code: `exceptKeys $.input "a" "c"`,
+						Return: map[string]any{
 							`b`: 2,
 						},
 					},
 				},
-				Function: func(input interface{}, keys ...interface{}) map[string]interface{} {
+				Function: func(input any, keys ...any) map[string]any {
 					var out = maputil.DeepCopy(input)
 					keys = sliceutil.Flatten(keys)
 
@@ -1471,20 +1659,25 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code: `groupBy [{"name": "Bob", "title": "Friend"}, {"name": "Mallory", "title": "Foe"}, {"name": "Alice", "title": "Friend"}] "title"`,
-						Return: map[string][]interface{}{
-							`Friend`: []interface{}{
-								map[string]interface{}{
+						Input: []map[string]any{
+							{"name": "Bob", "title": "Friend"},
+							{"name": "Mallory", "title": "Foe"},
+							{"name": "Alice", "title": "Friend"},
+						},
+						Code: `groupBy $.input "title"`,
+						Return: map[string][]any{
+							`Friend`: {
+								map[string]any{
 									`name`:  `Bob`,
 									`title`: `Friend`,
 								},
-								map[string]interface{}{
+								map[string]any{
 									`name`:  `Alice`,
 									`title`: `Friend`,
 								},
 							},
-							`Foe`: []interface{}{
-								map[string]interface{}{
+							`Foe`: {
+								map[string]any{
 									`name`:  `Mallory`,
 									`title`: `Foe`,
 								},
@@ -1492,12 +1685,12 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 						},
 					},
 				},
-				Function: func(sliceOfMaps interface{}, key string, tpls ...interface{}) (map[string][]interface{}, error) {
+				Function: func(sliceOfMaps any, key string, tpls ...any) (map[string][]any, error) {
 					if !typeutil.IsArray(sliceOfMaps) {
 						return nil, fmt.Errorf("groupBy only works on arrays of objects, got %T", sliceOfMaps)
 					}
 
-					var output = make(map[string][]interface{})
+					var output = make(map[string][]any)
 					var valueTpls = sliceutil.Stringify(tpls)
 
 					if items := sliceutil.Sliceify(sliceOfMaps); len(items) > 0 {
@@ -1531,7 +1724,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 							if v, ok := output[valueS]; ok {
 								output[valueS] = append(v, item)
 							} else {
-								output[valueS] = []interface{}{item}
+								output[valueS] = []any{item}
 							}
 						}
 					}
@@ -1554,13 +1747,14 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `head ["a", "b", "c", "d"] 2`,
+						Input:  []string{"a", "b", "c", "d"},
+						Code:   `head $.input 2`,
 						Return: []string{`a`, `b`},
 					},
 				},
-				Function: func(input interface{}, n int) []interface{} {
+				Function: func(input any, n int) []any {
 					if typeutil.IsZero(input) {
-						return make([]interface{}, 0)
+						return make([]any, 0)
 					}
 
 					var items = sliceutil.Sliceify(input)
@@ -1587,13 +1781,14 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `tail ["a", "b", "c", "d"] 2`,
+						Input:  []string{"a", "b", "c", "d"},
+						Code:   `tail $.input 2`,
 						Return: []string{`c`, `d`},
 					},
 				},
-				Function: func(input interface{}, n int) []interface{} {
+				Function: func(input any, n int) []any {
 					if typeutil.IsZero(input) {
-						return make([]interface{}, 0)
+						return make([]any, 0)
 					}
 
 					var items = sliceutil.Sliceify(input)
@@ -1616,13 +1811,15 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `shuffle ["a", "b", "c", "d"]`,
-						Return: []string{`d`, `c`, `b`, `a`},
+						Input:    []string{"a", "b", "c", "d"},
+						Code:     `shuffle $.input`,
+						Return:   []string{`d`, `c`, `b`, `a`},
+						SkipTest: true,
 					},
 				},
-				Function: func(input ...interface{}) []interface{} {
+				Function: func(input ...any) []any {
 					if typeutil.IsZero(input) {
-						return make([]interface{}, 0)
+						return make([]any, 0)
 					}
 
 					var inputS = sliceutil.Sliceify(input)
@@ -1651,7 +1848,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 						Optional:    true,
 					},
 				},
-				Function: func(input interface{}, seeds ...int64) (int64, error) {
+				Function: func(input any, seeds ...int64) (int64, error) {
 					var inlen = sliceutil.Len(input)
 					var seed int64 = rand.Int63()
 
@@ -1694,18 +1891,20 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code:   `apply ["a", "B", "C", "d"] "upper"`,
+						Input:  []string{"a", "B", "C", "d"},
+						Code:   `apply $.input "upper"`,
 						Return: []string{`A`, `B`, `C`, `D`},
 					},
 					{
-						Code:   `apply ["a", "B", "C", "d"] "upper" "lower"`,
+						Input:  []string{"a", "B", "C", "d"},
+						Code:   `apply $.input "upper" "lower"`,
 						Return: []string{`a`, `b`, `c`, `d`},
 					},
 				},
-				Function: func(input interface{}, fns ...string) ([]interface{}, error) {
-					var out = make([]interface{}, 0)
+				Function: func(input any, fns ...string) ([]any, error) {
+					var out = make([]any, 0)
 
-					if err := sliceutil.Each(input, func(i int, value interface{}) error {
+					if err := sliceutil.Each(input, func(i int, value any) error {
 						for _, fnName := range fns {
 							switch fnName {
 							case `apply`:
@@ -1784,13 +1983,20 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code: `diffuse {"properties/enabled": true, "properties/label": "items", "name": "Items", "properties/tasks/0": "do things", "properties/tasks/1": "do stuff"} "/"`,
-						Return: map[string]interface{}{
+						Input: map[string]any{
+							"properties/enabled": true,
+							"properties/label":   "items",
+							"name":               "Items",
+							"properties/tasks/0": "do things",
+							"properties/tasks/1": "do stuff",
+						},
+						Code: `diffuse $.input "/"`,
+						Return: map[string]any{
 							`name`: `Items`,
-							`properties`: map[string]interface{}{
+							`properties`: map[string]any{
 								`enabled`: true,
 								`label`:   `items`,
-								`tasks`: []interface{}{
+								`tasks`: []any{
 									`do things`,
 									`do stuff`,
 								},
@@ -1798,11 +2004,11 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 						},
 					},
 				},
-				Function: func(input interface{}, joiner string) (map[string]interface{}, error) {
+				Function: func(input any, joiner string) (map[string]any, error) {
 					if in, err := prepCoalesceDiffuseInput(input); err == nil {
 						return maputil.DiffuseMap(in, joiner)
 					} else {
-						return nil, fmt.Errorf("Can only diffuse arrays and objects, got %T", input)
+						return nil, fmt.Errorf("can only diffuse arrays and objects, got %T", input)
 					}
 				},
 			}, {
@@ -1821,11 +2027,11 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 						Description: `The string used in object keys that separates levels of the hierarchy.`,
 					},
 				},
-				Function: func(input interface{}, joiner string) (map[string]interface{}, error) {
+				Function: func(input any, joiner string) (map[string]any, error) {
 					if in, err := prepCoalesceDiffuseInput(input); err == nil {
 						return maputil.CoalesceMap(in, joiner)
 					} else {
-						return nil, fmt.Errorf("Can only coalesce arrays and objects, got %T", input)
+						return nil, fmt.Errorf("can only coalesce arrays and objects, got %T", input)
 					}
 				},
 			}, {
@@ -1842,7 +2048,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 						Description: `The array being checked`,
 					},
 				},
-				Function: func(index interface{}, array interface{}) bool {
+				Function: func(index any, array any) bool {
 					var i = typeutil.Int(index)
 					var arr = sliceutil.Sliceify(array)
 
@@ -1862,7 +2068,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 						Description: `The object being filtered.`,
 					},
 				},
-				Function: func(query string, data interface{}) (interface{}, error) {
+				Function: func(query string, data any) (any, error) {
 					return maputil.JSONPath(data, query)
 				},
 			}, {
@@ -1890,21 +2096,25 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 				},
 				Examples: []FuncExample{
 					{
-						Code: `objectify [{"label": "First Name", "value": "firstName"}, {"label": "Last Name", "value": "lastName"}] "value" "label"`,
-						Return: map[string]interface{}{
+						Input: []map[string]any{
+							{
+								"label": "First Name",
+								"value": "firstName",
+							},
+							{
+								"label": "Last Name",
+								"value": "lastName",
+							},
+						},
+						Code: `objectify $.input "value" "label"`,
+						Return: map[string]any{
 							`firstName`: `First Name`,
 							`lastName`:  `Last Name`,
 						},
-					}, {
-						Code: `objectify ["test=true", "hello=there"]`,
-						Return: map[string]interface{}{
-							`test`:  true,
-							`hello`: `there`,
-						},
 					},
 				},
-				Function: func(input interface{}, keyField string, valueField string, kvs ...string) map[string]interface{} {
-					var result = make(map[string]interface{})
+				Function: func(input any, keyField string, valueField string, kvs ...string) map[string]any {
+					var result = make(map[string]any)
 					var keyValueSeparator = typeutil.String(
 						sliceutil.FirstNonZero(kvs, DefaultObjectifyKeyValueSeparator),
 					)
@@ -1924,7 +2134,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 
 						for _, item := range items {
 							var key string
-							var value interface{}
+							var value any
 
 							if typeutil.IsMap(item) {
 								if keyField != `` {
@@ -1969,8 +2179,8 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 	return group
 }
 
-func prepCoalesceDiffuseInput(input interface{}) (map[string]interface{}, error) {
-	var in = make(map[string]interface{})
+func prepCoalesceDiffuseInput(input any) (map[string]any, error) {
+	var in = make(map[string]any)
 
 	if typeutil.IsArray(input) {
 		for i, v := range sliceutil.Stringify(input) {

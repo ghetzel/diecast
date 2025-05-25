@@ -1,9 +1,11 @@
 package internal
 
 type FuncExample struct {
+	Input       any
 	Code        string
 	Description string
-	Return      interface{}
+	Return      any
+	SkipTest    bool
 }
 
 type FuncArg struct {
@@ -12,7 +14,7 @@ type FuncArg struct {
 	Description string
 	Variadic    bool
 	Optional    bool
-	Default     interface{}
+	Default     any
 	Valid       []FuncArg
 }
 
@@ -25,7 +27,8 @@ type FuncDef struct {
 	Hidden    bool
 	Arguments []FuncArg
 	Examples  []FuncExample
-	Function  interface{} `json:"-"`
+	Function  any `json:"-"`
+	SkipTest  bool
 }
 
 type FuncGroup struct {
@@ -33,9 +36,10 @@ type FuncGroup struct {
 	Description string
 	Functions   []FuncDef
 	Skip        bool
+	SkipTest    bool
 }
 
-func (self FuncGroup) fn(name string) interface{} {
+func (self FuncGroup) fn(name string) any {
 	for _, fn := range self.Functions {
 		if fn.Name == name {
 			return fn.Function

@@ -20,7 +20,7 @@ type mockFile struct {
 }
 
 // Load data from a variety of sources and expose it with an http.File interface.
-func newMockFile(name string, src interface{}) (*mockFile, error) {
+func newMockFile(name string, src any) (*mockFile, error) {
 	var file = new(mockFile)
 
 	file.SetIsDir(false)
@@ -38,7 +38,7 @@ func (self *mockFile) prep() {
 	self.SetSize(int64(self.buf.Len()))
 }
 
-func (self *mockFile) SetHeader(key string, value interface{}) {
+func (self *mockFile) SetHeader(key string, value any) {
 	if self.header == nil {
 		self.header = make(http.Header)
 	}
@@ -50,7 +50,7 @@ func (self *mockFile) Header() http.Header {
 	return self.header
 }
 
-func (self *mockFile) SetSource(src interface{}) error {
+func (self *mockFile) SetSource(src any) error {
 	if src == nil { // nil source
 		self.SetData(nil)
 		return nil

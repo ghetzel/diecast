@@ -14,7 +14,7 @@ import (
 
 var DefaultEntryPoint = `content`
 var DefaultLayoutName = `default`
-var DefaultTemplateEngine = `html`
+var DefaultTemplateEngine = `text`
 var Delimiters = internal.Delimiters
 var FrontMatterSeparator = internal.FrontMatterSeparator
 var LayoutNamePrefix string = `layout:`
@@ -29,6 +29,7 @@ type Template struct {
 	gotmpl   *internal.GolangTemplate
 	initDone bool
 	funcs    FuncMap
+	ctx      *Context
 }
 
 func ParseTemplateString(source string) (*Template, error) {
@@ -58,58 +59,63 @@ func ParseTemplateWithFuncs(source io.Reader, funcs FuncMap) (*Template, error) 
 }
 
 // Implement reader interface.
-func (self *Template) Read(b []byte) (int, error) {
-	if err := self.init(); err == nil {
-		if self.buf == nil {
+func (template *Template) Read(b []byte) (int, error) {
+	if err := template.init(); err == nil {
+		if template.buf == nil {
 			var dst bytes.Buffer
 
-			if err := self.Render(nil, &dst); err != nil {
+			if err := template.Render(template.ctx, &dst); err != nil {
 				return 0, err
 			}
 
-			self.buf = &dst
+			template.buf = &dst
 		}
 	} else {
 		return 0, fmt.Errorf("init err: %v", err)
 	}
 
-	if buf := self.buf; buf != nil {
+	if buf := template.buf; buf != nil {
 		return buf.Read(b)
 	} else {
 		return 0, io.EOF
 	}
 }
 
-// Implemented io.Closer
-func (self *Template) Close() error {
-	self.initDone = false
-	self.buf = nil
-	self.gotmpl = nil
+// Implement io.Closer
+func (template *Template) Close() error {
+	template.initDone = false
+	template.buf = nil
+	template.gotmpl = nil
 	return nil
 }
 
-func (self *Template) reinit() error {
-	self.initDone = false
-	return self.init()
+// Embed a Context to use as initial state for Render()
+func (template *Template) SetContext(ctx *Context) {
+	template.ctx = ctx
+}
+
+func (template *Template) reinit() error {
+	template.initDone = false
+	return template.init()
 }
 
 // Initialize the template, parsing the data and making the object ready for subsequent calls to Render
-func (self *Template) init() error {
-	if self.initDone {
+func (template *Template) init() error {
+	if template.initDone {
 		return nil
 	}
 
-	var engine = typeutil.OrString(self.Engine, DefaultTemplateEngine)
-	// var name = typeutil.OrString(self.Filename, engine+`:`+self.SHA512SUM)
+	var engine = typeutil.OrString(template.Engine, DefaultTemplateEngine)
+	// var name = typeutil.OrString(template.Filename, engine+`:`+template.SHA512SUM)
 
 	if gotmpl, err := internal.ParseGolangTemplate(
-		self.entryPoint(),
+		template.entryPoint(),
 		engine,
-		self.TemplateString(),
-		self.funcs,
+		template.TemplateString(),
+		template.funcs,
 	); err == nil {
-		self.gotmpl = gotmpl
-		self.initDone = true
+		template.gotmpl = gotmpl
+		template.initDone = true
 		return nil
 	} else {
 		fmt.Printf("gotmpl: %v\n", err)
@@ -117,24 +123,24 @@ func (self *Template) init() error {
 	}
 }
 
-func (self *Template) Funcs(funcMap internal.FuncMap) *Template {
-	self.funcs = funcMap
-	self.reinit()
+func (template *Template) Funcs(funcMap internal.FuncMap) *Template {
+	template.funcs = funcMap
+	template.reinit()
 
-	return self
+	return template
 }
 
 // Return the raw, unrendered template source.
-func (self *Template) TemplateString() string {
-	return string(self.body)
+func (template *Template) TemplateString() string {
+	return string(template.body)
 }
 
 // Implement fmt.Stringer
-func (self *Template) String() string {
-	if err := self.init(); err == nil {
+func (template *Template) String() string {
+	if err := template.init(); err == nil {
 		var dst bytes.Buffer
 
-		if err := self.Render(nil, &dst); err == nil {
+		if err := template.Render(template.ctx, &dst); err == nil {
 			return dst.String()
 		} else {
 			return fmt.Sprintf("<!-- TEMPLATE ERROR: %v -->", err)
@@ -144,13 +150,13 @@ func (self *Template) String() string {
 	}
 }
 
-func (self *Template) entryPoint() string {
-	return typeutil.OrString(self.EntryPoint, DefaultEntryPoint)
+func (template *Template) entryPoint() string {
+	return typeutil.OrString(template.EntryPoint, DefaultEntryPoint)
 }
 
 // Refresh all data sources and render the template, writing the results to the giveni io.Writer.
-func (self *Template) Render(ctx *Context, w io.Writer) error {
-	if err := self.init(); err != nil {
+func (template *Template) Render(ctx *Context, w io.Writer) error {
+	if err := template.init(); err != nil {
 		return err
 	}
 
@@ -158,7 +164,7 @@ func (self *Template) Render(ctx *Context, w io.Writer) error {
 		ctx = NewContext(nil)
 	}
 
-	if err := self.applyPageVars(ctx); err != nil {
+	if err := template.applyPageVars(ctx); err != nil {
 		return err
 	}
 
@@ -166,22 +172,22 @@ func (self *Template) Render(ctx *Context, w io.Writer) error {
 		w = ctx
 	}
 
-	ctx.Debugf("template: known templates: %s", strings.Join(self.gotmpl.Names(), `, `))
-	ctx.Debugf("template: entrypoint: %s", self.entryPoint())
-	ctx.Debugf("template: funcs: %d", len(self.funcs))
+	ctx.Debugf("template: known templates: %s", strings.Join(template.gotmpl.Names(), `, `))
+	ctx.Debugf("template: entrypoint: %s", template.entryPoint())
+	ctx.Debugf("template: funcs: %d", len(template.funcs))
 
-	return self.gotmpl.ExecuteTemplate(w, self.entryPoint(), ctx.Data())
+	return template.gotmpl.ExecuteTemplate(w, template.entryPoint(), ctx.Data())
 }
 
 // Returns the SHA512 checksum of the underlying template file.
-func (self *Template) Checksum() string {
-	return self.SHA512SUM
+func (template *Template) Checksum() string {
+	return template.SHA512SUM
 }
 
-func (self *Template) applyPageVars(ctx *Context) error {
-	var pageVars = maputil.Apply(self.Page, func(key []string, value interface{}) (interface{}, bool) {
-		if mii, ok := value.(map[interface{}]interface{}); ok {
-			var msi = make(map[string]interface{})
+func (template *Template) applyPageVars(ctx *Context) error {
+	var pageVars = maputil.Apply(template.Page, func(key []string, value any) (any, bool) {
+		if mii, ok := value.(map[any]any); ok {
+			var msi = make(map[string]any)
 			for ki, vi := range mii {
 				msi[typeutil.String(ki)] = vi
 			}
@@ -206,19 +212,19 @@ func (self *Template) applyPageVars(ctx *Context) error {
 	return nil
 }
 
-func (self *Template) attachTemplate(ctx *Context, tmplName string, r io.Reader) error {
-	if tmpl, err := ParseTemplateWithFuncs(r, self.funcs); err == nil {
+func (template *Template) attachTemplate(ctx *Context, tmplName string, r io.Reader) error {
+	if tmpl, err := ParseTemplateWithFuncs(r, template.funcs); err == nil {
 		if err := tmpl.LoadRelatedTemplates(ctx); err != nil {
 			return fmt.Errorf("%s: %v", tmplName, err)
 		}
 
 		// whatever we need to do to merge in the new template header, do it here
-		self.EntryPoint = typeutil.OrString(tmpl.EntryPoint, self.EntryPoint)
-		self.DataSources = append(tmpl.DataSources, self.DataSources...)
+		template.EntryPoint = typeutil.OrString(tmpl.EntryPoint, template.EntryPoint)
+		template.DataSources = append(tmpl.DataSources, template.DataSources...)
 
 		// add this new data to our existing template tree and return
 		if pt := tmpl.gotmpl.ParseTree(); pt != nil {
-			var _, err = self.gotmpl.AddParseTree(tmplName, pt)
+			var _, err = template.gotmpl.AddParseTree(tmplName, pt)
 			return err
 		} else {
 			return fmt.Errorf("invalid layout template")
@@ -228,13 +234,13 @@ func (self *Template) attachTemplate(ctx *Context, tmplName string, r io.Reader)
 	}
 }
 
-func (self *Template) layoutName(name string) string {
+func (template *Template) layoutName(name string) string {
 	return LayoutNamePrefix + strings.TrimPrefix(name, LayoutNamePrefix)
 }
 
-func (self *Template) LoadRelatedTemplates(ctx *Context) error {
+func (template *Template) LoadRelatedTemplates(ctx *Context) error {
 	var doLayout bool = true
-	var name = ctx.T(self.Layout).OrString(DefaultLayoutName)
+	var name = ctx.T(template.Layout).OrString(DefaultLayoutName)
 	var lext string = typeutil.OrString(filepath.Ext(name), `.html`)
 
 	switch strings.ToLower(name) {
@@ -245,7 +251,7 @@ func (self *Template) LoadRelatedTemplates(ctx *Context) error {
 	}
 
 	if doLayout {
-		var layoutName = self.layoutName(name)
+		var layoutName = template.layoutName(name)
 		var layoutPath = filepath.Join(
 			typeutil.OrString(ctx.Server().Paths.LayoutsDir, DefaultLayoutsDir),
 			name+lext,
@@ -257,8 +263,8 @@ func (self *Template) LoadRelatedTemplates(ctx *Context) error {
 			defer layoutFile.Close()
 			ctx.MarkTemplateSeen(layoutName)
 
-			if err := self.attachTemplate(ctx, layoutName, layoutFile); err == nil {
-				self.EntryPoint = layoutName
+			if err := template.attachTemplate(ctx, layoutName, layoutFile); err == nil {
+				template.EntryPoint = layoutName
 			} else {
 				return err
 			}

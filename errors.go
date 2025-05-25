@@ -29,7 +29,7 @@ func ErrorCode(msg string, code int) error {
 	}
 }
 
-var NotImplemented = func(msg interface{}) error {
+var NotImplemented = func(msg any) error {
 	if s, ok := msg.(string); ok && s != `` {
 		return ErrorCode(`Not Implemented: `+s, http.StatusNotImplemented)
 	} else if err, ok := msg.(error); ok && err != nil {
