@@ -3,12 +3,12 @@ module github.com/ghetzel/diecast
 go 1.24.2
 
 require (
-	github.com/PuerkitoBio/goquery v1.10.3
+	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/alecthomas/chroma v0.10.0
 	github.com/alicebob/miniredis v2.5.0+incompatible
-	github.com/aws/aws-sdk-go v1.55.7
-	github.com/beevik/etree v1.5.1
-	github.com/biessek/golang-ico v0.0.0-20180326222316-d348d9ea4670
+	github.com/aws/aws-sdk-go v1.55.8
+	github.com/beevik/etree v1.6.0
+	github.com/biessek/golang-ico v0.0.0-20250805151044-6d8ea19fb761
 	github.com/dustin/go-humanize v1.0.1
 	github.com/ghetzel/cli v1.17.0
 	github.com/ghetzel/go-stockutil v1.13.0
@@ -16,10 +16,10 @@ require (
 	github.com/ghetzel/testify v1.4.1
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-rod/rod v0.116.2
-	github.com/go-shiori/go-readability v0.0.0-20250217085726-9f5bf5ca7612
+	github.com/go-shiori/go-readability v0.0.0-20251205110129-5db1dc9836f0
 	github.com/gobwas/glob v0.2.3
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/gomodule/redigo v1.9.2
+	github.com/gomodule/redigo v1.9.3
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674
 	github.com/grokify/html-strip-tags-go v0.1.0
 	github.com/husobee/vestigo v1.1.1
@@ -40,17 +40,17 @@ require (
 	github.com/tg123/go-htpasswd v1.2.4
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4
-	golang.org/x/net v0.40.0
-	golang.org/x/oauth2 v0.30.0
-	golang.org/x/text v0.25.0
-	golang.org/x/tools v0.33.0
+	golang.org/x/net v0.48.0
+	golang.org/x/oauth2 v0.34.0
+	golang.org/x/text v0.32.0
+	golang.org/x/tools/godoc v0.1.0-deprecated
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5 // indirect
-	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
+	github.com/HdrHistogram/hdrhistogram-go v1.2.0 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20230218143504-906a9b012302 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
@@ -79,6 +79,7 @@ require (
 	github.com/juliangruber/go-intersect v1.1.0 // indirect
 	github.com/kellydunn/golang-geo v0.7.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kylelemons/go-gypsy v1.0.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/martinlindhe/unit v0.0.0-20230420213220-4adfd7d0a0d6 // indirect
@@ -93,7 +94,7 @@ require (
 	github.com/pkg/sftp v1.13.9 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/stretchr/testify v1.10.0 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/urfave/negroni v1.0.0 // indirect
 	github.com/ysmood/fetchup v0.2.3 // indirect
@@ -104,11 +105,13 @@ require (
 	github.com/yuin/gopher-lua v1.1.1 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/crypto v0.38.0 // indirect
-	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/term v0.32.0 // indirect
+	golang.org/x/crypto v0.46.0 // indirect
+	golang.org/x/mod v0.30.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/term v0.38.0 // indirect
+	golang.org/x/tools v0.39.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apimachinery v0.33.1 // indirect

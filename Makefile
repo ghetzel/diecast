@@ -39,6 +39,7 @@ favicon.go:
 build: fmt
 	go build --ldflags '-extldflags "-static"' -installsuffix cgo -ldflags '-s' -o bin/$(BIN) cmd/diecast/main.go
 	which diecast && cp -v bin/$(BIN) $(shell which diecast) || true
+	which codesign && codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime $(shell which diecast)
 
 docs:
 	@true

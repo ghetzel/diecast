@@ -206,6 +206,52 @@ func loadStandardFunctionsCodecs(_ FuncMap, _ *Server) funcGroup {
 					}
 				},
 			}, {
+				Name: `unsafeCSS`,
+				Summary: `Return an unescaped raw CSS segment for direct inclusion in the rendered template output.` +
+					`This function bypasses the built-in CSS escaping and sanitization security features.`,
+				Arguments: []funcArg{
+					{
+						Name:        `document`,
+						Type:        `string`,
+						Description: `The raw CSS snippet you sneakily want to sneak past the CSS sanitizer for reasons.`,
+					},
+				},
+				Function: func(value any) (template.CSS, error) {
+					switch value := value.(type) {
+					case *goquery.Document:
+						if doc, err := value.Html(); err == nil {
+							return template.CSS(doc), nil
+						} else {
+							return ``, err
+						}
+					default:
+						return template.CSS(typeutil.String(value)), nil
+					}
+				},
+			}, {
+				Name: `unsafeJS`,
+				Summary: `Return an unescaped raw Javascript segment for direct inclusion in the rendered template output.` +
+					`This function bypasses the built-in Javascript escaping and sanitization security features.`,
+				Arguments: []funcArg{
+					{
+						Name:        `document`,
+						Type:        `string`,
+						Description: `The raw Javascript snippet you sneakily want to sneak past the Javascript sanitizer for reasons.`,
+					},
+				},
+				Function: func(value any) (template.JS, error) {
+					switch value := value.(type) {
+					case *goquery.Document:
+						if doc, err := value.Html(); err == nil {
+							return template.JS(doc), nil
+						} else {
+							return ``, err
+						}
+					default:
+						return template.JS(typeutil.String(value)), nil
+					}
+				},
+			}, {
 				Name: `sanitize`,
 				Summary: `Takes a raw HTML string and santizes it, removing attributes and elements that can be used ` +
 					`to evaluate scripts, but leaving the rest. Useful for preparing user-generated HTML for display.`,
