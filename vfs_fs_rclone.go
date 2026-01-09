@@ -2,9 +2,10 @@ package diecast
 
 import (
 	"fmt"
+	"io/fs"
+
 	"github.com/ghetzel/diecast/v2/internal"
 	rclone_fs "github.com/rclone/rclone/fs"
-	"io/fs"
 )
 
 func init() {

@@ -176,19 +176,6 @@ func (self *RcloneFS) generateAndSetRcloneConfig() error {
 
 	rclone_configfile.Install()
 
-	rclone_fs.LogOutput = func(level rclone_fs.LogLevel, text string) {
-		for _, substring := range []string{
-			`Can't follow symlink without`,
-			`Can't transfer non file/directory`,
-		} {
-			if strings.Contains(text, substring) {
-				return
-			}
-		}
-
-		// log.Debugf("vfs/rclone: %v", text)
-	}
-
 	return nil
 }
 

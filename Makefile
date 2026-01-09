@@ -10,22 +10,22 @@ LOGLEVEL     = debug
 all: go.mod deps fmt build test
 
 go.mod:
-	go mod init github.com/ghetzel/diecast/v2
+	@go mod init github.com/ghetzel/diecast/v2
 
 fmt:
-	go mod tidy
-	gofmt -w $(LOCALS)
-	go generate ./...
-	go vet ./...
+	@go mod tidy
+	@gofmt -w $(LOCALS)
+	@go generate ./...
+	@go vet ./...
 
 deps:
-	go get ./...
+	@go get ./...
 
 test: fmt deps
-	go test -count=1 $(PKGS)
+	@go test -count=1 $(PKGS)
 
 $(ARTIFACT):
-	go build --ldflags '-extldflags "-static"' -ldflags '-s' -o $(ARTIFACT) cmd/diecast2/*.go
+	@go build --ldflags '-extldflags "-static"' -ldflags '-s' -o $(ARTIFACT) cmd/diecast2/*.go
 
 build: $(ARTIFACT)
 

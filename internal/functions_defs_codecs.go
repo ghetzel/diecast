@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
+	"codeberg.org/readeck/go-readability/v2"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
-	"github.com/go-shiori/go-readability"
 	base58 "github.com/jbenet/go-base58"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
