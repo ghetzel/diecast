@@ -1,6 +1,8 @@
 package internal
 
-func loadRuntimeFunctionsVariables(server ServerProxy) FuncGroup {
+import "github.com/ghetzel/go-stockutil/typeutil"
+
+func loadRuntimeFunctionsVariables(server ServerProxy, ctx Contextable) FuncGroup {
 	return FuncGroup{
 		Name:     `Dynamic Variables`,
 		SkipTest: true,
@@ -27,6 +29,19 @@ func loadRuntimeFunctionsVariables(server ServerProxy) FuncGroup {
 						Optional:    true,
 						Description: `If specified, the value at _$.vars.NAME_ will be set to the given value.  Otherwise, it will be set to _null_.`,
 					},
+				},
+				Function: func(key string, values ...any) any {
+					switch len(values) {
+					case 0:
+						ctx.SetValue(key, nil)
+						return nil
+					case 1:
+						ctx.SetValue(key, values[0])
+						return values[0]
+					default:
+						ctx.SetValue(key, values)
+						return values
+					}
 				},
 				Examples: []FuncExample{
 					{
@@ -60,10 +75,17 @@ func loadRuntimeFunctionsVariables(server ServerProxy) FuncGroup {
 						Type:        `string`,
 						Description: `The name of the variable to append to.`,
 					}, {
-						Name:        `value`,
+						Name:        `values`,
 						Type:        `any`,
-						Description: `The value to append.`,
+						Description: `The value(s) to append.`,
 					},
+				},
+				Function: func(key string, values ...any) any {
+					for _, v := range values {
+						ctx.PushValue(key, v)
+					}
+
+					return values
 				},
 				Examples: []FuncExample{
 					{
@@ -83,12 +105,30 @@ func loadRuntimeFunctionsVariables(server ServerProxy) FuncGroup {
 				},
 			}, {
 				Name: `pop`,
+				Function: func(key string) any {
+					return ctx.Pop(key)
+				},
 			}, {
-				Name: `varset`,
+				Name:     `varset`,
+				Function: FunctionNotImplementedError(`varset`),
 			}, {
 				Name: `increment`,
+				Function: func(key string, values ...any) float64 {
+					var total float64
+
+					if len(values) == 0 {
+						total += ctx.Increment(key, 1)
+					} else {
+						for _, v := range values {
+							total += ctx.Increment(key, typeutil.Float(v))
+						}
+					}
+
+					return total
+				},
 			}, {
-				Name: `incrementByValue`,
+				Name:     `incrementByValue`,
+				Function: FunctionNotImplementedError(`incrementByValue`),
 			},
 		},
 	}

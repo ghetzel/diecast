@@ -95,6 +95,10 @@ func MinNonZero(data stats.Float64Data) (float64, error) {
 }
 
 func GetFunctions(server ServerProxy) (FuncGroups, FuncMap) {
+	return GetFunctionsWithRequest(server, nil)
+}
+
+func GetFunctionsWithRequest(server ServerProxy, ctx Contextable) (FuncGroups, FuncMap) {
 	if server != nil {
 		server.Lock(`get-functions`)
 		defer server.Unlock(`get-functions`)
@@ -150,9 +154,13 @@ func GetFunctions(server ServerProxy) (FuncGroups, FuncMap) {
 	// Celestial & Astronomical
 	groups = append(groups, loadStandardFunctionsCelestial(funcs, server))
 
-	// Documentation for runtime functions
-	groups = append(groups, loadRuntimeFunctionsVariables(server))
-	groups = append(groups, loadRuntimeFunctionsRequest(server))
+	if ctx != nil {
+		// Functions for working with the current request data
+		groups = append(groups, loadRuntimeFunctionsRequest(server, ctx))
+
+		// Functions for manipulating the current request context
+		groups = append(groups, loadRuntimeFunctionsVariables(server, ctx))
+	}
 
 	groups.PopulateFuncMap(funcs)
 
@@ -828,5 +836,11 @@ func readFromFS(fs http.FileSystem, filename string) ([]byte, error) {
 		return ioutil.ReadAll(file)
 	} else {
 		return nil, err
+	}
+}
+
+func FunctionNotImplementedError(name string) func(...any) error {
+	return func(...any) error {
+		return fmt.Errorf("function %q is not implemented in Diecast 2.x", name)
 	}
 }

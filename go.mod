@@ -17,6 +17,7 @@ require (
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/montanaflynn/stats v0.7.1
+	github.com/pkg/errors v0.9.1
 	github.com/rclone/rclone v1.72.1
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/sj14/astral v0.2.2
@@ -193,7 +194,6 @@ require (
 	github.com/peterh/liner v1.2.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.23 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/sftp v1.13.10 // indirect
 	github.com/pkg/xattr v0.4.12 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect

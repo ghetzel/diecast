@@ -25,6 +25,7 @@ type Contextable interface {
 	Get(key string, fallback ...any) typeutil.Variant
 	Header() http.Header
 	ID() string
+	Increment(key string, value float64) float64
 	Info(args ...any)
 	Infof(format string, args ...any)
 	Log(level log.Level, args ...any)

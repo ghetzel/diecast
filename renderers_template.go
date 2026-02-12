@@ -1,8 +1,9 @@
 package diecast
 
 import (
-	"github.com/ghetzel/diecast/v2/internal"
 	"io/fs"
+
+	"github.com/ghetzel/diecast/v2/internal"
 )
 
 type TemplateRenderer struct {
@@ -11,7 +12,7 @@ type TemplateRenderer struct {
 func (self *TemplateRenderer) Render(ctx *Context, input fs.File, cfg *RendererConfig) error {
 	defer input.Close()
 
-	var _, funcs = internal.GetFunctions(ctx.Server())
+	var _, funcs = internal.GetFunctionsWithRequest(ctx.Server(), ctx)
 
 	if tmpl, err := ParseTemplateWithFuncs(input, funcs); err == nil {
 		if err := tmpl.LoadRelatedTemplates(ctx); err != nil {

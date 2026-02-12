@@ -228,7 +228,7 @@ func (self *Server) ListenAndServe(address string) error {
 	return <-errchan
 }
 
-// Implements the http.Handler interface.
+// Implements the http.Handler interface. Handles all requests.
 func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var file fs.File
 	var err error
@@ -251,10 +251,10 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	defer ctx.Done()
 
 	// VALIDATE
-	// -------------------------------------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
 	//  ▶ decide to accept/reject request
 	//  ▶ perform authentication checks
-	//  ▶ any other security or data validation before causing a VFS retrieval
+	//  ▶ do any other security or data validation before causing a VFS retrieval
 	//
 	err = self.serveHttpPhaseValidate(ctx)
 
@@ -265,7 +265,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// RETRIEVE
-	// -------------------------------------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
 	//  ▶ use the request to locate the data and metadata that will be rendered into a response
 	//
 	file, err = self.serveHttpPhaseRetrieve(ctx)
@@ -287,7 +287,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// RENDER
-	// -------------------------------------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
 	//  ▶ consume the input data found in RETRIEVE and write whatever response the requestor will receive
 	//
 	err = self.serveHttpPhaseRender(ctx, file)
@@ -301,7 +301,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// END.OF.LINE.
-	// -------------------------------------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
 }
 
 // Intelligently respond in a consistent manner with the data provided, including error detection, redirection,

@@ -57,11 +57,16 @@ func NewContext(server *Server) *Context {
 	return ctx.reset()
 }
 
+// Initialize the data map.
+func (self *Context) initData() {
+	self.data = maputil.NewMap()
+}
+
 // Initialize all internal state such that a new request can begin via Start().
 func (self *Context) reset() *Context {
 	self.id = ``
 	self.id = self.ID()
-	self.data = maputil.M(nil)
+	self.initData()
 	self.wr = nil
 	self.req = nil
 	self.startedAt = time.Time{}
@@ -191,11 +196,15 @@ func (self *Context) ID() string {
 	return stringutil.UUID().Base58()
 }
 
-// Set the value for a given key.
+// Set the value for a given key
 func (self *Context) SetValue(key string, value any) {
 	self.datalock.Lock()
 	defer self.datalock.Unlock()
+	self.setValue(key, value)
+}
 
+// Set the value for a given key (no locking)
+func (self *Context) setValue(key string, value any) {
 	if typeutil.IsMap(value) {
 		if flat, err := maputil.CoalesceMap(maputil.M(value).MapNative(), `.`); err == nil {
 			for k, v := range flat {
@@ -271,6 +280,17 @@ func (self *Context) Get(key string, fallback ...any) typeutil.Variant {
 	defer self.datalock.Unlock()
 
 	return self.data.Get(key, fallback...)
+}
+
+// Set or increment a numeric value by a given magnitude
+func (self *Context) Increment(key string, value float64) float64 {
+	self.datalock.Lock()
+	defer self.datalock.Unlock()
+
+	var newval = self.Get(key).Float() + value
+	self.setValue(key, newval)
+
+	return newval
 }
 
 // Return the current context data as a map.

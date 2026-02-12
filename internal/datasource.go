@@ -1,19 +1,39 @@
 package internal
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+
+	"github.com/ghetzel/go-stockutil/maputil"
+)
 
 type DataSource struct {
-	ID        string `yaml:"id"`
-	URL       string `yaml:"url"`
-	Transform any    `yaml:"transform,omitempty"`
-	Content   any    `yaml:"content,omitempty"`
+	Content           any            `yaml:"content,omitempty"`
+	ID                string         `yaml:"id"`
+	Insecure          bool           `yaml:"insecure"`
+	Isolated          bool           `yaml:"isolated"`
+	RequestHeaders    map[string]any `yaml:"headers"`
+	RequestMethod     string         `yaml:"method,omitempty"`
+	RequestParameters map[string]any `yaml:"params"`
+	Timeout           time.Duration  `yaml:"timeout"`
+	Transform         any            `yaml:"transform,omitempty"`
+	URL               string         `yaml:"url"`
 }
 
 func (self DataSource) Retrieve(ctx Contextable) (any, error) {
-	if self.Content != nil {
+	if u := ctx.T(self.URL).String(); u != `` {
+		return RetrieveData(ctx, &RetrieveOptions{
+			Fallback: self.Content,
+			Headers:  maputil.Stringify(self.RequestHeaders),
+			Insecure: self.Insecure,
+			Isolated: self.Isolated,
+			Method:   self.RequestMethod,
+			Params:   self.RequestParameters,
+			Timeout:  self.Timeout,
+			URL:      self.URL,
+		})
+	} else if self.Content != nil {
 		return self.Content, nil
-	} else if u := ctx.T(self.URL).String(); u != `` {
-		return RetrieveURL(ctx, u)
 	} else {
 		return nil, fmt.Errorf(`skip`)
 	}

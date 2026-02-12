@@ -78,6 +78,7 @@ func (self *RendererConfig) RendererFor(ctx *Context) Renderer {
 
 // Render a retrieved file to the given response writer.
 func (self *Server) serveHttpPhaseRender(ctx *Context, file fs.File) error {
+	// -------------------------------------------------------------------------
 	// apply the first matching renderer from the config (if any)
 	for _, rc := range self.Renderers {
 		if renderer := rc.RendererFor(ctx); renderer != nil {
@@ -86,6 +87,7 @@ func (self *Server) serveHttpPhaseRender(ctx *Context, file fs.File) error {
 		}
 	}
 
+	// -------------------------------------------------------------------------
 	// try to find a renderer by glob matching the request path
 	for pattern, rc := range renderersByGlob {
 		if IsGlobMatch(ctx.Request().URL.Path, pattern) {
@@ -96,6 +98,7 @@ func (self *Server) serveHttpPhaseRender(ctx *Context, file fs.File) error {
 		}
 	}
 
+	// -------------------------------------------------------------------------
 	// try to work out a renderer based on the most recent MIME type hint
 	if typeHint := ctx.TypeHint(); typeHint != `` {
 		if rc, ok := renderersByMimeType[strings.ToLower(typeHint)]; ok {
@@ -106,6 +109,7 @@ func (self *Server) serveHttpPhaseRender(ctx *Context, file fs.File) error {
 		}
 	}
 
+	// -------------------------------------------------------------------------
 	// try to find a renderer by glob matching the source path
 	if stat, err := file.Stat(); err == nil {
 		for pattern, rc := range renderersByGlob {
@@ -118,6 +122,7 @@ func (self *Server) serveHttpPhaseRender(ctx *Context, file fs.File) error {
 		}
 	}
 
+	// -------------------------------------------------------------------------
 	// fallback to just copying the retrieved data to the response directly
 	return Passthrough(ctx, file, nil)
 }

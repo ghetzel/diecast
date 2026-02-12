@@ -190,6 +190,14 @@ func (template *Template) Checksum() string {
 }
 
 func (template *Template) applyPageVars(ctx *Context) error {
+	if template.Page == nil {
+		template.Page = make(map[string]any)
+	}
+
+	template.Page[`_`] = map[string]any{
+		`id`: ctx.ID(),
+	}
+
 	var pageVars = maputil.Apply(template.Page, func(key []string, value any) (any, bool) {
 		if mii, ok := value.(map[any]any); ok {
 			var msi = make(map[string]any)
@@ -226,6 +234,10 @@ func (template *Template) attachTemplate(ctx *Context, tmplName string, r io.Rea
 		// whatever we need to do to merge in the new template header, do it here
 		template.EntryPoint = typeutil.OrString(tmpl.EntryPoint, template.EntryPoint)
 		template.DataSources = append(tmpl.DataSources, template.DataSources...)
+
+		for k, v := range template.ResponseHeaders {
+			ctx.Header().Set(k, typeutil.String(v))
+		}
 
 		// add this new data to our existing template tree and return
 		if pt := tmpl.gotmpl.ParseTree(); pt != nil {

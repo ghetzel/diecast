@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/ghetzel/go-stockutil/log"
 	"gopkg.in/yaml.v2"
 )
 
@@ -14,14 +15,15 @@ var Delimiters [2]string = [2]string{`{{`, `}}`}
 var FrontMatterSeparator = []byte("---\n")
 
 type TemplateHeader struct {
-	Engine        string         `yaml:"engine"`
-	EntryPoint    string         `yaml:"entryPoint"`
-	DataSources   DataSet        `yaml:"dataSources"`
-	Layout        string         `yaml:"layout"`
-	Page          map[string]any `yaml:"page"`
-	Filename      string         `yaml:"-"`
-	ContentOffset int            `yaml:"-"`
-	SHA512SUM     string         `yaml:"-"`
+	Engine          string         `yaml:"engine"`
+	EntryPoint      string         `yaml:"entryPoint"`
+	DataSources     DataSet        `yaml:"dataSources"`
+	Layout          string         `yaml:"layout"`
+	Page            map[string]any `yaml:"page"`
+	ResponseHeaders map[string]any `yaml:"headers"`
+	Filename        string         `yaml:"-"`
+	ContentOffset   int            `yaml:"-"`
+	SHA512SUM       string         `yaml:"-"`
 }
 
 func SplitTemplateHeaderContent(r io.Reader) (*TemplateHeader, []byte, error) {
@@ -56,7 +58,19 @@ func SplitTemplateHeaderContent(r io.Reader) (*TemplateHeader, []byte, error) {
 	// Only attempt to parse if we actually read any front matter data.
 	if len(fmData) > 0 {
 		if err := yaml.UnmarshalStrict(fmData, hdr); err != nil {
-			return nil, body, err
+			if log.ErrContains(err, "not found in type internal.TemplateHeader") {
+				var lhdr = new(LegacyTemplateHeader)
+
+				if err := yaml.UnmarshalStrict(fmData, lhdr); err == nil {
+					if err := lhdr.convertToV2Header(hdr); err != nil {
+						return nil, body, err
+					}
+				} else {
+					return nil, body, err
+				}
+			} else {
+				return nil, body, err
+			}
 		}
 	}
 

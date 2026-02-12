@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/ghetzel/go-stockutil/convutil"
 	"github.com/ghetzel/go-stockutil/mathutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/montanaflynn/stats"
+	"github.com/pkg/errors"
 )
 
 func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
@@ -503,6 +505,46 @@ func loadStandardFunctionsMath(funcs FuncMap, server ServerProxy) FuncGroup {
 						typeutil.Float(rad)*(180/math.Pi),
 						rplaces,
 					)
+				},
+			}, {
+				Name:    `convert`,
+				Summary: `A generic unit conversion function that allows for converting values between two units of measurement.`,
+				Arguments: []FuncArg{
+					{
+						Name:        `value`,
+						Type:        `any`,
+						Description: `The value to convert from.`,
+					}, {
+						Name:        `fromUnit`,
+						Type:        `string`,
+						Description: `The unit of measure to convert from.`,
+					}, {
+						Name:        `toUnit`,
+						Type:        `string`,
+						Description: `The unit of measure to convert to.`,
+					},
+				},
+				Examples: []FuncExample{
+					{Code: `convert 32 "F" "C"`, Return: 0},
+					{Code: `convert 0 "C" "F"`, Return: 32},
+				},
+				Function: func(value any, fromUnit any, toUnit any) (float64, error) {
+					var uf convutil.Unit
+					var ut convutil.Unit
+
+					if u, err := convutil.ParseUnit(typeutil.String(fromUnit)); err == nil {
+						uf = u
+					} else {
+						return 0, errors.Wrap(err, "invalid input unit")
+					}
+
+					if u, err := convutil.ParseUnit(typeutil.String(toUnit)); err == nil {
+						ut = u
+					} else {
+						return 0, errors.Wrap(err, "invalid output unit")
+					}
+
+					return convutil.Convert(value, uf, ut)
 				},
 			},
 		},
