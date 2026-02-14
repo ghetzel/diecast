@@ -2,14 +2,18 @@ package diecast
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io/fs"
 	"mime"
+	"net"
 	"net/http"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/term"
 
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
@@ -24,6 +28,14 @@ type RequestIdentFunc func(*http.Request) string
 var DefaultContextTypeHint = `application/octet-stream`
 var DefaultContextDir = `.`
 var RequestIdentifierFunc RequestIdentFunc
+var LogStyleBoxWidth int = func() int {
+	if w, _, err := term.GetSize(0); err == nil {
+		return int(float64(w) * 0.75)
+	} else {
+		return 84
+	}
+}()
+var LogStyleAccentColor = `cyan`
 
 const (
 	XDiecastRequest = `X-Diecast-Request`
@@ -34,19 +46,22 @@ const (
 // validating the request may proceed, locating and retrieving the data, and performing any
 // post-processing of that data before it is returned to the requestor.
 type Context struct {
-	data           *maputil.Map
-	wr             http.ResponseWriter
-	req            *http.Request
-	server         *Server
-	startedAt      time.Time
-	statusCode     int
-	bytesWritten   int64
-	startlock      sync.Mutex
-	datalock       sync.Mutex
-	mimeHint       string
-	id             string
-	wroteOnce      bool
-	visitedLayouts map[string]bool
+	data             *maputil.Map
+	wr               http.ResponseWriter
+	req              *http.Request
+	server           *Server
+	startedAt        time.Time
+	statusCode       int
+	bytesWritten     int64
+	startlock        sync.Mutex
+	datalock         sync.Mutex
+	responseLock     sync.Mutex
+	mimeHint         string
+	id               string
+	wroteOnce        bool
+	wroteHeadersOnce bool
+	visitedLayouts   map[string]bool
+	isLegacyV1       bool
 }
 
 func NewContext(server *Server) *Context {
@@ -60,6 +75,59 @@ func NewContext(server *Server) *Context {
 // Initialize the data map.
 func (self *Context) initData() {
 	self.data = maputil.NewMap()
+
+	self.data.Set(`vars._.now`, time.Now().Format(time.RFC3339))
+}
+
+func (self *Context) injectRequestData(req *http.Request) {
+	var params = make(map[string]any)
+	var hdrs = make(map[string]any)
+
+	for k, vs := range req.URL.Query() {
+		switch len(vs) {
+		case 0:
+			continue
+		case 1:
+			params[k] = vs[0]
+		default:
+			params[k] = vs
+		}
+	}
+
+	for k, vs := range req.Header {
+		switch len(vs) {
+		case 0:
+			continue
+		case 1:
+			hdrs[k] = vs[0]
+		default:
+			hdrs[k] = vs
+		}
+	}
+
+	var host, port, _ = net.SplitHostPort(req.Host)
+	var tlsconn map[string]any
+
+	if tc := req.TLS; tc != nil {
+		tlsconn = map[string]any{
+			`protcol`:    req.TLS.NegotiatedProtocol,
+			`cipher`:     tls.CipherSuiteName(req.TLS.CipherSuite),
+			`serverName`: req.TLS.ServerName,
+			`version`:    req.TLS.Version,
+		}
+	}
+
+	self.setValue(`data._.request`, map[string]any{
+		`headers`: hdrs,
+		`host`:    host,
+		`method`:  req.Method,
+		`params`:  params,
+		`path`:    req.URL.Path,
+		`port`:    port,
+		`scheme`:  req.URL.Scheme,
+		`tls`:     tlsconn,
+		`url`:     req.RequestURI,
+	})
 }
 
 // Initialize all internal state such that a new request can begin via Start().
@@ -117,14 +185,26 @@ func (self *Context) StartHTTP(wr http.ResponseWriter, req *http.Request) {
 	self.startedAt = time.Now()
 
 	self.SetTypeHint(fileutil.GetMimeType(self.req.URL.Path, self.mimeHint))
-	log.Debugf("%s ${cyan}\u250C%s\u257C${reset}", self.ID(), strings.Repeat("\u2500", 84))
-	self.Logf(log.DEBUG, "context: start (%s %v)", self.req.Method, self.req.URL)
+	log.Debugf("${"+LogStyleAccentColor+"}\u250C%s\u257C${reset}", strings.Repeat("\u2500", LogStyleBoxWidth))
+
+	var hdrsuffix string
+
+	if l := len(req.Header); l > 0 {
+		hdrsuffix = fmt.Sprintf(", %d headers:", l)
+	}
+
+	self.Logf(log.DEBUG, "${reset}\u25B6${reset} %s %v%s", self.req.Method, self.req.URL, hdrsuffix)
 
 	for kv := range maputil.M(req.Header).Iter(maputil.IterOptions{
 		SortKeys: true,
 	}) {
-		self.Logf(log.DEBUG, "  % -32s %v", kv.K+`:`, kv.Value)
+		var val = typeutil.String(kv.Value)
+		val = stringutil.Elide(val, LogStyleBoxWidth-38, `...`)
+
+		self.Logf(log.DEBUG, "  % -32s %v", kv.K+`:`, val)
 	}
+
+	self.injectRequestData(req)
 }
 
 func (self *Context) Start(wr http.ResponseWriter, req *http.Request) *Context {
@@ -145,9 +225,15 @@ func (self *Context) Done() time.Duration {
 	var took = time.Since(self.startedAt)
 	var code = self.Code()
 
+	var color = `green`
+
+	if code >= 400 {
+		color = `red`
+	}
+
 	self.Logf(
 		log.DEBUG,
-		"context: wrote response (HTTP %d %s; %d bytes; took %v; %d headers)",
+		"${"+color+"+b}\u25C0 HTTP %d %s${reset}; %d bytes; took %v; %d headers:",
 		code,
 		http.StatusText(code),
 		self.bytesWritten,
@@ -161,7 +247,7 @@ func (self *Context) Done() time.Duration {
 		self.Logf(log.DEBUG, "  % -32s %v", kv.K+`:`, kv.Value)
 	}
 
-	log.Debugf("%s ${cyan}\u2514%s\u257C${reset}", self.ID(), strings.Repeat("\u2500", 84))
+	log.Debugf("${"+LogStyleAccentColor+"}\u2514%s\u257C${reset}", strings.Repeat("\u2500", LogStyleBoxWidth))
 	return took
 }
 
@@ -298,7 +384,13 @@ func (self *Context) Data() map[string]any {
 	self.datalock.Lock()
 	defer self.datalock.Unlock()
 
-	return self.data.MapNative(`yaml`)
+	var data = self.data.MapNative(`yaml`)
+
+	if self.isLegacyV1 {
+		data[`bindings`] = data[`data`]
+	}
+
+	return data
 }
 
 // Open a file in the underlying http.FileSystem.
@@ -308,7 +400,6 @@ func (self *Context) Open(name string) (fs.File, error) {
 	}
 
 	var f, err = self.server.VFS.Open(name)
-	self.Debugf("fs: open(%q) %v", name, err)
 
 	return f, err
 }
@@ -343,8 +434,14 @@ func (self *Context) Write(b []byte) (int, error) {
 
 // Write the response status code and keep a copy for later inspection.
 func (self *Context) WriteHeader(statusCode int) {
-	self.statusCode = statusCode
-	self.wr.WriteHeader(self.Code())
+	if !self.wroteHeadersOnce {
+		self.statusCode = statusCode
+		self.wr.WriteHeader(self.Code())
+		self.wroteHeadersOnce = true
+	} else {
+		self.Warningf("already sent response headers, ignoring WriteHeader() attempt")
+	}
+
 }
 
 // Return a usable HTTP status code for the reponse.
@@ -361,6 +458,8 @@ func (self *Context) Eval(value any) (typeutil.Variant, error) {
 	} else if typeutil.IsKindOfString(value) {
 		if ts := typeutil.String(value); strings.Contains(ts, Delimiters[0]) && strings.Contains(ts, Delimiters[1]) {
 			if tmpl, err := ParseTemplateString(ts); err == nil {
+				self.isLegacyV1 = tmpl.IsLegacyV1
+
 				var buf bytes.Buffer
 
 				if err := tmpl.Render(self, &buf); err == nil {
@@ -415,12 +514,12 @@ func (self *Context) logPrefix() string {
 
 func (self *Context) Log(level log.Level, args ...any) {
 	log.Log(level, append([]any{
-		fmt.Sprintf("%22s ${cyan}\u2502${reset} "+self.logPrefix(), self.ID()),
+		"${" + LogStyleAccentColor + "}\u2502${reset} " + self.logPrefix(),
 	}, args...)...)
 }
 
 func (self *Context) Logf(level log.Level, format string, args ...any) {
-	log.Logf(level, "%22s ${cyan}\u2502${reset} "+self.logPrefix()+format, append([]any{self.ID()}, args...)...)
+	log.Logf(level, "${"+LogStyleAccentColor+"}\u2502${reset} "+self.logPrefix()+format, args...)
 }
 
 func (self *Context) Debug(args ...any) {

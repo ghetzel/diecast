@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
 	"os"
@@ -741,6 +741,10 @@ func htmldoc(docI any) (*goquery.Document, error) {
 }
 
 func htmlModify(docI any, selector string, action string, k string, v any, extra ...any) (template.HTML, error) {
+	if docI == nil {
+		return ``, nil
+	}
+
 	if doc, err := htmldoc(docI); err == nil {
 		switch action {
 		case `remove`:
@@ -833,7 +837,7 @@ func toBytes(input any) []byte {
 func readFromFS(fs http.FileSystem, filename string) ([]byte, error) {
 	if file, err := fs.Open(filename); err == nil {
 		defer file.Close()
-		return ioutil.ReadAll(file)
+		return io.ReadAll(file)
 	} else {
 		return nil, err
 	}

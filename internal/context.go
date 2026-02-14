@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ghetzel/go-stockutil/log"
+	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
@@ -50,4 +51,32 @@ type Contextable interface {
 	WasTemplateSeen(name string) bool
 	Write(b []byte) (int, error)
 	WriteHeader(statusCode int)
+}
+
+// Evaluate a value against the given Contextable or panic.
+func MustEval(ctx Contextable, tpl any) any {
+	if v, err := ctx.Eval(tpl); err == nil {
+		return v.Value
+	} else {
+		panic(err.Error())
+	}
+}
+
+func MapEval(ctx Contextable, data map[string]any) map[string]any {
+	return maputil.Apply(data, func(key []string, value any) (any, bool) {
+		if !typeutil.IsEmpty(value) {
+			if v, err := ctx.Eval(value); err == nil {
+				value = v.Value
+			} else {
+				ctx.Warningf("invalid template %q: %v", value, err)
+				value = nil
+			}
+		}
+
+		return value, true
+	})
+}
+
+func StringMapEval(ctx Contextable, data map[string]any) map[string]string {
+	return maputil.Stringify(MapEval(ctx, data))
 }

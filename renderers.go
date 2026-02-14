@@ -82,7 +82,7 @@ func (self *Server) serveHttpPhaseRender(ctx *Context, file fs.File) error {
 	// apply the first matching renderer from the config (if any)
 	for _, rc := range self.Renderers {
 		if renderer := rc.RendererFor(ctx); renderer != nil {
-			ctx.Debugf("renderer: %T (config)", renderer)
+			// ctx.Debugf("renderer: %T (config)", renderer)
 			return renderer.Render(ctx, file, &rc)
 		}
 	}
@@ -92,7 +92,7 @@ func (self *Server) serveHttpPhaseRender(ctx *Context, file fs.File) error {
 	for pattern, rc := range renderersByGlob {
 		if IsGlobMatch(ctx.Request().URL.Path, pattern) {
 			if renderer := rc.RendererFor(ctx); renderer != nil {
-				ctx.Debugf("renderer: %T (glob: %q)", renderer, pattern)
+				// ctx.Debugf("renderer: %T (glob: %q)", renderer, pattern)
 				return renderer.Render(ctx, file, &rc)
 			}
 		}
@@ -103,7 +103,7 @@ func (self *Server) serveHttpPhaseRender(ctx *Context, file fs.File) error {
 	if typeHint := ctx.TypeHint(); typeHint != `` {
 		if rc, ok := renderersByMimeType[strings.ToLower(typeHint)]; ok {
 			if renderer := rc.RendererFor(ctx); renderer != nil {
-				ctx.Debugf("renderer: %T (mime: %q)", renderer, typeHint)
+				// ctx.Debugf("renderer: %T (mime: %q)", renderer, typeHint)
 				return renderer.Render(ctx, file, &rc)
 			}
 		}
@@ -115,7 +115,7 @@ func (self *Server) serveHttpPhaseRender(ctx *Context, file fs.File) error {
 		for pattern, rc := range renderersByGlob {
 			if IsGlobMatch(stat.Name(), pattern) {
 				if renderer := rc.RendererFor(ctx); renderer != nil {
-					ctx.Debugf("renderer: %T (source glob: %q)", renderer, pattern)
+					// ctx.Debugf("renderer: %T (source glob: %q)", renderer, pattern)
 					return renderer.Render(ctx, file, &rc)
 				}
 			}

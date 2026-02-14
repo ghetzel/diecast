@@ -42,6 +42,10 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server ServerProxy) Func
 					},
 				},
 				Function: func(docI any, selector string) ([]map[string]any, error) {
+					if docI == nil {
+						return nil, nil
+					}
+
 					var elements = make([]map[string]any, 0)
 
 					if doc, err := htmldoc(docI); err == nil {

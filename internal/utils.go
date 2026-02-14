@@ -5,7 +5,6 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"io"
-	"io/ioutil"
 
 	"github.com/ghetzel/go-stockutil/log"
 	"gopkg.in/yaml.v2"
@@ -24,6 +23,7 @@ type TemplateHeader struct {
 	Filename        string         `yaml:"-"`
 	ContentOffset   int            `yaml:"-"`
 	SHA512SUM       string         `yaml:"-"`
+	IsLegacyV1      bool           `yaml:"-"`
 }
 
 func SplitTemplateHeaderContent(r io.Reader) (*TemplateHeader, []byte, error) {
@@ -35,7 +35,7 @@ func SplitTemplateHeaderContent(r io.Reader) (*TemplateHeader, []byte, error) {
 	// tee the source to the hasher above for checksumming goodness
 	var summedSource = io.TeeReader(r, summer)
 
-	if data, err := ioutil.ReadAll(summedSource); err == nil {
+	if data, err := io.ReadAll(summedSource); err == nil {
 		var parts = bytes.SplitN(data, FrontMatterSeparator, 3)
 
 		switch len(parts) {
@@ -65,6 +65,8 @@ func SplitTemplateHeaderContent(r io.Reader) (*TemplateHeader, []byte, error) {
 					if err := lhdr.convertToV2Header(hdr); err != nil {
 						return nil, body, err
 					}
+
+					hdr.IsLegacyV1 = true
 				} else {
 					return nil, body, err
 				}

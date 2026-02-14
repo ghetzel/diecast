@@ -32,14 +32,17 @@ type Template struct {
 	ctx      *Context
 }
 
+// Parse a template from the given string.
 func ParseTemplateString(source string) (*Template, error) {
 	return ParseTemplate(bytes.NewBufferString(source))
 }
 
+// Parse a template by reading it from the given reader.
 func ParseTemplate(source io.Reader) (*Template, error) {
 	return ParseTemplateWithFuncs(source, nil)
 }
 
+// Parse a template by reading it from the given reader, exposing the given funcs to the template engine.
 func ParseTemplateWithFuncs(source io.Reader, funcs FuncMap) (*Template, error) {
 	if source == nil {
 		return nil, io.EOF
@@ -58,7 +61,7 @@ func ParseTemplateWithFuncs(source io.Reader, funcs FuncMap) (*Template, error) 
 	return tmpl, tmpl.init()
 }
 
-// Implement reader interface.
+// Render the template on read. Implements the io.Reader interface.
 func (template *Template) Read(b []byte) (int, error) {
 	if err := template.init(); err == nil {
 		if template.buf == nil {
@@ -135,7 +138,7 @@ func (template *Template) TemplateString() string {
 	return string(template.body)
 }
 
-// Implement fmt.Stringer
+// Render the template when being converted to a string. Implements fmt.Stringer.
 func (template *Template) String() string {
 	if err := template.init(); err == nil {
 		var dst bytes.Buffer
@@ -177,9 +180,9 @@ func (template *Template) Render(ctx *Context, w io.Writer) error {
 		w = ctx
 	}
 
-	ctx.Debugf("template: known templates: %s", strings.Join(template.gotmpl.Names(), `, `))
-	ctx.Debugf("template: entrypoint: %s", template.entryPoint())
-	ctx.Debugf("template: funcs: %d", len(template.funcs))
+	// ctx.Debugf("template: known templates: %s", strings.Join(template.gotmpl.Names(), `, `))
+	// ctx.Debugf("template: entrypoint: %s", template.entryPoint())
+	// ctx.Debugf("template: funcs: %d", len(template.funcs))
 
 	return template.gotmpl.ExecuteTemplate(w, template.entryPoint(), ctx.Data())
 }

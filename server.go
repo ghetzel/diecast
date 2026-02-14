@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -71,7 +70,7 @@ type Server struct {
 func NewServerFromConfig(r io.Reader) (*Server, error) {
 	var srv Server
 
-	if data, err := ioutil.ReadAll(r); err == nil {
+	if data, err := io.ReadAll(r); err == nil {
 		if err := yaml.UnmarshalStrict(data, &srv); err == nil {
 			return &srv, nil
 		} else {
@@ -273,7 +272,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if err == nil {
 		defer file.Close()
 	} else {
-		ctx.Debugf("retrieve: %v", err)
+		// ctx.Debugf("retrieve: %v", err)
 		self.writeResponse(ctx, err)
 		return
 	}

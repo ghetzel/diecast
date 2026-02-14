@@ -1,13 +1,17 @@
 package internal
 
 import (
-	"fmt"
+	"io"
 	"time"
+
+	"github.com/ghetzel/go-stockutil/httputil"
+	"github.com/ghetzel/go-stockutil/maputil"
+
+	"github.com/ghetzel/go-stockutil/fileutil"
 )
 
 type RetrieveOptions struct {
 	URL         string            `yaml:"url"                    json:"url"`                    // The URL or path to the resource being retrieved
-	Fallback    any               `yaml:"fallback,omitempty"     json:"fallback,omitempty"`     // The default value to return of the retrieval fails
 	Headers     map[string]string `yaml:"headers,omitempty"      json:"headers,omitempty"`      // Additional headers to include in the request
 	Insecure    bool              `yaml:"insecure,omitempty"     json:"insecure,omitempty"`     // If the protocol supports an insecure request mode (e.g.: HTTPS), permit it in this case
 	Method      string            `yaml:"method,omitempty"       json:"method,omitempty"`       // The protocol-specific method to perform the request with
@@ -17,6 +21,36 @@ type RetrieveOptions struct {
 	Isolated    bool              `yaml:"isolated,omitempty"     json:"isolated,omitempty"`     // Do not passthrough the headers that were sent from the client's browser in the originating request
 }
 
-func RetrieveData(ctx Contextable, opts *RetrieveOptions) (any, error) {
-	return nil, fmt.Errorf("Not Implemented: RetrieveURL()")
+func RetrieveData(ctx Contextable, opts *RetrieveOptions) (io.ReadCloser, error) {
+	// TODO: add Method and Headers{s}a to go-stockutil/fileutil.OpenOptions for http(s)
+
+	var url = opts.URL
+
+	for _, k := range maputil.StringKeys(opts.Params) {
+		url = httputil.SetQString(url, k, opts.Params[k])
+	}
+
+	ctx.Debugf("  retrieve: %v", url)
+
+	if response, err := fileutil.OpenWithOptions(url, fileutil.OpenOptions{
+		Timeout:  opts.Timeout,
+		Insecure: opts.Insecure,
+	}); err == nil {
+		return io.NopCloser(response), nil
+	} else {
+		return nil, err
+	}
+
+	// dispatch request to protocol-specific retriever. result is io.ReadCloser
+	//	.Method
+	//	.URL
+	//  .Insecure
+	// 	.Headers (somehow inject originating request headers, global, and page-specific headers)
+	// 	.Params
+	// 	.Timeout
+
+	// -> REQUEST
+	// <- RESPONSE
+
+	// return io.ReadCloser OR fallback; caller is responsible for parsing/filtering/transforming
 }

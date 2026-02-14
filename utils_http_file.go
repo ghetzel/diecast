@@ -3,7 +3,6 @@ package diecast
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -67,13 +66,13 @@ func (self *mockFile) SetSource(src any) error {
 			return err
 		}
 
-		if b, err := ioutil.ReadAll(f); err == nil {
+		if b, err := io.ReadAll(f); err == nil {
 			self.SetData(b)
 		} else {
 			return err
 		}
 	} else if r, ok := src.(io.Reader); ok { // io.Reader & io.ReadCloser
-		if b, err := ioutil.ReadAll(r); err == nil {
+		if b, err := io.ReadAll(r); err == nil {
 			self.SetData(b)
 		} else {
 			return err

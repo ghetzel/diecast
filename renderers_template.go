@@ -15,6 +15,8 @@ func (self *TemplateRenderer) Render(ctx *Context, input fs.File, cfg *RendererC
 	var _, funcs = internal.GetFunctionsWithRequest(ctx.Server(), ctx)
 
 	if tmpl, err := ParseTemplateWithFuncs(input, funcs); err == nil {
+		ctx.isLegacyV1 = tmpl.IsLegacyV1
+
 		if err := tmpl.LoadRelatedTemplates(ctx); err != nil {
 			return err
 		}
