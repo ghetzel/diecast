@@ -63,7 +63,7 @@ type Server struct {
 	Defaults      DefaultOptions    `yaml:"defaults"`
 	ovfs          fs.FS
 	startFuncs    []ServerStartFunc
-	srvlock       sync.Mutex
+	srvlocks      map[string]*sync.Mutex
 }
 
 // Loads a YAML-formatted configuration from the given reader and returns a Server.
@@ -112,11 +112,15 @@ func (self *Server) LoadLayersFromString(specs ...string) error {
 	return nil
 }
 
+func (self *Server) verifyPath() string {
+	return typeutil.OrString(self.VerifyPath, DefaultVerifyPath)
+}
+
 // Perform a pre-configured request that must succeed to be considered successful.
 func (self *Server) Verify() error {
 	var res, err = self.SimulateRequest(
 		typeutil.OrString(self.VerifyMethod, DefaultVerifyMethod),
-		typeutil.OrString(self.VerifyPath, DefaultVerifyPath),
+		self.verifyPath(),
 		nil,
 		nil,
 		nil,
@@ -201,7 +205,7 @@ func (self *Server) ListenAndServe(address string) error {
 			select {
 			case err := <-verr:
 				if err == nil {
-					log.Debugf("verify: ok")
+					log.Debugf("Successfully verified ability to serve %v", self.verifyPath())
 					ok = true // ok to start listening
 				} else {
 					// log.Debugf("verify: error %v", err)
@@ -218,7 +222,7 @@ func (self *Server) ListenAndServe(address string) error {
 	// wait for an ok signal then start listening blocked in another goroutine
 	go func() {
 		if r := <-readychan; r {
-			log.Noticef("listening on %v", hsrv.Addr)
+			log.Noticef("Server started at %v", hsrv.Addr)
 			errchan <- hsrv.ListenAndServe()
 		}
 	}()
@@ -378,11 +382,21 @@ func (self *Server) prep() error {
 }
 
 func (self *Server) Lock(name string) {
-	// self.srvlock.Lock()
+	if self.srvlocks == nil {
+		self.srvlocks = make(map[string]*sync.Mutex)
+	}
+
+	if self.srvlocks[name] == nil {
+		self.srvlocks[name] = new(sync.Mutex)
+	}
+
+	self.srvlocks[name].Lock()
 }
 
 func (self *Server) Unlock(name string) {
-	// self.srvlock.Unlock()
+	if lck, ok := self.srvlocks[name]; ok && lck != nil {
+		lck.Unlock()
+	}
 }
 
 func (self *Server) defaultFileExtensions() []string {

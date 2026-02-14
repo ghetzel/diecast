@@ -42,6 +42,12 @@ const (
 	XDiecastError   = `X-Diecast-Error`
 )
 
+type logLine struct {
+	Level  log.Level
+	Format string
+	Args   []any
+}
+
 // A Context represents everything necessary to handle the request for a single resource, including
 // validating the request may proceed, locating and retrieving the data, and performing any
 // post-processing of that data before it is returned to the requestor.
@@ -62,6 +68,7 @@ type Context struct {
 	wroteHeadersOnce bool
 	visitedLayouts   map[string]bool
 	isLegacyV1       bool
+	logAccumulator   []logLine
 }
 
 func NewContext(server *Server) *Context {
@@ -185,7 +192,12 @@ func (self *Context) StartHTTP(wr http.ResponseWriter, req *http.Request) {
 	self.startedAt = time.Now()
 
 	self.SetTypeHint(fileutil.GetMimeType(self.req.URL.Path, self.mimeHint))
-	log.Debugf("${"+LogStyleAccentColor+"}\u250C%s\u257C${reset}", strings.Repeat("\u2500", LogStyleBoxWidth))
+
+	self.logAccumulator = append(self.logAccumulator, logLine{
+		Level:  log.DEBUG,
+		Format: "${" + LogStyleAccentColor + "}\u250C%s\u257C${reset}",
+		Args:   []any{strings.Repeat("\u2500", LogStyleBoxWidth)},
+	})
 
 	var hdrsuffix string
 
@@ -247,7 +259,14 @@ func (self *Context) Done() time.Duration {
 		self.Logf(log.DEBUG, "  % -32s %v", kv.K+`:`, kv.Value)
 	}
 
-	log.Debugf("${"+LogStyleAccentColor+"}\u2514%s\u257C${reset}", strings.Repeat("\u2500", LogStyleBoxWidth))
+	self.logAccumulator = append(self.logAccumulator, logLine{
+		Level:  log.DEBUG,
+		Format: "${" + LogStyleAccentColor + "}\u2514%s\u257C${reset}",
+		Args:   []any{strings.Repeat("\u2500", LogStyleBoxWidth)},
+	})
+
+	self.Flush()
+
 	return took
 }
 
@@ -513,13 +532,30 @@ func (self *Context) logPrefix() string {
 // all context-specific log statements can be intercepted, formatted, and processed.
 
 func (self *Context) Log(level log.Level, args ...any) {
-	log.Log(level, append([]any{
-		"${" + LogStyleAccentColor + "}\u2502${reset} " + self.logPrefix(),
-	}, args...)...)
+	self.logAccumulator = append(self.logAccumulator, logLine{
+		Level:  level,
+		Format: "${" + LogStyleAccentColor + "}\u2502${reset} %v" + self.logPrefix(),
+		Args:   args,
+	})
 }
 
 func (self *Context) Logf(level log.Level, format string, args ...any) {
-	log.Logf(level, "${"+LogStyleAccentColor+"}\u2502${reset} "+self.logPrefix()+format, args...)
+	self.logAccumulator = append(self.logAccumulator, logLine{
+		Level:  level,
+		Format: "${" + LogStyleAccentColor + "}\u2502${reset} " + self.logPrefix() + format,
+		Args:   args,
+	})
+}
+
+func (self *Context) Flush() {
+	self.server.Lock(`context-logger`)
+	defer self.server.Unlock(`context-logger`)
+
+	for _, line := range self.logAccumulator {
+		log.Logf(line.Level, line.Format, line.Args...)
+	}
+
+	self.logAccumulator = nil
 }
 
 func (self *Context) Debug(args ...any) {
