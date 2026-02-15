@@ -228,9 +228,8 @@ func (self *Context) Start(wr http.ResponseWriter, req *http.Request) *Context {
 func (self *Context) Done() time.Duration {
 	self.startlock.Lock()
 	defer func() {
-		self.reset()
-		self.Flush()
 		self.startlock.Unlock()
+		self.reset()
 	}()
 
 	var rhdr = self.wr.Header()
@@ -264,6 +263,8 @@ func (self *Context) Done() time.Duration {
 		Format: "${" + LogStyleAccentColor + "}\u2514%s\u257C${reset}",
 		Args:   []any{strings.Repeat("\u2500", LogStyleBoxWidth)},
 	})
+
+	self.Flush()
 
 	return took
 }
@@ -438,10 +439,6 @@ func (self *Context) Open(name string) (fs.File, error) {
 // Return the http.Request associated with this context.  This function will panic if Start() was
 // not previously called with a non-nil http.Request.
 func (self *Context) Request() *http.Request {
-	if self.req == nil {
-		panic("no request associated with context")
-	}
-
 	return self.req
 }
 
@@ -457,22 +454,27 @@ func (self *Context) Header() http.Header {
 
 // Passthrough a Write to the underlying http.ResponseWriter.
 func (self *Context) Write(b []byte) (int, error) {
+	self.wr.WriteHeader(self.statusCode)
+
 	var n, err = self.wr.Write(b)
 	self.bytesWritten += int64(n)
 	self.wroteOnce = true
 	return n, err
 }
 
+func (self *Context) SetStatusCode(code int) {
+	self.statusCode = code
+}
+
 // Write the response status code and keep a copy for later inspection.
 func (self *Context) WriteHeader(statusCode int) {
 	if !self.wroteHeadersOnce {
-		self.statusCode = statusCode
-		self.wr.WriteHeader(self.Code())
+		self.SetStatusCode(statusCode)
+		self.wr.WriteHeader(self.statusCode)
 		self.wroteHeadersOnce = true
 	} else {
 		self.Warningf("already sent response headers, ignoring WriteHeader() attempt")
 	}
-
 }
 
 // Return a usable HTTP status code for the reponse.
@@ -560,8 +562,10 @@ func (self *Context) Logf(level log.Level, format string, args ...any) {
 }
 
 func (self *Context) Flush() {
-	self.server.Lock(`context-logger`)
-	defer self.server.Unlock(`context-logger`)
+	if srv := self.server; srv != nil {
+		srv.Lock(`context-logger`)
+		defer srv.Unlock(`context-logger`)
+	}
 
 	for _, line := range self.logAccumulator {
 		log.Logf(line.Level, line.Format, line.Args...)

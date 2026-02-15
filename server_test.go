@@ -165,5 +165,6 @@ func TestServerWriteResponse(t *testing.T) {
 	ctx.Start(w, req)
 	server.writeResponse(ctx, `/redirect/to/place/`, http.StatusTemporaryRedirect)
 	assert.Equal(t, http.StatusTemporaryRedirect, w.Code)
-	assert.Equal(t, `/redirect/to/place/`, w.HeaderMap.Get(`Location`))
+	assert.Equal(t, `/redirect/to/place/`, w.Header().Get(`Location`))
+	ctx.Done()
 }
