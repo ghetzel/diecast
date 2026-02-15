@@ -227,7 +227,7 @@ func (self *Server) ListenAndServe(address string) error {
 		}
 	}()
 
-	// whoever errors first returns
+	// whoever errors first, return that error (which can be nil)
 	return <-errchan
 }
 

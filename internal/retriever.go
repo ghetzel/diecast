@@ -4,10 +4,9 @@ import (
 	"io"
 	"time"
 
+	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/maputil"
-
-	"github.com/ghetzel/go-stockutil/fileutil"
 )
 
 type RetrieveOptions struct {
@@ -31,6 +30,15 @@ func RetrieveData(ctx Contextable, opts *RetrieveOptions) (io.ReadCloser, error)
 	}
 
 	ctx.Debugf("  retrieve: %v", url)
+	// self.Logf(
+	// 	log.DEBUG,
+	// 	"  ${cyan}\u25C0 HTTP %d %s${reset}; %d bytes; took %v; %d headers:",
+	// 	code,
+	// 	http.StatusText(code),
+	// 	self.bytesWritten,
+	// 	took.Round(time.Microsecond),
+	// 	len(rhdr),
+	// )
 
 	if response, err := fileutil.OpenWithOptions(url, fileutil.OpenOptions{
 		Timeout:  opts.Timeout,

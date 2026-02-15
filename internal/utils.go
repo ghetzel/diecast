@@ -59,6 +59,9 @@ func SplitTemplateHeaderContent(r io.Reader) (*TemplateHeader, []byte, error) {
 	if len(fmData) > 0 {
 		if err := yaml.UnmarshalStrict(fmData, hdr); err != nil {
 			if log.ErrContains(err, "not found in type internal.TemplateHeader") {
+				log.Warningf("template parse error: %v", err)
+				log.Warning("Attempting to parse as Legacy V1 template...")
+
 				var lhdr = new(LegacyTemplateHeader)
 
 				if err := yaml.UnmarshalStrict(fmData, lhdr); err == nil {

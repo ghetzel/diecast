@@ -52,7 +52,7 @@ type logLine struct {
 // validating the request may proceed, locating and retrieving the data, and performing any
 // post-processing of that data before it is returned to the requestor.
 type Context struct {
-	data             *maputil.Map
+	data             map[string]any
 	wr               http.ResponseWriter
 	req              *http.Request
 	server           *Server
@@ -81,9 +81,8 @@ func NewContext(server *Server) *Context {
 
 // Initialize the data map.
 func (self *Context) initData() {
-	self.data = maputil.NewMap()
-
-	self.data.Set(`vars._.now`, time.Now().Format(time.RFC3339))
+	self.data = make(map[string]any)
+	self.data[`vars._.now`] = time.Now().Format(time.RFC3339Nano)
 }
 
 func (self *Context) injectRequestData(req *http.Request) {
@@ -124,7 +123,7 @@ func (self *Context) injectRequestData(req *http.Request) {
 		}
 	}
 
-	self.setValue(`data._.request`, map[string]any{
+	self.data[`data._.request`] = map[string]any{
 		`headers`: hdrs,
 		`host`:    host,
 		`method`:  req.Method,
@@ -134,7 +133,7 @@ func (self *Context) injectRequestData(req *http.Request) {
 		`scheme`:  req.URL.Scheme,
 		`tls`:     tlsconn,
 		`url`:     req.RequestURI,
-	})
+	}
 }
 
 // Initialize all internal state such that a new request can begin via Start().
@@ -213,7 +212,7 @@ func (self *Context) StartHTTP(wr http.ResponseWriter, req *http.Request) {
 		var val = typeutil.String(kv.Value)
 		val = stringutil.Elide(val, LogStyleBoxWidth-38, `...`)
 
-		self.Logf(log.DEBUG, "  % -32s %v", kv.K+`:`, val)
+		self.Logf(log.DEBUG, "  ${8}\u21D2${reset} % -36s %v", kv.K+`:`, val)
 	}
 
 	self.injectRequestData(req)
@@ -230,6 +229,7 @@ func (self *Context) Done() time.Duration {
 	self.startlock.Lock()
 	defer func() {
 		self.reset()
+		self.Flush()
 		self.startlock.Unlock()
 	}()
 
@@ -256,7 +256,7 @@ func (self *Context) Done() time.Duration {
 	for kv := range maputil.M(rhdr).Iter(maputil.IterOptions{
 		SortKeys: true,
 	}) {
-		self.Logf(log.DEBUG, "  % -32s %v", kv.K+`:`, kv.Value)
+		self.Logf(log.DEBUG, "  ${8}\u21D0${reset} % -36s %v", kv.K+`:`, kv.Value)
 	}
 
 	self.logAccumulator = append(self.logAccumulator, logLine{
@@ -264,8 +264,6 @@ func (self *Context) Done() time.Duration {
 		Format: "${" + LogStyleAccentColor + "}\u2514%s\u257C${reset}",
 		Args:   []any{strings.Repeat("\u2500", LogStyleBoxWidth)},
 	})
-
-	self.Flush()
 
 	return took
 }
@@ -311,13 +309,16 @@ func (self *Context) SetValue(key string, value any) {
 // Set the value for a given key (no locking)
 func (self *Context) setValue(key string, value any) {
 	if typeutil.IsMap(value) {
-		if flat, err := maputil.CoalesceMap(maputil.M(value).MapNative(), `.`); err == nil {
+		if flat, err := maputil.CoalesceMap(
+			maputil.M(value).MapNative(),
+			`.`,
+		); err == nil {
 			for k, v := range flat {
-				self.data.Set(key+`.`+k, v)
+				self.data[key+`.`+k] = v
 			}
 		}
 	} else {
-		self.data.Set(key, value)
+		self.data[key] = value
 	}
 }
 
@@ -334,7 +335,7 @@ func (self *Context) PushValue(key string, value any) {
 
 	var repl []any
 
-	if v := self.data.Get(key); v.IsArray() {
+	if v := typeutil.V(self.data[key]); v.IsArray() {
 		repl = append(sliceutil.Sliceify(v.Value), value)
 	} else if v.IsNil() {
 		repl = []any{value}
@@ -343,9 +344,9 @@ func (self *Context) PushValue(key string, value any) {
 	}
 
 	if len(repl) == 0 {
-		self.data.Delete(key)
+		delete(self.data, key)
 	} else {
-		self.data.Set(key, repl)
+		self.data[key] = repl
 	}
 }
 
@@ -361,20 +362,20 @@ func (self *Context) Pop(key string) typeutil.Variant {
 	self.datalock.Lock()
 	defer self.datalock.Unlock()
 
-	if v := self.data.Get(key); v.IsArray() {
+	if v := typeutil.V(self.data[key]); v.IsArray() {
 		var vv = sliceutil.Sliceify(v.Value)
 
 		if l := len(vv); l == 0 {
 			return typeutil.Nil()
 		} else if l == 1 {
-			self.data.Delete(key)
+			delete(self.data, key)
 			return typeutil.V(vv[0])
 		} else {
-			self.data.Set(key, vv[0:(l-1)])
+			self.data[key] = vv[0:(l - 1)]
 			return typeutil.V(vv[(l - 1)])
 		}
 	} else {
-		self.data.Delete(key)
+		delete(self.data, key)
 		return v
 	}
 }
@@ -384,7 +385,13 @@ func (self *Context) Get(key string, fallback ...any) typeutil.Variant {
 	self.datalock.Lock()
 	defer self.datalock.Unlock()
 
-	return self.data.Get(key, fallback...)
+	if v := typeutil.V(self.data[key]); !v.IsNil() {
+		return v
+	} else if len(fallback) > 0 {
+		return typeutil.V(fallback[0])
+	} else {
+		return typeutil.Nil()
+	}
 }
 
 // Set or increment a numeric value by a given magnitude
@@ -403,7 +410,12 @@ func (self *Context) Data() map[string]any {
 	self.datalock.Lock()
 	defer self.datalock.Unlock()
 
-	var data = self.data.MapNative(`yaml`)
+	var data map[string]any
+	if expanded, err := maputil.DiffuseMap(self.data, `.`); err == nil {
+		data = maputil.M(expanded).MapNative(`yaml`)
+	} else {
+		self.Warningf("problem serializing data: %v", err)
+	}
 
 	if self.isLegacyV1 {
 		data[`bindings`] = data[`data`]

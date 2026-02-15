@@ -1,1 +1,14 @@
+---
+page:
+    lat: 42.433626464106986
+    lon: -71.20810509869362
+dataSources:
+-   id:      forecast
+    url:     https://forecast.weather.gov/MapClick.php
+    timeout: 30s
+    params:
+        lat:      "{{ $.page.lat }}"
+        lon:      "{{ $.page.lon }}"
+        FcstType: "digitalDWML"
+---
 <pre>{{ jsonify $ }}</pre>
