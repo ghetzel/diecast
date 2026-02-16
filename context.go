@@ -204,15 +204,19 @@ func (self *Context) StartHTTP(wr http.ResponseWriter, req *http.Request) {
 		hdrsuffix = fmt.Sprintf(", %d headers:", l)
 	}
 
-	self.Logf(log.DEBUG, "${reset}\u25B6${reset} %s %v%s", self.req.Method, self.req.URL, hdrsuffix)
+	self.Logf(log.DEBUG, "${white+b}\u25B6 %s %v%s${reset}", self.req.Method, self.req.URL, hdrsuffix)
 
-	for kv := range maputil.M(req.Header).Iter(maputil.IterOptions{
-		SortKeys: true,
-	}) {
-		var val = typeutil.String(kv.Value)
-		val = stringutil.Elide(val, LogStyleBoxWidth-38, `...`)
+	if len(req.Header) > 0 {
+		for kv := range maputil.M(req.Header).Iter(maputil.IterOptions{
+			SortKeys: true,
+		}) {
+			var val = typeutil.String(kv.Value)
+			val = stringutil.Elide(val, LogStyleBoxWidth-38, `...`)
 
-		self.Logf(log.DEBUG, "  ${8}\u21D2${reset} % -36s %v", kv.K+`:`, val)
+			self.Logf(log.DEBUG, "  ${8}\u21D2${reset} % -36s %v", kv.K+`:`, val)
+		}
+
+		self.Logf(log.DEBUG, "")
 	}
 
 	self.injectRequestData(req)
@@ -493,16 +497,22 @@ func (self *Context) Code() int {
 func (self *Context) Eval(value any) (typeutil.Variant, error) {
 	if value == nil {
 		return typeutil.Nil(), nil
-	} else if typeutil.IsKindOfString(value) {
-		if ts := typeutil.String(value); strings.Contains(ts, Delimiters[0]) && strings.Contains(ts, Delimiters[1]) {
-			log.Debugf("pts %v", ts)
-			if tmpl, err := ParseTemplateString(ts); err == nil {
+	} else if str, ok := value.(string); ok {
+		if strings.Contains(str, Delimiters[0]) && strings.Contains(str, Delimiters[1]) {
+			if tmpl, err := ParseTemplateString(str); err == nil {
 				self.isLegacyV1 = tmpl.IsLegacyV1
 
 				var buf bytes.Buffer
 
 				if err := tmpl.Render(self, &buf); err == nil {
-					return typeutil.V(buf.Bytes()), nil
+					var out string = buf.String()
+
+					switch out {
+					case `<no value>`:
+						out = ``
+					}
+
+					return typeutil.V(out), nil
 				} else {
 					return typeutil.Nil(), err
 				}

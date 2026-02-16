@@ -4,8 +4,9 @@ page:
     lon: -116.88606341503748
 dataSources:
 -   id:      ping
-    url:     http://files.home/sites/ping.txt
+    url:     http://files.home/sites/ping2.txt
     parser:  string
+    optional: true
 
 -   id:      forecast
     url:     https://forecast.weather.gov/MapClick.php
@@ -16,7 +17,5 @@ dataSources:
         lon:      "{{ $.page.lon }}"
         FcstType: "digitalDWML"
 ---
-
-<!-- <pre>{{ jsonify $ }}</pre> -->
-
-<b>{{ htmlQuery $.data.forecast `area-description` }}</b>
+<div>{{ $.data.ping }}</div>
+<div>{{ htmlInner $.data.forecast `area-description` }}</div>

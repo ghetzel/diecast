@@ -1,13 +1,23 @@
 package internal
 
 import (
+	"crypto/tls"
+	"fmt"
 	"io"
+	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/maputil"
 )
+
+func init() {
+	// replace built-in HTTP handlers with our custom one
+	fileutil.RegisterOpenHandler(`http`, openHandlerHttp)
+	fileutil.RegisterOpenHandler(`https`, openHandlerHttp)
+}
 
 type RetrieveOptions struct {
 	URL         string            `yaml:"url"                    json:"url"`                    // The URL or path to the resource being retrieved
@@ -29,7 +39,6 @@ func RetrieveData(ctx Contextable, opts *RetrieveOptions) (io.ReadCloser, error)
 		url = httputil.SetQString(url, k, opts.Params[k])
 	}
 
-	ctx.Debugf("  retrieve: %v", url)
 	// self.Logf(
 	// 	log.DEBUG,
 	// 	"  ${cyan}\u25C0 HTTP %d %s${reset}; %d bytes; took %v; %d headers:",
@@ -61,4 +70,40 @@ func RetrieveData(ctx Contextable, opts *RetrieveOptions) (io.ReadCloser, error)
 	// <- RESPONSE
 
 	// return io.ReadCloser OR fallback; caller is responsible for parsing/filtering/transforming
+}
+
+func openHandlerHttp(uri *url.URL, opt fileutil.OpenOptions) (io.ReadCloser, error) {
+	var client = http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+		Timeout: opt.GetTimeout(),
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: opt.Insecure,
+			},
+		},
+	}
+
+	if response, err := client.Get(uri.String()); err == nil {
+		if response != nil {
+			if response.StatusCode < 400 {
+				return response.Body, nil
+			} else {
+				return nil, fmt.Errorf(
+					"HTTP %d: %s",
+					response.StatusCode,
+					http.StatusText(response.StatusCode),
+				)
+			}
+		} else {
+			uri.User = nil
+			return nil, fmt.Errorf("empty response from %v", uri.String())
+		}
+	} else if response != nil {
+		uri.User = nil
+		return nil, fmt.Errorf("from %v: %v", uri.String(), response.Status)
+	} else {
+		return nil, fmt.Errorf("empty response from %v", uri.String())
+	}
 }

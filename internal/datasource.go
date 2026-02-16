@@ -30,7 +30,7 @@ type DataSource struct {
 // response data parsing and transformations.
 func (self DataSource) Retrieve(ctx Contextable) (any, error) {
 	if u := ctx.T(self.URL).String(); u != `` {
-		if rc, err := RetrieveData(ctx, &RetrieveOptions{
+		var opts = &RetrieveOptions{
 			Headers:  StringMapEval(ctx, self.RequestHeaders),
 			Insecure: self.Insecure,
 			Isolated: self.Isolated,
@@ -38,21 +38,27 @@ func (self DataSource) Retrieve(ctx Contextable) (any, error) {
 			Params:   MapEval(ctx, self.RequestParameters),
 			Timeout:  self.Timeout,
 			URL:      typeutil.String(MustEval(ctx, self.URL)),
-		}); err == nil {
+		}
+
+		if rc, err := RetrieveData(ctx, opts); err == nil {
 			defer rc.Close()
+
+			ctx.Debugf("  ${green}\u2B82${reset}  Datasource %q: %v", self.ID, opts.URL)
 
 			if self.ResponseParser == `` {
 				self.ResponseParser = DefaultResponseParser
 			}
 
 			if parser, ok := responseParsers[self.ResponseParser]; ok && parser != nil {
-				ctx.Debugf("    parser: %v", self.ResponseParser)
 				return parser(rc)
 			} else {
-				return nil, errors.Wrapf(err, "datasource %q: undefined parser %q", self.ID, self.ResponseParser)
+				return nil, errors.Wrapf(err, "undefined parser %q", self.ResponseParser)
 			}
 		} else if !self.Optional {
-			return nil, errors.Wrapf(err, "datasource %q", self.ID)
+			ctx.Debugf("  ${red+b}\u2B82  Datasource %q: %v${reset}", self.ID, err)
+			return nil, err
+		} else {
+			ctx.Debugf("  ${blue}\u2B82  Datasource %q [optional]: %v${reset}", self.ID, err)
 		}
 	}
 

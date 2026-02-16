@@ -21,7 +21,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	humanize "github.com/dustin/go-humanize"
 	"github.com/ghetzel/go-stockutil/fileutil"
-	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -578,7 +577,6 @@ func (self *htmlSerializer) Document() *goquery.Document {
 
 func (self *htmlSerializer) MarshalJSON() ([]byte, error) {
 	if doc := self.Node; doc != nil && doc.LastChild != nil {
-		log.Debugf("%+v", doc.LastChild)
 		return json.Marshal(htmlNodeToMap(doc.LastChild))
 	} else {
 		return nil, fmt.Errorf("empty HTML document")

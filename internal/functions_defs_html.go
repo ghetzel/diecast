@@ -25,10 +25,7 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server ServerProxy) Func
 					return stripped
 				},
 			}, {
-				Name: `htmlQuery`,
-				Aliases: []string{
-					`htmlquery`,
-				},
+				Name:    `htmlQuery`,
 				Summary: `Parse a given HTML document and return details about all elements matching a CSS selector.`,
 				Arguments: []FuncArg{
 					{
@@ -41,28 +38,32 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server ServerProxy) Func
 						Description: `A CSS selector that targets the elements that will be returned.`,
 					},
 				},
-				Function: func(docI any, selector string) ([]map[string]any, error) {
-					if docI == nil {
-						return nil, nil
-					}
-
-					var elements = make([]map[string]any, 0)
-
-					if doc, err := htmldoc(docI); err == nil {
-						doc.Find(selector).Each(func(i int, match *goquery.Selection) {
-							if len(match.Nodes) > 0 {
-								for _, node := range match.Nodes {
-									if nodeData := htmlNodeToMap(node); len(nodeData) > 0 {
-										elements = append(elements, nodeData)
-									}
-								}
-							}
-						})
+				Function: htmlQuery,
+			}, {
+				Name:    `htmlSelect`,
+				Summary: `Parse a given HTML document and return details about the first element matching a CSS selector.`,
+				Arguments: []FuncArg{
+					{
+						Name:        `document`,
+						Type:        `string`,
+						Description: `The HTML document to parse.`,
+					}, {
+						Name:        `selector`,
+						Type:        `string`,
+						Description: `A CSS selector that targets the elements that will be returned.`,
+					},
+				},
+				Function: func(docI any, selector string) (map[string]any, error) {
+					if qq, err := htmlQuery(docI, selector); err == nil {
+						switch len(qq) {
+						case 0:
+							return nil, nil
+						default:
+							return qq[0], nil
+						}
 					} else {
 						return nil, err
 					}
-
-					return elements, nil
 				},
 			}, {
 				Name:    `htmlRemove`,
@@ -227,14 +228,29 @@ func loadStandardFunctionsHtmlProcessing(funcs FuncMap, server ServerProxy) Func
 		},
 	}
 
-	group.Functions = append(group.Functions, []FuncDef{
-		{
-			Name:     `htmlquery`,
-			Alias:    `htmlQuery`,
-			Function: group.fn(`htmlQuery`),
-			Hidden:   true,
-		},
-	}...)
-
 	return group
+}
+
+func htmlQuery(docI any, selector string) ([]map[string]any, error) {
+	if docI == nil {
+		return nil, nil
+	}
+
+	var elements = make([]map[string]any, 0)
+
+	if doc, err := htmldoc(docI); err == nil {
+		doc.Find(selector).Each(func(i int, match *goquery.Selection) {
+			if len(match.Nodes) > 0 {
+				for _, node := range match.Nodes {
+					if nodeData := htmlNodeToMap(node); len(nodeData) > 0 {
+						elements = append(elements, nodeData)
+					}
+				}
+			}
+		})
+	} else {
+		return nil, err
+	}
+
+	return elements, nil
 }

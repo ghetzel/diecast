@@ -23,6 +23,7 @@ require (
 	github.com/sj14/astral v0.2.2
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/stretchr/testify v1.11.1
+	go.yaml.in/yaml/v2 v2.4.3
 	golang.org/x/net v0.48.0
 	golang.org/x/term v0.38.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -238,7 +239,6 @@ require (
 	go.opentelemetry.io/otel v1.39.0 // indirect
 	go.opentelemetry.io/otel/metric v1.39.0 // indirect
 	go.opentelemetry.io/otel/trace v1.39.0 // indirect
-	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
 	golang.org/x/oauth2 v0.34.0 // indirect

@@ -298,7 +298,6 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if err == nil {
 		return
 	} else {
-		ctx.Debugf("render: %v", err)
 		self.writeResponse(ctx, err)
 		return
 	}
@@ -322,19 +321,16 @@ func (self *Server) writeResponse(ctx *Context, data any, code ...int) {
 
 	if data == nil {
 		httpStatus = http.StatusNoContent
-		log.Debugf("httpStatus = %d due to empty response body", httpStatus)
 	}
 
 	// see if the response body itself has an opinion on what its HTTP status code should be
 	if c, ok := data.(Codeable); ok {
 		httpStatus = c.Code()
-		log.Debugf("httpStatus = %d due to response body Codeable impl.", httpStatus)
 	}
 
 	// honor any valid code given as an explicit override in the variadic code argument
 	if len(code) > 0 && code[0] >= 100 && code[0] < 600 {
 		httpStatus = code[0]
-		log.Debugf("httpStatus = %d due to explicit argument override", httpStatus)
 	}
 
 	// treat 3xx codes as redirects, interpreting data as the new location string
@@ -351,7 +347,6 @@ func (self *Server) writeResponse(ctx *Context, data any, code ...int) {
 		// if we're returning an error, do not permit non-error response statuses
 		if httpStatus < 400 {
 			httpStatus = http.StatusInternalServerError
-			log.Debugf("httpStatus = %d due to response body being error %v", httpStatus, err)
 		}
 
 		ctx.Header().Add(XDiecastError, err.Error())
@@ -365,7 +360,6 @@ func (self *Server) writeResponse(ctx *Context, data any, code ...int) {
 		} else {
 			data = err.Error()
 			httpStatus = http.StatusInternalServerError
-			log.Debugf("httpStatus = %d due to encoding error %v", httpStatus, err)
 			ctx.Header().Add(XDiecastError, err.Error())
 		}
 	}
