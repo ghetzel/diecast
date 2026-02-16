@@ -63,6 +63,7 @@ func MustEval(ctx Contextable, tpl any) any {
 }
 
 func MapEval(ctx Contextable, data map[string]any) map[string]any {
+	log.DumpJSON(data)
 	return maputil.Apply(data, func(key []string, value any) (any, bool) {
 		if !typeutil.IsEmpty(value) {
 			if v, err := ctx.Eval(value); err == nil {

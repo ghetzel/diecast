@@ -21,6 +21,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	humanize "github.com/dustin/go-humanize"
 	"github.com/ghetzel/go-stockutil/fileutil"
+	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
@@ -567,6 +568,23 @@ func htmlNodeToMap(node *html.Node) map[string]any {
 	return output
 }
 
+type htmlSerializer struct {
+	*html.Node
+}
+
+func (self *htmlSerializer) Document() *goquery.Document {
+	return goquery.NewDocumentFromNode(self.Node)
+}
+
+func (self *htmlSerializer) MarshalJSON() ([]byte, error) {
+	if doc := self.Node; doc != nil && doc.LastChild != nil {
+		log.Debugf("%+v", doc.LastChild)
+		return json.Marshal(htmlNodeToMap(doc.LastChild))
+	} else {
+		return nil, fmt.Errorf("empty HTML document")
+	}
+}
+
 func getSunriseSunset(latitude float64, longitude float64, atTime ...any) (time.Time, time.Time, error) {
 	var at time.Time
 
@@ -731,6 +749,8 @@ func toMarkdownExt(extensions ...string) blackfriday.Extensions {
 func htmldoc(docI any) (*goquery.Document, error) {
 	if d, ok := docI.(*goquery.Document); ok {
 		return d, nil
+	} else if d, ok := docI.(*htmlSerializer); ok {
+		return d.Document(), nil
 	} else if d, ok := docI.(string); ok {
 		return goquery.NewDocumentFromReader(bytes.NewBufferString(d))
 	} else if d, ok := docI.(template.HTML); ok {

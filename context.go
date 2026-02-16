@@ -495,6 +495,7 @@ func (self *Context) Eval(value any) (typeutil.Variant, error) {
 		return typeutil.Nil(), nil
 	} else if typeutil.IsKindOfString(value) {
 		if ts := typeutil.String(value); strings.Contains(ts, Delimiters[0]) && strings.Contains(ts, Delimiters[1]) {
+			log.Debugf("pts %v", ts)
 			if tmpl, err := ParseTemplateString(ts); err == nil {
 				self.isLegacyV1 = tmpl.IsLegacyV1
 

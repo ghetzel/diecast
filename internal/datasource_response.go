@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"go.yaml.in/yaml/v2"
+	"golang.org/x/net/html"
 )
 
 type ResponseParserFunc func(data io.Reader) (any, error)
@@ -24,7 +24,13 @@ func init() {
 	})
 
 	RegisterResponseParser(`html`, func(data io.Reader) (any, error) {
-		return goquery.NewDocumentFromReader(data)
+		if doc, err := html.Parse(data); err == nil {
+			return &htmlSerializer{
+				Node: doc,
+			}, nil
+		} else {
+			return nil, err
+		}
 	})
 
 	RegisterResponseParser(`json`, func(data io.Reader) (any, error) {
