@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/term"
 
+	"github.com/ghetzel/diecast/v2/internal"
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
@@ -493,7 +494,12 @@ func (self *Context) Eval(value any) (typeutil.Variant, error) {
 		return typeutil.Nil(), nil
 	} else if str, ok := value.(string); ok {
 		if strings.Contains(str, Delimiters[0]) && strings.Contains(str, Delimiters[1]) {
-			if tmpl, err := ParseTemplateString(str); err == nil {
+			var _, funcs = internal.GetFunctionsWithRequest(self.Server(), self)
+
+			if tmpl, err := ParseTemplateWithFuncs(
+				bytes.NewBufferString(str),
+				funcs,
+			); err == nil {
 				self.isLegacyV1 = tmpl.IsLegacyV1
 
 				var buf bytes.Buffer
