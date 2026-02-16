@@ -14,7 +14,7 @@ func init() {
 			return internal.CreateRcloneFilesystem(
 				layer.String(),
 				fmt.Sprintf("%s:%s", layer.Type, layer.RootDir),
-				nil,
+				layer.Options,
 			)
 		})
 	}

@@ -3,7 +3,6 @@ package diecast
 import (
 	"bytes"
 	"crypto/tls"
-	"fmt"
 	"io/fs"
 	"mime"
 	"net"
@@ -198,25 +197,19 @@ func (self *Context) StartHTTP(wr http.ResponseWriter, req *http.Request) {
 		Args:   []any{strings.Repeat("\u2500", LogStyleBoxWidth)},
 	})
 
-	var hdrsuffix string
+	self.Debugf("${white+b}\u25B6 %s %v${reset}", self.req.Method, self.req.URL)
 
 	if l := len(req.Header); l > 0 {
-		hdrsuffix = fmt.Sprintf(", %d headers:", l)
-	}
+		self.Debugf("  %d request headers:", l)
 
-	self.Logf(log.DEBUG, "${white+b}\u25B6 %s %v%s${reset}", self.req.Method, self.req.URL, hdrsuffix)
-
-	if len(req.Header) > 0 {
 		for kv := range maputil.M(req.Header).Iter(maputil.IterOptions{
 			SortKeys: true,
 		}) {
 			var val = typeutil.String(kv.Value)
 			val = stringutil.Elide(val, LogStyleBoxWidth-38, `...`)
 
-			self.Logf(log.DEBUG, "  ${8}\u21D2${reset} % -36s %v", kv.K+`:`, val)
+			self.Debugf("    ${8}\u21D2${reset} % -34s %v", kv.K+`:`, val)
 		}
-
-		self.Logf(log.DEBUG, "")
 	}
 
 	self.injectRequestData(req)
@@ -248,18 +241,19 @@ func (self *Context) Done() time.Duration {
 
 	self.Logf(
 		log.DEBUG,
-		"${"+color+"+b}\u25C0 HTTP %d %s${reset}; %d bytes; took %v; %d headers:",
+		"${"+color+"+b}\u25C0 HTTP %d %s${reset}; %d bytes; took %v",
 		code,
 		http.StatusText(code),
 		self.bytesWritten,
 		took.Round(time.Microsecond),
-		len(rhdr),
 	)
+
+	self.Debugf("  %d response headers:", len(rhdr))
 
 	for kv := range maputil.M(rhdr).Iter(maputil.IterOptions{
 		SortKeys: true,
 	}) {
-		self.Logf(log.DEBUG, "  ${8}\u21D0${reset} % -36s %v", kv.K+`:`, kv.Value)
+		self.Logf(log.DEBUG, "    ${8}\u21D0${reset} % -34s %v", kv.K+`:`, kv.Value)
 	}
 
 	self.logAccumulator = append(self.logAccumulator, logLine{

@@ -39,6 +39,10 @@ func LayerFromString(spec string) (*Layer, error) {
 		switch s.Scheme {
 		case ``, `fs`, `file`:
 			layer.Type = ``
+		case `http`, `https`:
+			layer.Type = `http`
+			layer.Options[`url`] = s.String()
+			layer.RootDir = ``
 		default:
 			layer.Type = s.Scheme
 		}

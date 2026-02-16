@@ -1,23 +1,14 @@
 package internal
 
 import (
-	"crypto/tls"
-	"fmt"
+	"context"
 	"io"
-	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/maputil"
 )
-
-func init() {
-	// replace built-in HTTP handlers with our custom one
-	fileutil.RegisterOpenHandler(`http`, openHandlerHttp)
-	fileutil.RegisterOpenHandler(`https`, openHandlerHttp)
-}
 
 type RetrieveOptions struct {
 	URL         string            `yaml:"url"                    json:"url"`                    // The URL or path to the resource being retrieved
@@ -31,8 +22,6 @@ type RetrieveOptions struct {
 }
 
 func RetrieveData(ctx Contextable, opts *RetrieveOptions) (io.ReadCloser, error) {
-	// TODO: add Method and Headers{s}a to go-stockutil/fileutil.OpenOptions for http(s)
-
 	var url = opts.URL
 
 	for _, k := range maputil.StringKeys(opts.Params) {
@@ -49,61 +38,29 @@ func RetrieveData(ctx Contextable, opts *RetrieveOptions) (io.ReadCloser, error)
 	// 	len(rhdr),
 	// )
 
-	if response, err := fileutil.OpenWithOptions(url, fileutil.OpenOptions{
-		Timeout:  opts.Timeout,
-		Insecure: opts.Insecure,
-	}); err == nil {
-		return io.NopCloser(response), nil
+	var retrieveCtx = context.Background()
+
+	if tm := opts.Timeout; tm > 0 {
+		var rctx, retrieveCancel = context.WithTimeout(retrieveCtx, tm)
+		defer retrieveCancel()
+		retrieveCtx = rctx
+	}
+
+	if opts.Insecure {
+		retrieveCtx = context.WithValue(retrieveCtx, `insecure`, true)
+	}
+
+	if len(opts.Headers) > 0 {
+		retrieveCtx = context.WithValue(retrieveCtx, `metadata`, opts.Headers)
+	}
+
+	if opts.Method != `` {
+		retrieveCtx = context.WithValue(retrieveCtx, `method`, opts.Method)
+	}
+
+	if response, err := fileutil.Retrieve(retrieveCtx, url); err == nil {
+		return response, nil
 	} else {
 		return nil, err
-	}
-
-	// dispatch request to protocol-specific retriever. result is io.ReadCloser
-	//	.Method
-	//	.URL
-	//  .Insecure
-	// 	.Headers (somehow inject originating request headers, global, and page-specific headers)
-	// 	.Params
-	// 	.Timeout
-
-	// -> REQUEST
-	// <- RESPONSE
-
-	// return io.ReadCloser OR fallback; caller is responsible for parsing/filtering/transforming
-}
-
-func openHandlerHttp(uri *url.URL, opt fileutil.OpenOptions) (io.ReadCloser, error) {
-	var client = http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-		Timeout: opt.GetTimeout(),
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: opt.Insecure,
-			},
-		},
-	}
-
-	if response, err := client.Get(uri.String()); err == nil {
-		if response != nil {
-			if response.StatusCode < 400 {
-				return response.Body, nil
-			} else {
-				return nil, fmt.Errorf(
-					"HTTP %d: %s",
-					response.StatusCode,
-					http.StatusText(response.StatusCode),
-				)
-			}
-		} else {
-			uri.User = nil
-			return nil, fmt.Errorf("empty response from %v", uri.String())
-		}
-	} else if response != nil {
-		uri.User = nil
-		return nil, fmt.Errorf("from %v: %v", uri.String(), response.Status)
-	} else {
-		return nil, fmt.Errorf("empty response from %v", uri.String())
 	}
 }

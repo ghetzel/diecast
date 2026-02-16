@@ -11,7 +11,7 @@ import (
 )
 
 const lunarHalfCycle = 14
-const sunElevationDayNightCutoff = -0.523 // day starts/ends when the sun is 0.7deg below the horizon
+const sunElevationDayNightCutoff = -0.523
 
 func loadStandardFunctionsCelestial(funcs FuncMap, server ServerProxy) FuncGroup {
 	return FuncGroup{

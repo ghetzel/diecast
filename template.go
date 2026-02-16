@@ -9,7 +9,9 @@ import (
 
 	"github.com/ghetzel/diecast/v2/internal"
 	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/pkg/errors"
 )
 
 var DefaultEntryPoint = `content`
@@ -19,6 +21,7 @@ var Delimiters = internal.Delimiters
 var FrontMatterSeparator = internal.FrontMatterSeparator
 var LayoutNamePrefix string = `layout:`
 var MaxFrontMatterSize = 32768
+var DefaultIncludesDir = `_includes`
 
 type FuncMap = internal.FuncMap
 
@@ -180,8 +183,8 @@ func (template *Template) Render(ctx *Context, w io.Writer) error {
 		w = ctx
 	}
 
-	// ctx.Debugf("template: known templates: %s", strings.Join(template.gotmpl.Names(), `, `))
-	// ctx.Debugf("template: entrypoint: %s", template.entryPoint())
+	ctx.Debugf("template: known templates: %s", strings.Join(template.gotmpl.Names(), `, `))
+	ctx.Debugf("template: entrypoint: %s", template.entryPoint())
 	// ctx.Debugf("template: funcs: %d", len(template.funcs))
 
 	return template.gotmpl.ExecuteTemplate(w, template.entryPoint(), ctx.Data())
@@ -290,6 +293,25 @@ func (template *Template) LoadRelatedTemplates(ctx *Context) error {
 			}
 		} else if name != DefaultLayoutName {
 			return err
+		}
+	}
+
+	if len(template.Includes) > 0 {
+		for _, includePath := range template.Includes {
+			var includePath = filepath.Join(DefaultIncludesDir, includePath)
+			var includeBase = filepath.Base(includePath)
+			var includeSlug = strings.TrimSuffix(includeBase, filepath.Ext(includeBase))
+
+			includeSlug = stringutil.Hyphenate(includeSlug)
+
+			if includeFile, err := ctx.Open(includePath); err == nil {
+				defer includeFile.Close()
+				ctx.MarkTemplateSeen(includeSlug)
+
+				if err := template.attachTemplate(ctx, includeSlug, includeFile); err != nil {
+					return errors.Wrapf(err, "include %q (path: %q)", includeSlug, includePath)
+				}
+			}
 		}
 	}
 

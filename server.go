@@ -25,7 +25,7 @@ var DefaultLayoutsDir = `/_layouts`
 var DefaultErrorsDir = `/_errors`
 var DefaultVerifyMethod = `GET`
 var DefaultVerifyPath = `/`
-var DefaultVerifyTimeout = `1s`
+var DefaultVerifyTimeout = `5s`
 var DefaultExtensions = []string{`.html`, `.htm`, `.md`}
 
 type ServerStartFunc func(*Server, error) error

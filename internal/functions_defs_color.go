@@ -12,129 +12,20 @@ import (
 
 const DefaultColorPalette = `munin`
 
-var palettes = map[string][]string{
-	`spectrum14`: []string{
-		`#ECB796`,
-		`#DC8F70`,
-		`#B2A470`,
-		`#92875A`,
-		`#716C49`,
-		`#D2ED82`,
-		`#BBE468`,
-		`#A1D05D`,
-		`#E7CBE6`,
-		`#D8AAD6`,
-		`#A888C2`,
-		`#9DC2D3`,
-		`#649EB9`,
-		`#387AA3`,
-	},
-	`colorwheel`: []string{
-		`#CB513A`,
-		`#73C03A`,
-		`#65B9AC`,
-		`#4682B4`,
-		`#96557E`,
-		`#785F43`,
-		`#858772`,
-		`#B5B6A9`,
-	},
-	`spectrum2000`: []string{
-		`#57306F`,
-		`#514C76`,
-		`#646583`,
-		`#738394`,
-		`#6B9C7D`,
-		`#84B665`,
-		`#A7CA50`,
-		`#BFE746`,
-		`#E2F528`,
-		`#FFF726`,
-		`#ECDD00`,
-		`#D4B11D`,
-		`#DE8800`,
-		`#DE4800`,
-		`#C91515`,
-		`#9A0000`,
-		`#7B0429`,
-		`#580839`,
-		`#31082B`,
-	},
-	`spectrum2001`: []string{
-		`#2F243F`,
-		`#3C2C55`,
-		`#4A3768`,
-		`#565270`,
-		`#6B6B7C`,
-		`#72957F`,
-		`#86AD6E`,
-		`#A1BC5E`,
-		`#B8D954`,
-		`#D3E04E`,
-		`#CCAD2A`,
-		`#CC8412`,
-		`#C1521D`,
-		`#AD3821`,
-		`#8A1010`,
-		`#681717`,
-		`#531E1E`,
-		`#3D1818`,
-		`#320A1B`,
-	},
-	`classic9`: []string{
-		`#2F254A`,
-		`#491D37`,
-		`#7C2626`,
-		`#963B20`,
-		`#7D5836`,
-		`#C5A32F`,
-		`#DDCB53`,
-		`#A2B73C`,
-		`#848F39`,
-		`#4A6860`,
-		`#423D4F`,
-	},
-	`cool`: []string{
-		`#5E9D2F`,
-		`#73C03A`,
-		`#4682B4`,
-		`#7BC3B8`,
-		`#A9884E`,
-		`#C1B266`,
-		`#A47493`,
-		`#C09FB5`,
-	},
-	`munin`: []string{
-		`#00CC00`,
-		`#0066B3`,
-		`#FF8000`,
-		`#FFCC00`,
-		`#330099`,
-		`#990099`,
-		`#CCFF00`,
-		`#FF0000`,
-		`#808080`,
-		`#008F00`,
-		`#00487D`,
-		`#B35A00`,
-		`#B38F00`,
-		`#6B006B`,
-		`#8FB300`,
-		`#B30000`,
-		`#BEBEBE`,
-		`#80FF80`,
-		`#80C9FF`,
-		`#FFC080`,
-		`#FFE680`,
-		`#AA80FF`,
-		`#EE00CC`,
-		`#FF8080`,
-		`#666600`,
-		`#FFBFFF`,
-		`#00FFCC`,
-		`#CC6699`,
-		`#999900`,
-	},
+var palettes = make(map[string][]string)
+
+func init() {
+	DefineColorPalette(`spectrum14`, `#ECB796`, `#DC8F70`, `#B2A470`, `#92875A`, `#716C49`, `#D2ED82`, `#BBE468`, `#A1D05D`, `#E7CBE6`, `#D8AAD6`, `#A888C2`, `#9DC2D3`, `#649EB9`, `#387AA3`)
+	DefineColorPalette(`colorwheel`, `#CB513A`, `#73C03A`, `#65B9AC`, `#4682B4`, `#96557E`, `#785F43`, `#858772`, `#B5B6A9`)
+	DefineColorPalette(`spectrum2000`, `#57306F`, `#514C76`, `#646583`, `#738394`, `#6B9C7D`, `#84B665`, `#A7CA50`, `#BFE746`, `#E2F528`, `#FFF726`, `#ECDD00`, `#D4B11D`, `#DE8800`, `#DE4800`, `#C91515`, `#9A0000`, `#7B0429`, `#580839`, `#31082B`)
+	DefineColorPalette(`spectrum2001`, `#2F243F`, `#3C2C55`, `#4A3768`, `#565270`, `#6B6B7C`, `#72957F`, `#86AD6E`, `#A1BC5E`, `#B8D954`, `#D3E04E`, `#CCAD2A`, `#CC8412`, `#C1521D`, `#AD3821`, `#8A1010`, `#681717`, `#531E1E`, `#3D1818`, `#320A1B`)
+	DefineColorPalette(`classic9`, `#2F254A`, `#491D37`, `#7C2626`, `#963B20`, `#7D5836`, `#C5A32F`, `#DDCB53`, `#A2B73C`, `#848F39`, `#4A6860`, `#423D4F`)
+	DefineColorPalette(`cool`, `#5E9D2F`, `#73C03A`, `#4682B4`, `#7BC3B8`, `#A9884E`, `#C1B266`, `#A47493`, `#C09FB5`)
+	DefineColorPalette(`munin`, `#00CC00`, `#0066B3`, `#FF8000`, `#FFCC00`, `#330099`, `#990099`, `#CCFF00`, `#FF0000`, `#808080`, `#008F00`, `#00487D`, `#B35A00`, `#B38F00`, `#6B006B`, `#8FB300`, `#B30000`, `#BEBEBE`, `#80FF80`, `#80C9FF`, `#FFC080`, `#FFE680`, `#AA80FF`, `#EE00CC`, `#FF8080`, `#666600`, `#FFBFFF`, `#00FFCC`, `#CC6699`, `#999900`)
+}
+
+func DefineColorPalette(name string, colors ...string) {
+	palettes[name] = colors
 }
 
 func loadStandardFunctionsColor(funcs FuncMap, server ServerProxy) FuncGroup {
@@ -445,7 +336,7 @@ func loadStandardFunctionsColor(funcs FuncMap, server ServerProxy) FuncGroup {
 				},
 				Function: func(name string, colors ...string) error {
 					if name != `` {
-						palettes[name] = colors
+						DefineColorPalette(name, colors...)
 						return nil
 					} else {
 						return fmt.Errorf("Must provide a name for the color palette being defined")

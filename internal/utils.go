@@ -18,6 +18,7 @@ type TemplateHeader struct {
 	EntryPoint      string         `yaml:"entryPoint"`
 	DataSources     DataSet        `yaml:"dataSources"`
 	Layout          string         `yaml:"layout"`
+	Includes        []string       `yaml:"includes"`
 	Page            map[string]any `yaml:"page"`
 	ResponseHeaders map[string]any `yaml:"headers"`
 	Filename        string         `yaml:"-"`

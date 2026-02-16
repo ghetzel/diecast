@@ -137,7 +137,12 @@ func (binding *LegacyBinding) convertToV2DataSource() (*DataSource, error) {
 	dataSource.RequestHeaders = maputil.Autotype(binding.Headers)
 	dataSource.RequestMethod = binding.Method
 	dataSource.RequestParameters = binding.Params
-	dataSource.Transform = binding.Transform
+	dataSource.Transformations = DataTransforms{
+		{
+			Type:       `jsonpath`,
+			Expression: binding.Transform,
+		},
+	}
 	dataSource.URL = binding.Resource
 
 	// if expr := binding.NotIfExpr; expr != `` {
