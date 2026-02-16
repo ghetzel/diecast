@@ -2,80 +2,28 @@ package internal
 
 import (
 	"fmt"
-	"io"
 	"time"
 
-	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/executil"
 	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/pkg/errors"
 )
 
-type DataSourceResponseFormat int
-
-func (format DataSourceResponseFormat) MarshalYAML() (any, error) {
-	switch format {
-	case FormatRaw:
-		return `raw`, nil
-	case FormatArray:
-		return `array`, nil
-	default:
-		return ``, nil
-	}
-}
-
-func (format *DataSourceResponseFormat) UnmarshalYAML(unmarshal func(any) error) error {
-	var incomingValue string
-
-	if err := unmarshal(&incomingValue); err == nil {
-		switch incomingValue {
-		case `raw`:
-			*format = FormatRaw
-		case `array`:
-			*format = FormatArray
-		case ``, `map`:
-			*format = FormatMap
-		default:
-			return fmt.Errorf("unknown format %q", incomingValue)
-		}
-
-		return nil
-	} else {
-		return err
-	}
-}
-
-func (format DataSourceResponseFormat) Parse(data io.Reader) (any, error) {
-	switch format {
-	case FormatRaw:
-		return data, nil
-	case FormatArray:
-		return []any{`NOT`, `IMPLEMENTED`}, nil
-	case FormatMap:
-		return maputil.M(data).MapNative(), nil
-	default:
-		return nil, fmt.Errorf("unknown format %q", format)
-	}
-}
-
-const (
-	FormatMap DataSourceResponseFormat = iota
-	FormatArray
-	FormatRaw
-)
+var DefaultResponseParser = executil.Env(`DIECAST_DS_DEFAULT_PARSER`, `json`)
 
 type DataSource struct {
-	Content           any                      `yaml:"content,omitempty"`
-	ID                string                   `yaml:"id"`
-	Insecure          bool                     `yaml:"insecure"`
-	Isolated          bool                     `yaml:"isolated"`
-	Optional          bool                     `yaml:"optional"`
-	RequestHeaders    map[string]any           `yaml:"headers"`
-	RequestMethod     string                   `yaml:"method,omitempty"`
-	RequestParameters map[string]any           `yaml:"params"`
-	ResponseParser    DataSourceResponseFormat `yaml:"parser"`
-	Timeout           time.Duration            `yaml:"timeout"`
-	Transform         any                      `yaml:"transform,omitempty"`
-	URL               string                   `yaml:"url"`
+	Content           any            `yaml:"content,omitempty"`
+	ID                string         `yaml:"id"`
+	Insecure          bool           `yaml:"insecure"`
+	Isolated          bool           `yaml:"isolated"`
+	Optional          bool           `yaml:"optional"`
+	RequestHeaders    map[string]any `yaml:"headers"`
+	RequestMethod     string         `yaml:"method,omitempty"`
+	RequestParameters map[string]any `yaml:"params"`
+	ResponseParser    string         `yaml:"parser"`
+	Timeout           time.Duration  `yaml:"timeout"`
+	Transform         any            `yaml:"transform,omitempty"`
+	URL               string         `yaml:"url"`
 }
 
 // Retrieve the current value as configured by this datasource, including all
@@ -93,10 +41,15 @@ func (self DataSource) Retrieve(ctx Contextable) (any, error) {
 		}); err == nil {
 			defer rc.Close()
 
-			if parsed, err := self.ResponseParser.Parse(rc); err == nil {
-				return parsed, nil
+			if self.ResponseParser == `` {
+				self.ResponseParser = DefaultResponseParser
+			}
+
+			if parser, ok := responseParsers[self.ResponseParser]; ok && parser != nil {
+				ctx.Debugf("    parser: %v", self.ResponseParser)
+				return parser(rc)
 			} else {
-				return nil, errors.Wrapf(err, "datasource %q", self.ID)
+				return nil, errors.Wrapf(err, "datasource %q: undefined parser %q", self.ID, self.ResponseParser)
 			}
 		} else if !self.Optional {
 			return nil, errors.Wrapf(err, "datasource %q", self.ID)

@@ -314,9 +314,12 @@ func (self *Context) setValue(key string, value any) {
 			maputil.M(value).MapNative(),
 			`.`,
 		); err == nil {
+
 			for k, v := range flat {
 				self.data[key+`.`+k] = v
 			}
+		} else {
+			self.Warningf("bad value %q: %v", key, err)
 		}
 	} else {
 		self.data[key] = value
@@ -454,7 +457,9 @@ func (self *Context) Header() http.Header {
 
 // Passthrough a Write to the underlying http.ResponseWriter.
 func (self *Context) Write(b []byte) (int, error) {
-	self.wr.WriteHeader(self.statusCode)
+	if !self.wroteOnce {
+		self.wr.WriteHeader(self.statusCode)
+	}
 
 	var n, err = self.wr.Write(b)
 	self.bytesWritten += int64(n)
