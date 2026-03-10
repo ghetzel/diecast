@@ -6,10 +6,12 @@ require (
 	codeberg.org/readeck/go-readability/v2 v2.1.0
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/alecthomas/chroma v0.10.0
+	github.com/blues/jsonata-go v1.5.4
 	github.com/dustin/go-humanize v1.0.1
 	github.com/ghetzel/cli v1.17.0
 	github.com/ghetzel/go-stockutil v1.13.0
 	github.com/ghetzel/testify v1.4.1
+	github.com/go-crypt/crypt v0.4.9
 	github.com/gobwas/glob v0.2.3
 	github.com/grokify/html-strip-tags-go v0.1.0
 	github.com/jbenet/go-base58 v0.0.0-20150317085156-6237cf65f3a6
@@ -20,6 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rclone/rclone v1.72.1
 	github.com/russross/blackfriday/v2 v2.1.0
+	github.com/ryanuber/go-glob v1.0.0
 	github.com/sj14/astral v0.2.2
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/stretchr/testify v1.11.1
@@ -79,7 +82,6 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/blues/jsonata-go v1.5.4 // indirect
 	github.com/boombuler/barcode v1.1.0 // indirect
 	github.com/bradenaw/juniper v0.15.3 // indirect
 	github.com/bradfitz/iter v0.0.0-20191230175014-e8f45d346db8 // indirect
@@ -115,6 +117,7 @@ require (
 	github.com/geoffgarside/ber v1.2.0 // indirect
 	github.com/ghetzel/uuid v0.0.0-20171129191014-dec09d789f3d // indirect
 	github.com/go-chi/chi/v5 v5.2.3 // indirect
+	github.com/go-crypt/x v0.4.12 // indirect
 	github.com/go-darwin/apfs v0.0.0-20211011131704-f84b94dbf348 // indirect
 	github.com/go-git/go-billy/v5 v5.7.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -244,7 +247,7 @@ require (
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
 	golang.org/x/oauth2 v0.34.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	google.golang.org/api v0.259.0 // indirect

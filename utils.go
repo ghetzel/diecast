@@ -70,7 +70,11 @@ func ShouldApplyTo(
 	onlyPatterns any,
 	methods any,
 ) bool {
-	if mm := sliceutil.CompactString(sliceutil.Stringify(methods)); len(mm) > 0 {
+	var mm = sliceutil.CompactString(sliceutil.Stringify(methods))
+	var excepts = sliceutil.Stringify(exceptPatterns)
+	var onlys = sliceutil.Stringify(onlyPatterns)
+
+	if len(mm) > 0 {
 		var pass bool
 
 		for _, m := range mm {
@@ -85,15 +89,17 @@ func ShouldApplyTo(
 		}
 	}
 
-	for _, except := range sliceutil.Stringify(exceptPatterns) {
-		if except != `` && IsGlobMatch(req.URL.Path, except) {
-			return false
+	if len(excepts) > 0 {
+		for _, except := range excepts {
+			if except != `` && IsGlobMatch(req.URL.Path, except) {
+				return false
+			}
 		}
 	}
 
 	// if there are "only" paths, then we may still match something.
 	// if not, then we didn't match an "except" path, and therefore should validate
-	if onlys := sliceutil.Stringify(onlyPatterns); len(onlys) > 0 {
+	if len(onlys) > 0 {
 		for _, only := range onlys {
 			if only != `` && IsGlobMatch(req.URL.Path, only) {
 				return true
@@ -101,7 +107,7 @@ func ShouldApplyTo(
 		}
 
 		return false
-	} else {
-		return true
 	}
+
+	return true
 }

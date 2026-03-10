@@ -13,22 +13,6 @@ var rendererTypes = make(map[string]Renderer)
 var renderersByMimeType = make(map[string]RendererConfig)
 var renderersByGlob = make(map[string]RendererConfig)
 
-func init() {
-	// RegisterRendererType(`pdf`, new(TemplateRenderer))
-	// RegisterRendererType(`image`, new(TemplateRenderer))
-	// RegisterRendererType(`msoffice`, new(TemplateRenderer))
-	RegisterRendererType(`template`, new(TemplateRenderer))
-	RegisterRendererType(``, new(PassthroughRenderer))
-
-	// setup default type handlers
-	RegisterRendererByMIME(`text/html`, RendererConfig{
-		Type: `template`,
-		Methods: []string{
-			http.MethodGet,
-		},
-	})
-}
-
 func RegisterRendererType(name string, renderer Renderer) {
 	rendererTypes[name] = renderer
 }

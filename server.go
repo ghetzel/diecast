@@ -51,19 +51,20 @@ type DefaultOptions struct {
 }
 
 type Server struct {
-	Address       string            `yaml:"address"`
-	DataSources   DataSet           `yaml:"dataSources"`
-	Paths         ServerPaths       `yaml:"paths"`
-	Validators    []ValidatorConfig `yaml:"validators"`
-	Renderers     []RendererConfig  `yaml:"renderers"`
-	VerifyMethod  string            `yaml:"verifyMethod"`
-	VerifyPath    string            `yaml:"verifyPath"`
-	VerifyTimeout string            `yaml:"verifyTimeout"`
-	VFS           VFS               `yaml:"vfs"`
-	Defaults      DefaultOptions    `yaml:"defaults"`
-	ovfs          fs.FS
-	startFuncs    []ServerStartFunc
-	srvlocks      map[string]*sync.Mutex
+	Address            string            `yaml:"address"`
+	DataSources        DataSet           `yaml:"dataSources"`
+	Paths              ServerPaths       `yaml:"paths"`
+	Validators         []ValidatorConfig `yaml:"validators"`
+	Renderers          []RendererConfig  `yaml:"renderers"`
+	VerifyMethod       string            `yaml:"verifyMethod"`
+	VerifyPath         string            `yaml:"verifyPath"`
+	VerifyTimeout      string            `yaml:"verifyTimeout"`
+	VFS                VFS               `yaml:"vfs"`
+	Defaults           DefaultOptions    `yaml:"defaults"`
+	ovfs               fs.FS
+	startFuncs         []ServerStartFunc
+	srvlocks           map[string]*sync.Mutex
+	credentialProvider Credential
 }
 
 // Loads a YAML-formatted configuration from the given reader and returns a Server.
@@ -146,7 +147,17 @@ func (self *Server) OnStart(fn ServerStartFunc) {
 
 // Simulates a single request, returning the http.Response that would be sent to a client, and an error should one occur.
 func (self *Server) SimulateRequest(method string, path string, body io.Reader, qs map[string]any, header map[string]any) (*http.Response, error) {
-	var wr = httptest.NewRecorder()
+	return self.SimulateRequestWithRecorder(
+		httptest.NewRecorder(),
+		method,
+		path,
+		body,
+		qs,
+		header,
+	)
+}
+
+func (self *Server) SimulateRequestWithRecorder(wr *httptest.ResponseRecorder, method string, path string, body io.Reader, qs map[string]any, header map[string]any) (*http.Response, error) {
 	var req = httptest.NewRequest(
 		typeutil.OrString(method, http.MethodGet),
 		path,
@@ -335,9 +346,7 @@ func (self *Server) writeResponse(ctx *Context, data any, code ...int) {
 
 	// treat 3xx codes as redirects, interpreting data as the new location string
 	if httpStatus >= 300 && httpStatus < 400 {
-		ctx.SetStatusCode(httpStatus)
-		http.Redirect(ctx, req, typeutil.OrString(data, `/`), httpStatus)
-		return
+		ctx.Header().Set(`Location`, typeutil.OrString(data, `/`))
 	}
 
 	// extract error data
@@ -405,4 +414,21 @@ func (self *Server) defaultFileExtensions() []string {
 	} else {
 		return DefaultExtensions
 	}
+}
+
+func (self *Server) SetCredentialProvider(provider Credential) {
+	self.credentialProvider = provider
+}
+
+func (self *Server) BasicAuthenticate(user string, password string) (merr error) {
+	if provider := self.credentialProvider; provider != nil {
+		if err := provider.BasicAuthenticate(user, password); err == nil {
+			merr = nil
+			return
+		} else {
+			merr = log.AppendError(merr, err)
+		}
+	}
+
+	return
 }

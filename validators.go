@@ -3,9 +3,6 @@ package diecast
 import (
 	"fmt"
 	"net/http"
-
-	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 )
 
 var validators = make(map[string]Validator)
@@ -35,11 +32,6 @@ func (self *ValidatorConfig) ShouldApplyTo(req *http.Request) bool {
 	return ShouldApplyTo(req, self.Except, self.Only, self.Methods)
 }
 
-// Return a typeutil.Variant containing the value at the named option key, or a fallback value.
-func (self *ValidatorConfig) Option(name string, fallbacks ...any) typeutil.Variant {
-	return maputil.M(self.Options).Get(name, fallbacks...)
-}
-
 // =====================================================================================================================
 
 // Validate the given request against all configured validators.  Will return nil if
@@ -59,6 +51,8 @@ func (self *Server) serveHttpPhaseValidate(ctx *Context) error {
 							return fmt.Errorf("failed on %q validator: %v", vc.Type, err)
 						}
 					}
+				} else {
+					return fmt.Errorf("unrecognized validator type %q", vc.Type)
 				}
 			}
 		} else {

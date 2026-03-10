@@ -18,6 +18,7 @@ import (
 	"github.com/ghetzel/go-stockutil/fileutil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/maputil"
+	"github.com/ghetzel/go-stockutil/rxutil"
 	"github.com/ghetzel/go-stockutil/sliceutil"
 	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -26,6 +27,7 @@ import (
 type RequestIdentFunc func(*http.Request) string
 
 var DefaultContextTypeHint = `application/octet-stream`
+var DefaultHeaderRedactPattern = `(?i)^(?:.*authorization|token|key)$`
 var DefaultContextDir = `.`
 var RequestIdentifierFunc RequestIdentFunc
 var LogStyleBoxWidth int = func() int {
@@ -208,6 +210,10 @@ func (self *Context) StartHTTP(wr http.ResponseWriter, req *http.Request) {
 		}) {
 			var val = typeutil.String(kv.Value)
 			val = stringutil.Elide(val, LogStyleBoxWidth-38, `...`)
+
+			if rxutil.IsMatchString(DefaultHeaderRedactPattern, kv.K) {
+				val = `[REDACTED]`
+			}
 
 			self.Debugf("    ${8}\u21D2${reset} % -34s %v", kv.K+`:`, val)
 		}
@@ -473,9 +479,9 @@ func (self *Context) SetStatusCode(code int) {
 // Write the response status code and keep a copy for later inspection.
 func (self *Context) WriteHeader(statusCode int) {
 	if !self.wroteHeadersOnce {
+		self.wroteHeadersOnce = true
 		self.SetStatusCode(statusCode)
 		self.wr.WriteHeader(self.statusCode)
-		self.wroteHeadersOnce = true
 	} else {
 		self.Warningf("already sent response headers, ignoring WriteHeader() attempt")
 	}
