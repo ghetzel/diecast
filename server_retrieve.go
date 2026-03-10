@@ -27,11 +27,9 @@ func (self *Server) serveHttpPhaseRetrieve(ctx *Context) (fs.File, error) {
 			continue
 		}
 
-		// ctx.Debugf("retrieve: try path %v", tryPath)
 		file, lerr = ctx.Open(tryPath)
 
 		if lerr == nil {
-			// ctx.Debugf("retrieve: path %v succeeded", tryPath)
 			if stat, err := file.Stat(); err == nil {
 				if mt := fileutil.GetMimeType(stat.Name()); mt != `` {
 					ctx.SetTypeHint(mt)

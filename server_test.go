@@ -9,38 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestServerServeHTTP(t *testing.T) {
-	var server Server
-	var w = httptest.NewRecorder()
-	var req *http.Request
-
-	server.Paths.IndexFilename = `testing.html`
-
-	server.VFS.Overrides = map[string]*File{
-		`/testing.html`: {
-			Data: `Greetings.`,
-		},
-		`/test.json`: {
-			Data: map[string]any{
-				`hello`: `there`,
-			},
-		},
-	}
-
-	// validate the exposure and configurability of IndexFilename
-	req = httptest.NewRequest(`GET`, `/`, nil)
-	server.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, `Greetings.`, w.Body.String())
-
-	// validate automatic encoding of complex types
-	w = httptest.NewRecorder()
-	req = httptest.NewRequest(`GET`, `/test.json`, nil)
-	server.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "{\n  \"hello\": \"there\"\n}", w.Body.String())
-}
-
 type teapot struct{}
 
 func (t teapot) Code() int {

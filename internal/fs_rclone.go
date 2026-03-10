@@ -121,8 +121,6 @@ func (self *RcloneFS) validate() error {
 		return err
 	}
 
-	// log.Debugf("vfs/rclone type=%v root=%v", self.Name, self.Type, fmt.Sprintf("%s:%s", self.Name, self.Root))
-
 	if vfs, ok := rcloneInstances[self.Name]; ok {
 		self.vfs = vfs
 	} else if vfs, err := rclone_fs.NewFs(
@@ -163,8 +161,6 @@ func (self *RcloneFS) generateAndSetRcloneConfig() error {
 
 		opts[kv.K] = kv.Value
 	}
-
-	// log.Debugf("[source=%q] writing RClone configuration to %v", self.Name, path)
 
 	if _, err := fileutil.WriteFile(self.rcloneConfigString(opts), path); err != nil {
 		return err

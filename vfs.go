@@ -28,24 +28,21 @@ func (self *VFS) SetFallbackFS(fallback fs.FS) {
 
 // Retrieve a file from the VFS.
 func (self *VFS) Open(name string) (fs.File, error) {
+	// check for explicitly overridden filenames and return them if present
 	if ov, ok := self.Overrides[name]; ok {
-		// log.Debugf("vfs: open %s [override]", name)
 		return ov.fsFile(self)
 	}
 
-	// search through layers
+	// search through layers to find one that matches
 	for _, layer := range self.Layers {
 		if layer.shouldConsiderOpening(name) {
 			if file, err := layer.openFsFile(name); err == nil {
-				// log.Debugf("vfs: open %s [layer=%d]", name, i)
 				return file, nil
 			} else if err == ErrNotFound {
 				if layer.HaltOnMissing {
-					// log.Debugf("vfs: halt: missing %s [layer=%d]", name, i)
 					return nil, err
 				}
 			} else if layer.HaltOnError {
-				// log.Debugf("vfs: halt: error %v [layer=%d]", err, i)
 				return nil, err
 			} else {
 				continue
@@ -58,7 +55,6 @@ func (self *VFS) Open(name string) (fs.File, error) {
 		if file, err := fs.Open(name); err == nil {
 			if stat, err := file.Stat(); err == nil {
 				if !stat.IsDir() {
-					// log.Debugf("vfs: open %s [fallback]", name)
 					return file, nil
 				}
 			}

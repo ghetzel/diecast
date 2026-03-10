@@ -185,7 +185,6 @@ func (template *Template) Render(ctx *Context, w io.Writer) error {
 
 	ctx.Debugf("template: known templates: %s", strings.Join(template.gotmpl.Names(), `, `))
 	ctx.Debugf("template: entrypoint: %s", template.entryPoint())
-	// ctx.Debugf("template: funcs: %d", len(template.funcs))
 
 	return template.gotmpl.ExecuteTemplate(w, template.entryPoint(), ctx.Data())
 }

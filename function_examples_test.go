@@ -9,6 +9,8 @@ import (
 	"github.com/ghetzel/testify/require"
 )
 
+// Validate that every Example provided in the documentation for each function actually
+// produces the specified output.
 func TestFunctionExamples(t *testing.T) {
 	var assert = require.New(t)
 

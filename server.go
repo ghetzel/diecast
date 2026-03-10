@@ -219,7 +219,6 @@ func (self *Server) ListenAndServe(address string) error {
 					log.Debugf("Successfully verified ability to serve %v", self.verifyPath())
 					ok = true // ok to start listening
 				} else {
-					// log.Debugf("verify: error %v", err)
 					errchan <- err
 				}
 			case <-time.After(verifyTimeout):
@@ -287,7 +286,6 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if err == nil {
 		defer file.Close()
 	} else {
-		// ctx.Debugf("retrieve: %v", err)
 		self.writeResponse(ctx, err)
 		return
 	}
