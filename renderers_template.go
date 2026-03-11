@@ -2,6 +2,9 @@ package diecast
 
 import (
 	"io/fs"
+	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/ghetzel/diecast/v2/internal"
 )
@@ -33,4 +36,14 @@ func (self *TemplateRenderer) Render(ctx *Context, input fs.File, cfg *RendererC
 	} else {
 		return err
 	}
+}
+
+func (self *TemplateRenderer) ShouldApplyTo(req *http.Request) bool {
+	var filename = filepath.Base(req.URL.Path)
+
+	if strings.HasPrefix(filename, `_`) {
+		return false
+	}
+
+	return true
 }

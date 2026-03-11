@@ -297,19 +297,20 @@ func (template *Template) LoadRelatedTemplates(ctx *Context) error {
 
 	if len(template.Includes) > 0 {
 		for _, includePath := range template.Includes {
-			var includePath = filepath.Join(DefaultIncludesDir, includePath)
-			var includeBase = filepath.Base(includePath)
-			var includeSlug = strings.TrimSuffix(includeBase, filepath.Ext(includeBase))
+			var includeFullPath = filepath.Join(DefaultIncludesDir, includePath)
+			var includeSlug = strings.TrimSuffix(includePath, filepath.Ext(includePath))
 
 			includeSlug = stringutil.Hyphenate(includeSlug)
 
-			if includeFile, err := ctx.Open(includePath); err == nil {
+			if includeFile, err := ctx.Open(includeFullPath); err == nil {
 				defer includeFile.Close()
 				ctx.MarkTemplateSeen(includeSlug)
 
 				if err := template.attachTemplate(ctx, includeSlug, includeFile); err != nil {
-					return errors.Wrapf(err, "include %q (path: %q)", includeSlug, includePath)
+					return errors.Wrapf(err, "include %q (path: %q)", includeSlug, includeFullPath)
 				}
+			} else {
+				return errors.Wrapf(err, "include %q", includeFullPath)
 			}
 		}
 	}

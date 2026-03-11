@@ -46,10 +46,21 @@ func (self *RendererConfig) Option(name string, fallbacks ...any) typeutil.Varia
 // Return a usable instance of the renderer that should be used (if any) for this configuration.
 func (self *RendererConfig) RendererFor(ctx *Context) Renderer {
 	if self.Type != `` {
-		if ctx != nil && ctx.Request() != nil {
-			if self.ShouldApplyTo(ctx.Request()) {
-				return rendererTypes[self.Type]
+		if ctx != nil {
+			if req := ctx.Request(); req != nil {
+				if self.ShouldApplyTo(req) {
+					var r = rendererTypes[self.Type]
+
+					if testable, ok := r.(RequestTester); ok {
+						if testable.ShouldApplyTo(req) {
+							return r
+						}
+					} else {
+						return r
+					}
+				}
 			}
+
 		} else {
 			return rendererTypes[self.Type]
 		}

@@ -24,3 +24,8 @@ type Retriever interface {
 type Renderer interface {
 	Render(*Context, fs.File, *RendererConfig) error
 }
+
+// Returns whether a given request is handleable by the implementors.
+type RequestTester interface {
+	ShouldApplyTo(req *http.Request) bool
+}

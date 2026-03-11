@@ -17,11 +17,7 @@ func basicAuthHeader(username string, password string) string {
 func TestStaticCredentialProvider(t *testing.T) {
 	var server Server
 
-	server.VFS.Overrides = map[string]*File{
-		`/index.html`: {
-			Data: `Greetings.`,
-		},
-	}
+	server.VFS.AddOverride(`/index.html`, `Greetings.`)
 
 	var static = &StaticCredentialProvider{}
 	assert.NoError(t, static.AddUserCleartext(`test`, `correct`))
