@@ -3,7 +3,6 @@ package diecast
 import (
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 
@@ -27,15 +26,13 @@ func makeRenderTestServer() *Server {
 	server.VFS.AddOverride(`/_test.html`, `{{ hello }}`)
 	server.VFS.AddOverride(`/_includes/partial.html`, `{{ $ }}`)
 
-	server.VFS.AddOverride(`/include.html`, strings.Join([]string{
-		`---`,
-		`page:`,
-		`  hello: Greetings`,
-		`includes:`,
-		`- partial.html`,
-		`---`,
-		`{{ template "partial" "friend" }}`,
-	}, "\n"))
+	server.VFS.AddOverride(`/include.html`, `---
+page:
+    hello: Greetings
+includes:
+- partial.html
+---
+{{ $.page.hello }} {{ template "partial" "friend" }}!`)
 
 	return server
 }
@@ -55,5 +52,5 @@ func TestServerRenderPhase(t *testing.T) {
 
 	serverGet(t, server, http.MethodGet, `/`, time.Now().Format("2006-01-02"))
 	serverGet(t, server, http.MethodGet, `/_test`, `{{ hello }}`)
-	serverGet(t, server, http.MethodGet, `/include`, `friend`)
+	serverGet(t, server, http.MethodGet, `/include`, `Greetings friend!`)
 }
