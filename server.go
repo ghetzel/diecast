@@ -1,7 +1,6 @@
 package diecast
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -15,6 +14,7 @@ import (
 	"github.com/ghetzel/go-stockutil/httputil"
 	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghetzel/go-stockutil/typeutil"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -191,6 +191,21 @@ func (self *Server) ListenAndServe(address string) error {
 		Handler: self,
 	}
 
+	log.Infof("starting diecast2 server at http://%v", hsrv.Addr)
+	log.Debug("VFS layers:")
+
+	for _, layer := range self.VFS.Layers {
+		switch lt := layer.Type; lt {
+		case ``, `local`:
+			var path = layer.RootDir
+			path, _ = filepath.Abs(path)
+			path = filepath.Clean(path)
+			log.Debugf("  local: %v", path)
+		default:
+			log.Debugf("  %s: %v", lt, layer.RootDir)
+		}
+	}
+
 	// verification check happens in a goroutine BEFORE the server starts listening
 	go func() {
 		var ok bool
@@ -210,7 +225,7 @@ func (self *Server) ListenAndServe(address string) error {
 
 			// verify happens in yet another goroutine so we can implement a timeout (below)
 			go func() {
-				verr <- self.Verify()
+				verr <- errors.Wrapf(self.Verify(), "startup verification failed")
 			}()
 
 			select {
