@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -88,14 +89,10 @@ func (self *RcloneFS) opts() map[string]any {
 	var options = make(map[string]any)
 
 	if defaults, ok := DefaultRemoteTypeOptions[self.Type]; ok {
-		for k, v := range defaults {
-			options[k] = v
-		}
+		maps.Copy(options, defaults)
 	}
 
-	for k, v := range self.Options {
-		options[k] = v
-	}
+	maps.Copy(options, self.Options)
 
 	return options
 }

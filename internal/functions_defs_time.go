@@ -551,7 +551,7 @@ func loadStandardFunctionsTime(funcs FuncMap, server ServerProxy) FuncGroup {
 							}
 
 							// ...then forward
-							for j := 0; j < len(split); j++ {
+							for j := range split {
 								var try = strings.Join(split[0:j], `-`)
 
 								if tm, err := stringutil.ConvertToTime(try); err == nil {

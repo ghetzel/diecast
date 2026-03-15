@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"maps"
 	"math"
 	"net/http"
 	"os"
@@ -34,7 +35,7 @@ import (
 var Base32Alphabet = base32.NewEncoding(`abcdefghijklmnopqrstuvwxyz234567`)
 var BuiltinFunctions = make(FuncMap)
 var DefaultObjectifyKeyValueSeparator = `=`
-var errorInterface = reflect.TypeOf((*error)(nil)).Elem()
+var errorInterface = reflect.TypeFor[error]()
 
 // Register a function that will be available to all template expressions, wherever they appear.
 func RegisterGlobalFunction(name string, fn any) {
@@ -106,9 +107,7 @@ func GetFunctionsWithRequest(server ServerProxy, ctx Contextable) (FuncGroups, F
 
 	var funcs FuncMap = make(FuncMap)
 
-	for k, v := range BuiltinFunctions {
-		funcs[k] = v
-	}
+	maps.Copy(funcs, BuiltinFunctions)
 
 	var groups FuncGroups = make(FuncGroups, 0)
 

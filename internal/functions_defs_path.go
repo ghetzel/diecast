@@ -286,7 +286,7 @@ func loadStandardFunctionsPath(funcs FuncMap, server ServerProxy) FuncGroup {
 					_, params := stringutil.SplitPair(fileutil.GetMimeType(path.Ext(filename)), `;`)
 					var kv = make(map[string]any)
 
-					for _, paramPair := range strings.Split(params, `;`) {
+					for paramPair := range strings.SplitSeq(params, `;`) {
 						key, value := stringutil.SplitPairTrimSpace(paramPair, `=`)
 
 						if len(key) == 0 {

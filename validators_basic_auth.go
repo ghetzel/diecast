@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/ghetzel/go-stockutil/typeutil"
@@ -52,9 +52,7 @@ func (self *BasicAuthValidator) Validate(ctx *Context, cfg *ValidatorConfig) (ve
 			props = append(props, k+`=`+typeutil.String(v))
 		}
 
-		sort.Slice(props, func(i, j int) bool {
-			return props[i] < props[j]
-		})
+		slices.Sort(props)
 
 		ctx.SetStatusCode(http.StatusUnauthorized)
 		ctx.Header().Set(`WWW-Authenticate`, `Basic `+strings.Join(props, `, `))

@@ -118,7 +118,7 @@ func loadStandardFunctionsCollections(funcs FuncMap, server ServerProxy) FuncGro
 					var array = sliceutil.Sliceify(input)
 					var output = make([]any, len(array))
 
-					for i := 0; i < len(array); i++ {
+					for i := range array {
 						output[len(array)-1-i] = array[i]
 					}
 

@@ -3,6 +3,7 @@ package internal
 import (
 	"io"
 	"io/fs"
+	"maps"
 
 	htemplate "html/template"
 	ttemplate "text/template"
@@ -159,9 +160,7 @@ func (self *GolangTemplate) Render(wr io.Writer, data any, name string) error {
 func (self *GolangTemplate) hfuncs() htemplate.FuncMap {
 	var fm = make(htemplate.FuncMap)
 
-	for k, v := range self.funcs {
-		fm[k] = v
-	}
+	maps.Copy(fm, self.funcs)
 
 	return fm
 }
@@ -169,9 +168,7 @@ func (self *GolangTemplate) hfuncs() htemplate.FuncMap {
 func (self *GolangTemplate) tfuncs() ttemplate.FuncMap {
 	var fm = make(ttemplate.FuncMap)
 
-	for k, v := range self.funcs {
-		fm[k] = v
-	}
+	maps.Copy(fm, self.funcs)
 
 	return fm
 }

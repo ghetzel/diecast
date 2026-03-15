@@ -144,22 +144,22 @@ func TestMiscFunctions(t *testing.T) {
 
 	var fn_random = fns[`random`].(func(bounds ...any) int64)
 
-	for i := 0; i < 100000; i++ {
+	for range 100000 {
 		var v = fn_random()
 		assert.True(v >= 0 && v < math.MaxInt64)
 	}
 
-	for i := 0; i < 100000; i++ {
+	for range 100000 {
 		var v = fn_random(42)
 		assert.True(v >= 42 && v < math.MaxInt64)
 	}
 
-	for i := 0; i < 100000; i++ {
+	for range 100000 {
 		var v = fn_random(42, 96)
 		assert.True(v >= 42 && v < 96)
 	}
 
-	for i := 0; i < 100000; i++ {
+	for range 100000 {
 		var v = fn_random(-100, 101)
 		assert.True(v >= -100 && v < 101)
 	}
