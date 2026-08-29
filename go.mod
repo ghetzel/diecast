@@ -1,6 +1,6 @@
-module github.com/ghetzel/diecast
+module go.gary.cool/diecast
 
-go 1.24.2
+go 1.27.0
 
 require (
 	github.com/PuerkitoBio/goquery v1.11.0
@@ -10,10 +10,6 @@ require (
 	github.com/beevik/etree v1.6.0
 	github.com/biessek/golang-ico v0.0.0-20250805151044-6d8ea19fb761
 	github.com/dustin/go-humanize v1.0.1
-	github.com/ghetzel/cli v1.17.0
-	github.com/ghetzel/go-stockutil v1.13.0
-	github.com/ghetzel/ratelimit v0.0.0-20200513232932-b28727c55ae1
-	github.com/ghetzel/testify v1.4.1
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-rod/rod v0.116.2
 	github.com/go-shiori/go-readability v0.0.0-20251205110129-5db1dc9836f0
@@ -37,12 +33,16 @@ require (
 	github.com/signalsciences/tlstext v1.3.0
 	github.com/sj14/astral v0.2.2
 	github.com/spaolacci/murmur3 v1.1.0
+	github.com/stretchr/testify v1.11.1
 	github.com/tg123/go-htpasswd v1.2.4
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/yosssi/gohtml v0.0.0-20201013000340-ee4748c638f4
-	golang.org/x/net v0.48.0
+	go.gary.cool/cli v1.18.0
+	go.gary.cool/go-stockutil v1.15.0
+	go.gary.cool/ratelimit v1.1.0
+	golang.org/x/net v0.52.0
 	golang.org/x/oauth2 v0.34.0
-	golang.org/x/text v0.32.0
+	golang.org/x/text v0.35.0
 	golang.org/x/tools/godoc v0.1.0-deprecated
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -61,8 +61,6 @@ require (
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
-	github.com/ghetzel/go-defaults v1.2.0 // indirect
-	github.com/ghetzel/uuid v0.0.0-20171129191014-dec09d789f3d // indirect
 	github.com/go-shiori/dom v0.0.0-20230515143342-73569d674e1c // indirect
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f // indirect
 	github.com/gorilla/css v1.0.1 // indirect
@@ -81,20 +79,19 @@ require (
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kylelemons/go-gypsy v1.0.0 // indirect
-	github.com/lib/pq v1.10.9 // indirect
+	github.com/lib/pq v1.11.2 // indirect
 	github.com/martinlindhe/unit v0.0.0-20230420213220-4adfd7d0a0d6 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/melbahja/goph v1.4.0 // indirect
+	github.com/melbahja/goph v1.5.0 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
-	github.com/miekg/dns v1.1.66 // indirect
+	github.com/miekg/dns v1.1.72 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pkg/sftp v1.13.9 // indirect
+	github.com/pkg/sftp v1.13.10 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
+	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/urfave/negroni v1.0.0 // indirect
 	github.com/ysmood/fetchup v0.2.3 // indirect
@@ -104,17 +101,19 @@ require (
 	github.com/ysmood/leakless v0.9.0 // indirect
 	github.com/yuin/gopher-lua v1.1.1 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
+	go.gary.cool/go-defaults v1.3.0 // indirect
+	go.gary.cool/uuid v0.0.0-20171129191014-dec09d789f3d // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/crypto v0.46.0 // indirect
-	golang.org/x/mod v0.30.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
-	golang.org/x/term v0.38.0 // indirect
-	golang.org/x/tools v0.39.0 // indirect
+	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/mod v0.34.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/term v0.41.0 // indirect
+	golang.org/x/tools v0.43.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apimachinery v0.33.1 // indirect
-	k8s.io/client-go v0.33.1 // indirect
-	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
+	k8s.io/apimachinery v0.35.2 // indirect
+	k8s.io/client-go v0.35.2 // indirect
+	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 )

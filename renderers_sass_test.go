@@ -9,8 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ghetzel/go-stockutil/typeutil"
-	"github.com/ghetzel/testify/require"
+	"github.com/stretchr/testify/require"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 func TestSassRenderer(t *testing.T) {

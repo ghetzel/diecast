@@ -10,9 +10,9 @@ import (
 	"strings"
 	text "text/template"
 
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/rxutil"
-	"github.com/ghetzel/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/log"
+	"go.gary.cool/go-stockutil/rxutil"
+	"go.gary.cool/go-stockutil/stringutil"
 )
 
 type Engine int

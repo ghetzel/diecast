@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/typeutil"
+	"go.gary.cool/go-stockutil/log"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 // 100ms precision seems generous for this use case, but you *can* change it.

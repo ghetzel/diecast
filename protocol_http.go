@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ghetzel/go-stockutil/httputil"
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
+	"go.gary.cool/go-stockutil/httputil"
+	"go.gary.cool/go-stockutil/log"
+	"go.gary.cool/go-stockutil/maputil"
+	"go.gary.cool/go-stockutil/sliceutil"
+	"go.gary.cool/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 // The HTTP binding protocol is used to interact with web servers and RESTful APIs.

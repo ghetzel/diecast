@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/gomodule/redigo/redis"
+	"go.gary.cool/go-stockutil/log"
+	"go.gary.cool/go-stockutil/sliceutil"
+	"go.gary.cool/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 var redisConnectionPool sync.Map

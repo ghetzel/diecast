@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/testify/require"
+	"github.com/stretchr/testify/require"
+	"go.gary.cool/go-stockutil/log"
 )
 
 func doTestServerRequest(s *Server, method string, path string, tester func(*httptest.ResponseRecorder)) {

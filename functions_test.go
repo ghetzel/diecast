@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ghetzel/go-stockutil/timeutil"
-	"github.com/ghetzel/testify/require"
+	"github.com/stretchr/testify/require"
+	"go.gary.cool/go-stockutil/timeutil"
 )
 
 func TestCollectionFunctions(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ghetzel/testify/require"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCsrfRequest(t *testing.T) {

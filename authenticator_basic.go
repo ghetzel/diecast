@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/pathutil"
-	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	htpasswd "github.com/tg123/go-htpasswd"
+	"go.gary.cool/go-stockutil/log"
+	"go.gary.cool/go-stockutil/pathutil"
+	"go.gary.cool/go-stockutil/sliceutil"
+	"go.gary.cool/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 type BasicAuthenticator struct {

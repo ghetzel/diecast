@@ -3,9 +3,9 @@ package diecast
 import (
 	"reflect"
 
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/timeutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
+	"go.gary.cool/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/timeutil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 func loadStandardFunctionsTypes(_ FuncMap, _ *Server) funcGroup {

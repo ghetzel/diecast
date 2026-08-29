@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ghetzel/go-stockutil/httputil"
-	"github.com/ghetzel/go-stockutil/log"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/proto"
+	"go.gary.cool/go-stockutil/httputil"
+	"go.gary.cool/go-stockutil/log"
 )
 
 type PdfRenderer struct {

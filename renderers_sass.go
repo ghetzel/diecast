@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/ghetzel/go-stockutil/executil"
+	"go.gary.cool/go-stockutil/executil"
 )
 
 var SassIndentString = `    `

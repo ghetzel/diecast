@@ -18,14 +18,14 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	humanize "github.com/dustin/go-humanize"
-	"github.com/ghetzel/go-stockutil/fileutil"
-	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/kelvins/sunrisesunset"
 	"github.com/montanaflynn/stats"
 	blackfriday "github.com/russross/blackfriday/v2"
+	"go.gary.cool/go-stockutil/fileutil"
+	"go.gary.cool/go-stockutil/maputil"
+	"go.gary.cool/go-stockutil/sliceutil"
+	"go.gary.cool/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/typeutil"
 	"golang.org/x/net/html"
 )
 

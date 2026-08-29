@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/ghetzel/go-stockutil/httputil"
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/typeutil"
+	"go.gary.cool/go-stockutil/httputil"
+	"go.gary.cool/go-stockutil/log"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 const DefaultCsrfInjectFormFieldSelector = `form[method="post"], form[method="POST"], form[method="Post"]` // if you need more case permutations than this, you may override this default

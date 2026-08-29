@@ -17,13 +17,13 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/ghetzel/go-stockutil/httputil"
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/oliveagle/jsonpath"
 	opentracing "github.com/opentracing/opentracing-go"
+	"go.gary.cool/go-stockutil/httputil"
+	"go.gary.cool/go-stockutil/log"
+	"go.gary.cool/go-stockutil/sliceutil"
+	"go.gary.cool/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/typeutil"
 	"gopkg.in/yaml.v2"
 )
 

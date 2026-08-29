@@ -18,13 +18,13 @@
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
-                    <a class="nav-link" target="_blank" href="https://github.com/ghetzel/diecast">
+                    <a class="nav-link" target="_blank" href="https://go.gary.cool/diecast">
                         <img src="https://img.shields.io/github/tag/ghetzel/diecast.svg?colorB=111111&label=GitHub&style=flat">
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" target="_blank" href="https://godoc.org/github.com/ghetzel/diecast">
-                        <img src="https://godoc.org/github.com/ghetzel/diecast?status.svg">
+                    <a class="nav-link" target="_blank" href="https://godoc.org/go.gary.cool/diecast">
+                        <img src="https://godoc.org/go.gary.cool/diecast?status.svg">
                     </a>
                 </li>
             </ul>
@@ -97,7 +97,7 @@
 <p>Building a site using Diecast is as easy as putting files in a folder. When you run the <code>diecast</code> command in this folder (the <em>working directory</em>), Diecast will make the contents of the folder available as a web page (by default, at <a href="http://localhost:28419" rel="nofollow"><code>http://localhost:28419</code></a>.) Any file ending in <code>.html</code> will be treated as a template and be processed before being returned to the user. If no other filenames or paths are requested, Diecast will look for and attempt to serve the file <code>index.html</code>.</p>
 <h2 id="installation">Installation</h2>
 <p>TODO: make this section much more detailed.</p>
-<pre><code>GO111MODULE=on go get github.com/ghetzel/diecast/cmd/diecast
+<pre><code>GO111MODULE=on go get go.gary.cool/diecast/cmd/diecast
 </code></pre>
 <h2 id="url-structure">URL Structure</h2>
 <p>Diecast does not have a concept of URL path routing, but rather strives to enforce simple, linear hierarchies by exposing the working directory directly as routable paths. For example, if a user visits the path <code>/users/list</code>, Diecast will look for files to serve in the following order:</p>
@@ -110,7 +110,7 @@
 </ul>
 <p>The first matching file from the list above will be served.</p>
 <h2 id="configuration">Configuration</h2>
-<p>You can configure Diecast by creating a file called <code>diecast.yml</code> in the same folder that the <code>diecast</code> command is run in, or by specifying the path to the file with the <code>--config</code> command line option. You can use this configuration file to control how Diecast renders templates and when, as well as set options for how files are accessed and from where. Diecast tries to use “sane defaults” whenever possible, but you can configure Diecast in many ways to suit your needs. For more details on these defaults and to see what goes in a <code>diecast.yml</code> file, see the <a href="https://github.com/ghetzel/diecast/blob/master/examples/diecast.sample.yml" rel="nofollow">Example Config File</a>.</p>
+<p>You can configure Diecast by creating a file called <code>diecast.yml</code> in the same folder that the <code>diecast</code> command is run in, or by specifying the path to the file with the <code>--config</code> command line option. You can use this configuration file to control how Diecast renders templates and when, as well as set options for how files are accessed and from where. Diecast tries to use “sane defaults” whenever possible, but you can configure Diecast in many ways to suit your needs. For more details on these defaults and to see what goes in a <code>diecast.yml</code> file, see the <a href="https://go.gary.cool/diecast/blob/master/examples/diecast.sample.yml" rel="nofollow">Example Config File</a>.</p>
 <h2 id="templating">Templating</h2>
 <p>Beyond merely acting as a simple file server, Diecast comes with a rich templating environment that you can use to build complex sites in a straightforward, easy to understand way. Templates are just files that you tell Diecast to treat specially. The default templating language used by Diecast is <a href="https://golang.org/pkg/text/template/" rel="nofollow">Golang’s built-in <code>text/template</code> package.</a>. Templates files consist of the template content, and optionally a header section called <em>front matter</em>. These headers are used to specify template-specific data such as predefined data structures, paths of other templates to include, rendering options, and the inclusion of remote data via <a href="#data-bindings" rel="nofollow">data bindings</a>. An example template looks like this:</p>
 <pre><code>---

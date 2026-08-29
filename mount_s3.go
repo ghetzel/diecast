@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/ghetzel/go-stockutil/executil"
-	"github.com/ghetzel/go-stockutil/fileutil"
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/stringutil"
 	"github.com/jszwec/s3fs"
+	"go.gary.cool/go-stockutil/executil"
+	"go.gary.cool/go-stockutil/fileutil"
+	"go.gary.cool/go-stockutil/log"
+	"go.gary.cool/go-stockutil/stringutil"
 )
 
 type awsLog struct{}

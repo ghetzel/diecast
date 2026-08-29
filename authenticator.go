@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/gobwas/glob"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 type Authenticator interface {

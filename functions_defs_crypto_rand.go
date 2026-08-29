@@ -14,9 +14,9 @@ import (
 	mrand "math/rand"
 	"strings"
 
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/spaolacci/murmur3"
+	"go.gary.cool/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 func hashingAlgo(alg string) (func() hash.Hash, error) {

@@ -1,7 +1,7 @@
 package diecast
 
 import (
-	"github.com/ghetzel/go-stockutil/convutil"
+	"go.gary.cool/go-stockutil/convutil"
 )
 
 var ConvertRoundToPlaces = 12

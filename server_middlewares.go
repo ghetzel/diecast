@@ -14,17 +14,17 @@ import (
 	"time"
 
 	ico "github.com/biessek/golang-ico"
-	"github.com/ghetzel/go-stockutil/executil"
-	"github.com/ghetzel/go-stockutil/fileutil"
-	"github.com/ghetzel/go-stockutil/httputil"
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	base58 "github.com/jbenet/go-base58"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"go.gary.cool/go-stockutil/executil"
+	"go.gary.cool/go-stockutil/fileutil"
+	"go.gary.cool/go-stockutil/httputil"
+	"go.gary.cool/go-stockutil/log"
+	"go.gary.cool/go-stockutil/maputil"
+	"go.gary.cool/go-stockutil/sliceutil"
+	"go.gary.cool/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 // A function that receives the current request, ResponseWriter, and returns whether to call the next middleware

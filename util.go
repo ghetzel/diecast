@@ -13,15 +13,15 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ghetzel/go-stockutil/fileutil"
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/jbenet/go-base58"
+	"go.gary.cool/go-stockutil/fileutil"
+	"go.gary.cool/go-stockutil/log"
+	"go.gary.cool/go-stockutil/maputil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 func bugWarning() {
-	log.Warningf("BUG: no timer associated with request. Please report this at https://github.com/ghetzel/diecast")
+	log.Warningf("BUG: no timer associated with request. Please report this at https://go.gary.cool/diecast")
 }
 
 type xmlNode struct {

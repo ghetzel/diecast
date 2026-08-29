@@ -11,15 +11,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ghetzel/cli"
-	"github.com/ghetzel/diecast"
-	"github.com/ghetzel/go-stockutil/log"
-	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/netutil"
-	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	isatty "github.com/mattn/go-isatty"
+	"go.gary.cool/cli"
+	"go.gary.cool/diecast"
+	"go.gary.cool/go-stockutil/log"
+	"go.gary.cool/go-stockutil/maputil"
+	"go.gary.cool/go-stockutil/netutil"
+	"go.gary.cool/go-stockutil/sliceutil"
+	"go.gary.cool/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/typeutil"
 	yaml "gopkg.in/yaml.v2"
 )
 

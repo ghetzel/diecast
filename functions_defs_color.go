@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ghetzel/go-stockutil/colorutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/spaolacci/murmur3"
+	"go.gary.cool/go-stockutil/colorutil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 const DefaultColorPalette = `munin`

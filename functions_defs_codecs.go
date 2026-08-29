@@ -13,14 +13,14 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/ghetzel/go-stockutil/httputil"
-	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/go-shiori/go-readability"
 	base58 "github.com/jbenet/go-base58"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
+	"go.gary.cool/go-stockutil/httputil"
+	"go.gary.cool/go-stockutil/maputil"
+	"go.gary.cool/go-stockutil/sliceutil"
+	"go.gary.cool/go-stockutil/typeutil"
 	"golang.org/x/net/html"
 )
 

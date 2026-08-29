@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ghetzel/testify/require"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/tools/godoc/vfs/httpfs"
 	"golang.org/x/tools/godoc/vfs/mapfs"
 )

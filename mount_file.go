@@ -8,8 +8,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/ghetzel/go-stockutil/fileutil"
-	"github.com/ghetzel/go-stockutil/sliceutil"
+	"go.gary.cool/go-stockutil/fileutil"
+	"go.gary.cool/go-stockutil/sliceutil"
 )
 
 // A FileMount exposes the contents of a given filesystem directory.

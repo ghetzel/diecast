@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
+	"go.gary.cool/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 var reqTimes sync.Map

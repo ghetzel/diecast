@@ -11,9 +11,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ghetzel/diecast"
-	"github.com/ghetzel/go-stockutil/rxutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
+	"go.gary.cool/diecast"
+	"go.gary.cool/go-stockutil/rxutil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 var rxFnDocString = `//\s*fn\s*(?P<func>[^:]+):\s*(?P<docstring>.*)`

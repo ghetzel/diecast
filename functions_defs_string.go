@@ -6,12 +6,12 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/rxutil"
-	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/kyokomi/emoji"
+	"go.gary.cool/go-stockutil/maputil"
+	"go.gary.cool/go-stockutil/rxutil"
+	"go.gary.cool/go-stockutil/sliceutil"
+	"go.gary.cool/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 func emojiKey(v string) string {

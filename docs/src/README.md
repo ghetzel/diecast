@@ -23,7 +23,7 @@ Building a site using Diecast is as easy as putting files in a folder. When you 
 TODO: make this section much more detailed.
 
 ```
-GO111MODULE=on go get github.com/ghetzel/diecast/cmd/diecast
+GO111MODULE=on go get go.gary.cool/diecast/cmd/diecast
 ```
 
 <!--
@@ -73,7 +73,7 @@ The first matching file from the list above will be served.
 
 ## Configuration
 
-You can configure Diecast by creating a file called `diecast.yml` in the same folder that the `diecast` command is run in, or by specifying the path to the file with the `--config` command line option. You can use this configuration file to control how Diecast renders templates and when, as well as set options for how files are accessed and from where. Diecast tries to use "sane defaults" whenever possible, but you can configure Diecast in many ways to suit your needs. For more details on these defaults and to see what goes in a `diecast.yml` file, see the [Example Config File](https://github.com/ghetzel/diecast/blob/master/examples/diecast.sample.yml).
+You can configure Diecast by creating a file called `diecast.yml` in the same folder that the `diecast` command is run in, or by specifying the path to the file with the `--config` command line option. You can use this configuration file to control how Diecast renders templates and when, as well as set options for how files are accessed and from where. Diecast tries to use "sane defaults" whenever possible, but you can configure Diecast in many ways to suit your needs. For more details on these defaults and to see what goes in a `diecast.yml` file, see the [Example Config File](https://go.gary.cool/diecast/blob/master/examples/diecast.sample.yml).
 
 ## Templating
 

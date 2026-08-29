@@ -5,7 +5,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/ghetzel/go-stockutil/httputil"
+	"go.gary.cool/go-stockutil/httputil"
 )
 
 type transportAwareRoundTripper struct {

@@ -3,9 +3,9 @@ package diecast
 import (
 	"net/http"
 
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/gorilla/websocket"
 	"github.com/husobee/vestigo"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 type Upgrader = websocket.Upgrader

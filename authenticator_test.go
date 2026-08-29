@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/ghetzel/testify/require"
+	"github.com/stretchr/testify/require"
 	htpasswd "github.com/tg123/go-htpasswd"
 )
 

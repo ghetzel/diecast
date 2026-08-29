@@ -3,11 +3,11 @@ package diecast
 import (
 	"time"
 
-	"github.com/ghetzel/go-stockutil/geoutil"
-	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/mathutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/sj14/astral/pkg/astral"
+	"go.gary.cool/go-stockutil/geoutil"
+	"go.gary.cool/go-stockutil/maputil"
+	"go.gary.cool/go-stockutil/mathutil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 const sunElevationDayNightCutoff = -0.523 // day starts/ends when the sun is 0.7deg below the horizon

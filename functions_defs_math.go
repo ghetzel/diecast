@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/ghetzel/go-stockutil/mathutil"
-	"github.com/ghetzel/go-stockutil/sliceutil"
-	"github.com/ghetzel/go-stockutil/stringutil"
-	"github.com/ghetzel/go-stockutil/typeutil"
 	"github.com/montanaflynn/stats"
+	"go.gary.cool/go-stockutil/mathutil"
+	"go.gary.cool/go-stockutil/sliceutil"
+	"go.gary.cool/go-stockutil/stringutil"
+	"go.gary.cool/go-stockutil/typeutil"
 )
 
 func loadStandardFunctionsMath(_ FuncMap, _ *Server) funcGroup {

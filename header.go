@@ -3,8 +3,8 @@ package diecast
 import (
 	"reflect"
 
-	"github.com/ghetzel/go-stockutil/maputil"
-	"github.com/ghetzel/go-stockutil/sliceutil"
+	"go.gary.cool/go-stockutil/maputil"
+	"go.gary.cool/go-stockutil/sliceutil"
 )
 
 type Redirect struct {

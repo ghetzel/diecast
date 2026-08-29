@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ghetzel/go-stockutil/log"
 	"github.com/ghodss/yaml"
+	"go.gary.cool/go-stockutil/log"
 )
 
 type TemplateRenderer struct {
